@@ -1,0 +1,234 @@
+
+  .sidebar {
+    background-color: #293649;
+    color: #293649;
+    width: 160px;
+    padding: 20px;
+    height: 90vh;
+    
+  }
+  .stages{
+  display: flex;
+    width: 199px;
+    margin-left: -19px;
+    margin-top: -20px;   
+    height: 59px;
+    background: #293649;
+    color: white;
+    justify-content: center;
+    align-items: center;
+    font-weight: 400;
+ 
+    box-sizing: border-box;
+  }
+  
+  .profile-section {
+    display: flex;
+    margin-bottom: 20px;
+    gap: 15px;
+    padding-top: 20px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-around;
+  }
+  
+  .application-section {
+    cursor: pointer;
+
+  }
+  
+  .application-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0px;
+    justify-content: center;
+    margin-bottom: 10px;
+    height: 40px;
+    border-radius: 10px;
+    /* background: #446699; */
+    /* box-shadow: 0 0 10px 5px rgba(255, 0, 0, 0.5);  */
+    transition: box-shadow 0.3s ease; 
+  }
+  .application-header:hover {
+    background: rgb(147, 116, 170);
+    /* box-shadow: 0 0 20px 10px rgb(147, 116, 170);  */
+  }
+  
+  .profile-icon {
+    padding-left: 10%;
+    margin-top: 20%;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    border-radius: 10px;
+    /* background: #446699; */
+    /* box-shadow: 0 0 10px 5px rgba(255, 0, 0, 0.5);  */
+    transition: box-shadow 0.3s ease; 
+  }
+  
+  .profile-icon:hover {
+    background: rgb(147, 116, 170);
+    /* box-shadow: 0 0 20px 10px rgb(147, 116, 170);   */
+  }
+.profile-icon1{
+  padding-left: 10%;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  height: 40px;
+  border-radius: 10px;
+  /* background: #446699; */
+  /* box-shadow: 0 0 10px 5px rgba(255, 0, 0, 0.5);  */
+  transition: box-shadow 0.3s ease; 
+}
+.profile-icon1:hover {
+  background: rgb(147, 116, 170);
+  /* box-shadow: 0 0 20px 10px rgb(147, 116, 170);  */
+}
+
+  .application-list {
+    list-style-type: none;
+    padding-left: 70px;
+  }
+  
+  .application-list li {
+    list-style-type: none;
+    /* padding-top: 10px; */
+    padding-left: 10px;
+    padding: 2px
+  }
+  
+  .application-list li:hover {
+    color: rgb(206, 238, 65);
+    background: rgb(147, 116, 170);
+    /* box-shadow: 0 0 20px 10px rgb(147, 116, 170);    */
+    border-radius: 20px
+  }
+  
+  .bullet {
+  
+    color: rgb(251, 255, 7);
+
+    margin-left: 20px;
+    margin-right: 5px;
+    font-size: 19px;
+  }
+  
+  .mains {
+    font-family: "Rubik", sans-serif;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+  }
+  
+  .mains:hover {
+    color: #81d554;
+  }
+  
+  .sidebar-link {
+    color: white;
+    text-decoration: none;
+    /* margin-left: 20px; */
+    width: 100%;
+  }
+  
+  .sidebar-link:hover {
+    color: #81d554;
+  }
+  
+  .vjlogo {
+    width: 190px; 
+  }
+
+
+  /* Medium <= 992px */
+  
+@media screen and (max-width: 992px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: 0.2fr 3fr;
+    grid-template-areas:
+      'header'
+      'main';
+  }
+
+  #sidebar {
+    display: none;
+  }
+
+  .menu-icon {
+    display: inline;
+  }
+
+  .sidebar-title > span {
+    display: inline;
+  }
+  .profile-icon{
+    padding-left: 10%;
+  }
+  .vjlogo {
+    width: 130px;
+    margin-top: -10px;
+    align-items: center;
+    /* margin-left: 20px; */
+}
+.mains {
+  font-family: "Rubik", sans-serif;
+  cursor: pointer;
+  color: black;
+  font-weight: 600;
+}
+.sidebar-link {
+  color: black;
+  text-decoration: none;
+  /* margin-left: 20px; */
+}
+}
+/* Small <= 768px */
+  
+@media screen and (max-width: 768px) {
+  .main-cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .charts {
+    grid-template-columns: 1fr;
+    margin-top: 30px;
+  }
+  .profile-icon{
+    padding-left: 13%;
+  }
+  .vjlogo {
+    width: 130px;
+    margin-top: -10px;
+    align-items: center;
+    /* margin-left: 20px; */
+}
+}
+
+/* Extra Small <= 576px */
+
+@media screen and (max-width: 576px) {
+  .vjlogo {
+    width: 100px;
+    margin-top: 0px;
+    height: 40px;
+}
+  .hedaer-left {
+    display: none;
+  }
+  .profile-icon{
+    padding-left: 9%;
+    align-items: center;
+    display: flex;
+  }
+ 
+}
+
+
+

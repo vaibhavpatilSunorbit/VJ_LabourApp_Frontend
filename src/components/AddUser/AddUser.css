@@ -1,0 +1,120 @@
+.MainDash {
+    padding: 2rem;
+    background-color: #f9f9f9;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .Main-div {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .Main-div:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  .searchInput-div {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+  }
+  
+  button, .MuiButton-containedPrimary {
+    background-color: #007bff;
+    color: #fff;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover, .MuiButton-containedPrimary:hover {
+    background-color: #0056b3;
+  }
+  
+  input, .MuiOutlinedInput-root, .MuiAutocomplete-input {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+  }
+  
+  input:hover, .MuiOutlinedInput-root:hover, .MuiAutocomplete-input:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  .MuiDialog-paper {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  
+  .MuiDialog-paperEnter {
+    transform: translateY(20%);
+    opacity: 0;
+  }
+  
+  .MuiDialog-paperEnterActive {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  .MuiDialog-paperExit {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  .MuiDialog-paperExitActive {
+    transform: translateY(20%);
+    opacity: 0;
+  }
+  
+  .MuiTableCell-head, .MuiTableCell-body {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .MuiTableCell-head {
+    background-color: #f1f1f1;
+    font-weight: bold;
+  }
+  
+  .MuiTableRow-root:hover {
+    background-color: #f9f9f9;
+  }
+  
+
+
+  .add-user-container {
+    padding: 20px;
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .form-group input {
+    width: 100%;
+    /* padding: 8px; */
+    box-sizing: border-box;
+  }
+  
+  button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
