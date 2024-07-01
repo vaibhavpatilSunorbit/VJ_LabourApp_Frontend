@@ -1,0 +1,83 @@
+/* Base styles */
+.login-container {
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0; /* Background color for the login page */
+  }
+  
+  .login-paper {
+    padding: 20px;
+    max-width: 900px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: white; /* Background color for the paper */
+    border-radius: 8px;
+  }
+  
+  .logo-image {
+    width: 150px; /* Adjust size as needed */
+    height: auto; /* Maintain aspect ratio */
+    margin-bottom: 20px; /* Spacing below the logo */
+  }
+  
+  .input-field {
+    margin-bottom: 15px; /* Spacing between input fields */
+  }
+  
+  .input-text {
+    background-color: #e90808; /* Background color for text fields */
+    transition: background-color 0.3s ease; /* Smooth transition on hover */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Box shadow for text fields */
+  }
+  
+  .input-text:hover {
+    background-color: #e0e0e0; /* Background color change on hover */
+  }
+  
+  .submit-button {
+    background-color: #1976d2; /* Primary button color */
+    color: white; /* Text color */
+    margin-top: 10px; /* Spacing above the button */
+  }
+  
+  .submit-button:hover {
+    background-color: #1565c0; /* Darker shade on hover */
+  }
+  
+  .toggle-signup-button {
+    text-transform: none; /* Disable uppercase transformation */
+    margin-top: 10px; /* Spacing above the button */
+  }
+  
+  .logout-button {
+    margin-top: 20px; /* Spacing above the button */
+  }
+  
+  /* Mobile responsive styles */
+  @media (max-width: 600px) {
+    .login-paper {
+      padding: 10px;
+      width: 90%; /* Adjust width for mobile */
+      max-width: none; /* Remove max-width constraint */
+    }
+  
+    .logo-image {
+      width: 120px; /* Smaller size for mobile */
+      margin-bottom: 15px; /* Adjust spacing */
+    }
+  
+    .input-field {
+      margin-bottom: 10px; /* Adjust spacing */
+    }
+  
+    .submit-button,
+    .toggle-signup-button,
+    .logout-button {
+      width: 100%; /* Full width buttons */
+      margin-top: 10px; /* Adjust spacing */
+    }
+  }
+  

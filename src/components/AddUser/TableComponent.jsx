@@ -11,6 +11,7 @@ import {
   Paper,
   Box,
 } from "@mui/material";
+import EditIcon from '@mui/icons-material/Edit';
 
 const TableComponent = ({
   users,
@@ -21,8 +22,18 @@ const TableComponent = ({
   handleEdit,
 }) => {
   return (
-    <Box py={5}>
-      <Paper sx={{ width: "100%", overflow: "hidden" }}>
+    <Box py={1} >
+   <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={users.length} 
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      <Paper sx={{ width: "100%", overflow: "hidden", boxShadow: 3, }}>
+     
         <TableContainer sx={{ maxHeight: 440 }}>
           <Table stickyHeader aria-label="sticky table">
             <TableHead>
@@ -46,35 +57,29 @@ const TableComponent = ({
                     <TableCell>{user.contactNo}</TableCell>
                     <TableCell>{user.userType}</TableCell>
                     <TableCell>
-                      <Button
+                      {/* <Button
                         variant="contained"
                         sx={{
                           backgroundColor: '#EFE6F7', 
                           color: '#8236BC',
                           marginRight: '10px',
                           '&:hover': {
-                            backgroundColor: '#1976d2', 
+                            backgroundColor: '#bfa7d7', 
                           },
                         }}
                         onClick={() => handleEdit(user)}
+                        
                       >
-                        Edit
-                      </Button>
+                      {<EditIcon />}
+                      </Button> */}
+                      <EditIcon onClick={() => handleEdit(user)}/>
                     </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={users.length} 
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+      
       </Paper>
     </Box>
   );

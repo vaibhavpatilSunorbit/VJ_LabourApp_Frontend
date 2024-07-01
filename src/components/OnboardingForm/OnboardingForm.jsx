@@ -16,20 +16,24 @@ import 'react-toastify/dist/ReactToastify.css';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { FaArrowLeft, FaEye, FaCheck } from 'react-icons/fa';
 import { v4 as uuidv4 } from "uuid";
-import SearchBar from "../SarchBar/SearchBar"
-import Loading from "../Loading/Loading"
+import SearchBar from "../SarchBar/SearchBar";
+import Loading from "../Loading/Loading";
+import Sidebar from "../Sidebar/Sidebar";
+
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [aadhaarImage, setAadhaarImage] = useState(null);
-  const [isKYCCollapsed, setIsKYCCollapsed] = useState(false);
+  const [isKYCCollapsed, setIsKYCCollapsed] = useState(true);
   const [isPersonalCollapsed, setIsPersonalCollapsed] = useState(true);
   const [isBankDetailsCollapsed, setIsBankDetailsCollapsed] = useState(true);
   const [isProjectCollapsed, setIsProjectCollapsed] = useState(true);
   const [kycCompleted, setKycCompleted] = useState(false);
   const [projectCompleted, setProjectCompleted] = useState(false);
+  const [personalCompleted, setPersonalCompleted] = useState(false);
+  const [bankDetailsCompleted, setBankDetailsCompleted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [error, setError] = useState('');
@@ -45,7 +49,13 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const [popupType, setPopupType] = useState('');
   const [isAddUserCollapsed, setIsAddUserCollapsed] = useState(true);
   const [isLabourDetailsCollapsed, setIsLabourDetailsCollapsed] = useState(true);
-
+  // New Chages for dorpdown
+  const [projectNames, setProjectNames] = useState([]);
+  const [labourCategories, setLabourCategories] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [workingHours, setWorkingHours] = useState([]);
+  const [designations, setDesignations] = useState([]);
+  const [nextID, setNextID] = useState(null);
 
   const [formData, setFormData] = useState({
     uploadAadhaarFront: '',
@@ -75,6 +85,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     labourCategory: '',
     department: '',
     workingHours: '',
+    designation: ''
   });
 
   const [formStatus, setFormStatus] = useState({
@@ -94,11 +105,46 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     setIsModalOpen(false);
   };
 
-  const handlePrevious = (route) => {
-    navigate(route);
+  const collapseAll = () => {
+    setIsKYCCollapsed(true);
+    setIsPersonalCollapsed(true);
+    setIsBankDetailsCollapsed(true);
+    setIsProjectCollapsed(true);
   };
 
   const handleNext = (route) => {
+    collapseAll();
+    switch (route) {
+      case '/personal':
+        setIsPersonalCollapsed(false);
+        break;
+      case '/bankDetails':
+        setIsBankDetailsCollapsed(false);
+        break;
+      case '/project':
+        setIsProjectCollapsed(false);
+        break;
+      default:
+        break;
+    }
+    navigate(route);
+  };
+
+  const handlePrevious = (route) => {
+    collapseAll();
+    switch (route) {
+      case '/kyc':
+        setIsKYCCollapsed(false);
+        break;
+      case '/personal':
+        setIsPersonalCollapsed(false);
+        break;
+      case '/bankDetails':
+        setIsBankDetailsCollapsed(false);
+        break;
+      default:
+        break;
+    }
     navigate(route);
   };
 
@@ -107,7 +153,43 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   //   navigate('/kyc');
   // }, []);
 
+  // New changes start here ---------------------------------------------
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const projectNamesRes = await axios.get('http://localhost:5000/api/project-names');
+        const labourCategoriesRes = await axios.get('http://localhost:5000/api/labour-categories');
+        const departmentsRes = await axios.get('http://localhost:5000/api/departments');
+        const workingHoursRes = await axios.get('http://localhost:5000/api/working-hours');
+        setProjectNames(projectNamesRes.data);
+        setLabourCategories(labourCategoriesRes.data);
+        setDepartments(departmentsRes.data);
+        setWorkingHours(workingHoursRes.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchDesignations = async () => {
+      if (formData.department) {
+        try {
+          const designationsRes = await axios.get(`http://localhost:5000/api/designations/${formData.department}`);
+          setDesignations(designationsRes.data);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    };
+
+    fetchDesignations();
+  }, [formData.department]);
+
+  // New changes end here ----------------------------------
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -131,15 +213,47 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
+  // const startCamera = async () => {
+  //   try {
+  //     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  //     videoRef.current.srcObject = stream;
+  //     setStream(stream);
+  //   } catch (err) {
+  //     console.error("Error accessing camera: ", err);
+  //   }
+  // };
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
-      setStream(stream);
+      // Define video constraints for better compatibility
+      const constraints = {
+        video: {
+          facingMode: 'user' // Use 'environment' for the rear camera
+        }
+      };
+
+      // Check if the browser supports getUserMedia
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoRef.current.srcObject = stream;
+        setStream(stream);
+      } else {
+        console.error("getUserMedia is not supported by this browser.");
+      }
     } catch (err) {
       console.error("Error accessing camera: ", err);
+      // Log detailed error information for troubleshooting
+      if (err.name === 'NotAllowedError') {
+        console.error("Permission denied. Please allow camera access in your browser settings.");
+      } else if (err.name === 'NotFoundError') {
+        console.error("No camera found on the device.");
+      } else if (err.name === 'NotReadableError') {
+        console.error("Unable to access the camera. It might be in use by another application.");
+      } else {
+        console.error("Unknown error: ", err);
+      }
     }
   };
+
 
   const capturePhoto = () => {
     const canvas = canvasRef.current;
@@ -187,6 +301,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       projectName,
       labourCategory,
       department,
+      designation,
       workingHours,
       contractorName,
       contractorNumber
@@ -216,6 +331,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       labourCategory,
       department,
       workingHours,
+      designation,
       contractorName,
       contractorNumber
     });
@@ -275,15 +391,42 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const renderRequiredAsterisk = (isRequired) => {
     return isRequired ? <span style={{ color: "red" }}> *</span> : null;
   };
-  const getBulletColor = () => {
-    if (formType === "kyc") {
-      return kycCompleted ? '#20C305' : '#FFBF00';
-    } else if (formType === "project") {
-      return projectCompleted ? '#20C305' : '#FFBF00';
-    } else {
-      return '#FFBF00';
-    }
+
+  const kycRequiredFields = ['labourOwnership', 'uploadAadhaarFront', 'uploadAadhaarBack', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber',];
+  const personalRequiredFields = ['dateOfJoining', 'address', 'pincode', 'taluka', 'district', 'village', 'state', 'emergencyContact', 'photoSrc'];
+  const bankDetailsRequiredFields = ['bankName', 'branch', 'accountNumber', 'ifscCode'];
+  const projectRequiredFields = ['contractorName', 'contractorNumber', 'projectName', 'labourCategory', 'department', 'workingHours', 'designation'];
+
+  // Check if all required fields are filled
+  const isFormComplete = (form, requiredFields) => {
+    return requiredFields.every(field => form[field] !== '');
   };
+
+  const checkKycFormCompletion = () => isFormComplete(formData, kycRequiredFields);
+  const checkPersonalFormCompletion = () => isFormComplete(formData, personalRequiredFields);
+  const checkBankDetailsFormCompletion = () => isFormComplete(formData, bankDetailsRequiredFields);
+  const checkProjectFormCompletion = () => isFormComplete(formData, projectRequiredFields);
+
+  useEffect(() => {
+    setKycCompleted(checkKycFormCompletion());
+    setPersonalCompleted(checkPersonalFormCompletion());
+    setBankDetailsCompleted(checkBankDetailsFormCompletion());
+    setProjectCompleted(checkProjectFormCompletion());
+  }, [formData]);
+
+  const getBulletColor = (isCompleted) => {
+    return isCompleted ? '#20C305' : '#FFBF00';
+  };
+  // const getBulletColor = () => {
+  //   if (formType === "kyc") {
+  //     return kycCompleted ? '#20C305' : '#FFBF00';
+  //   } else if (formType === "project") {
+  //     return projectCompleted ? '#20C305' : '#FFBF00';
+  //   } else {
+  //     return '#FFBF00';
+  //   }
+  // };
+
   const handleDateChange = (e) => {
     const selectedDate = new Date(e.target.value);
     const today = new Date();
@@ -297,15 +440,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     } else {
       setErrorMessage('');
     }
-    setDateOfBirth(e.target.value);
+    setDateOfBirth({ ...formData, dateOfBirth: e.target.value });
   };
 
 
   const validateForm = () => {
     const requiredFields = [
-      'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber', 'gender', 'dateOfJoining',
-      'address', 'pincode', 'taluka', 'district', 'village', 'state',
-      'emergencyContact', 'bankName', 'branch', 'accountNumber', 'ifscCode',
+      // 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber', 'gender', 'dateOfJoining',
+      // 'address', 'pincode', 'taluka', 'district', 'village', 'state',
+      // 'emergencyContact', 'bankName', 'branch', 'accountNumber', 'ifscCode',
     ];
 
     for (const field of requiredFields) {
@@ -315,25 +458,46 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       }
     }
 
-    if (!formData.village) {
-      toast.warn("Village field is empty. Please consider filling it.");
-    }
+    // if (!formData.village) {
+    //   toast.warn("Village field is empty. Please consider filling it.");
+    // }
 
     return true;
   };
 
 
-  const base64ToBlob = (base64, mimeType) => {
-    const byteString = atob(base64.split(',')[1]);
-    const arrayBuffer = new ArrayBuffer(byteString.length);
-    const intArray = new Uint8Array(arrayBuffer);
-
-    for (let i = 0; i < byteString.length; i++) {
-      intArray[i] = byteString.charCodeAt(i);
+  const base64ToBlob = (base64String, mimeType = 'application/octet-stream') => {
+    const byteCharacters = atob(base64String.split(',')[1]);
+    const byteArrays = [];
+  
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+      const slice = byteCharacters.slice(offset, offset + 512);
+      const byteNumbers = new Array(slice.length);
+  
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+  
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
     }
-
-    return new Blob([intArray], { type: mimeType });
+  
+    const blob = new Blob(byteArrays, { type: mimeType });
+    return blob;
   };
+  
+
+  // const base64ToBlob = (base64, mimeType) => {
+  //   const byteString = atob(base64.split(',')[1]);
+  //   const arrayBuffer = new ArrayBuffer(byteString.length);
+  //   const intArray = new Uint8Array(arrayBuffer);
+
+  //   for (let i = 0; i < byteString.length; i++) {
+  //     intArray[i] = byteString.charCodeAt(i);
+  //   }
+
+  //   return new Blob([intArray], { type: mimeType });
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -342,6 +506,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     setLoading(true);
 
     try {
+      const { data: { nextID } } = await axios.get('http://localhost:5000/labours/next-id');
+      setNextID(nextID);
+
       const formDataToSend = new FormData();
 
       Object.keys(formData).forEach(key => {
@@ -365,6 +532,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
         formDataToSend.append('photoSrc', photoBlob, 'captured_photo.jpg');
       }
 
+      formDataToSend.append('labourID', nextID); 
+
       const response = await axios.post('http://localhost:5000/labours', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -376,7 +545,17 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       }
 
       console.log('Form submission response:', response.data);
-      setPopupMessage('Your details have been successfully submitted. Thanks!');
+      // setPopupMessage(`Your details have been successfully submitted. Your Labour ID is ${nextID}. Thanks!`);
+      setPopupMessage(
+        <div style={{ lineHeight: '1' }}>
+          <p>Your details have been successfully submitted.</p>
+          <p>
+            Your Labour ID is <span style={{ fontSize: '1.5em', color: '#007bff', fontWeight: 700 }}>{nextID}</span>.
+          </p>
+          <p>Thanks!</p>
+        </div>
+      );
+
       setPopupType('success');
       setSaved(true);
       // toast.success('Form submitted successfully!');
@@ -396,7 +575,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     }
     setTimeout(() => {
       setSaved(false);
-    }, 9000);
+    }, 12000);
     // console.log(userData);
   };
 
@@ -640,11 +819,16 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   };
 
 
+  const handleAccountNumberChange = (e) => {
+    // Remove non-numeric characters from input
+    const cleanedValue = e.target.value.replace(/\D/g, '');
+    setFormData({ ...formData, accountNumber: cleanedValue });
+  };
+
   return (
     <Box p={{ paddingRight: 3 }}>
       <div className="onboarding-form-container">
         <ToastContainer />
-       
         <SearchBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -652,16 +836,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
           searchResults={searchResults}
           handleSelectLabour={handleSelectLabour}
         />
-
         <form className="onboarding-form" onSubmit={handleSubmit}>
           <ul>
             <li>
               <div className="title" onClick={toggleKYCCollapse}>
                 <PersonOutlineIcon />
-                <span className="bullet" style={{ color: getBulletColor() }}>&#8226;</span>
-
+                <span className="bullet" style={{ color: getBulletColor(kycCompleted) }}>&#8226;</span>
                 <Link to="/kyc" className="sidebar-link">
-                  <span className="mains">KYC</span>
+                  <span className="mainsName">Kyc</span>
                   <div className="detail-icons1">
                     {isKYCCollapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
                   </div>
@@ -674,23 +856,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                   {formType === "kyc" && (
                     <>
                       <div className="labour-adhaar">
-                        <div className="labour-ownership">
-                          <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
-                            Labour Ownership {renderRequiredAsterisk(true)}
-                          </InputLabel>
-                          <div id="select-container">
-                            <select
-                              id="labourOwnership"
-                              className="select-wrapper"
-                              name="labourOwnership"
-                              required
-                              value={formData.labourOwnership || ''}
-                              onChange={(e) => setFormData({ ...formData, labourOwnership: e.target.value })} >
-                              <option value="VJ" style={{ width: 'calc(100% - 20px)' }}>VJ</option>
-                              <option value="Contractor" style={{ width: 'calc(100% - 20px)' }}>Contractor</option>
-                            </select>
-                          </div>
-                        </div>
+
 
                         {loading && <Loading />}
                         <div className="project-field">
@@ -714,6 +880,24 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                       </div>
 
                       <div className="name-contact">
+                        <div className="labour-ownership">
+                          <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
+                            Labour Ownership {renderRequiredAsterisk(true)}
+                          </InputLabel>
+                          <div id="select-container">
+                            <select
+                              id="labourOwnership"
+                              className="select-wrapper"
+                              name="labourOwnership"
+                              required
+                              value={formData.labourOwnership || ''}
+                              onChange={(e) => setFormData({ ...formData, labourOwnership: e.target.value })} >
+                              <option value="VJ" style={{ width: 'calc(100% - 20px)' }}>VJ</option>
+                              <option value="Contractor" style={{ width: 'calc(100% - 20px)' }}>Contractor</option>
+                            </select>
+                          </div>
+                        </div>
+
                         <div className="name">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                             Full Name{renderRequiredAsterisk(true)}
@@ -727,6 +911,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           />
                         </div>
 
+
+                      </div>
+
+                      <div className="birth-aadhaar">
                         <div className="adharNumber">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                             Aadhaar Number {renderRequiredAsterisk(true)}
@@ -741,9 +929,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             {newError && <span style={{ color: 'red', display: 'flex' }}>{newError}</span>}
                           </div>
                         </div>
-                      </div>
 
-                      <div className="birth-aadhaar">
                         <div className="date">
                           <div className="birth-date">
                             <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
@@ -753,16 +939,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               className="date-input"
                               type="date"
                               value={formData.dateOfBirth}
-                              onChange={(e) => {
-                                setDateOfBirth(e.target.value);
-                                handleDateChange(e);
-                              }}
+                              onChange={handleDateChange}
                               max="2006-01-01"
                               required />
                             {errorMessage && <div style={{ color: 'red' }}>{errorMessage}</div>}
                           </div>
                         </div>
+                      </div>
 
+                      <div className="birth-aadhaar">
                         <div className="contact">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                             Contact Number{renderRequiredAsterisk(true)}
@@ -774,22 +959,21 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           />
                           {error && <span style={{ color: 'red', display: 'flex' }}>{error}</span>}
                         </div>
-                      </div>
-
-                      <div className="gender">
-                        <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
-                          Gender{renderRequiredAsterisk(true)}
-                        </InputLabel>
-                        <div className="gender-input">
-                          <select
-                            id="gender"
-                            name="gender"
-                            required
-                            value={formData.gender}
-                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                          </select>
+                        <div className="gender">
+                          <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
+                            Gender{renderRequiredAsterisk(true)}
+                          </InputLabel>
+                          <div className="gender-input">
+                            <select
+                              id="gender"
+                              name="gender"
+                              required
+                              value={formData.gender}
+                              onChange={(e) => setFormData({ ...formData, gender: e.target.value })}>
+                              <option value="male">Male</option>
+                              <option value="female">Female</option>
+                            </select>
+                          </div>
                         </div>
                       </div>
                       <div className="navigationBut">
@@ -804,22 +988,22 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
             <li>
               <div className="title" onClick={togglePersonalCollapse}>
                 <EditNoteIcon />
-                <span className="bullet" style={{ color: getBulletColor() }}>&#8226;</span>
+                <span className="bullet" style={{ color: getBulletColor(personalCompleted) }}>&#8226;</span>
 
                 <Link to="/personal" className="sidebar-link">
 
-                  <span className="mains">Personal</span>
+                  <span className="mainsName">Personal</span>
                   <div className="detail-icons2">
                     {isPersonalCollapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
                   </div>
                 </Link>
               </div>
-              <div className={`collapsible-content ${isPersonalCollapsed ? 'collapsed' : ''}`}>
+                <div className={`collapsible-content ${isPersonalCollapsed ? 'collapsed' : ''}`}>
 
-                <div className="form-body">
+                  <div className="form-body">
 
-                  {formType === "personal" && (
-                    <>
+                    {formType === "personal" && (
+                      <>
                       <div className="locations">
                         <div className="joining-date">
                           <InputLabel
@@ -859,7 +1043,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                         </div>
                       </div>
 
-                      
+
                       {loading && <Loading />}
                       <div className="locations">
                         <div className="personal-pincode-field">
@@ -1005,20 +1189,21 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           </div>
                           <div className="button-container" style={{ marginTop: '10px' }}>
                             {!stream && !photoSrc && (
-                              <button onClick={startCamera} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
+                              <button type="button" onClick={startCamera} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
                                 Start Camera<CameraAltIcon />
                               </button>
                             )}
                             {stream && !photoSrc && (
-                              <button onClick={capturePhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
+                              <button type="button" onClick={capturePhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
                                 Capture Photo<CameraAltIcon />
                               </button>
                             )}
                             {!stream && photoSrc && (
-                              <button onClick={repeatPhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
+                              <button type="button" onClick={repeatPhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
                                 Repeat Photo<CameraAltIcon />
                               </button>
                             )}
+                            {/* <input type="file" name="" accept="image/*" capture="user" id=""/> */}
                           </div>
                         </div>
                         <input
@@ -1032,12 +1217,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             return { ...prevFormData, photoInput: e.target.value }
                           })}
                         />
-                        <div className="navigation-buttons">
-                          <button onClick={() => handlePrevious('/kyc')}>Previous</button>
-                          <button onClick={() => handleNext('/bankDetails')} style={{ marginLeft: "10px" }}>Next</button>
-                        </div>
-                      </div>
 
+                      </div>
+                      <div className="navigation-buttons">
+                        <button onClick={() => handlePrevious('/kyc')}>Previous</button>
+                        <button onClick={() => handleNext('/bankDetails')} style={{ marginLeft: "10px" }}>Next</button>
+                      </div>
                     </>
                   )}
                 </div>
@@ -1048,9 +1233,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
               <div className="title" onClick={toggleBankDetailsCollapse}>
 
                 <AccountBalanceIcon />
-                <span className="bullet" style={{ color: getBulletColor() }}>&#8226;</span>
+                <span className="bullet" style={{ color: getBulletColor(bankDetailsCompleted) }}>&#8226;</span>
                 <Link to="/bankDetails" className="sidebar-link">
-                  <span className="mains">BankDetails</span>
+                  <span className="mainsName">Bank Details</span>
                   <div className="detail-icons">
                     {isBankDetailsCollapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
                   </div>
@@ -1063,7 +1248,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                       <div className="locations">
                         <div className="bankDetails-field">
                           <InputLabel id="bank-name-label" sx={{ color: "black" }}>
-                            Bank Name{renderRequiredAsterisk(true)}
+                            Bank Name
                           </InputLabel>
                           <input
                             type="text"
@@ -1077,7 +1262,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
                         <div className="bankDetails-field">
                           <InputLabel id="branch-label" sx={{ color: "black" }}>
-                            Branch{renderRequiredAsterisk(true)}
+                            Branch
                           </InputLabel>
                           <input
                             type="text"
@@ -1093,7 +1278,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                       <div className="locations">
                         <div className="bankDetails-field">
                           <InputLabel id="account-number-label" sx={{ color: "black" }}>
-                            Account Number{renderRequiredAsterisk(true)}
+                            Account Number
                           </InputLabel>
                           <input
                             type="text"
@@ -1101,13 +1286,28 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             name="accountNumber"
                             required
                             value={formData.accountNumber || ''}
-                            onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
+                            onChange={handleAccountNumberChange}
+                            onKeyDown={(e) => {
+                              // Allow only numeric inputs and specific control keys (e.g., Backspace, Delete)
+                              if (
+                                !(
+                                  (e.key >= '0' && e.key <= '9') || // Allow numbers
+                                  e.key === 'Backspace' ||
+                                  e.key === 'Delete' ||
+                                  e.key === 'ArrowLeft' ||
+                                  e.key === 'ArrowRight' ||
+                                  e.key === 'Tab'
+                                )
+                              ) {
+                                e.preventDefault();
+                              }
+                            }}
                           />
                         </div>
 
                         <div className="bankDetails-field">
                           <InputLabel id="ifsc-label" sx={{ color: "black" }}>
-                            IFSC code{renderRequiredAsterisk(true)}
+                            IFSC code
                           </InputLabel>
                           <input
                             type="text"
@@ -1120,12 +1320,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                         </div>
                       </div>
 
-                      <div className="bankDetails-field">
+                      {/* <div className="bankDetails-field">
                         <InputLabel id="id-card-label" sx={{ color: "black" }}>
                           Id Proof{renderRequiredAsterisk(true)}
                         </InputLabel>
                         <input type="file" onChange={() => { }} required />
-                      </div>
+                      </div> */}
                       <div className="navigationBut">
                         <button onClick={() => handlePrevious('/personal')}>Previous</button>
                         <button onClick={() => handleNext('/project')} style={{ marginLeft: "10px" }}>Next</button>
@@ -1139,10 +1339,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
             <li>
               <div className="title" onClick={toggleProjectCollapse}>
                 <AssignmentIcon />
-                <span className="bullet" style={{ color: getBulletColor(formStatus.project) }}>&#8226;</span>
+                <span className="bullet" style={{ color: getBulletColor(projectCompleted) }}>&#8226;</span>
 
                 <Link to="/project" className="sidebar-link">
-                  <span className="mains">Project</span>
+                  <span className="mainsName">Project</span>
                   <div className="detail-icons3">
                     {isProjectCollapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
                   </div>
@@ -1183,7 +1383,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                         </div>
                         <div className="locations">
                           <div className="project-field">
-                            <InputLabel id="project-name-label" sx={{ color: "black" }}>
+                            <InputLabel id="project-name-label" sx={{ color: 'black' }}>
                               Project Name{renderRequiredAsterisk(true)}
                             </InputLabel>
                             <div className="gender-input">
@@ -1194,14 +1394,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                                 required
                               >
-                                <option value="" disabled selected>Select a project</option>
-                                <option value="YashOne Infinitee">YashOne Infinitee</option>
-                                <option value="New Test Project">New Test Project</option>
+                                <option value="" disabled>Select a project</option>
+                                {projectNames.map(project => (
+                                  <option key={project.id} value={project.Business_Unit}>{project.Business_Unit}</option>
+                                ))}
                               </select>
                             </div>
                           </div>
                           <div className="project-field">
-                            <InputLabel id="labour-category-label" sx={{ color: "black" }}>
+                            <InputLabel id="labour-category-label" sx={{ color: 'black' }}>
                               Labour Category{renderRequiredAsterisk(true)}
                             </InputLabel>
                             <div className="gender-input">
@@ -1212,17 +1413,17 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
                                 required
                               >
-                                <option value="" disabled selected>Select a Labour Category</option>
-                                <option value="Skilled">Skilled</option>
-                                <option value="Semi-Skilled">Semi-Skilled</option>
-                                <option value="Unskilled">Unskilled</option>
+                                <option value="" disabled>Select a Labour Category</option>
+                                {labourCategories.map(category => (
+                                  <option key={category.Id} value={category.Description}>{category.Description}</option>
+                                ))}
                               </select>
                             </div>
                           </div>
                         </div>
                         <div className="locations">
                           <div className="project-field">
-                            <InputLabel id="department-label" sx={{ color: "black" }}>
+                            <InputLabel id="department-label" sx={{ color: 'black' }}>
                               Department{renderRequiredAsterisk(true)}
                             </InputLabel>
                             <div className="gender-input">
@@ -1233,20 +1434,36 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                                 required
                               >
-                                <option value="" disabled selected>Select a Department</option>
-                                <option value="Electrical">Electrical</option>
-                                <option value="Plumbing">Plumbing</option>
-                                <option value="CCA">CCA</option>
-                                <option value="EHCS">EHCS</option>
-                                <option value="Firefighting">Firefighting</option>
-                                <option value="MQC">MQC</option>
-                                <option value="FEP">FEP</option>
-                                <option value="E&C">E&C</option>
+                                <option value="" disabled>Select a Department</option>
+                                {departments.map(department => (
+                                  <option key={department.Id} value={department.Id}>{department.Description}</option>
+                                ))}
                               </select>
                             </div>
                           </div>
                           <div className="project-field">
-                            <InputLabel id="working-hours-label" sx={{ color: "black" }}>
+                            <InputLabel id="designation-label" sx={{ color: 'black' }}>
+                              Designation{renderRequiredAsterisk(true)}
+                            </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="designation"
+                                name="designation"
+                                value={formData.designation}
+                                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled>Select a Designation</option>
+                                {designations.map(designation => (
+                                  <option key={designation.id} value={designation.Description}>{designation.Description}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="locations">
+                          <div className="project-field">
+                            <InputLabel id="working-hours-label" sx={{ color: 'black' }}>
                               Working Hours{renderRequiredAsterisk(true)}
                             </InputLabel>
                             <div className="gender-input">
@@ -1257,9 +1474,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
                                 required
                               >
-                                <option value="" disabled selected>Select a Working Hours</option>
-                                <option value="8 hours">8 hours</option>
-                                <option value="9 hours">9 hours</option>
+                                <option value="" disabled>Select Working Hours</option>
+                                {workingHours.map(hours => (
+                                  <option key={hours.Id} value={hours.Shift_Name}>{hours.Shift_Name}</option>
+                                ))}
                               </select>
                             </div>
                           </div>
@@ -1281,14 +1499,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               className="btn btn-preview"
                             > Preview
                           </button>
-                            <button
-                              type="button"
-                              id="save"
-                              className={`btn btn-save save-button ${saved ? 'saved' : ''}`}
-                              onClick={handleSubmit}
-                            >
-                              {saved ? <FaCheck className="icon" /> : 'Save Details'}
-                            </button>
+                              <button
+                                type="submit"
+                                id="save"
+                                className={`btn btn-save save-button ${saved ? 'saved' : ''}`}
+                                onClick={handleSubmit}
+                              >
+                                {saved ? <FaCheck className="icon" /> : 'Submit'}
+                              </button>
                           </div>
                         </div>
                       </div>
@@ -1297,25 +1515,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                 </div>
               </div>
             </li>
-            {/* 
-          <li>
-            <div className="form-section">
-              <div className="title" onClick={toggleAddUserCollapse}>
-                <PersonOutlineIcon />
-                <span className="bullet" style={{ color: getBulletColor() }}>&#8226;</span>
-                <Link to="/labourDetails" className="sidebar-link">
-                  <span className="mains">Labour Details</span>
-                  <div className="detail-icons1">
-                    {isLabourDetailsCollapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
-                  </div>
-                </Link>
-              </div>
 
-              <div className={`collapsible-content ${isLabourDetailsCollapsed ? 'collapsed' : ''}`}>
-                <LabourDetails userData={userData} handleChange={handleChange} handleSubmit={handleSubmit} isEdit={isEdit} />
-              </div>
-            </div>
-          </li> */}
 
 
 
@@ -1323,6 +1523,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
           </ul>
 
         </form>
+
         {saved && (
           <>
             <div className="overlay"></div>
@@ -1449,6 +1650,23 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
           height: 100%;
           background: rgba(0, 0, 0, 0.5);
           z-index: 999;
+        }
+        @media (min-width: 468px) {
+          .popup {
+            width: 300px; 
+          }
+        }
+      
+        @media (min-width: 1024px) {
+          .popup {
+            width: 300px; 
+          }
+        }
+      
+        @media (min-width: 1280px) {
+          .popup {
+            width: 300px; 
+          }
         }
       `}</style>
       </div>

@@ -32,12 +32,13 @@
     justify-content: space-around;
   }
   
-  .application-section {
-    cursor: pointer;
-
+  .application-section:hover {
+    /* cursor: pointer; */
+    border-radius: 20px;
   }
   
   .application-header {
+    margin-top: 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -46,12 +47,12 @@
     margin-bottom: 10px;
     height: 40px;
     border-radius: 10px;
-    /* background: #446699; */
+    /* background: #0caee9; */
     /* box-shadow: 0 0 10px 5px rgba(255, 0, 0, 0.5);  */
     transition: box-shadow 0.3s ease; 
   }
   .application-header:hover {
-    background: rgb(147, 116, 170);
+    background: #0caee9;
     /* box-shadow: 0 0 20px 10px rgb(147, 116, 170);  */
   }
   
@@ -63,13 +64,13 @@
     align-items: center;
     height: 40px;
     border-radius: 10px;
-    /* background: #446699; */
+    /* background: #0caee9; */
     /* box-shadow: 0 0 10px 5px rgba(255, 0, 0, 0.5);  */
     transition: box-shadow 0.3s ease; 
   }
   
   .profile-icon:hover {
-    background: rgb(147, 116, 170);
+    background: #0caee9;
     /* box-shadow: 0 0 20px 10px rgb(147, 116, 170);   */
   }
 .profile-icon1{
@@ -80,12 +81,12 @@
   margin-bottom: 10px;
   height: 40px;
   border-radius: 10px;
-  /* background: #446699; */
+  /* background: #0caee9; */
   /* box-shadow: 0 0 10px 5px rgba(255, 0, 0, 0.5);  */
   transition: box-shadow 0.3s ease; 
 }
 .profile-icon1:hover {
-  background: rgb(147, 116, 170);
+  background: #0caee9;
   /* box-shadow: 0 0 20px 10px rgb(147, 116, 170);  */
 }
 
@@ -102,8 +103,8 @@
   }
   
   .application-list li:hover {
-    color: rgb(206, 238, 65);
-    background: rgb(147, 116, 170);
+    /* color: rgb(206, 238, 65); */
+    background: #0caee9;
     /* box-shadow: 0 0 20px 10px rgb(147, 116, 170);    */
     border-radius: 20px
   }
@@ -112,7 +113,7 @@
   
     color: rgb(251, 255, 7);
 
-    margin-left: 20px;
+    margin-left: 10px;
     margin-right: 5px;
     font-size: 19px;
   }
@@ -122,11 +123,9 @@
     cursor: pointer;
     color: white;
     font-weight: 600;
+    /* margin-left: 10px; */
   }
-  
-  .mains:hover {
-    color: #81d554;
-  }
+ 
   
   .sidebar-link {
     color: white;
@@ -135,14 +134,16 @@
     width: 100%;
   }
   
-  .sidebar-link:hover {
-    color: #81d554;
-  }
-  
+ 
   .vjlogo {
     width: 190px; 
   }
+  .img-white-fill {
+    filter: brightness(0) invert(1); /* This will make the image appear white */
+    height: 30px;
+  }
 
+  
 
   /* Medium <= 992px */
   
@@ -176,15 +177,14 @@
     /* margin-left: 20px; */
 }
 .mains {
-  font-family: "Rubik", sans-serif;
+  /* font-family: "Rubik", sans-serif; */
   cursor: pointer;
-  color: black;
+  color: white;
   font-weight: 600;
 }
 .sidebar-link {
-  color: black;
+  color: white;
   text-decoration: none;
-  /* margin-left: 20px; */
 }
 }
 /* Small <= 768px */
@@ -227,7 +227,7 @@
     align-items: center;
     display: flex;
   }
- 
+
 }
 
 

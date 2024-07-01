@@ -1,0 +1,202 @@
+ <div className="locations">
+                          <div className="project-field">
+                            <InputLabel id="project-name-label" sx={{ color: 'black' }}>
+                              Project Name
+        </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="projectName"
+                                name="projectName"
+                                value={formData.projectName}
+                                onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled>Select a project</option>
+                                {projectNames.map(project => (
+                                  <option key={project.id} value={project.Business_Unit}>{project.Business_Unit}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="project-field">
+                            <InputLabel id="labour-category-label" sx={{ color: 'black' }}>
+                              Labour Category
+        </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="labourCategory"
+                                name="labourCategory"
+                                value={formData.labourCategory}
+                                onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled>Select a Labour Category</option>
+                                {labourCategories.map(category => (
+                                  <option key={category.Id} value={category.Description}>{category.Description}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="locations">
+                          <div className="project-field">
+                            <InputLabel id="department-label" sx={{ color: 'black' }}>
+                              Department
+        </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="department"
+                                name="department"
+                                value={formData.department}
+                                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled>Select a Department</option>
+                                {departments.map(department => (
+                                  <option key={department.Id} value={department.Id}>{department.Description}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="project-field">
+                            <InputLabel id="designation-label" sx={{ color: 'black' }}>
+                              Designation
+        </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="designation"
+                                name="designation"
+                                value={formData.designation}
+                                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled>Select a Designation</option>
+                                {designations.map(designation => (
+                                  <option key={designation.id} value={designation.Description}>{designation.Description}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="locations">
+                          <div className="project-field">
+                            <InputLabel id="working-hours-label" sx={{ color: 'black' }}>
+                              Working Hours
+        </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="workingHours"
+                                name="workingHours"
+                                value={formData.workingHours}
+                                onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled>Select Working Hours</option>
+                                {workingHours.map(hours => (
+                                  <option key={hours.Id} value={hours.Shift_Name}>{hours.Shift_Name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="buttons-container">
+                          <div className="navigation-buttons">
+
+
+
+
+
+
+
+
+
+
+
+      ----------------  old fields harcoded  code is below
+
+
+                            <div className="locations">
+                          <div className="project-field">
+                            <InputLabel id="project-name-label" sx={{ color: "black" }}>
+                              Project Name{renderRequiredAsterisk(true)}
+                            </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="projectName"
+                                name="projectName"
+                                value={formData.projectName}
+                                onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled selected>Select a project</option>
+                                <option value="YashOne Infinitee">YashOne Infinitee</option>
+                                <option value="New Test Project">New Test Project</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="project-field">
+                            <InputLabel id="labour-category-label" sx={{ color: "black" }}>
+                              Labour Category{renderRequiredAsterisk(true)}
+                            </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="labourCategory"
+                                name="labourCategory"
+                                value={formData.labourCategory}
+                                onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled selected>Select a Labour Category</option>
+                                <option value="Skilled">Skilled</option>
+                                <option value="Semi-Skilled">Semi-Skilled</option>
+                                <option value="Unskilled">Unskilled</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="locations">
+                          <div className="project-field">
+                            <InputLabel id="department-label" sx={{ color: "black" }}>
+                              Department{renderRequiredAsterisk(true)}
+                            </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="department"
+                                name="department"
+                                value={formData.department}
+                                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled selected>Select a Department</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Plumbing">Plumbing</option>
+                                <option value="CCA">CCA</option>
+                                <option value="EHCS">EHCS</option>
+                                <option value="Firefighting">Firefighting</option>
+                                <option value="MQC">MQC</option>
+                                <option value="FEP">FEP</option>
+                                <option value="E&C">E&C</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="project-field">
+                            <InputLabel id="working-hours-label" sx={{ color: "black" }}>
+                              Working Hours{renderRequiredAsterisk(true)}
+                            </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="workingHours"
+                                name="workingHours"
+                                value={formData.workingHours}
+                                onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
+                                required
+                              >
+                                <option value="" disabled selected>Select a Working Hours</option>
+                                <option value="8 hours">8 hours</option>
+                                <option value="9 hours">9 hours</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="buttons-container">
+                          <div className="navigation-buttons">

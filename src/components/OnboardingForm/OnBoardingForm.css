@@ -82,7 +82,10 @@
     background-color: #f0f0f0;
 }
 
-
+.mainsName{
+  color: black;
+  font-weight: 600;
+}
 
    
 .search-bar {
@@ -141,7 +144,6 @@
     border-width: 12px;
   }
 }
-
 
 
 
@@ -257,6 +259,7 @@
   font-size: 16px;
   width: 250px;
   color: #B5B5B5;
+  border-color: #efb5f4;
   font-weight: 500;
   height: 20px; /* Adjust height as needed */
 }
@@ -382,6 +385,7 @@
 display: inline;
 }
 .buttons-container{
+  /* height: 13vh; */
   margin-top: 4rem;
   display: flex;
   justify-content: flex-start;
@@ -424,8 +428,8 @@ display: inline;
   height: 40px;
   border: none;
   border-radius: 50%;
-  background: red;
-  color: #fff;
+  background: transparent;
+  color: red;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -434,7 +438,8 @@ display: inline;
 }
 
 #close-button:hover {
-  background: #ff4646;
+  background: red;
+  color:white;
 }
 
 /* Close button icon */
@@ -642,10 +647,13 @@ select option{
     padding: 15px;
     margin-left: 27px;
   } */
+
+
+/*   
   .search-bar {
     padding: 15px;
   }
-
+ */
 
 
   .search-bar button {
@@ -659,7 +667,7 @@ select option{
   }
 
   .onboarding-form button {
-    font-size: 14px;
+    font-size: 12px;
     width: 110px;
   }
   .labour-adhaar,
@@ -690,18 +698,22 @@ hr{
 .detail-icons{
   display: inline;
   padding-left: 17vh;
+  color: black;
 }
 .detail-icons1{
   display: inline;
   padding-left: 27.8vh;
+  color: black;
 }
 .detail-icons2{
   display: inline;
   padding-left: 21.4vh;
+  color: black;
 }
 .detail-icons3{
   display: inline;
-  padding-left: 23.8vh;
+  padding-left: 23.2vh;
+  color: black;
 }
 
 .video-container, .photo-container {
@@ -723,7 +735,12 @@ hr{
 
 .buttons-container {
   /* margin-top: 4rem; */
+  /* display: flex;
+  flex-direction: column; */
+  height: 13vh;
+  margin-top: 4rem;
   display: flex;
+  justify-content: flex-start;
   flex-direction: column;
 }
 .navigationBut{
@@ -741,6 +758,7 @@ hr{
   box-sizing: border-box;
 } */
 .save-btn{
+  width: 90vw;
   float: right;
   display: flex;
   /* margin-top: 20%; */
@@ -763,7 +781,7 @@ hr{
   margin-right: 15vw;
 }
 .video-container {
-  margin-bottom: 6px
+  margin-bottom: 16px
 }
 }
 
@@ -791,9 +809,9 @@ hr{
   } */
 
 
-  .search-bar {
+  /* .search-bar {
     margin-bottom: 30px;
-  }
+  } */
 
   /* .search-bar input[type="text"] {
     width: calc(100% - 180px);
@@ -894,7 +912,7 @@ display: none
     color: #B5B5B5;
     font-weight: 500;
     height: 18px;
-    /* border-color: #efb5f4; */
+    border-color: #efb5f4;
     box-shadow: 0 0 5px rgb(138 147 235 / 54%);
   }
   
@@ -935,7 +953,7 @@ display: none
     color: #B5B5B5;
     font-weight: 300;
     height: 43px;
-    /* border-color: #efb5f4; */
+    border-color: #efb5f4;
     box-shadow: 0 0 5px rgb(138 147 235 / 54%);
   }
   

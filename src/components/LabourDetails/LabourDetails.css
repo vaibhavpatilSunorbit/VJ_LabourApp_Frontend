@@ -1,4 +1,4 @@
-General Styles
+/* General Styles */
 .search-form {
   display: flex;
   align-items: center;
@@ -14,9 +14,18 @@ General Styles
   height: 56px;
 }
 
-.approve-button {
-  background-color: aquamarine;
-  color: bisque;
+/* Button Styles */
+.approve-button, .reject-button {
+  margin-left: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.approve-button:hover {
+  background-color: #388e3c;
+}
+
+.reject-button:hover {
+  background-color: #d32f2f;
 }
 
 .custom-button {
@@ -31,19 +40,6 @@ General Styles
   cursor: pointer;
 }
 
-.approve-button, .reject-button {
-  margin-left: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.approve-button:hover {
-  background-color: #388e3c;
-}
-
-.reject-button:hover {
-  background-color: #d32f2f;
-}
-
 /* Modal Styles */
 .modal {
   position: absolute;
@@ -52,7 +48,7 @@ General Styles
   transform: translate(-50%, -50%);
   background-color: white;
   border-radius: 8px;
-  width: 60%;
+  width: 70%;
   max-width: 600px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
@@ -86,12 +82,28 @@ General Styles
   .approve-button, .reject-button {
     margin-left: 0;
     margin-top: 8px;
+    width: 100%;
+  }
+
+  .custom-button {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px;
   }
 }
 
+/* styles.css */
+
+
+
 @media (max-width: 480px) {
-  .search-form {
+  /* .search-form {
     padding: 10px;
+  } */
+
+  .MuiButton-root {
+    /* width: 100%;  */
+    margin-bottom: 8px;
   }
 
   .search-button {
@@ -119,6 +131,7 @@ General Styles
     width: 160px;
   }
 }
+
 
 
 

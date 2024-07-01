@@ -18,8 +18,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import TableComponent from "./TableComponent";
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
-const accessPages = ["Labour Onboarding Form", "Labour Details"];
+const accessPages = ["Application", "Labour Details", "Add User", "Apprved Labours"];
 
 const AddUser = () => {
   const [showModal, setShowModal] = useState(false);
@@ -38,6 +40,8 @@ const AddUser = () => {
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     fetchUsers();
@@ -222,7 +226,7 @@ const AddUser = () => {
   };
 
   return (
-    <Box px={5} py={2}>
+    <Box py={2} px={2} sx={{ width: isMobile ? '90vw' : 'auto' }}>
       <div className="MainDash">
         <Typography variant="h4" mb={3}>
           Add User
@@ -235,11 +239,11 @@ const AddUser = () => {
               color: '#8236BC',
               marginRight: '10px',
               '&:hover': {
-                backgroundColor: '#1976d2', 
+                backgroundColor: '#bfa7d7',
               },
             }}
             onClick={() => handleShowModal(false)}
-            style={{ marginBottom: 20 }}
+            // style={{ marginBottom: 20 }}
           >
             Add User
           </Button>
@@ -264,9 +268,9 @@ const AddUser = () => {
     right: 8,
     top: 8,
     color: (theme) => theme.palette.grey[500],
-    backgroundColor: '#f21e1ec7',  
+    backgroundColor: '',  
     '&:hover': {
-      backgroundColor: 'darkred', 
+      backgroundColor: 'red', 
     },
   }}
 >
@@ -329,6 +333,7 @@ const AddUser = () => {
                 variant="outlined"
                 error={!!errors.userType}
                 helperText={errors.userType}
+                sx={{ margin: '20px 0' }}
               >
                 <MenuItem value="admin">Admin</MenuItem>
                 <MenuItem value="user">User</MenuItem>
@@ -371,7 +376,14 @@ const AddUser = () => {
               <Button
                 onClick={handleFormSubmit}
                 variant="contained"
-                color="primary"
+                 sx={{
+                          backgroundColor: '#EFE6F7',
+                          color: '#8236BC',
+                          marginRight: '10px',
+                          '&:hover': {
+                            backgroundColor: '#bfa7d7',
+                          },
+                        }}
               >
                 {userData.id ? "Update" : "Add"}
               </Button>

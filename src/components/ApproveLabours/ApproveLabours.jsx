@@ -3,11 +3,15 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button } from '@mui/material';
 import Loading from "../Loading/Loading"; 
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const ApproveLabour = ({ refresh }) => {
   const [approvedLabours, setApprovedLabours] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     fetchApprovedLabours();
@@ -28,7 +32,7 @@ const ApproveLabour = ({ refresh }) => {
 
  
   return (
-    <Box px={5} py={2}>
+    <Box  py={2} px={2} sx={{ width: isMobile ? '90vw' : 'auto' }}>
       <Typography variant="h4" mb={3}>
         Approved Labours
       </Typography>
@@ -38,7 +42,16 @@ const ApproveLabour = ({ refresh }) => {
       ) : error ? (
         <Typography color="error">{error}</Typography>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper}  sx={{
+          height: '77vh',
+          overflowX: 'auto',
+          backgroundColor: '#fff',
+          color: 'rgba(0, 0, 0, 0.87)',
+          transition: 'box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+          borderRadius: 4,
+          boxShadow: '0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12)',
+          width: '100%',
+        }}>
           <Table>
             <TableHead>
               <TableRow>

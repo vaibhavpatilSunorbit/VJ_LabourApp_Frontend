@@ -1,12 +1,12 @@
 *{
+  margin: 0px;
   font-family: 'Roboto', sans-serif;
 }
 
 body, html {
-  /* height: 100%; */
   font-family: 'Roboto', sans-serif;
   /* font-family: 'Poppins', sans-serif; */
-  /* overflow-y: hidden; */
+  overflow-y: hidden;
 }
 
 .app {
@@ -59,8 +59,9 @@ input[type="submit"] {
 
 .close_icon {
   color: red;
-  margin-left: 170px;
-  margin-top: 10px;
+  /* margin-left: 170px; */
+  /* margin-top: 10px; */
+  height: 17px;
   cursor: pointer;
 }
 
@@ -69,8 +70,8 @@ input[type="submit"] {
   grid-template-columns: 240px 1fr;
   grid-template-rows: auto 1fr;
   grid-template-areas:
-      'header header'
-      'sidebar main';
+  'sidebar header header header'
+  'sidebar main main main';
   height: 100vh;
 }
 
@@ -123,12 +124,18 @@ input[type="submit"] {
 }
 
 .sidebar-title {
+  height: 70px;
   display: flex;
   /* padding: 0px 0px 0px 0px; */
-  margin-bottom: -20px;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-top: 30px
+  /* margin-bottom: -20px; */
+  flex-direction: row;
+  /* align-items: flex-start; */
+background-color: #F3F3F3;
+justify-content: space-evenly;
+align-items: center;
+margin-top: 0px;
+font-size: 20px;
+font-weight: 700;
 }
 
 .sidebar-title > span {
@@ -136,9 +143,12 @@ input[type="submit"] {
 }
 
 .sidebar-brand {
-  margin-top: 0px;
+  display: flex;
+  /* justify-content: space-evenly; */
+  align-items: center;
+  /* margin-top: 0px;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 700; */
 }
 
 .sidebar-list {
@@ -176,6 +186,7 @@ input[type="submit"] {
 .vjlogo{
   width: 170px;
   height: 65px;
+  padding-left: 20px;
  
 }
 /* End Sidebar  */
@@ -275,7 +286,7 @@ p{
 .title {
   border-bottom: 1px solid #DFDFDF;
   display: flex;
-  gap: 15px;
+  /* gap: 15px; */
   align-items: flex-end;
   height: 50px;
   padding-bottom: 10px;
@@ -388,9 +399,9 @@ select {
       'main';
   }
 
-  /* #sidebar {
+  #sidebar {
     display: none;
-  } */
+  }
 
   .menu-icon {
     display: inline;
@@ -400,8 +411,8 @@ select {
     display: inline;
   }
   .menu-icon {
-    /* display: inline; */
-    display: none
+    display: inline;
+    /* display: none */
 }
 .form-body {
   /* padding-left: 15px; */
@@ -437,10 +448,11 @@ select {
     display: none;
   }
   .search-form {
+    width: 90vw;
     flex-direction: column;
     align-items: stretch;
     gap: 0px;
-    margin-left: 0px;
+    margin-left: 5%;
 }
 
 }
@@ -453,19 +465,20 @@ select {
   }
   .vjlogo{
     width: 100px;
-    margin-top: 0px;
+    /* margin-top: 10px; */
     height: 40px;
   }
   .onboarding-form-container ul  {
-    margin-left: -10px;
-    width: 100%
+    margin-left: -20px;
+    /* width: 100% */
   }
   .custom-select-wrapper {
     width: 100%;
   }
+  
 }
 
-@media screen and (min-width: 1200px) {
+@media screen and (min-width: 800px) {
 .title{
   display: none;
 }
@@ -473,7 +486,7 @@ select {
 
 
 
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 800px) {
 
 /* .onboarding-form-container {
 display: none
@@ -493,7 +506,7 @@ display: none
 }
 
 .collapsible-content:not(.collapsed) {
-  max-height: 1000px; /* Adjust as needed */
+  max-height: 1500px; /* Adjust as needed */
   /* margin-bottom: 30px; */
   margin-left: 10%;
 }
