@@ -274,6 +274,8 @@ import profileIcon5 from '../../images/approval.png';
 import VJLogo from "../../images/VJlogo-1-removebg.png";
 import { SidebarData } from '../../Data';
 import { useUser } from '../../UserContext/UserContext';
+import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
+// import CancelIcon from '@mui/icons-material/Cancel';
 
 function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
   const { userAccessPages } = useUser();
@@ -291,7 +293,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
     <aside id="sidebar" className={openSidebarToggle ? "sidebar-responsive" : ""}>
       <div className='sidebar-title'>
         <img src={VJLogo} className="vjlogo" alt="logo" />
-        <span className='icon close_icon' onClick={OpenSidebar} style={{ marginLeft: '55px', marginRight: '30px' }}>X</span>
+        <span className='icon close_icon' onClick={OpenSidebar} style={{ marginLeft: '55px', marginRight: '30px' }}><ArrowCircleLeftIcon/></span>
       </div>
       <div className="application-section">
         <div className="application-header" onClick={toggleCollapse}>

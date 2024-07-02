@@ -85,7 +85,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     labourCategory: '',
     department: '',
     workingHours: '',
-    designation: ''
+    designation: '',
+    title: '',
+    nationality: 'INDIAN',
+    maritalStatus: '',
+    paymentMode: 'NEFT',
+    companyName: '',
+    employeeType: 'PERMANENT',
+    currentStatus: 'WORKING',
+    seatingOffice: 'SITE LABOUR',
   });
 
   const [formStatus, setFormStatus] = useState({
@@ -304,7 +312,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       designation,
       workingHours,
       contractorName,
-      contractorNumber
+      contractorNumber,
     } = labour;
 
     setFormData({
@@ -333,7 +341,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       workingHours,
       designation,
       contractorName,
-      contractorNumber
+      contractorNumber,
+      title: '',
+      nationality: 'INDIAN',
+      maritalStatus: '',
+      paymentMode: 'NEFT',
+      companyName: '',
+      employeeType: 'PERMANENT',
+      currentStatus: 'WORKING',
+      seatingOffice: 'SITE LABOUR',
     });
 
     setSearchQuery('');
@@ -469,23 +485,23 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const base64ToBlob = (base64String, mimeType = 'application/octet-stream') => {
     const byteCharacters = atob(base64String.split(',')[1]);
     const byteArrays = [];
-  
+
     for (let offset = 0; offset < byteCharacters.length; offset += 512) {
       const slice = byteCharacters.slice(offset, offset + 512);
       const byteNumbers = new Array(slice.length);
-  
+
       for (let i = 0; i < slice.length; i++) {
         byteNumbers[i] = slice.charCodeAt(i);
       }
-  
+
       const byteArray = new Uint8Array(byteNumbers);
       byteArrays.push(byteArray);
     }
-  
+
     const blob = new Blob(byteArrays, { type: mimeType });
     return blob;
   };
-  
+
 
   // const base64ToBlob = (base64, mimeType) => {
   //   const byteString = atob(base64.split(',')[1]);
@@ -532,7 +548,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
         formDataToSend.append('photoSrc', photoBlob, 'captured_photo.jpg');
       }
 
-      formDataToSend.append('labourID', nextID); 
+      formDataToSend.append('labourID', nextID);
 
       const response = await axios.post('http://localhost:5000/labours', formDataToSend, {
         headers: {
@@ -898,6 +914,30 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           </div>
                         </div>
 
+                        <div className="gender">
+                          <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
+                            Title
+                          </InputLabel>
+                          <div className="gender-input">
+                            <select
+                              id="title"
+                              name="title"
+                              required
+                              value={formData.title}
+                              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            >
+                              <option value="">Select Title</option>
+                              <option value="mr">MR.</option>
+                              <option value="mrs">MRS.</option>
+                              <option value="miss">MISS.</option>
+                              <option value="ms">MS.</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+
+                      <div className="birth-aadhaar">
                         <div className="name">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                             Full Name{renderRequiredAsterisk(true)}
@@ -911,10 +951,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           />
                         </div>
 
-
-                      </div>
-
-                      <div className="birth-aadhaar">
                         <div className="adharNumber">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                             Aadhaar Number {renderRequiredAsterisk(true)}
@@ -929,7 +965,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             {newError && <span style={{ color: 'red', display: 'flex' }}>{newError}</span>}
                           </div>
                         </div>
+                      </div>
 
+
+                      <div className="birth-aadhaar">
                         <div className="date">
                           <div className="birth-date">
                             <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
@@ -945,9 +984,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             {errorMessage && <div style={{ color: 'red' }}>{errorMessage}</div>}
                           </div>
                         </div>
-                      </div>
 
-                      <div className="birth-aadhaar">
+
+
+
                         <div className="contact">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                             Contact Number{renderRequiredAsterisk(true)}
@@ -959,6 +999,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           />
                           {error && <span style={{ color: 'red', display: 'flex' }}>{error}</span>}
                         </div>
+                      </div>
+
+                      <div className="birth-aadhaar">
                         <div className="gender">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                             Gender{renderRequiredAsterisk(true)}
@@ -998,12 +1041,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                   </div>
                 </Link>
               </div>
-                <div className={`collapsible-content ${isPersonalCollapsed ? 'collapsed' : ''}`}>
+              <div className={`collapsible-content ${isPersonalCollapsed ? 'collapsed' : ''}`}>
 
-                  <div className="form-body">
+                <div className="form-body">
 
-                    {formType === "personal" && (
-                      <>
+                  {formType === "personal" && (
+                    <>
                       <div className="locations">
                         <div className="joining-date">
                           <InputLabel
@@ -1174,6 +1217,44 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                         </div>
                       </div>
 
+                      <div className="em-contact-block">
+                        <div className="bankDetails-field">
+                          <InputLabel id="branch-label" sx={{ color: "black" }}>
+                            Nationality
+                           </InputLabel>
+                          <input
+                            type="text"
+                            id="nationality"
+                            name="nationality"
+                            required
+                            value={formData.nationality || 'INDIAN'}
+                            onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
+                          />
+                        </div>
+                        <div className="gender">
+                          <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
+                            Marital Status
+                         </InputLabel>
+                          <div className="gender-input">
+                            <select
+                              id="maritalStatus"
+                              name="maritalStatus"
+                              required
+                              value={formData.maritalStatus}
+                              onChange={(e) => setFormData({ ...formData, maritalStatus: e.target.value })}
+                            >
+                              <option value="">Select Marital Status</option>
+                              <option value="married">MARRIED</option>
+                              <option value="unmarried">UNMARRIED</option>
+                              <option value="divorce">DIVORCE</option>
+                              <option value="widowed">WIDOWED</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+
+
                       <div className="location-photo-label">
                         <InputLabel
                           id="personal-emcontact-label"
@@ -1316,6 +1397,22 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             required
                             value={formData.ifscCode || ''}
                             onChange={(e) => setFormData({ ...formData, ifscCode: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="locations">
+                        <div className="bankDetails-field">
+                          <InputLabel id="branch-label" sx={{ color: "black" }}>
+                            Payment Mode
+                           </InputLabel>
+                          <input
+                            type="text"
+                            id="paymentMode"
+                            name="paymentMode"
+                            required
+                            value={formData.paymentMode || 'NEFT'}
+                            onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
                           />
                         </div>
                       </div>
@@ -1481,7 +1578,76 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               </select>
                             </div>
                           </div>
+                          <div className="gender">
+                            <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
+                              Company Name{renderRequiredAsterisk(true)}
+                            </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="companyName"
+                                name="companyName"
+                                required
+                                value={formData.companyName}
+                                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}>
+                                <option value="">Select Company Name</option>
+                                <option value="sakalpContractsPvtLtd">SANKALP CONTRACTS PRIVATE LIMITED</option>
+                                <option value="vilasJavdekarEcoShelterPvtLtd">VILAS JAVDEKAR ECO SHELTERS PRIVATE LIMITED</option>
+                                <option value="vilasJavdekarGreenscapsDevloperLLP">VILAS JAVDEKAR GREENSCAPE DEVELOPERS LLP</option>
+                                <option value="vilasJavdekarInfiniteeDeveloperPvtLtd">VILAS JAVDEKARS INFINITEE DEVELOPERS PVT.LTD.</option>
+                              </select>
+                            </div>
+                          </div>
                         </div>
+
+                        <div className="locations">
+                          <div className="gender">
+                            <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
+                              Employee Type{renderRequiredAsterisk(true)}
+                            </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="employeeType"
+                                name="employeeType"
+                                required
+                                value={formData.employeeType || 'PERMANENT'}
+                                onChange={(e) => setFormData({ ...formData, employeeType: e.target.value })}>
+                                <option value="PERMANENT">Permanent</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="bankDetails-field">
+                            <InputLabel id="branch-label" sx={{ color: "black" }}>
+                              Current Status
+                           </InputLabel>
+                            <input
+                              type="text"
+                              id="currentStatus"
+                              name="currentStatus"
+                              required
+                              value={formData.currentStatus || 'WORKING'}
+                              onChange={(e) => setFormData({ ...formData, currentStatus: e.target.value })}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="locations">
+                          <div className="bankDetails-field">
+                            <InputLabel id="branch-label" sx={{ color: "black" }}>
+                              Seating Office
+                           </InputLabel>
+                            <input
+                              type="text"
+                              id="seatingOffice"
+                              name="seatingOffice"
+                              required
+                              value={formData.seatingOffice || 'SITE LABOUR'}
+                              onChange={(e) => setFormData({ ...formData, seatingOffice: e.target.value })}
+                            />
+                          </div>
+                        </div>
+
+
+
                         <div className="buttons-container">
                           <div className="navigation-buttons">
                             {/* <button onClick={() => handleNext('/project')} style={{marginLeft: '10px'}}>Next</button> */}
@@ -1499,14 +1665,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               className="btn btn-preview"
                             > Preview
                           </button>
-                              <button
-                                type="submit"
-                                id="save"
-                                className={`btn btn-save save-button ${saved ? 'saved' : ''}`}
-                                onClick={handleSubmit}
-                              >
-                                {saved ? <FaCheck className="icon" /> : 'Submit'}
-                              </button>
+                            <button
+                              type="submit"
+                              id="save"
+                              className={`btn btn-save save-button ${saved ? 'saved' : ''}`}
+                              onClick={handleSubmit}
+                            >
+                              {saved ? <FaCheck className="icon" /> : 'Submit'}
+                            </button>
                           </div>
                         </div>
                       </div>
