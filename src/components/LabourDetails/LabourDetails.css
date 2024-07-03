@@ -2,7 +2,7 @@
 .search-form {
   display: flex;
   align-items: center;
-  margin-bottom: 16px;
+  /* margin-bottom: 16px; */
 }
 
 .search-bar {
@@ -13,6 +13,7 @@
 .search-button {
   height: 56px;
 }
+
 
 /* Button Styles */
 .approve-button, .reject-button {
@@ -48,7 +49,7 @@
   transform: translate(-50%, -50%);
   background-color: white;
   border-radius: 8px;
-  width: 70%;
+  width: 80%;
   max-width: 600px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
@@ -64,10 +65,17 @@
 
 /* Responsive Styles */
 @media (max-width: 768px) {
-  .search-form {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  /* .search-form {
+    width: 96vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0px;
+    margin-left: 7%;
+  } */
+.table-cell {
+  padding: 5px !important;
+}
 
   .search-bar {
     margin-right: 0;
@@ -92,8 +100,35 @@
   }
 }
 
-/* styles.css */
 
+.custom-pagination {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  padding-right: 16px; 
+  display: flex;
+  justify-content: space-between;
+}
+
+.custom-pagination .MuiTablePagination-spacer {
+  display: none;
+}
+
+.custom-pagination .MuiTablePagination-toolbar {
+  padding-left: 0 !important;
+}
+
+.custom-pagination .MuiTablePagination-actions {
+  margin-left: 0 !important;
+}
+.custom-pagination .MuiSelect-select-MuiInputBase-input{
+  min-width: none;
+}
+.custom-pagination .MuiSelect-select{
+  padding: 2px ;
+}
+.custom-pagination .MuiTableCell-root{
+  padding: 5px;
+}
 
 
 @media (max-width: 480px) {

@@ -20,6 +20,7 @@ import axios from "axios";
 import TableComponent from "./TableComponent";
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import {API_BASE_URL} from "../../Data"
 
 const accessPages = ["Application", "Labour Details", "Add User", "Apprved Labours"];
 
@@ -50,7 +51,7 @@ const AddUser = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/users/getAllUsers", {
+      const response = await axios.get(API_BASE_URL +`/users/getAllUsers`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -159,7 +160,7 @@ const AddUser = () => {
             const token = localStorage.getItem("token");
             const endpoint = userData.id ? "updateUser" : "registerUser";
             const method = userData.id ? "put" : "post";
-            const url = `http://localhost:5000/users/${endpoint}`;
+            const url = API_BASE_URL +`/users/${endpoint}`;
 
             const payload = {
                 ...userData,
@@ -226,9 +227,9 @@ const AddUser = () => {
   };
 
   return (
-    <Box py={2} px={2} sx={{ width: isMobile ? '90vw' : 'auto' }}>
+    <Box py={2} px={1} sx={{ width: isMobile ? '96vw' : 'auto' }}>
       <div className="MainDash">
-        <Typography variant="h4" mb={3}>
+        <Typography variant="h5" mb={1}>
           Add User
         </Typography>
         <div className="Main-div">

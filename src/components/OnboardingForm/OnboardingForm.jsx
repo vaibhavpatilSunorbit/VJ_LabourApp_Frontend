@@ -11,7 +11,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { FaArrowLeft, FaEye, FaCheck } from 'react-icons/fa';
@@ -19,7 +19,7 @@ import { v4 as uuidv4 } from "uuid";
 import SearchBar from "../SarchBar/SearchBar";
 import Loading from "../Loading/Loading";
 import Sidebar from "../Sidebar/Sidebar";
-
+import { API_BASE_URL } from "../../Data"
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -87,13 +87,13 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     workingHours: '',
     designation: '',
     title: '',
-    nationality: 'INDIAN',
-    maritalStatus: '',
-    paymentMode: 'NEFT',
     companyName: '',
-    employeeType: 'PERMANENT',
-    currentStatus: 'WORKING',
-    seatingOffice: 'SITE LABOUR',
+    maritalStatus: '',
+    // nationality: 'Indian',
+    // paymentMode: 'NEFT',
+    // employeeType: 'PERMANENT',
+    // currentStatus: 'WORKING',
+    // seatingOffice: 'SITE LABOUR',
   });
 
   const [formStatus, setFormStatus] = useState({
@@ -166,10 +166,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const projectNamesRes = await axios.get('http://localhost:5000/api/project-names');
-        const labourCategoriesRes = await axios.get('http://localhost:5000/api/labour-categories');
-        const departmentsRes = await axios.get('http://localhost:5000/api/departments');
-        const workingHoursRes = await axios.get('http://localhost:5000/api/working-hours');
+        const projectNamesRes = await axios.get(API_BASE_URL + `/api/project-names`);
+        const labourCategoriesRes = await axios.get(API_BASE_URL + `/api/labour-categories`);
+        const departmentsRes = await axios.get(API_BASE_URL + `/api/departments`);
+        const workingHoursRes = await axios.get(API_BASE_URL + `/api/working-hours`);
         setProjectNames(projectNamesRes.data);
         setLabourCategories(labourCategoriesRes.data);
         setDepartments(departmentsRes.data);
@@ -186,7 +186,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     const fetchDesignations = async () => {
       if (formData.department) {
         try {
-          const designationsRes = await axios.get(`http://localhost:5000/api/designations/${formData.department}`);
+          const designationsRes = await axios.get(API_BASE_URL + `/api/designations/${formData.department}`);
           setDesignations(designationsRes.data);
         } catch (err) {
           console.error(err);
@@ -206,7 +206,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       return;
     }
     try {
-      const response = await axios.get(`http://localhost:5000/labours/search?q=${searchQuery}`);
+      const response = await axios.get(API_BASE_URL + `/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
     } catch (error) {
       console.error('Error searching:', error);
@@ -313,6 +313,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       workingHours,
       contractorName,
       contractorNumber,
+      title,
+      maritalStatus,
+      companyName,
     } = labour;
 
     setFormData({
@@ -342,11 +345,11 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       designation,
       contractorName,
       contractorNumber,
-      title: '',
-      nationality: 'INDIAN',
-      maritalStatus: '',
+      title,
+      maritalStatus,
+      companyName,
+      nationality: 'Indian',
       paymentMode: 'NEFT',
-      companyName: '',
       employeeType: 'PERMANENT',
       currentStatus: 'WORKING',
       seatingOffice: 'SITE LABOUR',
@@ -462,9 +465,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
   const validateForm = () => {
     const requiredFields = [
-      // 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber', 'gender', 'dateOfJoining',
-      // 'address', 'pincode', 'taluka', 'district', 'village', 'state',
-      // 'emergencyContact', 'bankName', 'branch', 'accountNumber', 'ifscCode',
+      'labourOwnership', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber',
+      'dateOfJoining', 'address', 'pincode', 'taluka', 'district', 'village', 'state', 'emergencyContact', 'photoSrc',
+      'bankName', 'branch', 'accountNumber', 'ifscCode','contractorName', 'contractorNumber', 'projectName', 'labourCategory', 'department', 'workingHours', 'designation'
     ];
 
     for (const field of requiredFields) {
@@ -522,10 +525,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     setLoading(true);
 
     try {
-      const { data: { nextID } } = await axios.get('http://localhost:5000/labours/next-id');
+      const { data: { nextID } } = await axios.get(API_BASE_URL + `/labours/next-id`);
       setNextID(nextID);
 
       const formDataToSend = new FormData();
+
+      console.log(formData);
 
       Object.keys(formData).forEach(key => {
         formDataToSend.append(key, formData[key]);
@@ -550,7 +555,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
       formDataToSend.append('labourID', nextID);
 
-      const response = await axios.post('http://localhost:5000/labours', formDataToSend, {
+      const response = await axios.post(API_BASE_URL + `/labours`, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -563,15 +568,27 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       console.log('Form submission response:', response.data);
       // setPopupMessage(`Your details have been successfully submitted. Your Labour ID is ${nextID}. Thanks!`);
       setPopupMessage(
-        <div style={{ lineHeight: '1' }}>
-          <p>Your details have been successfully submitted.</p>
-          <p>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-evenly',
+            alignItems: 'center',
+            textAlign: 'center',
+            lineHeight: '1.5',
+            padding: '20px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '10px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your details have been successfully submitted.</p>
+          <p style={{ fontSize: '1.2em', color: '#343a40' }}>
             Your Labour ID is <span style={{ fontSize: '1.5em', color: '#007bff', fontWeight: 700 }}>{nextID}</span>.
           </p>
-          <p>Thanks!</p>
+          <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
         </div>
       );
-
       setPopupType('success');
       setSaved(true);
       // toast.success('Form submitted successfully!');
@@ -828,12 +845,78 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     setFormData({ ...formData, emergencyContact: value });
     validateContactNumber(value);
   };
+
+
   const handleAadhaarNumberChange = (e) => {
     const { value } = e.target;
     setFormData({ ...formData, aadhaarNumber: value });
     validateAadhaarNumber(value);
   };
 
+  // const handleAadhaarNumberChange = async (e) => {
+  //   const { value } = e.target;
+  //   setFormData({ ...formData, aadhaarNumber: value });
+
+  //   try {
+  //     const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: value });
+
+  //     if (response.data.exists) {
+  //       toast.error('User has already filled the form with this Aadhaar number.');
+  //       setNewError('User has already filled the form with this Aadhaar number.');
+  //     } else {
+  //       setNewError('');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error checking Aadhaar number:', error);
+  //     setNewError('Error checking Aadhaar number. Please try again.');
+  //   }
+  // };
+
+  // const uploadAadhaarImageToSurepass = async (file) => {
+  //   const formData = new FormData();
+  //   formData.append('file', file);
+
+  //   try {
+  //     const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //             'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
+  //           }
+  //         });
+    
+  //         const { data } = response;
+  //         console.log(data);
+  //         if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
+  //           const ocrFields = data.data.ocr_fields[0];
+    
+  //           // Check if Aadhaar number already exists
+  //           const existingAadhaarCheck = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
+    
+  //           if (existingAadhaarCheck.data.exists) {
+  //             toast.error('User has already filled the form with this Aadhaar number.');
+  //             setNewError('User has already filled the form with this Aadhaar number.');
+  //           } else {
+  //             setNewError('');
+  //             setFormData({
+  //               aadhaarNumber: ocrFields.aadhaar_number.value,
+  //               name: ocrFields.full_name.value,
+  //               dateOfBirth: ocrFields.dob.value,
+  //               gender: ocrFields.gender.value,
+  //               village: formData.village,
+  //               taluka: formData.taluka,
+  //               district: formData.district,
+  //               state: formData.state,
+  //               pincode: formData.pincode
+  //             });
+  //           }
+  //         } else {
+  //           setNewError('Error reading Aadhaar details from image.');
+  //         }
+  //       } catch (error) {
+  //         console.error('Error uploading Aadhaar image to Surepass:', error);
+  //         setNewError('Error uploading Aadhaar image. Please try again.');
+  //       }
+  //     };
 
   const handleAccountNumberChange = (e) => {
     // Remove non-numeric characters from input
@@ -853,7 +936,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
           handleSelectLabour={handleSelectLabour}
         />
         <form className="onboarding-form" onSubmit={handleSubmit}>
-          <ul>
+          <ul style={{ marginLeft: "-20px" }}>
             <li>
               <div className="title" onClick={toggleKYCCollapse}>
                 <PersonOutlineIcon />
@@ -877,8 +960,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                         {loading && <Loading />}
                         <div className="project-field">
                           <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
-                            Upload Aadhaar Front
-                        </InputLabel>
+                            Upload Aadhaar Front {renderRequiredAsterisk(true)}
+                          </InputLabel>
                           <div className="input-with-icon">
                             <input type="file" name="uploadAadhaarFront" onChange={handleFileChange} accept="image/*" required />
                             <DocumentScannerIcon className="input-icon" />
@@ -887,7 +970,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                         <div className="project-field">
                           <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
                             Upload Aadhaar Back
-                        </InputLabel>
+                          </InputLabel>
                           <div className="input-with-icon">
                             <input type="file" name="uploadAadhaarBack" onChange={handleFileChange} accept="image/*" required />
                             <DocumentScannerIcon className="input-icon" />
@@ -908,6 +991,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               required
                               value={formData.labourOwnership || ''}
                               onChange={(e) => setFormData({ ...formData, labourOwnership: e.target.value })} >
+                              <option value="">Select Labour Ownership</option>
                               <option value="VJ" style={{ width: 'calc(100% - 20px)' }}>VJ</option>
                               <option value="Contractor" style={{ width: 'calc(100% - 20px)' }}>Contractor</option>
                             </select>
@@ -916,7 +1000,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
                         <div className="gender">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
-                            Title
+                            Title {renderRequiredAsterisk(true)}
                           </InputLabel>
                           <div className="gender-input">
                             <select
@@ -961,9 +1045,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               name="aadhaarNumber"
                               value={formData.aadhaarNumber || ''}
                               onChange={handleAadhaarNumberChange}
-                              required />
-                            {newError && <span style={{ color: 'red', display: 'flex' }}>{newError}</span>}
+                              required
+                            />
                           </div>
+                          <ToastContainer />
                         </div>
                       </div>
 
@@ -1221,20 +1306,20 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                         <div className="bankDetails-field">
                           <InputLabel id="branch-label" sx={{ color: "black" }}>
                             Nationality
-                           </InputLabel>
+                          </InputLabel>
                           <input
                             type="text"
                             id="nationality"
                             name="nationality"
                             required
-                            value={formData.nationality || 'INDIAN'}
+                            value={formData.nationality || 'Indian'}
                             onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
                           />
                         </div>
                         <div className="gender">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
-                            Marital Status
-                         </InputLabel>
+                            Marital Status {renderRequiredAsterisk(true)}
+                          </InputLabel>
                           <div className="gender-input">
                             <select
                               id="maritalStatus"
@@ -1405,7 +1490,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                         <div className="bankDetails-field">
                           <InputLabel id="branch-label" sx={{ color: "black" }}>
                             Payment Mode
-                           </InputLabel>
+                          </InputLabel>
                           <input
                             type="text"
                             id="paymentMode"
@@ -1617,8 +1702,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           </div>
                           <div className="bankDetails-field">
                             <InputLabel id="branch-label" sx={{ color: "black" }}>
-                              Current Status
-                           </InputLabel>
+                              Current Status {renderRequiredAsterisk(true)}
+                            </InputLabel>
                             <input
                               type="text"
                               id="currentStatus"
@@ -1633,8 +1718,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                         <div className="locations">
                           <div className="bankDetails-field">
                             <InputLabel id="branch-label" sx={{ color: "black" }}>
-                              Seating Office
-                           </InputLabel>
+                              Seating Office {renderRequiredAsterisk(true)}
+                            </InputLabel>
                             <input
                               type="text"
                               id="seatingOffice"
@@ -1658,13 +1743,13 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               style={{ marginRight: '10px' }}
                               className="btn btn-previous"
                             > Previous
-                           </button>
+                            </button>
                             <button
                               type="button"
                               onClick={openModal}
                               className="btn btn-preview"
                             > Preview
-                          </button>
+                            </button>
                             <button
                               type="submit"
                               id="save"
@@ -1700,7 +1785,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                 <span className={`icon ${popupType}`}>
                   {popupType === 'success' ? '✔' : '✘'}
                 </span> Ok
-            </button>
+              </button>
             </div>
           </>
         )}

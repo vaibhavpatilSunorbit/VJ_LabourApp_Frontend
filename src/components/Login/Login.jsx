@@ -230,7 +230,7 @@ import "./Login.css";
 import { v4 as uuidv4 } from "uuid";
 import LogoImage from '../../images/VJlogo-1-removebg.png';
 import Sidebar from '../Sidebar/Sidebar';
-import { SidebarData } from '../../Data';
+import { SidebarData, API_BASE_URL } from '../../Data';
 
 const Login = () => {
   const { updateUser, userRole, setUserAccessPages ,userAccessPages } = useUser();
@@ -268,11 +268,11 @@ const Login = () => {
     };
 
     axios
-      .post('http://localhost:5000/users/loginUser', loginData)
+      .post(API_BASE_URL +`/users/loginUser`, loginData)
       .then((response) => {
         const userData = response.data.data;
         updateUser(userData); // Update user context with user data
-        setUserAccessPages(userData.accessPages); // Set user access pages in context
+        // setUserAccessPages(userData.accessPages); // Set user access pages in context
         setOpenPopup(true);
         setPopupMessage("Login successful!");
         setPopupSeverity("success");
@@ -307,7 +307,7 @@ const Login = () => {
     };
 
     axios
-      .post('http://localhost:5000/users/registerUser', signUpData)
+      .post(API_BASE_URL + `/users/registerUser`, signUpData)
       .then((response) => {
         setOpenPopup(true);
         setPopupMessage("Sign Up successful! Please log in.");
@@ -335,9 +335,9 @@ const Login = () => {
       {isLoading && <Loading />}
       <Container maxWidth="sm">
         <Paper className="login-paper">
-          <Grid container spacing={2} justifyContent="center" alignItems="center" direction="column">
+          <Grid container spacing={1} justifyContent="center" alignItems="center" direction="column">
             <Grid item>
-              <img src={LogoImage} alt="Logo" style={{ width: '250px', height: 'auto', marginBottom: '20px' }} />
+              <img src={LogoImage} alt="Logo" style={{ width: '250px', height: 'auto', }} />
             </Grid>
             <Grid item>
               <Typography variant="h5" component="h1" gutterBottom>
@@ -360,7 +360,7 @@ const Login = () => {
                 <Grid item xs={12} className="input-field">
                   <TextField label="Contact Number" variant="outlined" fullWidth value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} sx={{width: '270px'}}/>
                 </Grid>
-                <Grid item xs={12} className="input-field">
+                {/* <Grid item xs={12} className="input-field">
                   <FormControl fullWidth>
                     <InputLabel>User Type</InputLabel>
                     <Select value={userType} onChange={(e) => setUserType(e.target.value)} label="User Type"  sx={{width: '270px'}}>
@@ -368,7 +368,7 @@ const Login = () => {
                       <MenuItem value="user">User</MenuItem>
                     </Select>
                   </FormControl>
-                </Grid>
+                </Grid> */}
               </>
             )}
             <Grid item>
@@ -376,7 +376,7 @@ const Login = () => {
                 {isSignUp ? "Sign Up" : "Login"}
               </Button>
             </Grid>
-            <Grid item>
+            {/* <Grid item>
               <Typography variant="body2">
                 {isSignUp ? (
                   <span>
@@ -394,7 +394,7 @@ const Login = () => {
                   </span>
                 )}
               </Typography>
-            </Grid>
+            </Grid> */}
           </Grid>
         </Paper>
       </Container>

@@ -262,7 +262,7 @@
 
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -278,9 +278,11 @@ import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
 // import CancelIcon from '@mui/icons-material/Cancel';
 
 function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
-  const { userAccessPages } = useUser();
+  const { user } = useUser();
   const [isCollapsed, setIsCollapsed] = useState(true);
-
+  const sidebarRef = useRef(null);
+  
+console.log('userAccessPages',user.accessPages)
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
@@ -289,8 +291,22 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
     return isCompleted ? '#20C305' : '#FFBF00';
   };
 
+  const handleClickOutside = (event) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(event.target) && openSidebarToggle) {
+      OpenSidebar();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [openSidebarToggle]);
+
+
   return (
-    <aside id="sidebar" className={openSidebarToggle ? "sidebar-responsive" : ""}>
+    <aside ref={sidebarRef} id="sidebar" className={openSidebarToggle ? "sidebar-responsive" : ""}>
       <div className='sidebar-title'>
         <img src={VJLogo} className="vjlogo" alt="logo" />
         <span className='icon close_icon' onClick={OpenSidebar} style={{ marginLeft: '55px', marginRight: '30px' }}><ArrowCircleLeftIcon/></span>
@@ -318,7 +334,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
       </div>
 
       <div className="other-sections">
-        {SidebarData.filter(item => userAccessPages.includes(item.heading) && item.heading !== "Application").map((item, index) => (
+      {SidebarData.filter(item => (!user?.accessPages || user?.accessPages?.includes(item.heading))&& item.heading !== "Application").map((item, index) => (
           <div className="profile-icon1" key={index}>
             <img src={
               item.heading === "Add User" ? profileIcon3 :

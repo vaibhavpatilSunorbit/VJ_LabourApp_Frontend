@@ -287,6 +287,7 @@ import Loading from "../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
+import { API_BASE_URL } from "../../Data"
 
 const LabourDetails = ({ onApprove }) => {
   const [labours, setLabours] = useState([]);
@@ -300,6 +301,7 @@ const LabourDetails = ({ onApprove }) => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [tabValue, setTabValue] = useState(0);
   const theme = useTheme();
+  // const isMobile = useMediaQuery('(max-width: 600px)');
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
@@ -309,7 +311,7 @@ const LabourDetails = ({ onApprove }) => {
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/labours');
+      const response = await axios.get(API_BASE_URL + `/labours`);
       setLabours(response.data);
       setLoading(false);
     } catch (error) {
@@ -326,7 +328,7 @@ const LabourDetails = ({ onApprove }) => {
       return;
     }
     try {
-      const response = await axios.get(`http://localhost:5000/labours/search?q=${searchQuery}`);
+      const response = await axios.get(API_BASE_URL + `/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
     } catch (error) {
       console.error('Error searching:', error);
@@ -334,9 +336,10 @@ const LabourDetails = ({ onApprove }) => {
     }
   };
 
+
   const handleApprove = async (id) => {
     try {
-      const response = await axios.put(`http://localhost:5000/labours/approve/${id}`);
+      const response = await axios.put(API_BASE_URL + `/labours/approve/${id}`);
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
@@ -356,7 +359,7 @@ const LabourDetails = ({ onApprove }) => {
 
   const handleReject = async (id) => {
     try {
-      const response = await axios.put(`http://localhost:5000/labours/reject/${id}`);
+      const response = await axios.put(API_BASE_URL + `/labours/reject/${id}`);
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
@@ -375,7 +378,7 @@ const LabourDetails = ({ onApprove }) => {
 
   const openPopup = async (labour) => {
     try {
-      const response = await axios.get(`http://localhost:5000/labours/${labour.id}`);
+      const response = await axios.get(API_BASE_URL + `/labours/${labour.id}`);
       setSelectedLabour(response.data);
       setIsPopupOpen(true);
     } catch (error) {
@@ -403,6 +406,7 @@ const LabourDetails = ({ onApprove }) => {
     setPage(0);
   };
 
+
   const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
   const filteredLabours = displayLabours.filter(labour => {
@@ -416,16 +420,18 @@ const LabourDetails = ({ onApprove }) => {
   });
 
   return (
-    <Box py={2} pl={3} pr={1} sx={{ width: isMobile ? '87vw' : 'auto' }}>
-      <Typography variant="h4" mb={3}>
+    <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', }}>
+      {/* <Typography variant="h5" >
         Labour Details
-      </Typography>
+      </Typography> */}
 
-      <Box ml={-4}>
+      <Box ml={-1.5}>
         <SearchBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
+          searchResults={searchResults}
+          setSearchResults={setSearchResults}
           className="search-bar"
         />
       </Box>
@@ -433,105 +439,128 @@ const LabourDetails = ({ onApprove }) => {
 
 
       <Box
-  sx={{
-    width: "auto",
-    height: "auto",
-    bgcolor: "white",
-    marginBottom: "15px",
-    p: 1,
-    borderRadius: 2,
-    boxShadow: 3,
-    alignSelf: "flex-start",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-  }}
->
-  <Tabs
-    value={tabValue}
-    onChange={handleTabChange}
-    aria-label="tabs example"
-    sx={{
-      ".MuiTabs-indicator": {
-        display: "none",
-      },
-      minHeight: "auto",
-    }}
-  >
-    <Tab
-      label="Pending"
-      style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
-      sx={{
-        color: tabValue === 0 ? "white" : "black",
-        bgcolor: tabValue === 0 ? "#EFE6F7" : "transparent",
-        borderRadius: 1,
-        textTransform: "none",
-        fontWeight: "bold",
-        mr: 1,
-        minHeight: "auto",
-        minWidth: "auto",
-        // padding: "6px 12px",
-        "&:hover": {
-          bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
-        },
-      }}
-    />
-    <Tab
-      label="Approved"
-      style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
-      sx={{
-        color: tabValue === 1 ? "white" : "black",
-        bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "transparent",
-        borderRadius: 1,
-        textTransform: "none",
-        mr: 1,
-        fontWeight: "bold",
-        minHeight: "auto",
-        minWidth: "auto",
-        // padding: "6px 12px",
-        "&:hover": {
-          bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
-        },
-      }}
-    />
-    <Tab
-      label="Rejected"
-      style={{ color: tabValue === 2 ? "rgb(255, 100, 100)" : "black" }}
-      sx={{
-        color: tabValue === 2 ? "white" : "black",
-        bgcolor: tabValue === 2 ? "rgb(255, 229, 229)" : "transparent",
-        borderRadius: 1,
-        textTransform: "none",
-        fontWeight: "bold",
-        minHeight: "auto",
-        minWidth: "auto",
-        // padding: "6px 12px",
-        "&:hover": {
-          bgcolor: tabValue === 2 ? "rgb(255, 229, 229)" : "rgb(255, 229, 229)",
-        },
-      }}
-    />
-  </Tabs>
-  <TablePagination
-    rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-    count={filteredLabours.length}
-    rowsPerPage={rowsPerPage}
-    page={page}
-    onPageChange={handleChangePage}
-    onRowsPerPageChange={handleChangeRowsPerPage}
-  />
-</Box>
+        sx={{
+          width: "auto",
+          height: "auto",
+          bgcolor: "white",
+          marginBottom: "15px",
+          p: 1,
+          borderRadius: 2,
+          boxShadow: 3,
+          alignSelf: "flex-start",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          aria-label="tabs example"
+          sx={{
+            ".MuiTabs-indicator": {
+              display: "none",
+            },
+            minHeight: "auto",
+          }}
+        >
+          <Tab
+            label="Pending"
+            style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
+            sx={{
+              color: tabValue === 0 ? "white" : "black",
+              bgcolor: tabValue === 0 ? "#EFE6F7" : "transparent",
+              borderRadius: 1,
+              textTransform: "none",
+              fontWeight: "bold",
+              mr: 1,
+              minHeight: "auto",
+              minWidth: "auto",
+              // padding: "6px 12px",
+              "&:hover": {
+                bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
+              },
+            }}
+          />
+          <Tab
+            label="Approved"
+            style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
+            sx={{
+              color: tabValue === 1 ? "white" : "black",
+              bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "transparent",
+              borderRadius: 1,
+              textTransform: "none",
+              mr: 1,
+              fontWeight: "bold",
+              minHeight: "auto",
+              minWidth: "auto",
+              // padding: "6px 12px",
+              "&:hover": {
+                bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
+              },
+            }}
+          />
+          <Tab
+            label="Rejected"
+            style={{ color: tabValue === 2 ? "rgb(255, 100, 100)" : "black" }}
+            sx={{
+              color: tabValue === 2 ? "white" : "black",
+              bgcolor: tabValue === 2 ? "rgb(255, 229, 229)" : "transparent",
+              borderRadius: 1,
+              textTransform: "none",
+              fontWeight: "bold",
+              minHeight: "auto",
+              minWidth: "auto",
+              // padding: "6px 12px",
+              "&:hover": {
+                bgcolor: tabValue === 2 ? "rgb(255, 229, 229)" : "rgb(255, 229, 229)",
+              },
+            }}
+          />
+        </Tabs>
+        <TablePagination
+          className="custom-pagination"
+          rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+          count={filteredLabours.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Box>
 
-    
 
-      <TableContainer component={Paper} sx={{ mb: 3, overflowX: 'auto',  borderRadius: 2,
-    boxShadow: 3,maxHeight: 'calc(62vh - 64px)', '&::-webkit-scrollbar': {
-      width: '8px',},'&::-webkit-scrollbar-track': {backgroundColor: '#f1f1f1',
-    },'&::-webkit-scrollbar-thumb': { backgroundColor: '#888', borderRadius: '4px',},}}>
-        <Table sx={{ minWidth: 800,}}>
-          <TableHead>
-            <TableRow>
+
+      <TableContainer component={Paper} sx={{
+        mb: 6,
+        overflowX: 'auto',
+        borderRadius: 2,
+        boxShadow: 3,
+        maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
+        '&::-webkit-scrollbar': {
+          width: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          backgroundColor: '#f1f1f1',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: '#888',
+          borderRadius: '4px',
+        },
+      }}>
+        <Table sx={{ minWidth: 800 }} >
+          <TableHead >
+          <TableRow
+            sx={{
+              '& th': {
+                padding: '12px',
+                '@media (max-width: 600px)': {
+                  padding: '10px',
+                },
+              },
+            }}
+          >
               <TableCell>Sr No</TableCell>
               <TableCell>Name of Labour</TableCell>
               <TableCell>Project</TableCell>
@@ -547,7 +576,17 @@ const LabourDetails = ({ onApprove }) => {
               ? filteredLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               : filteredLabours
             ).map((labour, index) => (
-              <TableRow key={labour.id}>
+              <TableRow
+              key={labour.id}
+              sx={{
+                '& td': {
+                  padding: '12px',
+                  '@media (max-width: 600px)': {
+                    padding: '10px',
+                  },
+                },
+              }}
+            >
                 <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                 <TableCell>{labour.name}</TableCell>
                 <TableCell>{labour.projectName}</TableCell>
@@ -634,7 +673,7 @@ const LabourDetails = ({ onApprove }) => {
                     }}
                     onClick={() => openPopup(labour)}
                   > */}
-                  < RemoveRedEyeIcon  onClick={() => openPopup(labour)}/>
+                  < RemoveRedEyeIcon onClick={() => openPopup(labour)} />
                   {/* </Button> */}
                 </TableCell>
               </TableRow>
@@ -643,7 +682,7 @@ const LabourDetails = ({ onApprove }) => {
         </Table>
       </TableContainer>
 
-     
+
       <Modal
         open={isPopupOpen}
         onClose={closePopup}

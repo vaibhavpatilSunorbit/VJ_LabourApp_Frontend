@@ -24,7 +24,7 @@ function Header({OpenSidebar}) {
             {/* <img src={VJLogo} className="vjlogo" alt="logo"/> */}
             
         </div>
-        <div className='header-right' className="headericon">
+        <div className='header-right headericon' >
             <BsFillBellFill className='icon'/>
             <Tooltip title="Logout" arrow>
       <GrLogout className='icon' onClick={handleLogout} />

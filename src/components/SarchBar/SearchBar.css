@@ -2,8 +2,8 @@
     display: flex;
     gap: 30px;
     align-items: center;
-    margin-bottom: 16px;
-    margin-left: 35px
+    /* margin-bottom: 16px; */
+    margin-left: 20px
 }
 .search-input {
     width: 100%;
@@ -140,14 +140,18 @@
     width: calc(100% - 180px);
     padding: 15px;
   }
-  .search-form {
-    width: 90vw;
-    flex-direction: column;
-    align-items: stretch;
+  /* .search-form {
+    width: 96vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     gap: 0px;
-    margin-left: 20px;
-
+    margin-left: 7%;
+} */
+.search-bar button{
+  width: 30vw;
 }
+
  
   }
   
