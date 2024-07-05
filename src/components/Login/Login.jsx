@@ -337,7 +337,7 @@ const Login = () => {
         <Paper className="login-paper">
           <Grid container spacing={1} justifyContent="center" alignItems="center" direction="column">
             <Grid item>
-              <img src={LogoImage} alt="Logo" style={{ width: '250px', height: 'auto', }} />
+              <img src={LogoImage} alt="Logo" style={{ width: '230px', height: 'auto', }} />
             </Grid>
             <Grid item>
               <Typography variant="h5" component="h1" gutterBottom>

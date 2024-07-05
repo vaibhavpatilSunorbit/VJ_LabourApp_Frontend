@@ -22,7 +22,7 @@ import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {API_BASE_URL} from "../../Data"
 
-const accessPages = ["Application", "Labour Details", "Add User", "Apprved Labours"];
+const accessPages = ["Application", "Labour Details", "Add User", "Approved Labours"];
 
 const AddUser = () => {
   const [showModal, setShowModal] = useState(false);

@@ -120,7 +120,7 @@
     }
       
   .search-bar input[type="text"] {
-    width: calc(100% - 150px);
+    width: calc(100% - 0px);
     padding: 12px;
   }
 

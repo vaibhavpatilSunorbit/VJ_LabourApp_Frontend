@@ -26,7 +26,7 @@ function Header({OpenSidebar}) {
         </div>
         <div className='header-right headericon' >
             <BsFillBellFill className='icon'/>
-            <Tooltip title="Logout" arrow>
+               <Tooltip title="Logout" arrow>
       <GrLogout className='icon' onClick={handleLogout} />
     </Tooltip>
             <BsPersonCircle className='icon'/>

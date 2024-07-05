@@ -9,7 +9,9 @@
   height: 10vh;
   overflow-y: hidden;
 }
-
+.menu-icon {
+  cursor: pointer;
+}
 
 
 .logo-container {

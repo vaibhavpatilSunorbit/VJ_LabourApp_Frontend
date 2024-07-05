@@ -3,8 +3,8 @@ import { UilUniversity, UilUserPlus, UilFileAlt } from '@iconscout/react-unicons
 
 
 
-// export const API_BASE_URL = "https://laboursandbox.vjerp.com";
-export const API_BASE_URL = "http://localhost:5000";
+export const API_BASE_URL = "https://laboursandbox.vjerp.com";
+// export const API_BASE_URL = "http://localhost:5000";
 
 
 export const accessPages = [
@@ -15,6 +15,8 @@ export const accessPages = [
   "Hold/Release",
   "Release Approval",
 ];
+
+
 
 // Data.js
 export const SidebarData = [
@@ -49,7 +51,7 @@ export const SidebarData = [
     icon: UilUserPlus,
     heading: "Labour Details",
     path: "labourDetails",
-    roles: ["admin", "user"],
+    roles: ["admin"],
   },
   {
     icon: UilFileAlt,
@@ -59,7 +61,7 @@ export const SidebarData = [
   },
   {
     icon: UilFileAlt,
-    heading: "Apprved Labours",
+    heading: "Approved Labours",
     path: "approveLabours",
     roles: ["admin"],
   },

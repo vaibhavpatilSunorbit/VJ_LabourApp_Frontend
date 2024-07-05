@@ -309,7 +309,7 @@ console.log('userAccessPages',user.accessPages)
     <aside ref={sidebarRef} id="sidebar" className={openSidebarToggle ? "sidebar-responsive" : ""}>
       <div className='sidebar-title'>
         <img src={VJLogo} className="vjlogo" alt="logo" />
-        <span className='icon close_icon' onClick={OpenSidebar} style={{ marginLeft: '55px', marginRight: '30px' }}><ArrowCircleLeftIcon/></span>
+        <span className='icon close_icon' onClick={OpenSidebar} style={{ marginLeft: '50px', marginRight: '30px' }}><ArrowCircleLeftIcon/></span>
       </div>
       <div className="application-section">
         <div className="application-header" onClick={toggleCollapse}>

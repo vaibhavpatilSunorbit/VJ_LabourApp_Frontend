@@ -15,10 +15,8 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { FaArrowLeft, FaEye, FaCheck } from 'react-icons/fa';
-import { v4 as uuidv4 } from "uuid";
 import SearchBar from "../SarchBar/SearchBar";
 import Loading from "../Loading/Loading";
-import Sidebar from "../Sidebar/Sidebar";
 import { API_BASE_URL } from "../../Data"
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
@@ -43,6 +41,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const [loading, setLoading] = useState(false);
   const [uploadAadhaarFront, setuploadAadhaarFront] = useState('');
   const [uploadAadhaarBack, setuploadAadhaarBack] = useState('');
+  const [uploadIdProof, setuploadIdProof] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [saved, setSaved] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
@@ -55,11 +54,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const [departments, setDepartments] = useState([]);
   const [workingHours, setWorkingHours] = useState([]);
   const [designations, setDesignations] = useState([]);
+  const [companyNames, setCompanyNames] = useState([]);
   const [nextID, setNextID] = useState(null);
+  const [message, setMessage] = useState(''); 
+  const [messageType, setMessageType] = useState('');
 
   const [formData, setFormData] = useState({
     uploadAadhaarFront: '',
     uploadAadhaarBack: '',
+    uploadIdProof: '',
     name: '',
     aadhaarNumber: '',
     dateOfBirth: '',
@@ -88,7 +91,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     designation: '',
     title: '',
     companyName: '',
-    maritalStatus: '',
+    Marital_Status: '',
     // nationality: 'Indian',
     // paymentMode: 'NEFT',
     // employeeType: 'PERMANENT',
@@ -157,9 +160,159 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   };
 
 
-  // useEffect(() => {
-  //   navigate('/kyc');
-  // }, []);
+
+  const uploadAadhaarImageToSurepass = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
+        }
+      });
+
+      const { data } = response;
+      console.log(data);
+      if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
+        const ocrFields = data.data.ocr_fields[0];
+
+        // Check if Aadhaar number already exists
+        const existingAadhaarCheck = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
+
+        if (existingAadhaarCheck.data.exists) {
+          setMessageType('error');
+          setNewError('User has already filled the form with this Aadhaar number.');
+        } else {
+          setNewError('');
+          setFormData({
+            aadhaarNumber: ocrFields.aadhaar_number.value,
+            name: ocrFields.full_name.value,
+            dateOfBirth: ocrFields.dob.value,
+            gender: ocrFields.gender.value,
+            village: formData.village,
+            taluka: formData.taluka,
+            district: formData.district,
+            state: formData.state,
+            pincode: formData.pincode
+          });
+          setMessageType('success');
+          setMessage('Congratulations! New Aadhaar number registered.');
+        }
+      } else {
+        setNewError('Error reading Aadhaar details from image.');
+      }
+    } catch (error) {
+      console.error('Error uploading Aadhaar image to Surepass:', error);
+      setNewError('Error uploading Aadhaar image. Please try again.');
+    }
+  };
+
+  const handleAadhaarNumberChange = async (e) => {
+    const { value } = e.target;
+    setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value }));
+    validateAadhaarNumber(value);
+
+    if (value.length === 12 && /^\d{12}$/.test(value)) {
+      try {
+        const exists = await checkAadhaarExistence(value);
+        if (exists) {
+          setMessageType('error');
+          setMessage('User has already filled the form with this Aadhaar number.');
+          setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear the field
+        } else {
+          setMessageType('success');
+          setMessage('Congratulations! New Aadhaar number registered.');
+        }
+      } catch (error) {
+        console.error('Error checking Aadhaar number:', error);
+        setMessageType('error');
+        setMessage('Error checking Aadhaar number. Please try again.');
+      }
+    }
+  };
+
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage('');
+      }, 5000); // Clear message after 5 seconds
+
+      return () => clearTimeout(timer); // Cleanup timer
+    }
+  }, [message]);
+
+  const checkAadhaarExistence = async (aadhaarNumber) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber });
+      return response.data.exists;
+    } catch (error) {
+      console.error('Error checking Aadhaar number existence:', error);
+      return false;
+    }
+  };
+
+
+  const fetchPincodeData = async (pincode) => {
+    try {
+      const response = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching pincode data:', error);
+      return null;
+    }
+  };
+
+
+  const handlePincodeChange = async (e) => {
+    const pincode = e.target.value;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      pincode,
+      village: "",
+      taluka: "",
+      district: "",
+      state: ""
+    }));
+
+    if (pincode.length === 6) {
+      setLoading(true);
+      const response = await fetchPincodeData(pincode);
+
+      if (response && response[0] && response[0].Status === "Success") {
+        setSuggestions(response[0].PostOffice);
+        setShowSuggestions(true);
+      } else {
+        const nearbyPincode = pincode.substring(0, 4);
+        const nearbyResponse = await fetchPincodeData(nearbyPincode);
+
+        if (nearbyResponse && nearbyResponse[0] && nearbyResponse[0].Status === "Success") {
+          setSuggestions(nearbyResponse[0].PostOffice);
+          setShowSuggestions(true);
+        } else {
+          console.error('Location data not found');
+          setShowSuggestions(false);
+        }
+      }
+      setLoading(false);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+  const handleSuggestionClick = (suggestion) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      village: suggestion.Name,
+      taluka: suggestion.Block,
+      district: suggestion.District,
+      state: suggestion.State,
+      pincode: suggestion.Pincode
+    }));
+    setShowSuggestions(false);
+  };
+
 
   // New changes start here ---------------------------------------------
 
@@ -196,6 +349,21 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
     fetchDesignations();
   }, [formData.department]);
+
+  useEffect(() => {
+    const fetchCompanyNames = async () => {
+      if (formData.projectName) {
+        try {
+          const companyNamesRes = await axios.get(API_BASE_URL + `/api/company-names/${formData.projectName}`);
+          setCompanyNames(companyNamesRes.data);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    };
+
+    fetchCompanyNames();
+  }, [formData.projectName]);
 
   // New changes end here ----------------------------------
 
@@ -314,7 +482,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       contractorName,
       contractorNumber,
       title,
-      maritalStatus,
+      Marital_Status,
       companyName,
     } = labour;
 
@@ -346,7 +514,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       contractorName,
       contractorNumber,
       title,
-      maritalStatus,
+      Marital_Status,
       companyName,
       nationality: 'Indian',
       paymentMode: 'NEFT',
@@ -411,7 +579,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     return isRequired ? <span style={{ color: "red" }}> *</span> : null;
   };
 
-  const kycRequiredFields = ['labourOwnership', 'uploadAadhaarFront', 'uploadAadhaarBack', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber',];
+  const kycRequiredFields = ['labourOwnership', 'uploadAadhaarFront', 'uploadAadhaarBack', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber','uploadIdProof',];
   const personalRequiredFields = ['dateOfJoining', 'address', 'pincode', 'taluka', 'district', 'village', 'state', 'emergencyContact', 'photoSrc'];
   const bankDetailsRequiredFields = ['bankName', 'branch', 'accountNumber', 'ifscCode'];
   const projectRequiredFields = ['contractorName', 'contractorNumber', 'projectName', 'labourCategory', 'department', 'workingHours', 'designation'];
@@ -465,9 +633,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
   const validateForm = () => {
     const requiredFields = [
-      'labourOwnership', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber',
-      'dateOfJoining', 'address', 'pincode', 'taluka', 'district', 'village', 'state', 'emergencyContact', 'photoSrc',
-      'bankName', 'branch', 'accountNumber', 'ifscCode','contractorName', 'contractorNumber', 'projectName', 'labourCategory', 'department', 'workingHours', 'designation'
+      // 'labourOwnership', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber',
+      // 'dateOfJoining', 'address', 'pincode', 'taluka', 'district', 'village', 'state', 'emergencyContact', 'photoSrc',
+      // 'bankName', 'branch', 'accountNumber', 'ifscCode','contractorName', 'contractorNumber', 'projectName', 'labourCategory', 'department', 'workingHours', 'designation'
     ];
 
     for (const field of requiredFields) {
@@ -548,6 +716,17 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
         console.error('uploadAadhaarBack is not a file object');
       }
 
+      if (uploadIdProof && uploadIdProof instanceof File) {
+        formDataToSend.append('uploadIdProof', uploadIdProof, uploadIdProof.name);
+      } else {
+        console.error('uploadIdProof is not a file object');
+      }
+
+      // if (uploadIdProof) {
+      //   const photoBlob = base64ToBlob(uploadIdProof, 'image/jpeg');
+      //   formDataToSend.append('uploadIdProof', photoBlob, 'id_photo.jpg');
+      // }
+
       if (photoSrc) {
         const photoBlob = base64ToBlob(photoSrc, 'image/jpeg');
         formDataToSend.append('photoSrc', photoBlob, 'captured_photo.jpg');
@@ -596,6 +775,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       setFormData({});
       setuploadAadhaarFront(null);
       setuploadAadhaarBack(null);
+      setuploadIdProof(null);
       setPhotoSrc(null);
 
     } catch (error) {
@@ -613,15 +793,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   };
 
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    setSearchQuery(value);
-  };
-
+  
 
   const handleFileChange = async (event) => {
     const { name, files } = event.target;
@@ -635,6 +807,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       uploadAadhaarFront: setuploadAadhaarFront,
       uploadAadhaarBack: setuploadAadhaarBack,
       photoSrc: setPhotoSrc,
+      uploadIdProof: setuploadIdProof,
     };
 
     const setStateFunction = fileStateSetter[name];
@@ -655,160 +828,69 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
 
 
-  const uploadAadhaarImageToOCRSpace = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('apikey', 'YOUR_OCR_API_KEY');
-    formData.append('language', 'eng');
+  const handleFileChanges = async (event) => {
+    const { name, files } = event.target;
+    const file = files[0];
 
-    try {
-      const response = await axios.post('https://api.ocr.space/parse/image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+    if (!file) return;
 
-      const { ParsedResults } = response.data;
-      if (ParsedResults && ParsedResults.length > 0) {
-        const parsedData = ParsedResults[0];
-        setFormData({
-          aadhaarNumber: parsedData.ParsedText.match(/\d{4}\s\d{4}\s\d{4}/)[0],
-          name: parsedData.ParsedText.match(/(Name)(.*?)(Father|Mother|Spouse)/)[2].trim(),
-          dateOfBirth: parsedData.ParsedText.match(/\d{2}\/\d{2}\/\d{4}/)[0],
-        });
-      }
-    } catch (error) {
-      console.error('Error uploading Aadhaar image to OCR.space:', error);
-    }
-  };
+    console.log("Selected file:", file);
 
-
-  const fetchPincodeData = async (pincode) => {
-    try {
-      const response = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching pincode data:', error);
-      return null;
-    }
-  };
-
-  const handlePincodeChange = async (e) => {
-    const pincode = e.target.value;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      pincode,
-      village: "",
-      taluka: "",
-      district: "",
-      state: ""
-    }));
-
-    if (pincode.length === 6) {
-      setLoading(true);
-      const response = await fetchPincodeData(pincode);
-
-      if (response && response[0] && response[0].Status === "Success") {
-        setSuggestions(response[0].PostOffice);
-        setShowSuggestions(true);
-      } else {
-        const nearbyPincode = pincode.substring(0, 4);
-        const nearbyResponse = await fetchPincodeData(nearbyPincode);
-
-        if (nearbyResponse && nearbyResponse[0] && nearbyResponse[0].Status === "Success") {
-          setSuggestions(nearbyResponse[0].PostOffice);
-          setShowSuggestions(true);
-        } else {
-          console.error('Location data not found');
-          setShowSuggestions(false);
-        }
-      }
-      setLoading(false);
+    const fileStateSetter = {
+  
+      uploadIdProof: setuploadIdProof,
+    };
+    const setStateFunction = fileStateSetter[name];
+    if (setStateFunction) {
+      setStateFunction(file);
     } else {
-      setShowSuggestions(false);
-    }
-  };
-  const handleSuggestionClick = (suggestion) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      village: suggestion.Name,
-      taluka: suggestion.Block,
-      district: suggestion.District,
-      state: suggestion.State,
-      pincode: suggestion.Pincode
-    }));
-    setShowSuggestions(false);
-  };
-
-  const uploadAadhaarImageToSurepass = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
-        }
-      });
-
-      const { data } = response;
-      console.log(data)
-      if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
-        const ocrFields = data.data.ocr_fields[0];
-
-        setFormData({
-          aadhaarNumber: ocrFields.aadhaar_number.value,
-          name: ocrFields.full_name.value,
-          dateOfBirth: ocrFields.dob.value,
-          gender: ocrFields.gender.value,
-          village: formData.village,
-          taluka: formData.taluka,
-          district: formData.district,
-          state: formData.state,
-          pincode: formData.pincode
-        });
-        setDateOfBirth(ocrFields.dob.value);
-      } else {
-        console.error('Error uploading Aadhaar image to Surepass: OCR fields not found in response');
-      }
-    } catch (error) {
-      console.error('Error uploading Aadhaar image to Surepass:', error);
-    }
-  };
-
-  const handleAddressSelect = (selectedAddress) => {
-    const addressComponents = selectedAddress.display_name.split(', ');
-    const city = addressComponents[1];
-    const taluka = addressComponents[1];
-    const district = addressComponents[2];
-    const state = addressComponents[3];
-    const pincode = addressComponents[7];
-
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      address: selectedAddress.display_name,
-      village: city,
-      taluka: taluka || '',
-      district: district || '',
-      state: state || '',
-      pincode: pincode || '',
-    }));
-
-    setSuggestions([]);
-  };
-
-  function handlePhotoChange(event) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const imageData = e.target.result;
-        console.log("Image data:", imageData);
-      };
-      reader.readAsDataURL(file);
+      console.error(`Unknown file input name: ${name}`);
+      return;
     }
   }
+
+ 
+  
+
+  // const uploadAadhaarImageToSurepass = async (file) => {
+  //   const formData = new FormData();
+  //   formData.append('file', file);
+
+  //   try {
+  //     const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //         'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
+  //       }
+  //     });
+
+  //     const { data } = response;
+  //     console.log(data)
+  //     if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
+  //       const ocrFields = data.data.ocr_fields[0];
+
+  //       setFormData({
+  //         aadhaarNumber: ocrFields.aadhaar_number.value,
+  //         name: ocrFields.full_name.value,
+  //         dateOfBirth: ocrFields.dob.value,
+  //         gender: ocrFields.gender.value,
+  //         village: formData.village,
+  //         taluka: formData.taluka,
+  //         district: formData.district,
+  //         state: formData.state,
+  //         pincode: formData.pincode
+  //       });
+  //       setDateOfBirth(ocrFields.dob.value);
+  //     } else {
+  //       console.error('Error uploading Aadhaar image to Surepass: OCR fields not found in response');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error uploading Aadhaar image to Surepass:', error);
+  //   }
+  // };
+
+ 
+ 
 
   const validateContactNumber = (number) => {
     const isValid = /^\d{10}$/.test(number);
@@ -846,83 +928,114 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     validateContactNumber(value);
   };
 
-
-  const handleAadhaarNumberChange = (e) => {
-    const { value } = e.target;
-    setFormData({ ...formData, aadhaarNumber: value });
-    validateAadhaarNumber(value);
-  };
-
-  // const handleAadhaarNumberChange = async (e) => {
-  //   const { value } = e.target;
-  //   setFormData({ ...formData, aadhaarNumber: value });
-
-  //   try {
-  //     const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: value });
-
-  //     if (response.data.exists) {
-  //       toast.error('User has already filled the form with this Aadhaar number.');
-  //       setNewError('User has already filled the form with this Aadhaar number.');
-  //     } else {
-  //       setNewError('');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error checking Aadhaar number:', error);
-  //     setNewError('Error checking Aadhaar number. Please try again.');
-  //   }
-  // };
-
-  // const uploadAadhaarImageToSurepass = async (file) => {
-  //   const formData = new FormData();
-  //   formData.append('file', file);
-
-  //   try {
-  //     const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
-  //       headers: {
-  //         'Content-Type': 'multipart/form-data',
-  //             'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
-  //           }
-  //         });
-    
-  //         const { data } = response;
-  //         console.log(data);
-  //         if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
-  //           const ocrFields = data.data.ocr_fields[0];
-    
-  //           // Check if Aadhaar number already exists
-  //           const existingAadhaarCheck = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
-    
-  //           if (existingAadhaarCheck.data.exists) {
-  //             toast.error('User has already filled the form with this Aadhaar number.');
-  //             setNewError('User has already filled the form with this Aadhaar number.');
-  //           } else {
-  //             setNewError('');
-  //             setFormData({
-  //               aadhaarNumber: ocrFields.aadhaar_number.value,
-  //               name: ocrFields.full_name.value,
-  //               dateOfBirth: ocrFields.dob.value,
-  //               gender: ocrFields.gender.value,
-  //               village: formData.village,
-  //               taluka: formData.taluka,
-  //               district: formData.district,
-  //               state: formData.state,
-  //               pincode: formData.pincode
-  //             });
-  //           }
-  //         } else {
-  //           setNewError('Error reading Aadhaar details from image.');
-  //         }
-  //       } catch (error) {
-  //         console.error('Error uploading Aadhaar image to Surepass:', error);
-  //         setNewError('Error uploading Aadhaar image. Please try again.');
-  //       }
-  //     };
-
   const handleAccountNumberChange = (e) => {
     // Remove non-numeric characters from input
     const cleanedValue = e.target.value.replace(/\D/g, '');
     setFormData({ ...formData, accountNumber: cleanedValue });
   };
+
+
+  const uploadAadhaarImageToOCRSpace = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('apikey', 'YOUR_OCR_API_KEY');
+    formData.append('language', 'eng');
+
+    try {
+      const response = await axios.post('https://api.ocr.space/parse/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      const { ParsedResults } = response.data;
+      if (ParsedResults && ParsedResults.length > 0) {
+        const parsedData = ParsedResults[0];
+        setFormData({
+          aadhaarNumber: parsedData.ParsedText.match(/\d{4}\s\d{4}\s\d{4}/)[0],
+          name: parsedData.ParsedText.match(/(Name)(.*?)(Father|Mother|Spouse)/)[2].trim(),
+          dateOfBirth: parsedData.ParsedText.match(/\d{2}\/\d{2}\/\d{4}/)[0],
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading Aadhaar image to OCR.space:', error);
+    }
+  };
+
+
+
+  const handleAddressSelect = (selectedAddress) => {
+    const addressComponents = selectedAddress.display_name.split(', ');
+    const city = addressComponents[1];
+    const taluka = addressComponents[1];
+    const district = addressComponents[2];
+    const state = addressComponents[3];
+    const pincode = addressComponents[7];
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      address: selectedAddress.display_name,
+      village: city,
+      taluka: taluka || '',
+      district: district || '',
+      state: state || '',
+      pincode: pincode || '',
+    }));
+
+    setSuggestions([]);
+  };
+
+
+  // const handleAadhaarNumberChange = (e) => {
+  //   const { value } = e.target;
+  //   setFormData({ ...formData, aadhaarNumber: value });
+  //   validateAadhaarNumber(value);
+  // };
+
+
+  // const handleAadhaarNumberChange = async (e) => {
+  //   const { value } = e.target;
+  //   setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value }));
+  //   validateAadhaarNumber(value);
+
+  //   if (value.length === 12 && /^\d{12}$/.test(value)) {
+  //     try {
+  //       const exists = await checkAadhaarExistence(value);
+  //       if (exists) {
+  //         setNewError('User has already filled the form with this Aadhaar number.');
+  //         // toast.error('User has already filled the form with this Aadhaar number.');
+  //         setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear the field
+  //       }
+  //     } catch (error) {
+  //       console.error('Error checking Aadhaar number:', error);
+  //        setNewError('Error checking Aadhaar number. Please try again.');
+  //     }
+  //   }
+  // };
+
+
+  
+  function handlePhotoChange(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const imageData = e.target.result;
+        console.log("Image data:", imageData);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+    setSearchQuery(value);
+  };
+
 
   return (
     <Box p={{ paddingRight: 3 }}>
@@ -1011,10 +1124,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             >
                               <option value="">Select Title</option>
-                              <option value="mr">MR.</option>
-                              <option value="mrs">MRS.</option>
-                              <option value="miss">MISS.</option>
-                              <option value="ms">MS.</option>
+                              <option value="Mr">MR.</option>
+                              <option value="Mrs">MRS.</option>
+                              <option value="Miss">MISS.</option>
+                              <option value="Ms">MS.</option>
                             </select>
                           </div>
                         </div>
@@ -1047,8 +1160,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               onChange={handleAadhaarNumberChange}
                               required
                             />
+                            {newError && <div style={{ color: 'red' }}>{newError}</div>}
                           </div>
-                          <ToastContainer />
+                          {message && <div className={`popup-message ${messageType}`}>{message}</div>}
                         </div>
                       </div>
 
@@ -1098,9 +1212,19 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               required
                               value={formData.gender}
                               onChange={(e) => setFormData({ ...formData, gender: e.target.value })}>
-                              <option value="male">Male</option>
-                              <option value="female">Female</option>
+                              <option value="Male">Male</option>
+                              <option value="Female">Female</option>
                             </select>
+                          </div>
+                        </div>
+
+                        <div className="project-field">
+                          <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
+                            Upload ID Proof
+                          </InputLabel>
+                          <div className="input-with-icon">
+                            <input type="file" name="uploadIdProof" onChange={handleFileChanges} accept="image/*" required />
+                            <DocumentScannerIcon className="input-icon" />
                           </div>
                         </div>
                       </div>
@@ -1322,17 +1446,17 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           </InputLabel>
                           <div className="gender-input">
                             <select
-                              id="maritalStatus"
-                              name="maritalStatus"
+                              id="Marital_Status"
+                              name="Marital_Status"
                               required
-                              value={formData.maritalStatus}
-                              onChange={(e) => setFormData({ ...formData, maritalStatus: e.target.value })}
+                              value={formData.Marital_Status}
+                              onChange={(e) => setFormData({ ...formData, Marital_Status: e.target.value })}
                             >
                               <option value="">Select Marital Status</option>
-                              <option value="married">MARRIED</option>
-                              <option value="unmarried">UNMARRIED</option>
-                              <option value="divorce">DIVORCE</option>
-                              <option value="widowed">WIDOWED</option>
+                              <option value="MARRIED">MARRIED</option>
+                              <option value="UNMARRIED">UNMARRIED</option>
+                              <option value="DIVORCE">DIVORCE</option>
+                              <option value="WIDOWED">WIDOWED</option>
                             </select>
                           </div>
                         </div>
@@ -1576,9 +1700,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                                 required
                               >
-                                <option value="" disabled>Select a project</option>
+                                <option value="" >Select a project</option>
                                 {projectNames.map(project => (
-                                  <option key={project.id} value={project.Business_Unit}>{project.Business_Unit}</option>
+                                  // <option key={project.id} value={project.Business_Unit}>{project.Business_Unit}</option>
+                                  <option key={project.id} value={project.id}>{project.Business_Unit}</option>
                                 ))}
                               </select>
                             </div>
@@ -1595,7 +1720,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
                                 required
                               >
-                                <option value="" disabled>Select a Labour Category</option>
+                                <option value="" >Select a Labour Category</option>
                                 {labourCategories.map(category => (
                                   <option key={category.Id} value={category.Description}>{category.Description}</option>
                                 ))}
@@ -1616,7 +1741,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                                 required
                               >
-                                <option value="" disabled>Select a Department</option>
+                                <option value="" >Select a Department</option>
                                 {departments.map(department => (
                                   <option key={department.Id} value={department.Id}>{department.Description}</option>
                                 ))}
@@ -1635,7 +1760,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                                 required
                               >
-                                <option value="" disabled>Select a Designation</option>
+                                <option value="" >Select a Designation</option>
                                 {designations.map(designation => (
                                   <option key={designation.id} value={designation.Description}>{designation.Description}</option>
                                 ))}
@@ -1656,7 +1781,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
                                 required
                               >
-                                <option value="" disabled>Select Working Hours</option>
+                                <option value="" >Select Working Hours</option>
                                 {workingHours.map(hours => (
                                   <option key={hours.Id} value={hours.Shift_Name}>{hours.Shift_Name}</option>
                                 ))}
@@ -1673,12 +1798,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 name="companyName"
                                 required
                                 value={formData.companyName}
-                                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}>
-                                <option value="">Select Company Name</option>
-                                <option value="sakalpContractsPvtLtd">SANKALP CONTRACTS PRIVATE LIMITED</option>
-                                <option value="vilasJavdekarEcoShelterPvtLtd">VILAS JAVDEKAR ECO SHELTERS PRIVATE LIMITED</option>
-                                <option value="vilasJavdekarGreenscapsDevloperLLP">VILAS JAVDEKAR GREENSCAPE DEVELOPERS LLP</option>
-                                <option value="vilasJavdekarInfiniteeDeveloperPvtLtd">VILAS JAVDEKARS INFINITEE DEVELOPERS PVT.LTD.</option>
+                                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                              >
+                                <option value="" >Select Company Name</option>
+                                {companyNames.map(company => (
+                                  <option key={company.id} value={company.Company_Name}>{company.Company_Name}</option>
+                                ))}
                               </select>
                             </div>
                           </div>
