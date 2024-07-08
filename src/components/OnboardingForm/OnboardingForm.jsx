@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { InputLabel, Box } from '@mui/material';
 import "./OnBoardingForm.css";
 import axios from 'axios';
@@ -18,6 +18,8 @@ import { FaArrowLeft, FaEye, FaCheck } from 'react-icons/fa';
 import SearchBar from "../SarchBar/SearchBar";
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data"
+import LabourDetails from "../LabourDetails/LabourDetails";
+import ViewDetails from "../ViewDetails/ViewDetails";
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -56,9 +58,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   const [designations, setDesignations] = useState([]);
   const [companyNames, setCompanyNames] = useState([]);
   const [nextID, setNextID] = useState(null);
-  const [message, setMessage] = useState(''); 
+  const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
-
+  const [selectedLabour, setSelectedLabour] = useState(null);
+  const [aadhaarFront, setAadhaarFront] = useState(null);
+  const [aadhaarBack, setAadhaarBack] = useState(null);
+  const [aadhaarFrontData, setAadhaarFrontData] = useState({});
   const [formData, setFormData] = useState({
     uploadAadhaarFront: '',
     uploadAadhaarBack: '',
@@ -77,7 +82,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     state: '',
     emergencyContact: '',
     photoSrc: '',
-    labourOwnership: '',
+    labourOwnership: 'VJ',
     bankName: '',
     branch: '',
     accountNumber: '',
@@ -89,14 +94,16 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     department: '',
     workingHours: '',
     designation: '',
-    title: '',
+    title: 'Mr',
     companyName: '',
-    Marital_Status: '',
+    // Marital_Status: 'MARRIED',
     // nationality: 'Indian',
-    // paymentMode: 'NEFT',
-    // employeeType: 'PERMANENT',
-    // currentStatus: 'WORKING',
-    // seatingOffice: 'SITE LABOUR',
+    // Payment_Mode: 'NEFT',
+    // Employee_Type: 'PERMANENT',
+    // Current_Status: 'WORKING',
+    // Seating_Office: 'SITE LABOUR',
+    projectDescription: '',
+    departmentDescription: '',
   });
 
   const [formStatus, setFormStatus] = useState({
@@ -108,13 +115,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const openModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
 
   const collapseAll = () => {
     setIsKYCCollapsed(true);
@@ -159,6 +159,52 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     navigate(route);
   };
 
+  
+
+  const handleFileChange = async (event) => {
+    const { name, files } = event.target;
+    const file = files[0];
+
+    if (!file) return;
+
+    const fileStateSetter = {
+      uploadAadhaarFront: setuploadAadhaarFront,
+      uploadAadhaarBack: setuploadAadhaarBack,
+      photoSrc: setPhotoSrc,
+      uploadIdProof: setuploadIdProof,
+    };
+
+    const setStateFunction = fileStateSetter[name];
+    if (setStateFunction) {
+      setStateFunction(file);
+    } else {
+      console.error(`Unknown file input name: ${name}`);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const ocrData = await uploadAadhaarImageToSurepass(file);
+
+      // if (name === 'uploadAadhaarFront') {
+      //   setAadhaarFrontData(ocrData);
+      //   setFormData((prev) => ({
+      //     ...prev,
+      //     ...ocrData
+      //   }));
+      // } else if (name === 'uploadAadhaarBack') {
+      //   setFormData((prev) => ({
+      //     ...prev,
+      //     ...aadhaarFrontData,
+      //     ...ocrData
+      //   }));
+      // }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+    setLoading(false);
+  };
+
 
 
   const uploadAadhaarImageToSurepass = async (file) => {
@@ -174,7 +220,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       });
 
       const { data } = response;
-      console.log(data);
+      // console.log("aadhar ocr",data); 
       if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
         const ocrFields = data.data.ocr_fields[0];
 
@@ -185,18 +231,46 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
           setMessageType('error');
           setNewError('User has already filled the form with this Aadhaar number.');
         } else {
+          // console.log("zip", ocrFields.address?.zip);
+
           setNewError('');
-          setFormData({
-            aadhaarNumber: ocrFields.aadhaar_number.value,
-            name: ocrFields.full_name.value,
-            dateOfBirth: ocrFields.dob.value,
-            gender: ocrFields.gender.value,
-            village: formData.village,
-            taluka: formData.taluka,
-            district: formData.district,
-            state: formData.state,
-            pincode: formData.pincode
-          });
+
+          const removePrefixes = (address) => {
+            const regex = /\b(C\/O:|D\/O:|S\/O:|W\/O:|H\/O:)\s*[^,]*,\s*/gi;
+            const cleanedAddress = address.replace(regex, '').trim();
+            return cleanedAddress;
+          };
+  
+          const cleanedAddress = removePrefixes(ocrFields.address?.value);
+
+          if(ocrFields.document_type === 'aadhaar_front_bottom'){
+            setFormData((prev) => {
+              return {
+                ...prev,
+                aadhaarNumber: ocrFields.aadhaar_number?.value,
+                name: ocrFields.full_name?.value,
+                dateOfBirth: ocrFields.dob?.value,
+                gender: ocrFields.gender?.value               
+              }
+            });
+          }else{
+            setFormData((prev) => {
+              return {
+                ...prev,
+                village: ocrFields.address?.city,
+                address: cleanedAddress,
+                taluka: formData.taluka,
+                district: ocrFields.address?.district,
+                state: ocrFields.address?.state,
+                pincode: ocrFields.address?.zip
+              }
+            });
+          }
+
+       
+          if(ocrFields.address?.zip){
+            handlePincodeChange(ocrFields.address?.zip);
+          }
           setMessageType('success');
           setMessage('Congratulations! New Aadhaar number registered.');
         }
@@ -264,17 +338,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       return null;
     }
   };
+  const suggestionsRef = useRef(null);
 
+  const handlePincodeChange = async (pincode) => {
+    console.log("handlePincodeChange called")
 
-  const handlePincodeChange = async (e) => {
-    const pincode = e.target.value;
     setFormData((prevFormData) => ({
       ...prevFormData,
       pincode,
-      village: "",
-      taluka: "",
-      district: "",
-      state: ""
     }));
 
     if (pincode.length === 6) {
@@ -285,18 +356,20 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
         setSuggestions(response[0].PostOffice);
         setShowSuggestions(true);
       } else {
-        const nearbyPincode = pincode.substring(0, 4);
-        const nearbyResponse = await fetchPincodeData(nearbyPincode);
+        setShowSuggestions(false);
+        // const nearbyPincode = pincode.substring(0, 4);
+        // const nearbyResponse = await fetchPincodeData(nearbyPincode);
 
-        if (nearbyResponse && nearbyResponse[0] && nearbyResponse[0].Status === "Success") {
-          setSuggestions(nearbyResponse[0].PostOffice);
-          setShowSuggestions(true);
-        } else {
-          console.error('Location data not found');
-          setShowSuggestions(false);
-        }
+        // if (nearbyResponse && nearbyResponse[0] && nearbyResponse[0].Status === "Success") {
+        //   setSuggestions(nearbyResponse[0].PostOffice);
+        //   setShowSuggestions(true);
+        // } else {
+        //   console.error('Location data not found');
+        //   setShowSuggestions(false);
+        // }
       }
       setLoading(false);
+      // setShowSuggestions(false);
     } else {
       setShowSuggestions(false);
     }
@@ -313,6 +386,18 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     setShowSuggestions(false);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // New changes start here ---------------------------------------------
 
@@ -327,13 +412,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
         setLabourCategories(labourCategoriesRes.data);
         setDepartments(departmentsRes.data);
         setWorkingHours(workingHoursRes.data);
+
+
       } catch (err) {
         console.error(err);
       }
     };
 
     fetchData();
-  }, []);
+  }, [setDepartments, setProjectNames]);
 
   useEffect(() => {
     const fetchDesignations = async () => {
@@ -341,6 +428,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
         try {
           const designationsRes = await axios.get(API_BASE_URL + `/api/designations/${formData.department}`);
           setDesignations(designationsRes.data);
+
+          if (designationsRes.data.length > 0 && !formData.designation) {
+            setFormData(prevFormData => ({
+              ...prevFormData,
+              designation: designationsRes.data[0].Description
+            }));
+          }
+
         } catch (err) {
           console.error(err);
         }
@@ -356,6 +451,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
         try {
           const companyNamesRes = await axios.get(API_BASE_URL + `/api/company-names/${formData.projectName}`);
           setCompanyNames(companyNamesRes.data);
+
+          if (companyNamesRes.data.length > 0 && !formData.companyName) {
+            setFormData(prevFormData => ({
+              ...prevFormData,
+              companyName: companyNamesRes.data[0].Company_Name
+            }));
+          }
+
         } catch (err) {
           console.error(err);
         }
@@ -516,37 +619,37 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
       title,
       Marital_Status,
       companyName,
-      nationality: 'Indian',
-      paymentMode: 'NEFT',
-      employeeType: 'PERMANENT',
-      currentStatus: 'WORKING',
-      seatingOffice: 'SITE LABOUR',
+      // Nationality: 'Indian',
+      // Payment_Mode: 'NEFT',
+      // Employee_Type: 'PERMANENT',
+      // Current_Status: 'WORKING',
+      // Seating_Office: 'SITE LABOUR',
     });
 
     setSearchQuery('');
     setSearchResults([]);
 
-    console.log('Selected Labour:', labour);
+    // console.log('Selected Labour:', labour);
   };
 
 
-  const renderPreviewModal = () => {
-    if (!isModalOpen) return null;
-    return (
-      <div className="overlay">
-        <div className="preview-modal">
-          <button id="close-button" onClick={closeModal}></button>
-          <ul>
-            {Object.entries(formData).map(([key, value]) => (
-              <li key={key}>
-                <strong>{capitalizeFirstLetter(key)}:</strong> {value}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    );
-  };
+  // const renderPreviewModal = () => {
+  //   if (!isModalOpen) return null;
+  //   return (
+  //     <div className="overlay">
+  //       <div className="preview-modal">
+  //         <button id="close-button" onClick={closeModal}></button>
+  //         <ul>
+  //           {Object.entries(formData).map(([key, value]) => (
+  //             <li key={key}>
+  //               <strong>{capitalizeFirstLetter(key)}:</strong> {value}
+  //             </li>
+  //           ))}
+  //         </ul>
+  //       </div>
+  //     </div>
+  //   );
+  // };
 
   const toggleAddUserCollapse = () => {
     setIsAddUserCollapsed(!isAddUserCollapsed);
@@ -579,7 +682,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     return isRequired ? <span style={{ color: "red" }}> *</span> : null;
   };
 
-  const kycRequiredFields = ['labourOwnership', 'uploadAadhaarFront', 'uploadAadhaarBack', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber','uploadIdProof',];
+  const kycRequiredFields = ['labourOwnership', 'uploadAadhaarFront', 'uploadAadhaarBack', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber', 'uploadIdProof',];
   const personalRequiredFields = ['dateOfJoining', 'address', 'pincode', 'taluka', 'district', 'village', 'state', 'emergencyContact', 'photoSrc'];
   const bankDetailsRequiredFields = ['bankName', 'branch', 'accountNumber', 'ifscCode'];
   const projectRequiredFields = ['contractorName', 'contractorNumber', 'projectName', 'labourCategory', 'department', 'workingHours', 'designation'];
@@ -627,15 +730,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     } else {
       setErrorMessage('');
     }
-    setDateOfBirth({ ...formData, dateOfBirth: e.target.value });
+    setFormData({ ...formData, dateOfBirth: e.target.value });
   };
 
 
   const validateForm = () => {
     const requiredFields = [
-      // 'labourOwnership', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber',
-      // 'dateOfJoining', 'address', 'pincode', 'taluka', 'district', 'village', 'state', 'emergencyContact', 'photoSrc',
-      // 'bankName', 'branch', 'accountNumber', 'ifscCode','contractorName', 'contractorNumber', 'projectName', 'labourCategory', 'department', 'workingHours', 'designation'
+      'labourOwnership', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber',
+      'dateOfJoining', 'address', 'pincode', 'taluka', 'district', 'village', 'state', 'emergencyContact',
+      'projectName', 'labourCategory', 'department', 'workingHours', 'designation'
     ];
 
     for (const field of requiredFields) {
@@ -698,7 +801,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
       const formDataToSend = new FormData();
 
-      console.log(formData);
+      // console.log(formData);
 
       Object.keys(formData).forEach(key => {
         formDataToSend.append(key, formData[key]);
@@ -744,7 +847,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
         throw new Error('Form submission failed');
       }
 
-      console.log('Form submission response:', response.data);
+      // console.log('Form submission response:', response.data);
       // setPopupMessage(`Your details have been successfully submitted. Your Labour ID is ${nextID}. Thanks!`);
       setPopupMessage(
         <div
@@ -793,38 +896,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   };
 
 
-  
-
-  const handleFileChange = async (event) => {
-    const { name, files } = event.target;
-    const file = files[0];
-
-    if (!file) return;
-
-    console.log("Selected file:", file);
-
-    const fileStateSetter = {
-      uploadAadhaarFront: setuploadAadhaarFront,
-      uploadAadhaarBack: setuploadAadhaarBack,
-      photoSrc: setPhotoSrc,
-      uploadIdProof: setuploadIdProof,
-    };
-
-    const setStateFunction = fileStateSetter[name];
-    if (setStateFunction) {
-      setStateFunction(file);
-    } else {
-      console.error(`Unknown file input name: ${name}`);
-      return;
-    }
-    setLoading(true);
-    try {
-      await uploadAadhaarImageToSurepass(file);
-    } catch (error) {
-      console.error("Error uploading file:", error);
-    }
-    setLoading(false);
-  };
 
 
 
@@ -834,10 +905,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
     if (!file) return;
 
-    console.log("Selected file:", file);
+    // console.log("Selected file:", file);
 
     const fileStateSetter = {
-  
+
       uploadIdProof: setuploadIdProof,
     };
     const setStateFunction = fileStateSetter[name];
@@ -849,8 +920,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     }
   }
 
- 
-  
+
+
 
   // const uploadAadhaarImageToSurepass = async (file) => {
   //   const formData = new FormData();
@@ -889,8 +960,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   //   }
   // };
 
- 
- 
+
+
 
   const validateContactNumber = (number) => {
     const isValid = /^\d{10}$/.test(number);
@@ -929,10 +1000,82 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   };
 
   const handleAccountNumberChange = (e) => {
-    // Remove non-numeric characters from input
     const cleanedValue = e.target.value.replace(/\D/g, '');
+    if (cleanedValue.length > 16) {
+      cleanedValue = cleanedValue.slice(0, 16);
+    }
     setFormData({ ...formData, accountNumber: cleanedValue });
+
   };
+
+
+  // const openModal = () => {
+  //   setIsModalOpen(true);
+  // };
+
+  // const closeModal = () => {
+  //   setIsModalOpen(false);
+  // };
+
+  const handlePreview = () => {
+    openPreviewModal(formData);
+  };
+
+  const handleChanges = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value
+    }));
+  };
+
+  const getProjectDescription = (projectId) => {
+    const project = projectNames.find(proj => proj.id === projectId);
+    return project ? project.name : projectId;
+  };
+
+  const getDepartmentDescription = (departmentId) => {
+    const department = departments.find(dept => dept.id === departmentId);
+    return department ? department.name : departmentId;
+  };
+
+  const transformDataForPreview = (data) => {
+    return {
+      ...data,
+      projectDescription: getProjectDescription(data.projectName),
+      departmentDescription: getDepartmentDescription(data.department),
+    };
+  };
+
+  const openPreviewModal = () => {
+    const transformedData = transformDataForPreview(formData);
+    setSelectedLabour(transformedData);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedLabour(null);
+    setIsModalOpen(false);
+  };
+
+  const renderPreviewModal = () => {
+    if (!isModalOpen || !selectedLabour) return null;
+    return (
+      <ViewDetails
+        selectedLabour={selectedLabour}
+        onClose={closeModal}
+      />
+    );
+  };
+
 
 
   const uploadAadhaarImageToOCRSpace = async (file) => {
@@ -1014,14 +1157,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
   // };
 
 
-  
+
   function handlePhotoChange(event) {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = function (e) {
         const imageData = e.target.result;
-        console.log("Image data:", imageData);
+        // console.log("Image data:", imageData);
       };
       reader.readAsDataURL(file);
     }
@@ -1036,6 +1179,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
     setSearchQuery(value);
   };
 
+  // const handleTitleChange = (e) => {
+  //   setFormData({ ...formData, [e.target.name]: e.target.value });
+  // };
 
   return (
     <Box p={{ paddingRight: 3 }}>
@@ -1048,6 +1194,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
           searchResults={searchResults}
           handleSelectLabour={handleSelectLabour}
         />
+
         <form className="onboarding-form" onSubmit={handleSubmit}>
           <ul style={{ marginLeft: "-20px" }}>
             <li>
@@ -1077,7 +1224,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           </InputLabel>
                           <div className="input-with-icon">
                             <input type="file" name="uploadAadhaarFront" onChange={handleFileChange} accept="image/*" required />
+                         
                             <DocumentScannerIcon className="input-icon" />
+                           
                           </div>
                         </div>
                         <div className="project-field">
@@ -1086,6 +1235,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           </InputLabel>
                           <div className="input-with-icon">
                             <input type="file" name="uploadAadhaarBack" onChange={handleFileChange} accept="image/*" required />
+                          
                             <DocumentScannerIcon className="input-icon" />
                           </div>
                         </div>
@@ -1121,7 +1271,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               name="title"
                               required
                               value={formData.title}
-                              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                              //  onChange={handleChange}
+                              onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
                             >
                               <option value="">Select Title</option>
                               <option value="Mr">MR.</option>
@@ -1212,6 +1363,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               required
                               value={formData.gender}
                               onChange={(e) => setFormData({ ...formData, gender: e.target.value })}>
+                              {/* <option value="">Select Gender</option> */}
                               <option value="Male">Male</option>
                               <option value="Female">Female</option>
                             </select>
@@ -1220,7 +1372,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
                         <div className="project-field">
                           <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
-                            Upload ID Proof
+                            Upload ID Proof{renderRequiredAsterisk(true)}
                           </InputLabel>
                           <div className="input-with-icon">
                             <input type="file" name="uploadIdProof" onChange={handleFileChanges} accept="image/*" required />
@@ -1298,10 +1450,29 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
                       {loading && <Loading />}
                       <div className="locations">
+                      <div className="location-Village-label">
+                          <InputLabel
+                            id="demo-simple-select-label"
+                            sx={{ color: "black" }}
+                          >
+                            Village/City{renderRequiredAsterisk(true)}
+                          </InputLabel>
+                          <input
+                            className="village"
+                            type="text"
+                            id="village" p
+                            name="village"
+                            required
+                            value={formData.village || ''}
+                            onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+                          />
+                        </div>
+
                         <div className="personal-pincode-field">
                           <InputLabel
                             id="personal-pincode-label"
                             sx={{ color: "black" }}
+                            value={formData.pincode || " "}
                           >
                             Pincode{renderRequiredAsterisk(true)}
                           </InputLabel>
@@ -1312,38 +1483,22 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             name="personal-pincode"
                             required
                             value={formData.pincode || ''}
-                            onChange={handlePincodeChange}
+                            onChange={(e)=>handlePincodeChange(e.target.value)}
                           />
-                          {showSuggestions && suggestions.length > 0 && (
-                            <ul className="suggestions-dropdown">
-                              {suggestions.map((suggestion, index) => (
-                                <li key={index} onClick={() => handleSuggestionClick(suggestion)}>
-                                  {suggestion.Name}, {suggestion.Block}, {suggestion.District}, {suggestion.State}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
+                         {showSuggestions && suggestions.length > 0 && (
+        <ul className="suggestions-dropdown" ref={suggestionsRef}>
+          {suggestions.map((suggestion, index) => (
+            <li key={index} onClick={() => handleSuggestionClick(suggestion)}>
+              {suggestion.Name}, {suggestion.Block}, {suggestion.District}, {suggestion.State}
+            </li>
+          ))}
+        </ul>
+      )}
                         </div>
 
 
 
-                        <div className="location-taluka-label">
-                          <InputLabel
-                            id="demo-simple-select-label"
-                            sx={{ color: "black" }}
-                          >
-                            Taluka{renderRequiredAsterisk(true)}
-                          </InputLabel>
-                          <input
-                            className="taluka"
-                            type="text"
-                            id="taluka"
-                            name="taluka"
-                            required
-                            value={formData.taluka || ''}
-                            onChange={(e) => setFormData({ ...formData, taluka: e.target.value })}
-                          />
-                        </div>
+                     
                       </div>
 
                       <div className="state-block">
@@ -1367,21 +1522,21 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
 
 
 
-                        <div className="location-Village-label">
+                        <div className="location-taluka-label">
                           <InputLabel
                             id="demo-simple-select-label"
                             sx={{ color: "black" }}
                           >
-                            Village/City{renderRequiredAsterisk(true)}
+                            Taluka{renderRequiredAsterisk(true)}
                           </InputLabel>
                           <input
-                            className="village"
+                            className="taluka"
                             type="text"
-                            id="village" p
-                            name="village"
+                            id="taluka"
+                            name="taluka"
                             required
-                            value={formData.village || ''}
-                            onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+                            value={formData.taluka || ''}
+                            onChange={(e) => setFormData({ ...formData, taluka: e.target.value })}
                           />
                         </div>
                       </div>
@@ -1427,19 +1582,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                       </div>
 
                       <div className="em-contact-block">
-                        <div className="bankDetails-field">
-                          <InputLabel id="branch-label" sx={{ color: "black" }}>
-                            Nationality
-                          </InputLabel>
-                          <input
-                            type="text"
-                            id="nationality"
-                            name="nationality"
-                            required
-                            value={formData.nationality || 'Indian'}
-                            onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                          />
-                        </div>
+                      
                         <div className="gender">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                             Marital Status {renderRequiredAsterisk(true)}
@@ -1484,12 +1627,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               </button>
                             )}
                             {stream && !photoSrc && (
-                              <button type="button" onClick={capturePhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
+                              <button type="button" onClick={capturePhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px', backgroundColor: 'rgb(93 210 120 / 89%)', color: 'white', }}>
                                 Capture Photo<CameraAltIcon />
                               </button>
                             )}
                             {!stream && photoSrc && (
-                              <button type="button" onClick={repeatPhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
+                              <button type="button" onClick={repeatPhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px', backgroundColor: 'rgb(214 94 105 / 78%)', color: 'white', }}>
                                 Repeat Photo<CameraAltIcon />
                               </button>
                             )}
@@ -1503,7 +1646,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           value={photoSrc || ''}
                           required
                           onChange={(e) => setFormData((prevFormData) => {
-                            console.log("photoInput", e.target.value)
+                            // console.log("photoInput", e.target.value)
                             return { ...prevFormData, photoInput: e.target.value }
                           })}
                         />
@@ -1577,8 +1720,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             required
                             value={formData.accountNumber || ''}
                             onChange={handleAccountNumberChange}
+                            maxLength={16}
                             onKeyDown={(e) => {
-                              // Allow only numeric inputs and specific control keys (e.g., Backspace, Delete)
+                             
                               if (
                                 !(
                                   (e.key >= '0' && e.key <= '9') || // Allow numbers
@@ -1617,11 +1761,11 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           </InputLabel>
                           <input
                             type="text"
-                            id="paymentMode"
-                            name="paymentMode"
+                            id="Payment_Mode"
+                            name="Payment_Mode"
                             required
-                            value={formData.paymentMode || 'NEFT'}
-                            onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
+                            value={formData.Payment_Mode || 'NEFT'}
+                            onChange={handleChanges}
                           />
                         </div>
                       </div>
@@ -1697,7 +1841,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 id="projectName"
                                 name="projectName"
                                 value={formData.projectName}
-                                onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                                // onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                                onChange={handleInputChange}
                                 required
                               >
                                 <option value="" >Select a project</option>
@@ -1708,25 +1853,30 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               </select>
                             </div>
                           </div>
-                          <div className="project-field">
-                            <InputLabel id="labour-category-label" sx={{ color: 'black' }}>
-                              Labour Category{renderRequiredAsterisk(true)}
+
+                          <div className="gender">
+                            <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
+                              Company Name{renderRequiredAsterisk(true)}
                             </InputLabel>
                             <div className="gender-input">
                               <select
-                                id="labourCategory"
-                                name="labourCategory"
-                                value={formData.labourCategory}
-                                onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
+                                id="companyName"
+                                name="companyName"
                                 required
+                                value={formData.companyName}
+                                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                               >
-                                <option value="" >Select a Labour Category</option>
-                                {labourCategories.map(category => (
-                                  <option key={category.Id} value={category.Description}>{category.Description}</option>
+                                {/* <option value="" >Select Company Name</option> */}
+                                {companyNames.map(company => (
+                                  <option key={company.id} value={company.Company_Name}>{company.Company_Name}</option>
                                 ))}
                               </select>
                             </div>
                           </div>
+
+
+
+                         
                         </div>
                         <div className="locations">
                           <div className="project-field">
@@ -1738,7 +1888,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 id="department"
                                 name="department"
                                 value={formData.department}
-                                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                // onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                onChange={handleInputChange}
                                 required
                               >
                                 <option value="" >Select a Department</option>
@@ -1760,7 +1911,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                                 onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                                 required
                               >
-                                <option value="" >Select a Designation</option>
+                                {/* <option value="" >Select a Designation</option> */}
                                 {designations.map(designation => (
                                   <option key={designation.id} value={designation.Description}>{designation.Description}</option>
                                 ))}
@@ -1769,6 +1920,26 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                           </div>
                         </div>
                         <div className="locations">
+
+                        <div className="project-field">
+                            <InputLabel id="labour-category-label" sx={{ color: 'black' }}>
+                              Labour Category{renderRequiredAsterisk(true)}
+                            </InputLabel>
+                            <div className="gender-input">
+                              <select
+                                id="labourCategory"
+                                name="labourCategory"
+                                value={formData.labourCategory}
+                                onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
+                                required
+                              >
+                                <option value="" >Select a Labour Category</option>
+                                {labourCategories.map(category => (
+                                  <option key={category.Id} value={category.Description}>{category.Description}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
                           <div className="project-field">
                             <InputLabel id="working-hours-label" sx={{ color: 'black' }}>
                               Working Hours{renderRequiredAsterisk(true)}
@@ -1788,39 +1959,21 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                               </select>
                             </div>
                           </div>
-                          <div className="gender">
-                            <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
-                              Company Name{renderRequiredAsterisk(true)}
-                            </InputLabel>
-                            <div className="gender-input">
-                              <select
-                                id="companyName"
-                                name="companyName"
-                                required
-                                value={formData.companyName}
-                                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                              >
-                                <option value="" >Select Company Name</option>
-                                {companyNames.map(company => (
-                                  <option key={company.id} value={company.Company_Name}>{company.Company_Name}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
+                         
                         </div>
 
-                        <div className="locations">
+                        {/* <div className="locations">
                           <div className="gender">
                             <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                               Employee Type{renderRequiredAsterisk(true)}
                             </InputLabel>
                             <div className="gender-input">
                               <select
-                                id="employeeType"
-                                name="employeeType"
+                                id="Employee_Type"
+                                name="Employee_Type"
                                 required
-                                value={formData.employeeType || 'PERMANENT'}
-                                onChange={(e) => setFormData({ ...formData, employeeType: e.target.value })}>
+                                value={formData.Employee_Type || 'PERMANENT'}
+                                onChange={handleChanges}>
                                 <option value="PERMANENT">Permanent</option>
                               </select>
                             </div>
@@ -1831,11 +1984,11 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             </InputLabel>
                             <input
                               type="text"
-                              id="currentStatus"
-                              name="currentStatus"
+                              id="Current_Status"
+                              name="Current_Status"
                               required
-                              value={formData.currentStatus || 'WORKING'}
-                              onChange={(e) => setFormData({ ...formData, currentStatus: e.target.value })}
+                              value={formData.Current_Status || 'WORKING'}
+                              onChange={handleChanges}
                             />
                           </div>
                         </div>
@@ -1847,14 +2000,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             </InputLabel>
                             <input
                               type="text"
-                              id="seatingOffice"
-                              name="seatingOffice"
+                              id="Seating_Office"
+                              name="Seating_Office"
                               required
-                              value={formData.seatingOffice || 'SITE LABOUR'}
-                              onChange={(e) => setFormData({ ...formData, seatingOffice: e.target.value })}
+                              value={formData.Seating_Office || 'SITE LABOUR'}
+                              onChange={handleChanges}
                             />
                           </div>
-                        </div>
+                        </div> */}
 
 
 
@@ -1870,8 +2023,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture }) => {
                             > Previous
                             </button>
                             <button
+                              variant="contained"
                               type="button"
-                              onClick={openModal}
+                              // onClick={openModal}
+                              onClick={handlePreview}
                               className="btn btn-preview"
                             > Preview
                             </button>

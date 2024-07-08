@@ -373,21 +373,23 @@ const AddUser = () => {
               />
             </DialogContent>
             <DialogActions>
+            <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        justifyContent: 'space-around',
+        gap: 2, 
+        mt: 2 
+      }}
+    >
               <Button onClick={handleCloseModal}>Cancel</Button>
               <Button
                 onClick={handleFormSubmit}
-                variant="contained"
-                 sx={{
-                          backgroundColor: '#EFE6F7',
-                          color: '#8236BC',
-                          marginRight: '10px',
-                          '&:hover': {
-                            backgroundColor: '#bfa7d7',
-                          },
-                        }}
+                // variant="contained"
               >
                 {userData.id ? "Update" : "Add"}
               </Button>
+              </Box>
             </DialogActions>
           </Dialog>
         </div>

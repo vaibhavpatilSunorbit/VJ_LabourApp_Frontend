@@ -273,41 +273,47 @@ const ViewDetails = ({ selectedLabour, onClose }) => {
       return;
     }
 
+    const defaultValues = {
+      Nationality: 'Indian',
+      Payment_Mode: 'NEFT',
+      Employee_Type: 'PERMANENT',
+      Current_Status: 'WORKING',
+      Seating_Office: 'SITE LABOUR',
+    };
+
     const formData = {
-      "Labour ID": selectedLabour.LabourID || "",
+      // "Labour ID": selectedLabour.LabourID || "",
       "Labour Ownership": selectedLabour.labourOwnership || "",
+      "Title": selectedLabour?.title || "",
       "Name": selectedLabour.name || "",
       "Aadhaar No": selectedLabour.aadhaarNumber || "",
       "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'yyyy-MM-dd') : "",
       "Contact No": selectedLabour.contactNumber || "",
+      "Emergency Contact": selectedLabour?.emergencyContact || "", 
       "Gender": selectedLabour.gender || "",
-      "Date of Joining": selectedLabour.dateOfJoining || "",
+      "Date of Joining": selectedLabour.dateOfJoining ? format(new Date(selectedLabour.dateOfJoining), 'yyyy-MM-dd') : "",
       "Address": selectedLabour.address || "",
-      "Pincode": selectedLabour.pincode || "",
-      "Taluka": selectedLabour.taluka || "",
-      "District": selectedLabour?.district || "",
       "Village": selectedLabour?.village || "",
+      "Pincode": selectedLabour.pincode || "",
+      "District": selectedLabour?.district || "",
+      "Taluka": selectedLabour.taluka || "",
       "State": selectedLabour?.state || "",
-      "Emergency Contact": selectedLabour?.emergencyContact || "",
-      "Title": selectedLabour?.title || "",
-      "Marital Status": selectedLabour?.maritalStatus || "",
-      "Nationality": selectedLabour?.nationality || "",
-      "Payment Mode": selectedLabour?.paymentMode || "",
-      "Employee Type": selectedLabour?.employeeType || "",
-      "Current Status": selectedLabour?.currentStatus || "",
-      "Seacting Office": selectedLabour?.seatingOffice || "",
-      "Company Name": selectedLabour?.companyName || "",
+      "Marital Status": selectedLabour?.Marital_Status || "",
       "Bank Name": selectedLabour?.bankName || "",
       "Account Number": selectedLabour?.accountNumber || "",
       "IFSC Code": selectedLabour?.ifscCode || "",
-      "Project Name": selectedLabour?.projectName || "",
-      "Labour Category": selectedLabour?.labourCategory || "",
-      "Department": selectedLabour?.department || "",
+      "Project Name": selectedLabour?.projectDescription || "",
+      "Company Name": selectedLabour?.companyName || "",
+      "Department": selectedLabour?.departmentDescription || "",
       "Designation": selectedLabour?.designation || "",
+      "Labour Category": selectedLabour?.labourCategory || "",    
       "Working Hours": selectedLabour?.workingHours || "",
-      "Contractor Name": selectedLabour?.contractorName || "",
-      "Contractor Number": selectedLabour?.contractorNumber || "",
     };
+
+    if (selectedLabour.labourOwnership === "Contractor") {
+      formData["Contractor Name"] = selectedLabour.contractorName || "";
+      formData["Contractor Number"] = selectedLabour.contractorNumber || "";
+    }
 
     const doc = new jsPDF();
     doc.setFontSize(20);
@@ -371,6 +377,15 @@ const ViewDetails = ({ selectedLabour, onClose }) => {
       linkBack.click();
       document.body.removeChild(linkBack);
 
+      const responseId = await axios.get(`${baseUrl}${selectedLabour.uploadIdProof}`, { responseType: 'blob' });
+      const urlId = window.URL.createObjectURL(new Blob([responseId.data], { type: 'image/jpeg' }));
+      const linkId = document.createElement('a');
+      linkId.href = urlId;
+      linkId.setAttribute('download', `Labour_${selectedLabour.id}_ID_Proof.jpg`);
+      document.body.appendChild(linkId);
+      linkId.click();
+      document.body.removeChild(linkId);
+
       toast.success('Aadhaar card downloaded successfully.');
     } catch (error) {
       console.error('Error downloading Aadhaar card:', error);
@@ -379,40 +394,38 @@ const ViewDetails = ({ selectedLabour, onClose }) => {
   };
 
   const formData = {
-    "Labour ID": selectedLabour?.LabourID || "",
-    "Labour Ownership": selectedLabour?.labourOwnership || "",
-    "Name": selectedLabour?.name || "",
-    "Aadhaar No": selectedLabour?.aadhaarNumber || "",
-    "Date of Birth": selectedLabour?.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'yyyy-MM-dd') : "",
-    "Contact No": selectedLabour?.contactNumber || "",
-    "Gender": selectedLabour?.gender || "",
-    "Date of Joining": selectedLabour?.dateOfJoining ? format(new Date(selectedLabour.dateOfJoining), 'yyyy-MM-dd') : "",
-    "Address": selectedLabour?.address || "",
-    "Pincode": selectedLabour?.pincode || "",
-    "Taluka": selectedLabour?.taluka || "",
-    "District": selectedLabour?.district || "",
-    "Village": selectedLabour?.village || "",
-    "State": selectedLabour?.state || "",
-    "Emergency Contact": selectedLabour?.emergencyContact || "",
-    "Title": selectedLabour?.title || "",
-    "Marital Status": selectedLabour?.maritalStatus || "",
-    "Nationality": selectedLabour?.nationality || "",
-    "Payment Mode": selectedLabour?.paymentMode || "",
-    "Employee Type": selectedLabour?.employeeType || "",
-    "Current Status": selectedLabour?.currentStatus || "",
-    "Seacting Office": selectedLabour?.seatingOffice || "",
-    "Company Name": selectedLabour?.companyName || "",
-    "Bank Name": selectedLabour?.bankName || "",
-    "Account Number": selectedLabour?.accountNumber || "",
-    "IFSC Code": selectedLabour?.ifscCode || "",
-    "Project Name": selectedLabour?.projectName || "",
-    "Labour Category": selectedLabour?.labourCategory || "",
-    "Department": selectedLabour?.department || "",
-    "Designation": selectedLabour?.designation || "",
-    "Working Hours": selectedLabour?.workingHours || "",
-    "Contractor Name": selectedLabour?.contractorName || "",
-    "Contractor Number": selectedLabour?.contractorNumber || "",
+    // "Labour ID": selectedLabour?.LabourID || "",
+    "Labour Ownership": selectedLabour.labourOwnership || "",
+      "Title": selectedLabour?.title || "",
+      "Name": selectedLabour.name || "",
+      "Aadhaar No": selectedLabour.aadhaarNumber || "",
+      "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'yyyy-MM-dd') : "",
+      "Contact No": selectedLabour.contactNumber || "",
+      "Emergency Contact": selectedLabour?.emergencyContact || "", 
+      "Gender": selectedLabour.gender || "",
+      "Date of Joining": selectedLabour.dateOfJoining ? format(new Date(selectedLabour.dateOfJoining), 'yyyy-MM-dd') : "",
+      "Address": selectedLabour.address || "",
+      "Village": selectedLabour?.village || "",
+      "Pincode": selectedLabour.pincode || "",
+      "District": selectedLabour?.district || "",
+      "Taluka": selectedLabour.taluka || "",
+      "State": selectedLabour?.state || "",
+      "Marital Status": selectedLabour?.Marital_Status || "",
+      "Bank Name": selectedLabour?.bankName || "",
+      "Account Number": selectedLabour?.accountNumber || "",
+      "IFSC Code": selectedLabour?.ifscCode || "",
+      "Project Name": selectedLabour?.projectDescription || "",
+      "Company Name": selectedLabour?.companyName || "",
+      "Department": selectedLabour?.departmentDescription || "",
+      "Designation": selectedLabour?.designation || "",
+      "Labour Category": selectedLabour?.labourCategory || "",    
+      "Working Hours": selectedLabour?.workingHours || "",
   };
+
+  if (selectedLabour?.labourOwnership === "Contractor") {
+    formData["Contractor Name"] = selectedLabour?.contractorName || "";
+    formData["Contractor Number"] = selectedLabour?.contractorNumber || "";
+  }
 
   return (
     <Dialog open={!!selectedLabour} onClose={onClose} PaperProps={{ className: 'custom-dialog' }}>

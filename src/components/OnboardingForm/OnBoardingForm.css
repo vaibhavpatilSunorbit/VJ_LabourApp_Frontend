@@ -398,6 +398,7 @@
 
 
 
+
 /* Animation keyframes for modal fade-in */
 @keyframes modalFadeIn {
   from {
@@ -521,7 +522,7 @@ display: inline;
   border-radius: 4px;
   font-size: 16px;
   width: 276px;
-  color: rgb(164, 154, 154);
+  color: rgb(84, 75, 75);
   font-weight: 300;
   height: 43px;
 
@@ -941,7 +942,7 @@ display: none
     border-radius: 4px;
     font-size: 16px;
     width: 258px;
-    color: #B5B5B5;
+    color: #7a7575;
     font-weight: 500;
     height: 18px;
     border-color: #efb5f4;
@@ -982,12 +983,13 @@ display: none
     border-radius: 4px;
     font-size: 16px;
     width: 276px;
-    color: #B5B5B5;
+    color: #7a7575;
     font-weight: 300;
     height: 43px;
     border-color: #efb5f4;
     box-shadow: 0 0 5px rgb(138 147 235 / 54%);
   }
+  
   
   li {
     list-style-type: none;

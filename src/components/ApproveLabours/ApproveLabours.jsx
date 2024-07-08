@@ -32,7 +32,7 @@
 //     }
 //   };
 
-  
+
 //   const handleChangePage = (event, newPage) => {
 //     setPage(newPage);
 //   };
@@ -42,7 +42,7 @@
 //     setPage(0);
 //   };
 
- 
+
 //   return (
 //     <Box  py={2} px={2} sx={{ width: isMobile ? '90vw' : 'auto' }}>
 //       <Typography variant="h4" mb={3}>
@@ -96,7 +96,7 @@
 //                     <TableCell>{labour.department}</TableCell>
 //                     <TableCell>{labour.labourCategory}</TableCell>
 //                     <TableCell>{labour.status}</TableCell>
-                    
+
 //                   </TableRow>
 //                 ))
 //               ) : (
@@ -216,7 +216,7 @@
 //     setIsPopupOpen(false);
 //   };
 
-  
+
 //   return (
 //     <Box py={2} px={1} sx={{ width: isMobile ? '96vw' : 'auto' }}>
 //       <Typography variant="h5" mb={1}>
@@ -360,7 +360,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import { API_BASE_URL } from "../../Data"
 
-const ApproveLabour = ({ onApprove }) => {
+const ApproveLabours = ({ onApprove, departments, projectNames }) => {
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -369,7 +369,7 @@ const ApproveLabour = ({ onApprove }) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedLabour, setSelectedLabour] = useState(null);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [tabValue, setTabValue] = useState(0);
   const theme = useTheme();
   // const isMobile = useMediaQuery('(max-width: 600px)');
@@ -382,7 +382,8 @@ const ApproveLabour = ({ onApprove }) => {
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(API_BASE_URL + `/labours`);
+      const response = await axios.get(`${API_BASE_URL}/labours`);
+      console.log('API Response:', response.data);
       setLabours(response.data);
       setLoading(false);
     } catch (error) {
@@ -408,49 +409,19 @@ const ApproveLabour = ({ onApprove }) => {
   };
 
 
-  const handleApprove = async (id) => {
-    try {
-      const response = await axios.put(API_BASE_URL + `/labours/approve/${id}`);
-      if (response.data.success) {
-        setLabours(prevLabours =>
-          prevLabours.map(labour =>
-            labour.id === id ? { ...labour, status: 'Approved', isApproved: 1 } : labour
-          )
-        );
-        toast.success('Labour approved successfully.');
-        onApprove();
-      } else {
-        toast.error('Failed to approve labour. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error approving labour:', error);
-      toast.error('Error approving labour. Please try again.');
-    }
-  };
-
-  const handleReject = async (id) => {
-    try {
-      const response = await axios.put(API_BASE_URL + `/labours/reject/${id}`);
-      if (response.data.success) {
-        setLabours(prevLabours =>
-          prevLabours.map(labour =>
-            labour.id === id ? { ...labour, status: 'Rejected', isApproved: 2 } : labour
-          )
-        );
-        toast.success('Labour rejected successfully.');
-      } else {
-        toast.error('Failed to reject labour. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error rejecting labour:', error);
-      toast.error('Error rejecting labour. Please try again.');
-    }
-  };
 
   const openPopup = async (labour) => {
     try {
       const response = await axios.get(API_BASE_URL + `/labours/${labour.id}`);
-      setSelectedLabour(response.data);
+      const labourDetails = response.data;
+      const projectDescription = getProjectDescription(labourDetails.projectName);
+      const departmentDescription = getDepartmentDescription(labourDetails.department);
+
+      setSelectedLabour({
+        ...labourDetails,
+        projectDescription,
+        departmentDescription,
+      });
       setIsPopupOpen(true);
     } catch (error) {
       console.error('Error fetching labour details:', error);
@@ -478,6 +449,11 @@ const ApproveLabour = ({ onApprove }) => {
   };
 
 
+  const handleSelectLabour = (selectedLabour) => {
+    setSelectedLabour(selectedLabour);
+  };
+
+
   const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
   const filteredLabours = displayLabours.filter(labour => {
@@ -489,6 +465,39 @@ const ApproveLabour = ({ onApprove }) => {
       return labour.status === 'Rejected';
     }
   });
+
+  const getDepartmentDescription = (departmentId) => {
+    if (!departments || departments.length === 0) {
+      return 'Unknown';
+    }
+    const department = departments.find(dept => dept.Id === Number(departmentId));
+    return department ? department.Description : 'Unknown';
+  };
+
+  const getProjectDescription = (projectId) => {
+    console.log('Projects Array:', projectNames);
+    console.log('Project ID:', projectId, 'Type:', typeof projectId);
+
+    if (!projectNames || projectNames.length === 0) {
+      console.log('Projects array is empty or undefined');
+      return 'Unknown';
+    }
+
+    if (projectId === undefined || projectId === null) {
+      console.log('Project ID is undefined or null');
+      return 'Unknown';
+    }
+
+    const project = projectNames.find(proj => {
+      console.log(`Checking project: ${proj.id} === ${Number(projectId)} (Type: ${typeof proj.id})`);
+      return proj.id === Number(projectId);
+    });
+
+    console.log('Found Project:', project);
+    return project ? project.Business_Unit : 'Unknown';
+  };
+
+
 
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', }}>
@@ -503,6 +512,7 @@ const ApproveLabour = ({ onApprove }) => {
           handleSearch={handleSearch}
           searchResults={searchResults}
           setSearchResults={setSearchResults}
+          handleSelectLabour={handleSelectLabour}
           className="search-bar"
         />
       </Box>
@@ -592,7 +602,7 @@ const ApproveLabour = ({ onApprove }) => {
         </Tabs>
         <TablePagination
           className="custom-pagination"
-          rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+          rowsPerPageOptions={[10, 25, { label: 'All', value: -1 }]}
           count={filteredLabours.length}
           rowsPerPage={rowsPerPage}
           page={page}
@@ -622,16 +632,16 @@ const ApproveLabour = ({ onApprove }) => {
       }}>
         <Table sx={{ minWidth: 800 }} >
           <TableHead >
-          <TableRow
-            sx={{
-              '& th': {
-                padding: '12px',
-                '@media (max-width: 600px)': {
-                  padding: '10px',
+            <TableRow
+              sx={{
+                '& th': {
+                  padding: '12px',
+                  '@media (max-width: 600px)': {
+                    padding: '10px',
+                  },
                 },
-              },
-            }}
-          >
+              }}
+            >
               <TableCell>Sr No</TableCell>
               <TableCell>Name of Labour</TableCell>
               <TableCell>Project</TableCell>
@@ -646,25 +656,30 @@ const ApproveLabour = ({ onApprove }) => {
               ? filteredLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               : filteredLabours
             ).map((labour, index) => (
+              console.log('Labour Object:', labour),
+              console.log('Labour Project ID:', labour.project_id),
               <TableRow
-              key={labour.id}
-              sx={{
-                '& td': {
-                  padding: '12px',
-                  '@media (max-width: 600px)': {
-                    padding: '10px',
+                key={labour.id}
+                sx={{
+                  '& td': {
+                    padding: '12px',
+                    '@media (max-width: 600px)': {
+                      padding: '10px',
+                    },
                   },
-                },
-              }}
-            >
+                }}
+              >
                 <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                 <TableCell>{labour.name}</TableCell>
-                <TableCell>{labour.projectName}</TableCell>
-                <TableCell>{labour.department}</TableCell>
+                <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
+                <TableCell>{getDepartmentDescription(labour.department)}</TableCell>
                 <TableCell>{labour.labourCategory}</TableCell>
                 <TableCell>{labour.status}</TableCell>
+
                 <TableCell>
+
                   < RemoveRedEyeIcon onClick={() => openPopup(labour)} />
+
                 </TableCell>
               </TableRow>
             ))}
@@ -692,4 +707,4 @@ const ApproveLabour = ({ onApprove }) => {
   );
 };
 
-export default ApproveLabour;
+export default ApproveLabours;

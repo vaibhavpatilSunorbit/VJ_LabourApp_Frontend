@@ -1,4 +1,89 @@
-import React, { useState } from 'react';
+// import React, { useState } from 'react';
+// import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// import Header from './components/Header/Header';
+// import Sidebar from './components/Sidebar/Sidebar';
+// import OnboardingForm from './components/OnboardingForm/OnboardingForm';
+// import AddUser from "./components/AddUser/AddUser";
+// import LabourDetails from "./components/LabourDetails/LabourDetails";
+// import ApproveLabours from "./components/ApproveLabours/ApproveLabours";
+// import Dashboard from "./components/Dashboard/Dashboard"
+// import Login from "./components/Login/Login"
+// import './App.css';
+
+// function App() {
+//   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
+//   const [approvedLabours, setApprovedLabours] = useState([]);
+//   const [refresh, setRefresh] = useState(false);
+//   const [formStatus, setFormStatus] = useState({
+//     kyc: false,
+//     personal: false,
+//     bankDetails: false,
+//     project: false
+//   });
+
+//   const handleApprove = () => {
+//     setRefresh(prev => !prev);
+//   };
+
+//   const OpenSidebar = () => {
+//     setOpenSidebarToggle(!openSidebarToggle);
+//   };
+
+//   const handleFormSubmit = (formType, data) => {
+//     if (formType === 'approveLabours') {
+//       setApprovedLabours([...approvedLabours, data]); 
+//     }
+//     setFormStatus((prevStatus) => ({
+//       ...prevStatus,
+//       [formType]: true
+//     }));
+//   };
+
+//   return (
+//     <Router>
+//       <div className='grid-container'>
+//         <Routes>
+//           {/* Route for Login */}
+//           <Route path="/" element={<Login />} />
+          
+//           {/* Routes with Header and Sidebar */}
+//           <Route
+//             path="/*"
+//             element={
+//               <>
+//                 <Header OpenSidebar={OpenSidebar} />
+//                 <Sidebar formStatus={formStatus} openSidebarToggle={openSidebarToggle} OpenSidebar={OpenSidebar} />
+//                 <Routes>
+//                   <Route path="/dashboard" element={<Dashboard />} />
+//                   <Route path="/kyc" element={<OnboardingForm formType="kyc" onFormSubmit={handleFormSubmit} />} />
+//                   <Route path="/personal" element={<OnboardingForm formType="personal" onFormSubmit={handleFormSubmit} />} />
+//                   <Route path="/project" element={<OnboardingForm formType="project" onFormSubmit={handleFormSubmit} />} />
+//                   <Route path="/bankDetails" element={<OnboardingForm formType="bankDetails" onFormSubmit={handleFormSubmit} />} />
+//                   <Route path="/labourDetails" element={<LabourDetails onFormSubmit={handleFormSubmit} onApprove={handleApprove} />} />
+//                   <Route path="/approveLabours" element={<ApproveLabours refresh={refresh} />} />
+//                   <Route path="/addUser" element={<AddUser onFormSubmit={handleFormSubmit} />} />
+//                 </Routes>
+//               </>
+//             }
+//           />
+          
+//           {/* Redirect to Login if route doesn't match */}
+//           <Route path="*" element={<Navigate to="/" />} />
+//         </Routes>
+//       </div>
+//     </Router>
+//   );
+// }
+
+// export default App;
+
+
+
+
+
+
+
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
@@ -6,8 +91,10 @@ import OnboardingForm from './components/OnboardingForm/OnboardingForm';
 import AddUser from "./components/AddUser/AddUser";
 import LabourDetails from "./components/LabourDetails/LabourDetails";
 import ApproveLabours from "./components/ApproveLabours/ApproveLabours";
-import Dashboard from "./components/Dashboard/Dashboard"
-import Login from "./components/Login/Login"
+import Dashboard from "./components/Dashboard/Dashboard";
+import Login from "./components/Login/Login";
+import axios from 'axios';
+import { API_BASE_URL } from "./Data";
 import './App.css';
 
 function App() {
@@ -20,6 +107,28 @@ function App() {
     bankDetails: false,
     project: false
   });
+
+
+  const [departments, setDepartments] = useState([]);
+  const [projectNames, setProjectNames] = useState([]);
+
+  useEffect(() => {
+    const fetchDepartmentsAndProjects = async () => {
+      try {
+        const departmentsRes = await axios.get(API_BASE_URL + '/api/departments');
+        console.log('Fetched Departments:', departmentsRes.data); // Debugging
+        setDepartments(departmentsRes.data);
+
+        const projectsRes = await axios.get(API_BASE_URL + '/api/project-names');
+        console.log('Fetched Projects:', projectsRes.data); // Debugging
+        setProjectNames(projectsRes.data);
+      } catch (err) {
+        console.error('Error fetching departments or projects:', err);
+      }
+    };
+
+    fetchDepartmentsAndProjects();
+  }, []);
 
   const handleApprove = () => {
     setRefresh(prev => !prev);
@@ -59,8 +168,8 @@ function App() {
                   <Route path="/personal" element={<OnboardingForm formType="personal" onFormSubmit={handleFormSubmit} />} />
                   <Route path="/project" element={<OnboardingForm formType="project" onFormSubmit={handleFormSubmit} />} />
                   <Route path="/bankDetails" element={<OnboardingForm formType="bankDetails" onFormSubmit={handleFormSubmit} />} />
-                  <Route path="/labourDetails" element={<LabourDetails onFormSubmit={handleFormSubmit} onApprove={handleApprove} />} />
-                  <Route path="/approveLabours" element={<ApproveLabours refresh={refresh} />} />
+                  <Route path="/labourDetails" element={<LabourDetails departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} onApprove={handleApprove} />} />
+                  <Route path="/approveLabours" element={<ApproveLabours refresh={refresh} departments={departments} projectNames={projectNames}/>} />
                   <Route path="/addUser" element={<AddUser onFormSubmit={handleFormSubmit} />} />
                 </Routes>
               </>
@@ -76,6 +185,8 @@ function App() {
 }
 
 export default App;
+
+
 
 
 

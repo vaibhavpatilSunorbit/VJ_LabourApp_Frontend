@@ -259,6 +259,11 @@
 
 
 
+
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -289,7 +294,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import { API_BASE_URL } from "../../Data"
 
-const LabourDetails = ({ onApprove }) => {
+const LabourDetails = ({ onApprove, departments, projectNames }) => {
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -298,7 +303,7 @@ const LabourDetails = ({ onApprove }) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedLabour, setSelectedLabour] = useState(null);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [tabValue, setTabValue] = useState(0);
   const theme = useTheme();
   // const isMobile = useMediaQuery('(max-width: 600px)');
@@ -311,7 +316,8 @@ const LabourDetails = ({ onApprove }) => {
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(API_BASE_URL + `/labours`);
+      const response = await axios.get(`${API_BASE_URL}/labours`);
+      console.log('API Response:', response.data);
       setLabours(response.data);
       setLoading(false);
     } catch (error) {
@@ -379,7 +385,15 @@ const LabourDetails = ({ onApprove }) => {
   const openPopup = async (labour) => {
     try {
       const response = await axios.get(API_BASE_URL + `/labours/${labour.id}`);
-      setSelectedLabour(response.data);
+      const labourDetails = response.data;
+      const projectDescription = getProjectDescription(labourDetails.projectName);
+      const departmentDescription = getDepartmentDescription(labourDetails.department);
+
+      setSelectedLabour({
+        ...labourDetails,
+        projectDescription,
+        departmentDescription,
+      });
       setIsPopupOpen(true);
     } catch (error) {
       console.error('Error fetching labour details:', error);
@@ -406,6 +420,10 @@ const LabourDetails = ({ onApprove }) => {
     setPage(0);
   };
 
+  const handleSelectLabour = (selectedLabour) => {
+    setSelectedLabour(selectedLabour);
+  };
+
 
   const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
@@ -418,6 +436,52 @@ const LabourDetails = ({ onApprove }) => {
       return labour.status === 'Rejected';
     }
   });
+
+  // Function to get department description from ID
+  // const getDepartmentDescription = (departmentId) => {
+  //   if (!departments || departments.length === 0) {
+  //     return 'Unknown';
+  //   }
+  //   const department = departments.find(dept => dept.Id === Number(departmentId));
+  //   return department ? department.Description : 'Unknown';
+  // };
+
+
+  const getDepartmentDescription = (departmentId) => {
+    if (!departments || departments.length === 0) {
+      return 'Unknown';
+    }
+    const department = departments.find(dept => dept.Id === Number(departmentId));
+    return department ? department.Description : 'Unknown';
+  };
+
+
+
+
+  const getProjectDescription = (projectId) => {
+    console.log('Projects Array:', projectNames);
+    console.log('Project ID:', projectId, 'Type:', typeof projectId);
+
+    if (!projectNames || projectNames.length === 0) {
+      console.log('Projects array is empty or undefined');
+      return 'Unknown';
+    }
+
+    if (projectId === undefined || projectId === null) {
+      console.log('Project ID is undefined or null');
+      return 'Unknown';
+    }
+
+    const project = projectNames.find(proj => {
+      console.log(`Checking project: ${proj.id} === ${Number(projectId)} (Type: ${typeof proj.id})`);
+      return proj.id === Number(projectId);
+    });
+
+    console.log('Found Project:', project);
+    return project ? project.Business_Unit : 'Unknown';
+  };
+
+
 
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', }}>
@@ -432,6 +496,7 @@ const LabourDetails = ({ onApprove }) => {
           handleSearch={handleSearch}
           searchResults={searchResults}
           setSearchResults={setSearchResults}
+          handleSelectLabour={handleSelectLabour}
           className="search-bar"
         />
       </Box>
@@ -521,7 +586,7 @@ const LabourDetails = ({ onApprove }) => {
         </Tabs>
         <TablePagination
           className="custom-pagination"
-          rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+          rowsPerPageOptions={[10, 25, { label: 'All', value: -1 }]}
           count={filteredLabours.length}
           rowsPerPage={rowsPerPage}
           page={page}
@@ -562,6 +627,7 @@ const LabourDetails = ({ onApprove }) => {
             }}
           >
               <TableCell>Sr No</TableCell>
+              <TableCell>Labour ID</TableCell>
               <TableCell>Name of Labour</TableCell>
               <TableCell>Project</TableCell>
               <TableCell>Department</TableCell>
@@ -576,6 +642,8 @@ const LabourDetails = ({ onApprove }) => {
               ? filteredLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               : filteredLabours
             ).map((labour, index) => (
+              console.log('Labour Object:', labour),
+              console.log('Labour Project ID:', labour.project_id),
               <TableRow
               key={labour.id}
               sx={{
@@ -588,9 +656,10 @@ const LabourDetails = ({ onApprove }) => {
               }}
             >
                 <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                <TableCell>{labour.LabourID}</TableCell>
                 <TableCell>{labour.name}</TableCell>
-                <TableCell>{labour.projectName}</TableCell>
-                <TableCell>{labour.department}</TableCell>
+                <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
+              <TableCell>{getDepartmentDescription(labour.department)}</TableCell>
                 <TableCell>{labour.labourCategory}</TableCell>
                 <TableCell>{labour.status}</TableCell>
                 <TableCell>
