@@ -264,6 +264,8 @@
 
 
 
+
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -282,19 +284,33 @@ import {
   Fade,
   TablePagination,
   Tabs,
-  Tab
+  Tab,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import "./LabourDetails.css";
+import { useNavigate } from 'react-router-dom';
 import SearchBar from '../SarchBar/SearchBar';
 import ViewDetails from '../ViewDetails/ViewDetails';
 import Loading from "../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-import { API_BASE_URL } from "../../Data"
+import EditIcon from '@mui/icons-material/Edit';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { API_BASE_URL } from "../../Data";
+import InfoIcon from '@mui/icons-material/Info';
+import jsPDF from 'jspdf';
+import { useUser } from '../../UserContext/UserContext';
+// import logoImage from '../../images/Labour_ID_Card.png';
 
-const LabourDetails = ({ onApprove, departments, projectNames }) => {
+const LabourDetails = ({ onApprove, departments, projectNames ,labour    }) => {
+  const { user } = useUser();
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -305,10 +321,25 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [tabValue, setTabValue] = useState(0);
+  const [rejectReason, setRejectReason] = useState('');
+  const [isRejectPopupOpen, setIsRejectPopupOpen] = useState(false);
+  const [isRejectReasonPopupOpen, setIsRejectReasonPopupOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [popupType, setPopupType] = useState('');
+  const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false); // New state for confirmation dialog
+  const [labourToApprove, setLabourToApprove] = useState(null);
+  const [disabledButtons, setDisabledButtons] = useState(new Set());
   const theme = useTheme();
+  const [resubmittedLabours, setResubmittedLabours] = useState(new Set());
+  const navigate = useNavigate();
+
   // const isMobile = useMediaQuery('(max-width: 600px)');
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // const history = useHistory();
+  
+console.log("setSelectedLaour",setSelectedLabour)
   useEffect(() => {
     fetchLabours();
   }, []);
@@ -334,7 +365,7 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
       return;
     }
     try {
-      const response = await axios.get(API_BASE_URL + `/labours/search?q=${searchQuery}`);
+      const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
     } catch (error) {
       console.error('Error searching:', error);
@@ -342,18 +373,58 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
     }
   };
 
+  const handleApproveConfirmOpen = (labour) => {
+    setLabourToApprove(labour);
+    setIsApproveConfirmOpen(true);
+  };
+
+  const handleApproveConfirmClose = () => {
+    setLabourToApprove(null);
+    setIsApproveConfirmOpen(false);
+  };
 
   const handleApprove = async (id) => {
+    console.log('Approving labour ID:', id);
+    console.log('Logged-in user:', user);
+    handleApproveConfirmClose(); 
     try {
-      const response = await axios.put(API_BASE_URL + `/labours/approve/${id}`);
+      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/labours/next-id`);
+      // const response = await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { LabourID: nextID, onboardName: loggedInUser});
+      // const response = await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { LabourID: nextID, onboardName: user.name }); // Include OnboardName
+      const response = await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { LabourID: nextID}); // Include OnboardName
+      console.log('API response:', response.data);
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
-            labour.id === id ? { ...labour, status: 'Approved', isApproved: 1 } : labour
+            labour.id === id ? { ...labour, status: 'Approved', isApproved: 1, LabourID: nextID, onboardName: labour.OnboardName  } : labour
           )
         );
         toast.success('Labour approved successfully.');
         onApprove();
+        setPopupMessage(
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
+              textAlign: 'center',
+              lineHeight: '1.5',
+              padding: '20px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '10px',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your details have been successfully submitted.</p>
+            <p style={{ fontSize: '1.2em', color: '#343a40' }}>
+              Your Labour ID is <span style={{ fontSize: '1.5em', color: '#007bff', fontWeight: 700 }}>{nextID}</span>.
+            </p>
+            <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
+          </div>
+        );
+        setPopupType('success');
+        setSaved(true);
       } else {
         toast.error('Failed to approve labour. Please try again.');
       }
@@ -362,17 +433,67 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
       toast.error('Error approving labour. Please try again.');
     }
   };
+  
+  // const handleResubmit = async (id) => {
+  //   try {
+  //     const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${id}`);
+  //     if (response.data.success) {
+  //       setLabours(prevLabours =>
+  //         prevLabours.map(labour =>
+  //           labour.id === id ? { ...labour, status: 'Pending', isApproved: 0 } : labour
+  //         )
+  //       );
+  //       toast.success('Labour resubmitted successfully.');
+  //       window.location.reload();
+  //     } else {
+  //       toast.error('Failed to resubmit labour. Please try again.');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error resubmitting labour:', error);
+  //     toast.error('Error resubmitting labour. Please try again.');
+  //   }
+  // };
+
+  // const handleResubmit = (labour) => {
+  //   setResubmittedLabours(prev => new Set([...prev, labour.id]));
+  //   navigate('/kyc', { state: { labour } });
+  // };  
+  const handleResubmit = async(labour) => {
+    setResubmittedLabours((prev) => new Set(prev).add(labour.id));
+try {
+  const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${labour.id}`, );
+  if (response.data.success) {
+    navigate('/kyc', { state: { labour } });
+
+    setLabours(prevLabours =>
+      prevLabours.map(labour =>
+        labour.id === labour.id ? { ...labour, status: 'Resumbit', isApproved: 3,} : labour
+      )
+    );
+  } else {
+    toast.error('Failed to resumbit labour. Please try again.');
+  }
+} catch (error) {
+  console.error('Error rejecting labour:', error);
+  toast.error('Error rejecting labour. Please try again.');
+}
+  };
+
+
+  console.log("resubmittedLabluasd:",resubmittedLabours)
+
 
   const handleReject = async (id) => {
     try {
-      const response = await axios.put(API_BASE_URL + `/labours/reject/${id}`);
+      const response = await axios.put(`${API_BASE_URL}/labours/reject/${id}`, { Reject_Reason: rejectReason });
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
-            labour.id === id ? { ...labour, status: 'Rejected', isApproved: 2 } : labour
+            labour.id === id ? { ...labour, status: 'Rejected', isApproved: 2, Reject_Reason: rejectReason } : labour
           )
         );
         toast.success('Labour rejected successfully.');
+        setIsRejectPopupOpen(false);
       } else {
         toast.error('Failed to reject labour. Please try again.');
       }
@@ -382,9 +503,31 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
     }
   };
 
+  const openRejectPopup = (labour) => {
+    setSelectedLabour(labour);
+    setIsRejectPopupOpen(true);
+  };
+
+  const closeRejectPopup = () => {
+    setSelectedLabour(null);
+    setIsRejectPopupOpen(false);
+  };
+
+  const openRejectReasonPopup = (labour) => {
+    setSelectedLabour(labour);
+    setIsRejectReasonPopupOpen(true);
+  };
+
+  const closeRejectReasonPopup = () => {
+    setSelectedLabour(null);
+    setIsRejectReasonPopupOpen(false);
+  };
+
+
+
   const openPopup = async (labour) => {
     try {
-      const response = await axios.get(API_BASE_URL + `/labours/${labour.id}`);
+      const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
       const labourDetails = response.data;
       const projectDescription = getProjectDescription(labourDetails.projectName);
       const departmentDescription = getDepartmentDescription(labourDetails.department);
@@ -424,6 +567,116 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
     setSelectedLabour(selectedLabour);
   };
 
+  const handleEdit = (labour) => {
+    navigate('/edit-labour', { state: { labour } });
+  };
+
+
+  const handleDownloadPDF = async (labourId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
+      const labour = response.data;
+  
+      const doc = new jsPDF();
+  
+      const logoUrl = `${process.env.PUBLIC_URL}/images/vjlogo.png`; // Use the public URL
+  
+      // Verify that the logoUrl is correctly defined
+      if (!logoUrl) {
+        throw new Error('Logo URL is undefined');
+      }
+  
+      // Load the logo image
+      const loadImage = (url) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = (error) => {
+            console.error(`Failed to load image: ${url}`, error);
+            reject(new Error(`Failed to load image: ${url}`));
+          };
+          img.src = url;
+          console.log(`Attempting to load image from URL: ${url}`);
+        });
+      };
+  
+      console.log('Loading logo image from URL:', logoUrl);
+      const logoImg = await loadImage(logoUrl);
+      console.log('Logo image loaded:', logoImg);
+  
+      if (!labour.photoSrc) {
+        throw new Error('Labour photo URL is undefined');
+      }
+  
+      console.log('Loading labour photo from URL:', labour.photoSrc);
+      const labourPhoto = await loadImage(labour.photoSrc);
+      console.log('Labour photo loaded:', labourPhoto);
+  
+      // Convert image to data URI
+      const getDataUrl = (img) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        return canvas.toDataURL('image/png');
+      };
+  
+      const logoDataUrl = getDataUrl(logoImg);
+      const labourPhotoDataUrl = getDataUrl(labourPhoto);
+  
+      // Add logo
+      doc.addImage(logoDataUrl, 'PNG', 10, 10, 50, 20); 
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text('LABOUR ID CARD', 70, 25);
+  
+      // Add image
+      doc.addImage(labourPhotoDataUrl, 'PNG', 10, 40, 50, 70); 
+      doc.setLineWidth(1); // Set line width for darker border
+    doc.setDrawColor(0, 0, 0); // Set border color to black
+    doc.rect(10, 40, 50, 70); // Add border around image
+
+    const formatDate = (dateString) => {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0]; // Extract the date part only
+    };
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      const lineHeight = 8;
+      const startX = 70;
+      const valueStartX = 120; 
+      let startY = 40;
+
+      const addDetail = (label, value) => {
+        doc.text(`${label}`, startX, startY);
+        doc.text(`: ${value || 'N/A'}`, valueStartX, startY);
+        startY += lineHeight;
+      };
+  
+      addDetail('Name', labour.name);
+    addDetail('Location', labour.location);
+    addDetail('Date of Birth', formatDate(labour.dateOfBirth));
+    addDetail('Aadhaar No.', labour.aadhaarNumber);
+    addDetail('Department', labour.department);
+    addDetail('Designation', labour.designation);
+    addDetail('Emergency No.', labour.emergencyContact);
+    addDetail('Inducted by', labour.Inducted_By);
+    addDetail('Induction date', formatDate(labour.Induction_Date));
+    addDetail('Date Of joining', formatDate(labour.dateOfJoining));
+    addDetail('Valid till', labour.validTill);
+
+  
+      doc.save(`LabourID_${labour.LabourID || labourId}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error generating PDF. Please try again.');
+    }
+  };
+
 
   const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
@@ -433,7 +686,7 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
     } else if (tabValue === 1) {
       return labour.status === 'Approved';
     } else {
-      return labour.status === 'Rejected';
+      return labour.status === 'Rejected' || labour.status === 'Resubmit';
     }
   });
 
@@ -446,6 +699,9 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
   //   return department ? department.Description : 'Unknown';
   // };
 
+  const sortedLabours = tabValue === 1 
+  ? filteredLabours.sort((a, b) => a.LabourID.localeCompare(b.LabourID))
+  : filteredLabours.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const getDepartmentDescription = (departmentId) => {
     if (!departments || departments.length === 0) {
@@ -494,6 +750,7 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
+          // handleSearch={() => {}}
           searchResults={searchResults}
           setSearchResults={setSearchResults}
           handleSelectLabour={handleSelectLabour}
@@ -626,127 +883,146 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
               },
             }}
           >
-              <TableCell>Sr No</TableCell>
-              <TableCell>Labour ID</TableCell>
+             <TableCell>Sr No</TableCell>
+              {tabValue !== 0 && tabValue !== 2 && <TableCell>Labour ID</TableCell>}
               <TableCell>Name of Labour</TableCell>
               <TableCell>Project</TableCell>
               <TableCell>Department</TableCell>
-              <TableCell>Labour Category</TableCell>
+              {(tabValue === 0 || tabValue === 1) && <TableCell>Onboarded By</TableCell>}
               <TableCell>Status</TableCell>
-              <TableCell>Action</TableCell>
+              {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
+              {/* {tabValue === 2 && <TableCell>Edit</TableCell>} */}
+              {tabValue === 1 && <TableCell>LabourID Card</TableCell>}
+              {user.userType === 'admin' && <TableCell>Action</TableCell>}
               <TableCell>Details</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {(rowsPerPage > 0
-              ? filteredLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              : filteredLabours
+              ? sortedLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              : sortedLabours
             ).map((labour, index) => (
-              console.log('Labour Object:', labour),
-              console.log('Labour Project ID:', labour.project_id),
-              <TableRow
-              key={labour.id}
-              sx={{
-                '& td': {
-                  padding: '12px',
-                  '@media (max-width: 600px)': {
-                    padding: '10px',
-                  },
-                },
-              }}
-            >
+              <TableRow key={labour.id}>
                 <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                <TableCell>{labour.LabourID}</TableCell>
+                {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.LabourID}</TableCell>}
                 <TableCell>{labour.name}</TableCell>
                 <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
-              <TableCell>{getDepartmentDescription(labour.department)}</TableCell>
-                <TableCell>{labour.labourCategory}</TableCell>
+                <TableCell>{getDepartmentDescription(labour.department)}</TableCell>
+                {(tabValue === 0 || tabValue === 1) && (
+                  <TableCell>{labour.OnboardName}</TableCell>
+                )}
                 <TableCell>{labour.status}</TableCell>
-                <TableCell>
-                  {labour.status === 'Pending' && (
-                    <>
+                {tabValue === 2 && (
+                  <TableCell>
+                    <InfoIcon onClick={() => {
+                      setSelectedLabour(labour);
+                      setIsRejectReasonPopupOpen(true);
+                    }} />
+                  </TableCell>
+                )}
+                {/* {tabValue === 2 && (
+                  <TableCell>
+                    <EditIcon onClick={() => navigate('/kyc', { state: { labour } })} />
+                  </TableCell>
+                )} */}
+                {tabValue === 1 && (
+                  <TableCell>
+                    <PictureAsPdfIcon onClick={() => handleDownloadPDF(labour.id)} />
+                  </TableCell>
+                )}
+               {user.userType === 'admin' && (
+      <TableCell>
+        {labour.status === 'Pending' && (
+          <>
+            <Button
+              variant="contained"
+              sx={{
+                backgroundColor: 'rgb(229, 255, 225)',
+                color: 'rgb(43, 217, 144)',
+                width: '100px',
+                marginRight: '10px',
+                marginBottom: '3px',
+                '&:hover': {
+                  backgroundColor: 'rgb(229, 255, 225)',
+                },
+              }}
+              onClick={() => handleApproveConfirmOpen(labour)}
+              // onClick={() => handleApprove(labour.id)}
+            >
+              Approve
+            </Button>
+            <Button
+              variant="contained"
+              sx={{
+                backgroundColor: '#fce4ec',
+                color: 'rgb(255, 100, 100)',
+                width: '100px',
+                '&:hover': {
+                  backgroundColor: '#f8bbd0',
+                },
+              }}
+              onClick={() => {
+                setSelectedLabour(labour);
+                setIsRejectPopupOpen(true);
+              }}
+            >
+              Reject
+            </Button>
+          </>
+        )}
+        {labour.status === 'Approved' && (
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: 'rgb(229, 255, 225)',
+              color: 'rgb(43, 217, 144)',
+              '&:hover': {
+                backgroundColor: 'rgb(229, 255, 225)',
+              },
+            }}
+            onClick={() => handleEdit(labour)}
+          >
+            update
+          </Button>
+        )}
+        {/* {labour.status === 'Rejected' && !resubmittedLabours.has(labour.id) && (
                       <Button
                         variant="contained"
                         sx={{
                           backgroundColor: 'rgb(229, 255, 225)',
                           color: 'rgb(43, 217, 144)',
-                          width: '100px',
-                          marginRight: '10px',
-                          marginBottom: '3px',
                           '&:hover': {
                             backgroundColor: 'rgb(229, 255, 225)',
                           },
                         }}
-                        onClick={() => handleApprove(labour.id)}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        variant="contained"
-                        sx={{
-                          backgroundColor: '#fce4ec',
-                          color: 'rgb(255, 100, 100)',
-                          width: '100px',
-                          '&:hover': {
-                            backgroundColor: '#f8bbd0',
-                          },
-                        }}
-                        onClick={() => handleReject(labour.id)}
-                      >
-                        Reject
-                      </Button>
-                    </>
-                  )}
-                  {labour.status === 'Approved' && (
-                    <Button
-                      variant="contained"
-                      sx={{
-                        backgroundColor: 'rgb(255, 229, 229)',
-                        color: 'rgb(255, 100, 100)',
-                        width: '100px',
-                        '&:hover': {
-                          backgroundColor: 'rgb(255, 229, 229)',
-                        },
-                      }}
-                      onClick={() => handleReject(labour.id)}
-                    >
-                      Reject
-                    </Button>
-                  )}
-                  {labour.status === 'Rejected' && (
-                    <Button
-                      variant="contained"
-                      sx={{
-                        backgroundColor: 'rgb(229, 255, 225)',
-                        color: 'rgb(43, 217, 144) ',
-                        '&:hover': {
-                          backgroundColor: 'rgb(229, 255, 225)',
-                        },
-                      }}
-                      onClick={() => handleApprove(labour.id)}
-                    >
-                      Approve
-                    </Button>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {/* <Button
-                    variant="outlined"
-                    sx={{
-                      borderColor: '#2196f3',
-                      color: '#2196f3',
-                      '&:hover': {
-                        borderColor: '#1976d2',
-                        backgroundColor: 'rgba(33, 150, 243, 0.04)',
-                      },
-                    }}
-                    onClick={() => openPopup(labour)}
-                  > */}
-                  < RemoveRedEyeIcon onClick={() => openPopup(labour)} />
-                  {/* </Button> */}
-                </TableCell>
-              </TableRow>
-            ))}
+                        onClick={() => handleResubmit(labour)}
+          //  onClick={() => navigate('/kyc', { state: { labour } })}
+          >
+            Resubmit
+          </Button>
+        )} */}
+          {labour.status === 'Rejected' &&  (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: 'rgb(229, 255, 225)',
+                    color: 'rgb(43, 217, 144)',
+                    '&:hover': {
+                      backgroundColor: 'rgb(229, 255, 225)',
+                    },
+                  }}
+                  onClick={() => handleResubmit(labour)}
+                >
+                  Resubmit
+                </Button>
+              )}
+      </TableCell>
+    )}
+    <TableCell>
+      <RemoveRedEyeIcon onClick={() => openPopup(labour)} />
+    </TableCell>
+  </TableRow>
+))}
           </TableBody>
         </Table>
       </TableContainer>
@@ -756,8 +1032,8 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
         open={isPopupOpen}
         onClose={closePopup}
         closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{ timeout: 500 }}
+        // BackdropComponent={Backdrop}
+        // BackdropProps={{ timeout: 500 }}
       >
         <Fade in={isPopupOpen}>
           <div className="modal">
@@ -767,7 +1043,235 @@ const LabourDetails = ({ onApprove, departments, projectNames }) => {
           </div>
         </Fade>
       </Modal>
+      <Modal
+        open={isRejectPopupOpen}
+        onClose={closeRejectPopup}
+        closeAfterTransition
+      >
+        <Fade in={isRejectPopupOpen}>
+          <div className="modal">
+            <Typography variant="h6" component="h2">
+              Reject Labour
+            </Typography>
+            <TextField
+              label="Reason for rejection"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              margin="normal"
+            />
+            <Box mt={2}>
+              <Button variant="contained" color="primary" onClick={() => handleReject(selectedLabour.id)}>
+                Submit
+              </Button>
+              <Button variant="outlined" color="secondary" onClick={closeRejectPopup} sx={{ ml: 2 }}>
+                Cancel
+              </Button>
+            </Box>
+          </div>
+        </Fade>
+      </Modal>
+
+      <Modal
+        open={isRejectReasonPopupOpen}
+        onClose={closeRejectReasonPopup}
+        closeAfterTransition
+      >
+        <Fade in={isRejectReasonPopupOpen}>
+          <div className="modal">
+            <Typography variant="h6" component="h2">
+              Rejection Reason
+            </Typography>
+            {selectedLabour && (
+              <Typography variant="body1" component="p">
+                {selectedLabour.Reject_Reason}
+              </Typography>
+            )}
+            <Box mt={2}>
+              <Button variant="outlined" color="secondary" onClick={closeRejectReasonPopup}>
+                Close
+              </Button>
+            </Box>
+          </div>
+        </Fade>
+      </Modal>
+
+
+      <Dialog
+        open={isApproveConfirmOpen}
+        onClose={handleApproveConfirmClose}
+        aria-labelledby="approve-confirm-dialog-title"
+        aria-describedby="approve-confirm-dialog-description"
+      >
+        <DialogTitle id="approve-confirm-dialog-title">
+          Approve Labour
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="approve-confirm-dialog-description">
+            Are you sure you want to approve this labour?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleApproveConfirmClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={() => handleApprove(labourToApprove.id)} color="primary" autoFocus>
+            Approve
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {saved && (
+          <>
+            <div className="overlay"></div>
+            <div className={`popup ${popupType}`}>
+              <h2>{popupType === 'success' ? 'Thank You!' : 'Error'}</h2>
+              <p>{popupMessage}</p>
+              <button className={`ok-button ${popupType}`} onClick={() => setSaved(false)}>
+                <span className={`icon ${popupType}`}>
+                  {popupType === 'success' ? '✔' : '✘'}
+                </span> Ok
+              </button>
+            </div>
+          </>
+        )}
+
+        <style jsx>{`
+        body {
+          font-family: 'Roboto', sans-serif;
+          background-color: #f8f9fa;
+        }
+
+        .input-container {
+          margin: 20px 0;
+          position: relative;
+        }
+
+        .input-field {
+          width: 100%;
+          padding: 10px 15px;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          font-size: 16px;
+          outline: none;
+          transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-field:focus {
+          border-color: #007bff;
+          box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+
+        .input-field:hover {
+          border-color: #0056b3;
+        }
+
+        .error-message {
+          color: red;
+          font-size: 14px;
+          margin-top: 5px;
+          display: block;
+        }
+
+        .popup {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          padding: 20px;
+          width:70vw;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          z-index: 1000;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .popup.success {
+          background-color: #d4edda;
+          border-color: #c3e6cb;
+        }
+
+        .popup.error {
+          background-color: #f8d7da;
+          border-color: #f5c6cb;
+        }
+
+        .popup h2 {
+          margin: 0 0 10px;
+        }
+
+        .popup p {
+          margin: 0 0 20px;
+        }
+
+        .popup .ok-button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+
+        .popup .ok-button.success {
+          background-color: #28a745;
+          color: white;
+        }
+
+        .popup .ok-button.error {
+          background-color: #dc3545;
+          color: white;
+        }
+
+        .popup .ok-button:hover.success {
+          background-color: #218838;
+        }
+
+        .popup .ok-button:hover.error {
+          background-color: #c82333;
+        }
+
+        .popup .icon {
+          margin-right: 10px;
+        }
+
+        .overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 999;
+        }
+        @media (min-width: 468px) {
+          .popup {
+            width: 300px; 
+          }
+        }
+      
+        @media (min-width: 1024px) {
+          .popup {
+            width: 300px; 
+          }
+        }
+      
+        @media (min-width: 1280px) {
+          .popup {
+            width: 300px; 
+          }
+        }
+      `}</style>
     </Box>
+
   );
 };
 

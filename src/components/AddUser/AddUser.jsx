@@ -32,6 +32,7 @@ const AddUser = () => {
     emailID: "",
     contactNo: "",
     pasword: "",
+    plainPassword: "",
     userType: "user",
     isApproved: false,
     accessPages: [],
@@ -100,6 +101,10 @@ const AddUser = () => {
         setErrors((prevErrors) =>
           value.trim() === "" ? { ...prevErrors, pasword: "Password is required" } : { ...prevErrors, pasword: "" }
         );
+        setUserData((prevUserData) => ({
+          ...prevUserData,
+          plainPassword: value,
+        }));
         break;
       case "userType":
         setErrors((prevErrors) =>
@@ -129,6 +134,7 @@ const AddUser = () => {
       emailID: "",
       contactNo: "",
       pasword: "",
+      plainPassword: "",
       userType: "user",
       isApproved: false,
       accessPages: [],
@@ -169,12 +175,18 @@ const AddUser = () => {
                 isApproved: userData.isApproved,
             };
 
-            if (userData.id) {
-                delete payload.pasword;
-            } else {
-                payload.CreatedAt = new Date().toISOString();
-                payload.userToken = "someRandomToken";
-            }
+            // if (userData.id) {
+            //     delete payload.pasword;
+            // } else {
+            //     payload.CreatedAt = new Date().toISOString();
+            //     payload.userToken = "someRandomToken";
+            // }
+
+            if (!userData.id) {
+              payload.CreatedAt = new Date().toISOString();
+              payload.userToken = uuidv4();
+          }
+
 
             const response = await axios({
                 method,

@@ -30,9 +30,10 @@ export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
       try{
         const storedUser = localStorage.getItem('user');
-        return storedUser ? JSON.parse(storedUser) : {userType : 'user'};
+        return storedUser ? JSON.parse(storedUser) : {userType : 'user', name: ''};
       }catch(error){
         console.error('Error parsing JSON string:', error);
+        return { userType: 'user', name: '' };
       }       
       });
 

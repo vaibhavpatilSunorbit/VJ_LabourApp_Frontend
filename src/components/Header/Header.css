@@ -3,7 +3,7 @@
   color: #293649;
   padding: 10px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   width: auto; 
   height: 10vh;
@@ -12,7 +12,26 @@
 .menu-icon {
   cursor: pointer;
 }
+.header-right {
+  display: flex;
+  align-items: center;
+}
 
+.headericon .icon {
+  margin-left: 15px;
+  cursor: pointer;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-info span {
+  margin-left: 5px;
+  font-size: 16px;
+  color: #000; /* Adjust according to your design */
+}
 
 .logo-container {
   display: flex;

@@ -30,10 +30,10 @@ import App from './App';
 import { UserProvider } from './UserContext/UserContext'; // Adjust the path
 
 ReactDOM.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <UserProvider>
       <App />
-    </UserProvider>
-  </React.StrictMode>,
+    </UserProvider>,
+  // </React.StrictMode>,
   document.getElementById('root')
 );

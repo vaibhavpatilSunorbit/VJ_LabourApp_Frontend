@@ -6,9 +6,20 @@ import {BsFillBellFill,BsIconName , BsFillEnvelopeFill, BsPersonCircle, BsSearch
 //  import VJLogo from "../../images/VJlogo-1-removebg.png";
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '@mui/material/Tooltip';
+import { useUser }    from '../../UserContext/UserContext';
+// import './Header.css'
 
 function Header({OpenSidebar}) {
   const navigate = useNavigate();
+  const { user } = useUser();
+  console.log("User in Header:", user);
+  const isMobile = window.innerWidth <= 768;
+  const spanStyle = {
+    marginTop: '5px',
+    fontSize: isMobile ? '13px' : '17px', // Adjust the font size for mobile devices
+    color: '#000',
+    marginLeft: isMobile ? '9vw' : '5vw'
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Clear token from localStorage
@@ -24,13 +35,23 @@ function Header({OpenSidebar}) {
             {/* <img src={VJLogo} className="vjlogo" alt="logo"/> */}
             
         </div>
-        <div className='header-right headericon' >
-            <BsFillBellFill className='icon'/>
-               <Tooltip title="Logout" arrow>
-      <GrLogout className='icon' onClick={handleLogout} />
-    </Tooltip>
-            <BsPersonCircle className='icon'/>
-        </div>
+        <div className='header-right headericon' style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent:'flex-end' }}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <BsFillBellFill className='icon' style={{ margin: '0 10px', cursor: 'pointer' }} />
+        <Tooltip title="Logout" arrow>
+          <GrLogout
+            className='icon'
+            onClick={handleLogout}
+            style={{ margin: '0 10px', cursor: 'pointer' }}
+          />
+        </Tooltip>
+        <BsPersonCircle className='icon' style={{ margin: '0 10px', cursor: 'pointer' }} />
+      </div>
+      <span style={spanStyle}>
+        {user ? user.name : "Guest"}
+      </span>
+    </div>
+
     </header>
   )
 }

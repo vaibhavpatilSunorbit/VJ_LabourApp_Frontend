@@ -239,7 +239,7 @@
   border-radius: 4px;
   font-size: 16px;
   width: 258px;
-  color: #B5B5B5;
+  color: #060606;
   font-weight: 500;
   height: 18px;
   border-color: #efb5f4;
@@ -522,8 +522,8 @@ display: inline;
   border-radius: 4px;
   font-size: 16px;
   width: 276px;
-  color: rgb(84, 75, 75);
-  font-weight: 300;
+  color: #020202bd;
+  font-weight: 500;
   height: 43px;
 
 }
@@ -942,7 +942,7 @@ display: none
     border-radius: 4px;
     font-size: 16px;
     width: 258px;
-    color: #7a7575;
+    color: #020202bd;
     font-weight: 500;
     height: 18px;
     border-color: #efb5f4;
@@ -983,13 +983,25 @@ display: none
     border-radius: 4px;
     font-size: 16px;
     width: 276px;
-    color: #7a7575;
-    font-weight: 300;
+    color: #060505bd;
+    font-weight: 500;
     height: 43px;
     border-color: #efb5f4;
     box-shadow: 0 0 5px rgb(138 147 235 / 54%);
   }
-  
+ 
+.onboarding-form select option {
+  color: #161313f0;
+}
+
+.onboarding-form select option:first-of-type {
+  color: #2f2e2e;
+}
+
+/* Add a class for the selected option */
+.onboarding-form select.selected-option {
+  color: #170808f0;
+}
   
   li {
     list-style-type: none;

@@ -266,20 +266,13 @@ import PropTypes from 'prop-types';
 import { format } from 'date-fns';
 import './ViewDetails.css';
 
-const ViewDetails = ({ selectedLabour, onClose }) => {
+const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, availableDepartments }) => {
   const downloadFullForm = async () => {
     if (!selectedLabour) {
       console.error('Selected labour data is missing.');
       return;
     }
 
-    const defaultValues = {
-      Nationality: 'Indian',
-      Payment_Mode: 'NEFT',
-      Employee_Type: 'PERMANENT',
-      Current_Status: 'WORKING',
-      Seating_Office: 'SITE LABOUR',
-    };
 
     const formData = {
       // "Labour ID": selectedLabour.LabourID || "",
@@ -308,6 +301,9 @@ const ViewDetails = ({ selectedLabour, onClose }) => {
       "Designation": selectedLabour?.designation || "",
       "Labour Category": selectedLabour?.labourCategory || "",    
       "Working Hours": selectedLabour?.workingHours || "",
+      "Induction Date": selectedLabour?.Induction_Date ? format(new Date(selectedLabour.Induction_Date), 'yyyy-MM-dd') : "",
+      "Induction By": selectedLabour?.Inducted_By || "",
+      "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
     };
 
     if (selectedLabour.labourOwnership === "Contractor") {
@@ -385,7 +381,6 @@ const ViewDetails = ({ selectedLabour, onClose }) => {
       document.body.appendChild(linkId);
       linkId.click();
       document.body.removeChild(linkId);
-
       toast.success('Aadhaar card downloaded successfully.');
     } catch (error) {
       console.error('Error downloading Aadhaar card:', error);
@@ -420,6 +415,9 @@ const ViewDetails = ({ selectedLabour, onClose }) => {
       "Designation": selectedLabour?.designation || "",
       "Labour Category": selectedLabour?.labourCategory || "",    
       "Working Hours": selectedLabour?.workingHours || "",
+      "Induction Date": selectedLabour?.Induction_Date ? format(new Date(selectedLabour.Induction_Date), 'yyyy-MM-dd') : "",
+      "Induction By": selectedLabour?.Inducted_By || "",
+      "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
   };
 
   if (selectedLabour?.labourOwnership === "Contractor") {

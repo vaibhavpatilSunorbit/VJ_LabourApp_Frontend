@@ -96,6 +96,8 @@ import Login from "./components/Login/Login";
 import axios from 'axios';
 import { API_BASE_URL } from "./Data";
 import './App.css';
+import EditLabour from './components/EditLabour/EditLabour';
+
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -171,6 +173,7 @@ function App() {
                   <Route path="/labourDetails" element={<LabourDetails departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} onApprove={handleApprove} />} />
                   <Route path="/approveLabours" element={<ApproveLabours refresh={refresh} departments={departments} projectNames={projectNames}/>} />
                   <Route path="/addUser" element={<AddUser onFormSubmit={handleFormSubmit} />} />
+                  <Route path="/edit-labour" element={<EditLabour />} />
                 </Routes>
               </>
             }
