@@ -290,9 +290,11 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  InputLabel
 } from '@mui/material';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import "./LabourDetails.css";
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../SarchBar/SearchBar';
@@ -309,7 +311,7 @@ import jsPDF from 'jspdf';
 import { useUser } from '../../UserContext/UserContext';
 // import logoImage from '../../images/Labour_ID_Card.png';
 
-const LabourDetails = ({ onApprove, departments, projectNames ,labour    }) => {
+const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   const { user } = useUser();
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -333,6 +335,8 @@ const LabourDetails = ({ onApprove, departments, projectNames ,labour    }) => {
   const theme = useTheme();
   const [resubmittedLabours, setResubmittedLabours] = useState(new Set());
   const navigate = useNavigate();
+  const [formData, setFormData] = useState(null);
+  const [open, setOpen] = useState(false);
 
   // const isMobile = useMediaQuery('(max-width: 600px)');
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -396,7 +400,7 @@ console.log("setSelectedLaour",setSelectedLabour)
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
-            labour.id === id ? { ...labour, status: 'Approved', isApproved: 1, LabourID: nextID, onboardName: labour.OnboardName  } : labour
+            labour.id === id ? { ...labour, status: 'Approved', isApproved: 1, LabourID: nextID } : labour
           )
         );
         toast.success('Labour approved successfully.');
@@ -567,10 +571,67 @@ try {
     setSelectedLabour(selectedLabour);
   };
 
+  // const handleEdit = (labour) => {
+  //   navigate('/edit-labour', { state: { labour } });
+  // };
+
   const handleEdit = (labour) => {
-    navigate('/edit-labour', { state: { labour } });
+    setFormData(labour);
+    setOpen(true);
+  };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
+
+  
+  const handleAccountNumberChange = (e) => {
+    let cleanedValue = e.target.value.replace(/\D/g, '');
+    if (cleanedValue.length > 16) {
+      cleanedValue = cleanedValue.slice(0, 16);
+    }
+    setFormData({ ...formData, accountNumber: cleanedValue });
+  };
+
+  const handleExpiryDateChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 6) {
+      value = value.slice(0, 6);
+    }
+    if (value.length >= 2) {
+      value = value.slice(0, 2) + '-' + value.slice(2);
+    }
+    if (e.nativeEvent.inputType === 'deleteContentBackward' && value.length <= 3) {
+      value = value.slice(0, 2);
+    }
+    setFormData({ ...formData, expiryDate: value });
+  };
+
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formattedFormData = {
+      ...formData,
+      expiryDate: formData.expiryDate ? `01-${formData.expiryDate}` : null // Assuming the day is '01'
+    };
+    try {
+      const response = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData);
+      if (response.data.message === "Record updated successfully") {
+        toast.success('Labour details updated successfully.');
+        setOpen(false);
+        fetchLabours(); // Refresh the data to reflect changes
+      } else {
+        toast.error('Failed to update labour details. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating labour details:', error);
+      toast.error('Error updating labour details. Please try again.');
+    }
+  };
 
   const handleDownloadPDF = async (labourId) => {
     try {
@@ -649,7 +710,7 @@ try {
       const lineHeight = 8;
       const startX = 70;
       const valueStartX = 120; 
-      let startY = 40;
+      let startY = 32;
 
       const addDetail = (label, value) => {
         doc.text(`${label}`, startX, startY);
@@ -669,6 +730,14 @@ try {
     addDetail('Date Of joining', formatDate(labour.dateOfJoining));
     addDetail('Valid till', labour.validTill);
 
+    const cardX = 5;
+    const cardY = 3;
+    const cardWidth = 200;
+    const cardHeight = startY + 6;
+
+    doc.setLineWidth(1); // Set line width for the outer border
+    doc.setDrawColor(0, 0, 0); // Set outer border color to black
+    doc.rect(cardX, cardY, cardWidth, cardHeight);
   
       doc.save(`LabourID_${labour.LabourID || labourId}.pdf`);
     } catch (error) {
@@ -855,153 +924,79 @@ try {
 
 
       <TableContainer component={Paper} sx={{
-        mb: 6,
-        overflowX: 'auto',
-        borderRadius: 2,
-        boxShadow: 3,
-        maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
-        '&::-webkit-scrollbar': {
-          width: '8px',
-        },
-        '&::-webkit-scrollbar-track': {
-          backgroundColor: '#f1f1f1',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          backgroundColor: '#888',
-          borderRadius: '4px',
-        },
-      }}>
-        <Table sx={{ minWidth: 800 }} >
-          <TableHead >
-          <TableRow
-            sx={{
-              '& th': {
-                padding: '12px',
-                '@media (max-width: 600px)': {
-                  padding: '10px',
-                },
-              },
-            }}
-          >
-             <TableCell>Sr No</TableCell>
-              {tabValue !== 0 && tabValue !== 2 && <TableCell>Labour ID</TableCell>}
-              <TableCell>Name of Labour</TableCell>
-              <TableCell>Project</TableCell>
-              <TableCell>Department</TableCell>
-              {(tabValue === 0 || tabValue === 1) && <TableCell>Onboarded By</TableCell>}
-              <TableCell>Status</TableCell>
-              {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
-              {/* {tabValue === 2 && <TableCell>Edit</TableCell>} */}
-              {tabValue === 1 && <TableCell>LabourID Card</TableCell>}
-              {user.userType === 'admin' && <TableCell>Action</TableCell>}
-              <TableCell>Details</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {(rowsPerPage > 0
-              ? sortedLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              : sortedLabours
-            ).map((labour, index) => (
-              <TableRow key={labour.id}>
-                <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.LabourID}</TableCell>}
-                <TableCell>{labour.name}</TableCell>
-                <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
-                <TableCell>{getDepartmentDescription(labour.department)}</TableCell>
-                {(tabValue === 0 || tabValue === 1) && (
-                  <TableCell>{labour.OnboardName}</TableCell>
-                )}
-                <TableCell>{labour.status}</TableCell>
-                {tabValue === 2 && (
-                  <TableCell>
-                    <InfoIcon onClick={() => {
-                      setSelectedLabour(labour);
-                      setIsRejectReasonPopupOpen(true);
-                    }} />
-                  </TableCell>
-                )}
-                {/* {tabValue === 2 && (
-                  <TableCell>
-                    <EditIcon onClick={() => navigate('/kyc', { state: { labour } })} />
-                  </TableCell>
-                )} */}
-                {tabValue === 1 && (
-                  <TableCell>
-                    <PictureAsPdfIcon onClick={() => handleDownloadPDF(labour.id)} />
-                  </TableCell>
-                )}
-               {user.userType === 'admin' && (
-      <TableCell>
-        {labour.status === 'Pending' && (
-          <>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: 'rgb(229, 255, 225)',
-                color: 'rgb(43, 217, 144)',
-                width: '100px',
-                marginRight: '10px',
-                marginBottom: '3px',
-                '&:hover': {
-                  backgroundColor: 'rgb(229, 255, 225)',
-                },
-              }}
-              onClick={() => handleApproveConfirmOpen(labour)}
-              // onClick={() => handleApprove(labour.id)}
-            >
-              Approve
-            </Button>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: '#fce4ec',
-                color: 'rgb(255, 100, 100)',
-                width: '100px',
-                '&:hover': {
-                  backgroundColor: '#f8bbd0',
-                },
-              }}
-              onClick={() => {
+  mb: 6,
+  overflowX: 'auto',
+  borderRadius: 2,
+  boxShadow: 3,
+  maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
+  '&::-webkit-scrollbar': {
+    width: '8px',
+  },
+  '&::-webkit-scrollbar-track': {
+    backgroundColor: '#f1f1f1',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: '#888',
+    borderRadius: '4px',
+  },
+}}>
+  <Table sx={{ minWidth: 800 }}>
+    <TableHead>
+      <TableRow
+        sx={{
+          '& th': {
+            padding: '12px',
+            '@media (max-width: 600px)': {
+              padding: '10px',
+            },
+          },
+        }}
+      >
+        <TableCell>Sr No</TableCell>
+        {tabValue !== 0 && tabValue !== 2 && <TableCell>Labour ID</TableCell>}
+        <TableCell>Name of Labour</TableCell>
+        <TableCell>Project</TableCell>
+        <TableCell>Department</TableCell>
+        {(tabValue === 0 || tabValue === 1) && <TableCell>Onboarded By</TableCell>}
+        <TableCell>Status</TableCell>
+        {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
+        {tabValue === 1 && <TableCell>LabourID Card</TableCell>}
+        {((user.userType === 'admin') || (tabValue === 2 && user.userType === 'user')) && <TableCell>Action</TableCell>}
+        <TableCell>Details</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {(rowsPerPage > 0
+        ? sortedLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+        : sortedLabours
+      ).map((labour, index) => (
+        <TableRow key={labour.id}>
+          <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+          {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.LabourID}</TableCell>}
+          <TableCell>{labour.name}</TableCell>
+          <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
+          <TableCell>{getDepartmentDescription(labour.department)}</TableCell>
+          {(tabValue === 0 || tabValue === 1) && (
+            <TableCell>{labour.OnboardName}</TableCell>
+          )}
+          <TableCell>{labour.status}</TableCell>
+          {tabValue === 2 && (
+            <TableCell>
+              <InfoIcon onClick={() => {
                 setSelectedLabour(labour);
-                setIsRejectPopupOpen(true);
-              }}
-            >
-              Reject
-            </Button>
-          </>
-        )}
-        {labour.status === 'Approved' && (
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: 'rgb(229, 255, 225)',
-              color: 'rgb(43, 217, 144)',
-              '&:hover': {
-                backgroundColor: 'rgb(229, 255, 225)',
-              },
-            }}
-            onClick={() => handleEdit(labour)}
-          >
-            update
-          </Button>
-        )}
-        {/* {labour.status === 'Rejected' && !resubmittedLabours.has(labour.id) && (
-                      <Button
-                        variant="contained"
-                        sx={{
-                          backgroundColor: 'rgb(229, 255, 225)',
-                          color: 'rgb(43, 217, 144)',
-                          '&:hover': {
-                            backgroundColor: 'rgb(229, 255, 225)',
-                          },
-                        }}
-                        onClick={() => handleResubmit(labour)}
-          //  onClick={() => navigate('/kyc', { state: { labour } })}
-          >
-            Resubmit
-          </Button>
-        )} */}
-          {labour.status === 'Rejected' &&  (
+                setIsRejectReasonPopupOpen(true);
+              }} />
+            </TableCell>
+          )}
+          {tabValue === 1 && (
+            <TableCell>
+              <PictureAsPdfIcon onClick={() => handleDownloadPDF(labour.id)} />
+            </TableCell>
+          )}
+
+          {user.userType === 'user' && (
+            <TableCell>
+              {labour.status === 'Rejected' && (
                 <Button
                   variant="contained"
                   sx={{
@@ -1016,16 +1011,105 @@ try {
                   Resubmit
                 </Button>
               )}
-      </TableCell>
-    )}
-    <TableCell>
-      <RemoveRedEyeIcon onClick={() => openPopup(labour)} />
-    </TableCell>
-  </TableRow>
-))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              {labour.status === 'Approved' && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: 'rgb(229, 255, 225)',
+                    color: 'rgb(43, 217, 144)',
+                    '&:hover': {
+                      backgroundColor: 'rgb(229, 255, 225)',
+                    },
+                  }}
+                  onClick={() => handleEdit(labour)}
+                >
+                  Update
+                </Button>
+              )}
+            </TableCell>
+          )}
+
+          {user.userType === 'admin' && (
+            <TableCell>
+              {labour.status === 'Pending' && (
+                <>
+                  <Button
+                    variant="contained"
+                    sx={{
+                      backgroundColor: 'rgb(229, 255, 225)',
+                      color: 'rgb(43, 217, 144)',
+                      width: '100px',
+                      marginRight: '10px',
+                      marginBottom: '3px',
+                      '&:hover': {
+                        backgroundColor: 'rgb(229, 255, 225)',
+                      },
+                    }}
+                    onClick={() => handleApproveConfirmOpen(labour)}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    variant="contained"
+                    sx={{
+                      backgroundColor: '#fce4ec',
+                      color: 'rgb(255, 100, 100)',
+                      width: '100px',
+                      '&:hover': {
+                        backgroundColor: '#f8bbd0',
+                      },
+                    }}
+                    onClick={() => {
+                      setSelectedLabour(labour);
+                      setIsRejectPopupOpen(true);
+                    }}
+                  >
+                    Reject
+                  </Button>
+                </>
+              )}
+              {labour.status === 'Approved' && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: 'rgb(229, 255, 225)',
+                    color: 'rgb(43, 217, 144)',
+                    '&:hover': {
+                      backgroundColor: 'rgb(229, 255, 225)',
+                    },
+                  }}
+                  onClick={() => handleEdit(labour)}
+                >
+                  Update
+                </Button>
+              )}
+              {labour.status === 'Rejected' && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: 'rgb(229, 255, 225)',
+                    color: 'rgb(43, 217, 144)',
+                    '&:hover': {
+                      backgroundColor: 'rgb(229, 255, 225)',
+                    },
+                  }}
+                  onClick={() => handleResubmit(labour)}
+                >
+                  Resubmit
+                </Button>
+              )}
+            </TableCell>
+          )}
+
+          <TableCell>
+            <RemoveRedEyeIcon onClick={() => openPopup(labour)} />
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</TableContainer>
+
 
 
       <Modal
@@ -1138,6 +1222,80 @@ try {
             </div>
           </>
         )}
+
+<Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Edit Labour Details</DialogTitle>
+        <DialogContent>
+          {formData && (
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '400px', padding: 2 }}
+            >
+              <TextField
+                label="Labour Name"
+                name="labourName"
+                value={formData.name}
+                InputProps={{
+                  readOnly: true,
+                }}
+                sx={{ width: '100%' }}
+              />
+              <div className="bankDetails-field">
+                <InputLabel id="account-number-label" sx={{ color: "black" }}>
+                  Account Number
+                </InputLabel>
+                <input
+                  type="text"
+                  id="accountNumber"
+                  name="accountNumber"
+                  required
+                  value={formData.accountNumber || ''}
+                  onChange={handleAccountNumberChange}
+                  style={{ padding: '20px 10px', borderRadius: '4px', border: '1px solid #ccc', width: '95%' }}
+                  maxLength={16}
+                  onKeyDown={(e) => {
+                    if (
+                      !(
+                        (e.key >= '0' && e.key <= '9') || // Allow numbers
+                        e.key === 'Backspace' ||
+                        e.key === 'Delete' ||
+                        e.key === 'ArrowLeft' ||
+                        e.key === 'ArrowRight' ||
+                        e.key === 'Tab'
+                      )
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
+                />
+              </div>
+              <div className="expiryDate-field">
+                <InputLabel id="expiry-date-label" sx={{ color: "black" }}>
+                  Expiry Date
+                </InputLabel>
+                <input
+                  type="text"
+                  id="expiryDate"
+                  name="expiryDate"
+                  required
+                  value={formData.expiryDate || ''}
+                  onChange={handleExpiryDateChange}
+                  placeholder="MM-YYYY"
+                  style={{ padding: '20px 10px', borderRadius: '4px', border: '1px solid #ccc', width: '95%' }}
+                  maxLength={7}
+                />
+              </div>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">Update</Button>
+        </DialogActions>
+      </Dialog>
+      
+      <ToastContainer />
 
         <style jsx>{`
         body {

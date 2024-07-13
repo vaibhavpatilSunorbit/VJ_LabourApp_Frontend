@@ -96,7 +96,7 @@ import Login from "./components/Login/Login";
 import axios from 'axios';
 import { API_BASE_URL } from "./Data";
 import './App.css';
-import EditLabour from './components/EditLabour/EditLabour';
+import EditLabour from './EditLabour/EditLabour';
 
 
 function App() {

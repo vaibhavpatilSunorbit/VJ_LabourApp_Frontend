@@ -2274,6 +2274,8 @@ import { API_BASE_URL, INDUCTED_BY_OPTIONS } from "../../Data"
 import LabourDetails from "../LabourDetails/LabourDetails";
 import ViewDetails from "../ViewDetails/ViewDetails";
 import { useUser } from '../../UserContext/UserContext';
+import SwitchCameraIcon from '@mui/icons-material/SwitchCamera';
+import { IconButton } from '@mui/material';
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProjectNames = [], availableDepartments = []}) => {
   const { user } = useUser();
@@ -2294,7 +2296,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
   const [error, setError] = useState('');
   const [newError, setNewError] = useState('');
   const [hover, setHover] = useState(false);
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [uploadAadhaarFront, setuploadAadhaarFront] = useState('');
   const [uploadAadhaarBack, setuploadAadhaarBack] = useState('');
@@ -2316,6 +2317,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
   const [nextID, setNextID] = useState(null);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
+  const navigate = useNavigate();
   const [selectedLabour, setSelectedLabour] = useState(null);
   const [aadhaarFront, setAadhaarFront] = useState(null);
   const [aadhaarBack, setAadhaarBack] = useState(null);
@@ -2364,6 +2366,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
     Induction_Date: '',
     Inducted_By: '',
     uploadInductionDoc: '',
+    expiryDate: '',
   });
 
   const [formStatus, setFormStatus] = useState({
@@ -2759,6 +2762,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
   // const CameraCapture = () => {
   const [stream, setStream] = useState(null);
   const [photoSrc, setPhotoSrc] = useState('');
+  const [facingMode, setFacingMode] = useState('user');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -2776,11 +2780,11 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
       // Define video constraints for better compatibility
       const constraints = {
         video: {
-          facingMode: 'user' // Use 'environment' for the rear camera
+          // facingMode: 'user' 
+          facingMode: facingMode
         }
       };
 
-      // Check if the browser supports getUserMedia
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         videoRef.current.srcObject = stream;
@@ -2790,7 +2794,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
       }
     } catch (err) {
       console.error("Error accessing camera: ", err);
-      // Log detailed error information for troubleshooting
       if (err.name === 'NotAllowedError') {
         console.error("Permission denied. Please allow camera access in your browser settings.");
       } else if (err.name === 'NotFoundError') {
@@ -2802,7 +2805,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
       }
     }
   };
-
 
   const capturePhoto = () => {
     const canvas = canvasRef.current;
@@ -2823,6 +2825,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
 
   const repeatPhoto = () => {
     setPhotoSrc('');
+    startCamera();
+  };
+
+  const toggleCamera = () => {
+    setFacingMode((prevMode) => (prevMode === 'user' ? 'environment' : 'user'));
+    stopCamera();
     startCamera();
   };
 
@@ -3065,7 +3073,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaved(false);
-    if (!validateForm()) return;
+    // if (!validateForm()) return;
 
     setLoading(true);
 
@@ -3131,7 +3139,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
           }}
         >
           <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your details have been successfully submitted.</p>
-          <p style={{ fontSize: '1.2em', color: '#343a40' }}>
+          <p style={{ fontSize: '1.2em', color: 'rgb(22 152 61)' }}>
             Your Labour ID is in the approval stage.
           </p>
           <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
@@ -3157,7 +3165,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
     }
     setTimeout(() => {
       setSaved(false);
-      navigate('/labourDetails'); 
+      // navigate('/labourDetails'); 
     }, 12000);
   };
 
@@ -3451,8 +3459,19 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, availableProje
   };
 
   const openPreviewModal = () => {
-    console.log('Form Data:', formData); // Debugging
-    setSelectedLabour(formData);
+    // Process formData to ensure no File objects are directly passed to selectedLabour
+    const processedData = Object.keys(formData).reduce((acc, key) => {
+      const value = formData[key];
+      if (value instanceof File) {
+        acc[key] = value.name; // or handle it in another appropriate way
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
+    console.log('Processed Form Data:', processedData); // Debugging
+    setSelectedLabour(processedData);
     setIsModalOpen(true);
   };
 
@@ -4071,7 +4090,7 @@ console.log('availableDepartments',availableDepartments)
 
 
 
-                      <div className="location-photo-label">
+                      {/* <div className="location-photo-label">
                         <InputLabel
                           id="personal-emcontact-label"
                           sx={{ color: "black" }}
@@ -4100,7 +4119,6 @@ console.log('availableDepartments',availableDepartments)
                                 Repeat Photo<CameraAltIcon />
                               </button>
                             )}
-                            {/* <input type="file" name="" accept="image/*" capture="user" id=""/> */}
                           </div>
                         </div>
                         <input
@@ -4110,12 +4128,61 @@ console.log('availableDepartments',availableDepartments)
                           value={photoSrc || ''}
                           required
                           onChange={(e) => setFormData((prevFormData) => {
-                            // console.log("photoInput", e.target.value)
                             return { ...prevFormData, photoInput: e.target.value }
                           })}
                         />
 
-                      </div>
+                      </div> */}
+
+<div className="location-photo-label">
+      <InputLabel
+        id="personal-emcontact-label"
+        sx={{ color: "black" }}
+      >
+        Capture Photo
+      </InputLabel>
+      <div className="camera-container">
+        <div className="video-container" style={{ position: 'relative' }}>
+          <video ref={videoRef} className="video" autoPlay style={{ display: stream ? 'block' : 'none', width: '100%' }}></video>
+          <canvas ref={canvasRef} className="canvas" style={{ display: 'none' }}></canvas>
+          {photoSrc && <img src={photoSrc} alt="Captured" className="photo" style={{ width: '96%', position: 'absolute', top: 0, left: 0 }} />}
+          {stream && (
+            <IconButton 
+              onClick={toggleCamera} 
+              style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: '#f66300', color: 'white', width:'20px' }}>
+              <SwitchCameraIcon />
+            </IconButton>
+          )}
+        </div>
+        <div className="button-container" style={{ marginTop: '10px' }}>
+          {!stream && !photoSrc && (
+            <button type="button" onClick={startCamera} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
+              Start Camera <CameraAltIcon />
+            </button>
+          )}
+          {stream && !photoSrc && (
+            <button type="button" onClick={capturePhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px', backgroundColor: 'rgb(93 210 120 / 89%)', color: 'white', }}>
+              Capture Photo <CameraAltIcon />
+            </button>
+          )}
+          {!stream && photoSrc && (
+            <button type="button" onClick={repeatPhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px', backgroundColor: 'rgb(214 94 105 / 78%)', color: 'white', }}>
+              Repeat Photo <CameraAltIcon />
+            </button>
+          )}
+        </div>
+      </div>
+      <input
+        type="hidden"
+        id="photoInput"
+        name="photoInput"
+        value={photoSrc || ''}
+        required
+        onChange={(e) => setFormData((prevFormData) => {
+          return { ...prevFormData, photoInput: e.target.value }
+        })}
+      />
+    </div>
                       <div className="navigation-buttons">
                         <button onClick={() => handlePrevious('/kyc')}>Previous</button>
                         <button onClick={() => handleNext('/bankDetails')} style={{ marginLeft: "10px" }}>Next</button>
@@ -4525,7 +4592,7 @@ console.log('availableDepartments',availableDepartments)
                               variant="contained"
                               type="button"
                               // onClick={openModal}
-                              onClick={handlePreview}
+                              onClick={openPreviewModal}
                               className="btn btn-preview"
                             > Preview
                             </button>
