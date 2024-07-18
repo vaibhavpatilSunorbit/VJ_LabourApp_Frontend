@@ -215,7 +215,7 @@ const SearchBar = ({
           <ul>
             {searchResults.map((result) => (
               <li key={result.id}>
-                {result.name} - {result.aadhaarNumber}
+                {result.LabourID} - {result.name} - {result.aadhaarNumber}
                 <button onClick={() => handleSelectLabour(result)}>Select</button>
               </li>
             ))}

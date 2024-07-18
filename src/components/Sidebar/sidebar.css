@@ -1,3 +1,16 @@
+.sidebar-link.active {
+  background-color: #0caee96b;
+  color: white;
+}
+
+.profile-icon1.active-section {
+  background-color: #0caee96b;
+}
+.application-list .sidebar-link.active-subsection li {
+  background-color: #0caee96b;
+  border-radius: 20px;
+
+}
 
   .sidebar {
     background-color: #293649;
@@ -99,7 +112,8 @@
     list-style-type: none;
     /* padding-top: 10px; */
     padding-left: 10px;
-    padding: 2px
+    padding: 2px;
+    margin: 4px;
   }
   
   .application-list li:hover {

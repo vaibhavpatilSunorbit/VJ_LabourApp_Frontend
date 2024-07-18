@@ -16,9 +16,9 @@ function Header({OpenSidebar}) {
   const isMobile = window.innerWidth <= 768;
   const spanStyle = {
     marginTop: '5px',
-    fontSize: isMobile ? '13px' : '17px', // Adjust the font size for mobile devices
+    fontSize: isMobile ? '13px' : '14px', // Adjust the font size for mobile devices
     color: '#000',
-    marginLeft: isMobile ? '9vw' : '5vw'
+    marginLeft: isMobile ? '9vw' : '9vw'
   };
 
   const handleLogout = () => {

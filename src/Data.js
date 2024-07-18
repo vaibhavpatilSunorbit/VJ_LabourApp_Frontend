@@ -61,7 +61,8 @@ export const SidebarData = [
   },
   {
     icon: UilFileAlt,
-    heading: "Approved Labours",
+    // heading: "Approved Labours",
+    heading: "Project Machine",
     path: "approveLabours",
     roles: ["admin"],
   },

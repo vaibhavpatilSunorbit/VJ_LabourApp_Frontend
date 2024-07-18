@@ -255,6 +255,30 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React from 'react';
 import { Box, Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material';
 import { jsPDF } from 'jspdf';
@@ -265,8 +289,17 @@ import CloseIcon from '@mui/icons-material/Close';
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
 import './ViewDetails.css';
+import {API_BASE_URL} from '../../Data'
 
-const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, availableDepartments }) => {
+
+const trimUrl = (url) => {
+  const baseUrl = "http://localhost:4000/uploads/";
+  // return url ? url.replace(baseUrl, '') : '';
+  return typeof url === 'string' ? url.replace(baseUrl, '') : '';
+};
+
+
+const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
   const downloadFullForm = async () => {
     if (!selectedLabour) {
       console.error('Selected labour data is missing.');
@@ -275,7 +308,7 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
 
 
     const formData = {
-      // "Labour ID": selectedLabour.LabourID || "",
+      "Labour ID": selectedLabour.LabourID || "",
       "Labour Ownership": selectedLabour.labourOwnership || "",
       "Title": selectedLabour?.title || "",
       "Name": selectedLabour.name || "",
@@ -295,15 +328,18 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
       "Bank Name": selectedLabour?.bankName || "",
       "Account Number": selectedLabour?.accountNumber || "",
       "IFSC Code": selectedLabour?.ifscCode || "",
-      "Project Name": selectedLabour?.projectDescription || "",
+      "Project Name": selectedLabour?.projectName  || "",
       "Company Name": selectedLabour?.companyName || "",
-      "Department": selectedLabour?.departmentDescription || "",
+      "Department": selectedLabour?.department  || "",
       "Designation": selectedLabour?.designation || "",
       "Labour Category": selectedLabour?.labourCategory || "",    
       "Working Hours": selectedLabour?.workingHours || "",
       "Induction Date": selectedLabour?.Induction_Date ? format(new Date(selectedLabour.Induction_Date), 'yyyy-MM-dd') : "",
       "Induction By": selectedLabour?.Inducted_By || "",
-      "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
+      // "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
+      "Upload AadhaarFront Document": trimUrl(selectedLabour.uploadAadhaarFront) || "",
+      "Upload IdProof Document": trimUrl(selectedLabour.uploadIdProof) || "",
+      "Upload AadhaarBack Document": trimUrl(selectedLabour.uploadAadhaarBack) || "",
     };
 
     if (selectedLabour.labourOwnership === "Contractor") {
@@ -328,8 +364,10 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
 
     const tableColumns = ["Field", "Value"];
     const tableRows = Object.entries(formData).map(([field, value]) => [
-      field,
-      value.toString(),
+      field.toUpperCase(),
+      (value || 'N/A').toString().toUpperCase(),
+      // field,
+      // value.toString(),
     ]);
 
     doc.autoTable({
@@ -343,7 +381,9 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
         textColor: [0, 0, 0],
       },
       columnStyles: {
-        0: { fontStyle: 'bold' },
+        // 0: { fontStyle: 'bold' },
+        0: { cellWidth: 60, fontStyle: 'bold' }, 
+        1: { cellWidth: 130 }, 
       },
       margin: { top: 10 },
     });
@@ -354,6 +394,17 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
   const downloadAadhaarCard = async () => {
     try {
       const baseUrl = "";
+      console.log("Selected Labour:", selectedLabour);
+
+      if (!selectedLabour.uploadAadhaarFront  || !selectedLabour.uploadIdProof) {
+        console.error("Aadhaar URLs are missing:", {
+          uploadAadhaarFront: selectedLabour.uploadAadhaarFront,
+          uploadIdProof: selectedLabour.uploadIdProof,
+          // uploadAadhaarBack: selectedLabour.uploadAadhaarBack,          
+        });
+        toast.error("Aadhaar card URLs are missing. Please check the labour details.");
+        return;
+      }
 
       const responseFront = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarFront}`, { responseType: 'blob' });
       const urlFront = window.URL.createObjectURL(new Blob([responseFront.data], { type: 'image/jpeg' }));
@@ -364,15 +415,25 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
       linkFront.click();
       document.body.removeChild(linkFront);
 
-      const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
-      const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
-      const linkBack = document.createElement('a');
-      linkBack.href = urlBack;
-      linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
-      document.body.appendChild(linkBack);
-      linkBack.click();
-      document.body.removeChild(linkBack);
-
+      // const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
+      // const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
+      // const linkBack = document.createElement('a');
+      // linkBack.href = urlBack;
+      // linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
+      // document.body.appendChild(linkBack);
+      // linkBack.click();
+      // document.body.removeChild(linkBack);
+      
+      if (selectedLabour.uploadAadhaarBack) {
+        const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
+        const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
+        const linkBack = document.createElement('a');
+        linkBack.href = urlBack;
+        linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
+        document.body.appendChild(linkBack);
+        linkBack.click();
+        document.body.removeChild(linkBack);
+      }
       const responseId = await axios.get(`${baseUrl}${selectedLabour.uploadIdProof}`, { responseType: 'blob' });
       const urlId = window.URL.createObjectURL(new Blob([responseId.data], { type: 'image/jpeg' }));
       const linkId = document.createElement('a');
@@ -389,7 +450,7 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
   };
 
   const formData = {
-    // "Labour ID": selectedLabour?.LabourID || "",
+    "Labour ID": selectedLabour?.LabourID || "",
     "Labour Ownership": selectedLabour.labourOwnership || "",
       "Title": selectedLabour?.title || "",
       "Name": selectedLabour.name || "",
@@ -409,15 +470,18 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
       "Bank Name": selectedLabour?.bankName || "",
       "Account Number": selectedLabour?.accountNumber || "",
       "IFSC Code": selectedLabour?.ifscCode || "",
-      "Project Name": selectedLabour?.projectDescription || "",
+      "Project Name": selectedLabour?.projectName  || "",
       "Company Name": selectedLabour?.companyName || "",
-      "Department": selectedLabour?.departmentDescription || "",
+      "Department": selectedLabour?.department  || "",
       "Designation": selectedLabour?.designation || "",
       "Labour Category": selectedLabour?.labourCategory || "",    
       "Working Hours": selectedLabour?.workingHours || "",
-      "Induction Date": selectedLabour?.Induction_Date ? format(new Date(selectedLabour.Induction_Date), 'yyyy-MM-dd') : "",
+      "Induction Date": selectedLabour?.Induction_Date? format(new Date(selectedLabour.Induction_Date), 'yyyy-MM-dd') : "",
       "Induction By": selectedLabour?.Inducted_By || "",
-      "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
+      // "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
+      "Upload AadhaarFront Document": trimUrl(selectedLabour.uploadAadhaarFront) || "",
+      "Upload IdProof Document": trimUrl(selectedLabour.uploadIdProof) || "",
+      "Upload AadhaarBack Document": trimUrl(selectedLabour.uploadAadhaarBack) || "",
   };
 
   if (selectedLabour?.labourOwnership === "Contractor") {
@@ -425,6 +489,13 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
     formData["Contractor Number"] = selectedLabour?.contractorNumber || "";
   }
 
+  const formatLabel = (label) => {
+    if (label === "IFSC Code" || label === "Labour ID") {
+      return label.split("").join(""); // This will remove spaces
+    }
+    return label.replace(/([A-Z])/g, ' $1').trim(); 
+  };
+  
   return (
     <Dialog open={!!selectedLabour} onClose={onClose} PaperProps={{ className: 'custom-dialog' }}>
       <DialogTitle  style={{ display: 'flex', justifyContent: 'space-between', alignItems:'center' }}>
@@ -444,7 +515,8 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
             <div className="details-table">
               {Object.entries(formData).map(([key, value]) => (
                 <div key={key} className="details-row">
-                  <Typography variant="body2" className="label">{key.replace(/([A-Z])/g, ' $1').trim()}:</Typography>
+                      <Typography variant="body2" className="label">{formatLabel(key)}:</Typography>
+                  {/* <Typography variant="body2" className="label">{key.replace(/([A-Z])/g, ' $1').trim()}:</Typography> */}
                   <Typography variant="body2" className="value">{value}</Typography>
                 </div>
               ))}
@@ -458,9 +530,14 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
         <Button variant="contained" color="primary" onClick={downloadFullForm}>
           Download Form
         </Button>
-        <Button variant="contained" color="primary" onClick={downloadAadhaarCard}>
+        {/* <Button variant="contained" color="primary" onClick={downloadAadhaarCard}>
           Download Aadhaar
-        </Button>
+        </Button> */}
+          {!hideAadhaarButton && (
+          <Button variant="contained" color="primary" onClick={downloadAadhaarCard}>
+            Download Aadhaar
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );
@@ -469,6 +546,7 @@ const ViewDetails = ({ selectedLabour, onClose, availableProjectNames, available
 ViewDetails.propTypes = {
   selectedLabour: PropTypes.object,
   onClose: PropTypes.func.isRequired,
+  hideAadhaarButton: PropTypes.bool,
 };
 
 export default ViewDetails;
@@ -489,86 +567,103 @@ export default ViewDetails;
 
 
 
-
-
-
-
-
-
 // import React from 'react';
-// import { Box, Typography, Button } from '@mui/material';
+// import { Box, Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material';
 // import { jsPDF } from 'jspdf';
+// import 'jspdf-autotable';
 // import axios from 'axios';
 // import { toast } from 'react-toastify';
 // import CloseIcon from '@mui/icons-material/Close';
+// import PropTypes from 'prop-types';
+// import { format } from 'date-fns';
 // import './ViewDetails.css';
+// import {API_BASE_URL} from '../../Data'
 
 // const ViewDetails = ({ selectedLabour, onClose }) => {
 //   const downloadFullForm = async () => {
-//     const doc = new jsPDF();
+//     if (!selectedLabour) {
+//       console.error('Selected labour data is missing.');
+//       return;
+//     }
+
 
 //     const formData = {
-//       "Labour Ownership": selectedLabour.labourOwnership,
-//       "Name": selectedLabour.name,
-//       "Aadhaar No": selectedLabour.aadhaarNumber,
-//       "Date of Birth": selectedLabour.dateOfBirth,
-//       "Contact No": selectedLabour.contactNumber,
-//       "Gender": selectedLabour.gender,
-//       "Date of Joining": selectedLabour.dateOfJoining,
-//       "Address": selectedLabour.address,
-//       "Pincode": selectedLabour.pincode,
-//       "Taluka": selectedLabour.taluka,
-//       "District": selectedLabour.district,
-//       "Village": selectedLabour.village,
-//       "State": selectedLabour.state,
-//       "Emergency Contact": selectedLabour.emergencyContact,
-//       "Bank Name": selectedLabour.bankName,
-//       "Account Number": selectedLabour.accountNumber,
-//       "IFSC Code": selectedLabour.ifscCode,
-//       "Project Name": selectedLabour.projectName,
-//       "Labour Category": selectedLabour.labourCategory,
-//       "Department": selectedLabour.department,
-//       "Working Hours": selectedLabour.workingHours,
-//       "Contractor Name": selectedLabour.contractorName,
-//       "Contractor Number": selectedLabour.contractorNumber,
+//       "Labour ID": selectedLabour.LabourID || "",
+//       "Labour Ownership": selectedLabour.labourOwnership || "",
+//       "Title": selectedLabour?.title || "",
+//       "Name": selectedLabour.name || "",
+//       "Aadhaar No": selectedLabour.aadhaarNumber || "",
+//       "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'yyyy-MM-dd') : "",
+//       "Contact No": selectedLabour.contactNumber || "",
+//       "Emergency Contact": selectedLabour?.emergencyContact || "", 
+//       "Gender": selectedLabour.gender || "",
+//       "Date of Joining": selectedLabour.dateOfJoining ? format(new Date(selectedLabour.dateOfJoining), 'yyyy-MM-dd') : "",
+//       "Address": selectedLabour.address || "",
+//       "Village": selectedLabour?.village || "",
+//       "Pincode": selectedLabour.pincode || "",
+//       "District": selectedLabour?.district || "",
+//       "Taluka": selectedLabour.taluka || "",
+//       "State": selectedLabour?.state || "",
+//       "Marital Status": selectedLabour?.Marital_Status || "",
+//       "Bank Name": selectedLabour?.bankName || "",
+//       "Account Number": selectedLabour?.accountNumber || "",
+//       "IFSC Code": selectedLabour?.ifscCode || "",
+//       "Project Name": selectedLabour?.projectName  || "",
+//       "Company Name": selectedLabour?.companyName || "",
+//       "Department": selectedLabour?.department  || "",
+//       "Designation": selectedLabour?.designation || "",
+//       "Labour Category": selectedLabour?.labourCategory || "",    
+//       "Working Hours": selectedLabour?.workingHours || "",
+//       "Induction Date": selectedLabour?.Induction_Date ? format(new Date(selectedLabour.Induction_Date), 'yyyy-MM-dd') : "",
+//       "Induction By": selectedLabour?.Inducted_By || "",
+//       // "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
 //     };
 
-//     let y = 10; // Y-axis position
-//     doc.setFontSize(12);
-//     for (const [label, value] of Object.entries(formData)) {
-//       doc.text(`${label}: ${value}`, 10, y);
-//       y += 10;
+//     if (selectedLabour.labourOwnership === "Contractor") {
+//       formData["Contractor Name"] = selectedLabour.contractorName || "";
+//       formData["Contractor Number"] = selectedLabour.contractorNumber || "";
 //     }
 
-//     // Add photos to PDF
-//     const addImageToPDF = async (doc, imageUrl, x, y, width, height) => {
-//       const response = await axios.get(imageUrl, { responseType: 'blob' });
-//       const reader = new FileReader();
-//       reader.readAsDataURL(response.data);
-//       return new Promise((resolve) => {
-//         reader.onloadend = () => {
-//           const base64data = reader.result;
-//           doc.addImage(base64data, 'JPEG', x, y, width, height);
-//           resolve();
-//         };
-//       });
-//     };
+//     const doc = new jsPDF();
+//     doc.setFontSize(20);
+//     doc.text("Labour Details", 14, 15);
 
-//     // Adding Labour Photo
 //     if (selectedLabour.photoSrc) {
-//       await addImageToPDF(doc, selectedLabour.photoSrc, 10, y, 50, 50);
-//       y += 60; // adjust y position for next text
+//       try {
+//         const response = await axios.get(selectedLabour.photoSrc, { responseType: 'blob' });
+//         const imageUrl = URL.createObjectURL(response.data);
+//         doc.addImage(imageUrl, 'JPEG', 10, 20, 50, 50);
+//       } catch (error) {
+//         console.error('Error fetching image:', error);
+//         toast.error('Error fetching image. Please try again.');
+//       }
 //     }
 
-//     // Adding Aadhaar Front and Back Photos
-//     if (selectedLabour.uploadAadhaarFront) {
-//       await addImageToPDF(doc, selectedLabour.uploadAadhaarFront, 10, y, 50, 30);
-//       y += 40; // adjust y position for next image or text
-//     }
-//     if (selectedLabour.uploadAadhaarBack) {
-//       await addImageToPDF(doc, selectedLabour.uploadAadhaarBack, 10, y, 50, 30);
-//       y += 40; // adjust y position for next image or text
-//     }
+//     const tableColumns = ["Field", "Value"];
+//     const tableRows = Object.entries(formData).map(([field, value]) => [
+//       field.toUpperCase(),
+//       (value || 'N/A').toString().toUpperCase(),
+//       // field,
+//       // value.toString(),
+//     ]);
+
+//     doc.autoTable({
+//       head: [tableColumns],
+//       body: tableRows,
+//       startY: selectedLabour.photoSrc ? 80 : 30,
+//       styles: {
+//         overflow: 'linebreak',
+//         fontSize: 9,
+//         cellPadding: 2,
+//         textColor: [0, 0, 0],
+//       },
+//       columnStyles: {
+//         // 0: { fontStyle: 'bold' },
+//         0: { cellWidth: 60, fontStyle: 'bold' }, 
+//         1: { cellWidth: 130 }, 
+//       },
+//       margin: { top: 10 },
+//     });
 
 //     doc.save(`Labour_${selectedLabour.id}_FullForm.pdf`);
 //   };
@@ -576,11 +671,19 @@ export default ViewDetails;
 //   const downloadAadhaarCard = async () => {
 //     try {
 //       const baseUrl = "";
+//       console.log("Selected Labour:", selectedLabour);
+
+//       if (!selectedLabour.uploadAadhaarFront  || !selectedLabour.uploadIdProof) {
+//         console.error("Aadhaar URLs are missing:", {
+//           uploadAadhaarFront: selectedLabour.uploadAadhaarFront,
+//           uploadIdProof: selectedLabour.uploadIdProof,
+//           // uploadAadhaarBack: selectedLabour.uploadAadhaarBack,          
+//         });
+//         toast.error("Aadhaar card URLs are missing. Please check the labour details.");
+//         return;
+//       }
 
 //       const responseFront = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarFront}`, { responseType: 'blob' });
-//       const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
-
-//       // Download Aadhaar Front
 //       const urlFront = window.URL.createObjectURL(new Blob([responseFront.data], { type: 'image/jpeg' }));
 //       const linkFront = document.createElement('a');
 //       linkFront.href = urlFront;
@@ -589,15 +692,33 @@ export default ViewDetails;
 //       linkFront.click();
 //       document.body.removeChild(linkFront);
 
-//       // Download Aadhaar Back
-//       const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
-//       const linkBack = document.createElement('a');
-//       linkBack.href = urlBack;
-//       linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
-//       document.body.appendChild(linkBack);
-//       linkBack.click();
-//       document.body.removeChild(linkBack);
-
+//       // const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
+//       // const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
+//       // const linkBack = document.createElement('a');
+//       // linkBack.href = urlBack;
+//       // linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
+//       // document.body.appendChild(linkBack);
+//       // linkBack.click();
+//       // document.body.removeChild(linkBack);
+      
+//       if (selectedLabour.uploadAadhaarBack) {
+//         const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
+//         const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
+//         const linkBack = document.createElement('a');
+//         linkBack.href = urlBack;
+//         linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
+//         document.body.appendChild(linkBack);
+//         linkBack.click();
+//         document.body.removeChild(linkBack);
+//       }
+//       const responseId = await axios.get(`${baseUrl}${selectedLabour.uploadIdProof}`, { responseType: 'blob' });
+//       const urlId = window.URL.createObjectURL(new Blob([responseId.data], { type: 'image/jpeg' }));
+//       const linkId = document.createElement('a');
+//       linkId.href = urlId;
+//       linkId.setAttribute('download', `Labour_${selectedLabour.id}_ID_Proof.jpg`);
+//       document.body.appendChild(linkId);
+//       linkId.click();
+//       document.body.removeChild(linkId);
 //       toast.success('Aadhaar card downloaded successfully.');
 //     } catch (error) {
 //       console.error('Error downloading Aadhaar card:', error);
@@ -605,257 +726,118 @@ export default ViewDetails;
 //     }
 //   };
 
+//   const formData = {
+//     "Labour ID": selectedLabour?.LabourID || "",
+//     "Labour Ownership": selectedLabour.labourOwnership || "",
+//       "Title": selectedLabour?.title || "",
+//       "Name": selectedLabour.name || "",
+//       "Aadhaar No": selectedLabour.aadhaarNumber || "",
+//       "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'yyyy-MM-dd') : "",
+//       "Contact No": selectedLabour.contactNumber || "",
+//       "Emergency Contact": selectedLabour?.emergencyContact || "", 
+//       "Gender": selectedLabour.gender || "",
+//       "Date of Joining": selectedLabour.dateOfJoining ? format(new Date(selectedLabour.dateOfJoining), 'yyyy-MM-dd') : "",
+//       "Address": selectedLabour.address || "",
+//       "Village": selectedLabour?.village || "",
+//       "Pincode": selectedLabour.pincode || "",
+//       "District": selectedLabour?.district || "",
+//       "Taluka": selectedLabour.taluka || "",
+//       "State": selectedLabour?.state || "",
+//       "Marital Status": selectedLabour?.Marital_Status || "",
+//       "Bank Name": selectedLabour?.bankName || "",
+//       "Account Number": selectedLabour?.accountNumber || "",
+//       "IFSC Code": selectedLabour?.ifscCode || "",
+//       "Project Name": selectedLabour?.projectName  || "",
+//       "Company Name": selectedLabour?.companyName || "",
+//       "Department": selectedLabour?.department  || "",
+//       "Designation": selectedLabour?.designation || "",
+//       "Labour Category": selectedLabour?.labourCategory || "",    
+//       "Working Hours": selectedLabour?.workingHours || "",
+//       "Induction Date": selectedLabour?.Induction_Date? format(new Date(selectedLabour.Induction_Date), 'yyyy-MM-dd') : "",
+//       "Induction By": selectedLabour?.Inducted_By || "",
+//       // "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
+//       "Upload AadharFront Document": selectedLabour?.uploadAadhaarFront|| "",
+//       "Upload idProof Document": selectedLabour?.uploadIdProof || "",
+//   };
+
+//   if (selectedLabour?.labourOwnership === "Contractor") {
+//     formData["Contractor Name"] = selectedLabour?.contractorName || "";
+//     formData["Contractor Number"] = selectedLabour?.contractorNumber || "";
+//   }
+
+//   const formatLabel = (label) => {
+//     if (label === "IFSC Code" || label === "Labour ID") {
+//       return label.split("").join(""); // This will remove spaces
+//     }
+//     return label.replace(/([A-Z])/g, ' $1').trim(); 
+//   };
+  
 //   return (
-//     <Box className="modal-content">
-//       <Box className="modal-header">
-//         <Typography variant="h5" mb={2}>Labour Details</Typography>
-//         <Button className="close-button" onClick={onClose}>
+//     <Dialog open={!!selectedLabour} onClose={onClose} PaperProps={{ className: 'custom-dialog' }}>
+//       <DialogTitle  style={{ display: 'flex', justifyContent: 'space-between', alignItems:'center' }}>
+//         Labour Details
+//         <IconButton aria-label="close" onClick={onClose} >
 //           <CloseIcon />
-//         </Button>
-//       </Box>
-//       {selectedLabour ? (
-//         <div className="modal-body">
-//           <Typography variant="body1" className="label"><strong>Labour Photo:</strong></Typography>
-//           <img 
-//             src={selectedLabour.photoSrc} 
-//             alt={`${selectedLabour.name}'s Photo`} 
-//             height="200" 
-//             width="200" 
-//             style={{ display: 'block', marginBottom: '10px' }}
-//           />
-
-//           <Typography variant="body1" className="label"><strong>Labour Ownership:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.labourOwnership}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Name:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.name}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Aadhaar No:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.aadhaarNumber}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Date of Birth:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.dateOfBirth}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Contact No:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.contactNumber}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Gender:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.gender}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Date of Joining:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.dateOfJoining}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Address:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.address}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Pincode:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.pincode}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Taluka:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.taluka}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>District:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.district}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Village:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.village}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>State:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.state}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Emergency Contact:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.emergencyContact}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Bank Name:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.bankName}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Account Number:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.accountNumber}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>IFSC Code:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.ifscCode}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Project Name:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.projectName}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Labour Category:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.labourCategory}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Department:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.department}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Working Hours:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.workingHours}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Contractor Name:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.contractorName}</Typography>
-
-//           <Typography variant="body1" className="label"><strong>Contractor Number:</strong></Typography>
-//           <Typography variant="body1" className="value">{selectedLabour.contractorNumber}</Typography>
-
-//           <Box mt={3} className="modal-buttons">
-//             <Button variant="contained" color="primary" onClick={downloadFullForm} style={{ marginRight: '10px' }}>
-//               Download Full Form
-//             </Button>
-//             <Button variant="contained" color="primary" onClick={downloadAadhaarCard}>
-//               Download Aadhaar Card
-//             </Button>
-//           </Box>
-//         </div>
-//       ) : (
-//         <Typography variant="body1">Loading...</Typography>
-//       )}
-//     </Box>
-//   );
-// };
-
-// export default ViewDetails;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React from 'react';
-// import { Box, Typography, Button } from '@mui/material';
-// import { jsPDF } from 'jspdf';
-// import axios from 'axios';
-// import { toast } from 'react-toastify';
-// import './ViewDetails.css'; // Import the CSS file for styling
-
-// const ViewDetails = ({ selectedLabour, onClose }) => {
-//   const downloadFullForm = () => {
-//     const doc = new jsPDF();
-//     const formData = [
-//       { label: 'Labour Ownership', value: selectedLabour.labourOwnership },
-//       { label: 'Name', value: selectedLabour.name },
-//       { label: 'Aadhaar No', value: selectedLabour.aadhaarNumber },
-//       { label: 'Date of Birth', value: selectedLabour.dateOfBirth },
-//       { label: 'Contact No', value: selectedLabour.contactNumber },
-//       { label: 'Gender', value: selectedLabour.gender },
-//       { label: 'Date of Joining', value: selectedLabour.dateOfJoining },
-//       { label: 'Address', value: selectedLabour.address },
-//       { label: 'Pincode', value: selectedLabour.pincode },
-//       { label: 'Taluka', value: selectedLabour.taluka },
-//       { label: 'District', value: selectedLabour.district },
-//       { label: 'Village', value: selectedLabour.village },
-//       { label: 'State', value: selectedLabour.state },
-//       { label: 'Emergency Contact', value: selectedLabour.emergencyContact },
-//       { label: 'Bank Name', value: selectedLabour.bankName },
-//       { label: 'Account Number', value: selectedLabour.accountNumber },
-//       { label: 'IFSC Code', value: selectedLabour.ifscCode },
-//       { label: 'Project Name', value: selectedLabour.projectName },
-//       { label: 'Labour Category', value: selectedLabour.labourCategory },
-//       { label: 'Department', value: selectedLabour.department },
-//       { label: 'Working Hours', value: selectedLabour.workingHours },
-//       { label: 'Contractor Name', value: selectedLabour.contractorName },
-//       { label: 'Contractor Number', value: selectedLabour.contractorNumber },
-//     ];
-
-//     let y = 10; // Y-axis position
-//     formData.forEach(({ label, value }) => {
-//       doc.text(`${label}: ${value}`, 10, y);
-//       y += 10;
-//     });
-    
-//     doc.save(`Labour_${selectedLabour.id}_FullForm.pdf`);
-//   };
-
-//   const downloadAadhaarCard = async () => {
-//     try {
-//       const baseUrl = "";
-
-//       const responseFront = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarFront}`, { responseType: 'blob' });
-//       const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
-
-//       const downloadImage = async (response, fileName) => {
-//         const url = window.URL.createObjectURL(new Blob([response.data], { type: 'image/jpeg' }));
-//         const link = document.createElement('a');
-//         link.href = url;
-//         link.setAttribute('download', fileName);
-//         document.body.appendChild(link);
-//         link.click();
-//         document.body.removeChild(link);
-//       };
-
-//       await downloadImage(responseFront, `Labour_${selectedLabour.id}_Aadhaar_Front.jpg`);
-//       await downloadImage(responseBack, `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
-
-//       toast.success('Aadhaar card downloaded successfully.');
-//     } catch (error) {
-//       console.error('Error downloading Aadhaar card:', error);
-//       toast.error('Error downloading Aadhaar card. Please try again.');
-//     }
-//   };
-
-//   const detailsList = [
-//     { label: 'Labour Ownership', value: selectedLabour.labourOwnership },
-//     { label: 'Name', value: selectedLabour.name },
-//     { label: 'Aadhaar No', value: selectedLabour.aadhaarNumber },
-//     { label: 'Date of Birth', value: selectedLabour.dateOfBirth },
-//     { label: 'Contact No', value: selectedLabour.contactNumber },
-//     { label: 'Gender', value: selectedLabour.gender },
-//     { label: 'Date of Joining', value: selectedLabour.dateOfJoining },
-//     { label: 'Address', value: selectedLabour.address },
-//     { label: 'Pincode', value: selectedLabour.pincode },
-//     { label: 'Taluka', value: selectedLabour.taluka },
-//     { label: 'District', value: selectedLabour.district },
-//     { label: 'Village', value: selectedLabour.village },
-//     { label: 'State', value: selectedLabour.state },
-//     { label: 'Emergency Contact', value: selectedLabour.emergencyContact },
-//     { label: 'Bank Name', value: selectedLabour.bankName },
-//     { label: 'Account Number', value: selectedLabour.accountNumber },
-//     { label: 'IFSC Code', value: selectedLabour.ifscCode },
-//     { label: 'Project Name', value: selectedLabour.projectName },
-//     { label: 'Labour Category', value: selectedLabour.labourCategory },
-//     { label: 'Department', value: selectedLabour.department },
-//     { label: 'Working Hours', value: selectedLabour.workingHours },
-//     { label: 'Contractor Name', value: selectedLabour.contractorName },
-//     { label: 'Contractor Number', value: selectedLabour.contractorNumber },
-//   ];
-
-//   return (
-//     <Box className="modal-content">
-//       <Box className="modal-header">
-//         <Typography variant="h5">Labour Details</Typography>
-//         <Button className="close-button" onClick={onClose}>
-//           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-//             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-//           </svg>
-//         </Button>
-//       </Box>
-//       {selectedLabour ? (
-//         <div className="modal-body">
-//           {detailsList.map(({ label, value }) => (
-//             <div key={label} className="details-item">
-//               <Typography variant="body1" className="label"><strong>{label}:</strong></Typography>
-//               <Typography variant="body1" className="value">{value}</Typography>
+//         </IconButton>
+//       </DialogTitle>
+//       <DialogContent dividers className="modal-content">
+//         {selectedLabour ? (
+//           <>
+//             {selectedLabour.photoSrc && (
+//               <Box mb={2} textAlign="center">
+//                 <img src={selectedLabour.photoSrc} alt={`${selectedLabour.name}'s Photo`} height="200" width="200" />
+//               </Box>
+//             )}
+//             <div className="details-table">
+//               {Object.entries(formData).map(([key, value]) => (
+//                 <div key={key} className="details-row">
+//                       <Typography variant="body2" className="label">{formatLabel(key)}:</Typography>
+//                   {/* <Typography variant="body2" className="label">{key.replace(/([A-Z])/g, ' $1').trim()}:</Typography> */}
+//                   <Typography variant="body2" className="value">{value}</Typography>
+//                 </div>
+//               ))}
 //             </div>
-//           ))}
-//           <Box mt={3} className="modal-buttons">
-//             <Button variant="contained" color="primary" onClick={downloadFullForm}>Download Full Form</Button>
-//             <Button variant="contained" color="primary" onClick={downloadAadhaarCard}>Download Aadhaar Card</Button>
-//           </Box>
-//         </div>
-//       ) : (
-//         <Typography variant="body1">Loading...</Typography>
-//       )}
-//     </Box>
+//           </>
+//         ) : (
+//           <Typography variant="body1">Loading...</Typography>
+//         )}
+//       </DialogContent>
+//       <DialogActions  style={{ display: 'flex', justifyContent: 'center' }}>
+//         <Button variant="contained" color="primary" onClick={downloadFullForm}>
+//           Download Form
+//         </Button>
+//         <Button variant="contained" color="primary" onClick={downloadAadhaarCard}>
+//           Download Aadhaar
+//         </Button>
+//       </DialogActions>
+//     </Dialog>
 //   );
 // };
 
+// ViewDetails.propTypes = {
+//   selectedLabour: PropTypes.object,
+//   onClose: PropTypes.func.isRequired,
+// };
+
 // export default ViewDetails;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -24,7 +24,7 @@ const TableComponent = ({
   return (
     <Box py={1} >
    <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[ 10, 25, 40]}
           component="div"
           count={users.length} 
           rowsPerPage={rowsPerPage}
@@ -34,7 +34,7 @@ const TableComponent = ({
         />
       <Paper sx={{ width: "100%", overflow: "hidden", boxShadow: 3, }}>
      
-        <TableContainer sx={{ maxHeight: 440 }}>
+        <TableContainer sx={{ maxHeight: 450 }}>
           <Table stickyHeader aria-label="sticky table">
             <TableHead>
               <TableRow>

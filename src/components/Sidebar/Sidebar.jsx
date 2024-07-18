@@ -263,7 +263,7 @@
 
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation  } from 'react-router-dom';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import './sidebar.css';
@@ -280,11 +280,26 @@ import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
 function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
   const { user } = useUser();
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [activeSection, setActiveSection] = useState(null);
   const sidebarRef = useRef(null);
+  const location = useLocation();
+  const [activeSubSection, setActiveSubSection] = useState(null);
   
-console.log('userAccessPages',user.accessPages)
+// console.log('userAccessPages',user.accessPages)
+
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+
+  const handleSubLinkClick = (subItem) => {
+    setActiveSubSection(subItem.path);
+    setActiveSection(null); // Deactivate main section when a sublink is clicked
+  };
+
+  const handleMainSectionClick = (section) => {
+    setActiveSection(section);
+    setActiveSubSection(null); // Deactivate sublink when a main section is clicked
   };
 
   const getBulletColor = (isCompleted) => {
@@ -303,6 +318,10 @@ console.log('userAccessPages',user.accessPages)
       document.removeEventListener('click', handleClickOutside);
     };
   }, [openSidebarToggle]);
+
+  const handleSectionClick = (section) => {
+    setActiveSection(section);
+  };
 
 
   return (
@@ -323,7 +342,8 @@ console.log('userAccessPages',user.accessPages)
         {isCollapsed && (
           <ul className="application-list">
             {SidebarData.find(item => item.heading === "Application").subLinks.map((subItem, index) => (
-              <Link key={index} to={`/${subItem.path}`} className="sidebar-link">
+              <Link key={index} to={`/${subItem.path}`}   className={`sidebar-link ${location.pathname === `/${subItem.path}` ? 'active-subsection' : ''}`}
+              onClick={() => handleSubLinkClick(subItem)} >
                 <li>
                   <span className="bullet" style={{ color: getBulletColor(formStatus[subItem.path]) }}>&#8226;</span> {subItem.heading}
                 </li>
@@ -335,14 +355,19 @@ console.log('userAccessPages',user.accessPages)
 
       <div className="other-sections">
       {SidebarData.filter(item => (!user?.accessPages || user?.accessPages?.includes(item.heading))&& item.heading !== "Application").map((item, index) => (
-          <div className="profile-icon1" key={index}>
+          // <div className="profile-icon1" key={index}>
+          <div
+          key={index}
+          className={`profile-icon1 ${activeSection === item.heading ? 'active-section' : ''}`}
+          onClick={() => handleMainSectionClick(item.heading)}
+        >
             <img src={
               item.heading === "Add User" ? profileIcon3 :
               item.heading === "Labour Details" ? profileIcon4 :
-              item.heading === "Approve Labours" ? profileIcon5 :
+              item.heading === "Project Machine" ? profileIcon5 :
               profileIcon5
             } alt="Profile Icon" className="img-white-fill" style={{ height: "30px" }} />
-            <Link to={`/${item.path}`} className="sidebar-link">
+            <Link to={`/${item.path}`} className={`sidebar-link ${location.pathname === `/${item.path}` ? 'active-subsection' : ''}`}>
               <span className="bullet" style={{ color: getBulletColor(formStatus[item.path]) }}>&#8226;</span>
               <span className="mains">{item.heading}</span>
             </Link>

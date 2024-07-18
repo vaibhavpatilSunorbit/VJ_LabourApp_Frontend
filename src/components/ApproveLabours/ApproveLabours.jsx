@@ -1,325 +1,179 @@
-
 // import React, { useState, useEffect } from 'react';
 // import axios from 'axios';
-// import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, TablePagination, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
-// import Loading from "../Loading/Loading"; 
-// import { useTheme } from '@mui/material/styles';
-// import useMediaQuery from '@mui/material/useMediaQuery';
+// import { InputLabel } from '@mui/material';
+// import { API_BASE_URL } from "../../Data";
 
-// const ApproveLabour = ({ refresh }) => {
-//   const [approvedLabours, setApprovedLabours] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState(null);
-//   const theme = useTheme();
-//   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-//   const [page, setPage] = useState(0);
-//   const [rowsPerPage, setRowsPerPage] = useState(5);
+// const ApproveLabours = () => {
+//   const [projectNames, setProjectNames] = useState([]);
+//   const [devices, setDevices] = useState([]);
+//   const [formData, setFormData] = useState({
+//     projectName: '',
+//     deviceName: '',
+//     deviceLocation: '',
+//   });
+
+//   const renderRequiredAsterisk = (isRequired) => {
+//     return isRequired ? <span style={{ color: "red" }}> *</span> : null;
+//   };
 
 //   useEffect(() => {
-//     fetchApprovedLabours();
-//   }, [refresh]); 
+//     const fetchData = async () => {
+//       try {
+//         const projectNamesRes = await axios.get(`${API_BASE_URL}/api/project-names`);
+//         const devicesRes = await axios.get(`${API_BASE_URL}/api/devices`);
 
-//   const fetchApprovedLabours = async () => {
-//     setLoading(true);
-//     try {
-//       const response = await axios.get('http://localhost:5000/labours/approved');
-//       setApprovedLabours(response.data);
-//       setLoading(false); 
-//     } catch (error) {
-//       console.error('Error fetching approved labours:', error);
-//       setError(error.response ? error.response.data.message : 'Error fetching approved labours. Please try again.');
-//       setLoading(false); 
-//     }
+//         if (projectNamesRes.status === 200) {
+//           setProjectNames(projectNamesRes.data);
+//           console.log('Fetched Project Names:', projectNamesRes.data);
+//         } else {
+//           console.error('Failed to fetch project names:', projectNamesRes.status);
+//         }
+
+//         if (devicesRes.status === 200) {
+//           setDevices(devicesRes.data);
+//           console.log('Fetched Devices:', devicesRes.data);
+//         } else {
+//           console.error('Failed to fetch devices:', devicesRes.status);
+//         }
+//       } catch (err) {
+//         console.error('Error fetching data:', err);
+//       }
+//     };
+
+//     fetchData();
+//   }, []);
+
+//   const handleInputChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData((prevFormData) => ({
+//       ...prevFormData,
+//       [name]: value,
+//     }));
 //   };
 
-
-//   const handleChangePage = (event, newPage) => {
-//     setPage(newPage);
+//   const getInputStyle = (fieldName) => {
+//     return { 
+//       fontWeight: 400,
+//       fontSize: '16px',
+//       marginBottom: '8px',
+//       width: '17vw',
+//     };
 //   };
 
-//   const handleChangeRowsPerPage = (event) => {
-//     setRowsPerPage(parseInt(event.target.value, 10));
-//     setPage(0);
+//   const inputLabelStyle = {
+//     color: 'black',
+//     fontFamily: "Roboto, Helvetica, Arial, sans-serif",
+//     fontWeight: 400,
+//     fontSize: '1rem',
+//     lineHeight: '1.4375em',
+//     letterSpacing: '0.00938em',
+//     padding: 0,
+//     position: 'relative',
+//     display: 'block',
+//     transformOrigin: 'top left',
+//     whiteSpace: 'nowrap',
+//     overflow: 'hidden',
+//     textOverflow: 'ellipsis',
+//     maxWidth: '100%',
+//     transition: 'color 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms, transform 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms, max-width 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms',
+//     color: 'rgba(0, 0, 0, 0.6)'
 //   };
-
 
 //   return (
-//     <Box  py={2} px={2} sx={{ width: isMobile ? '90vw' : 'auto' }}>
-//       <Typography variant="h4" mb={3}>
-//         Approved Labours
-//       </Typography>
-
-//       {loading ? (
-//         <Loading /> 
-//       ) : error ? (
-//         <Typography color="error">{error}</Typography>
-//       ) : (
-//         <>
-//           <TablePagination
-//             rowsPerPageOptions={[5, 10, 25]}
-//             component="div"
-//             count={approvedLabours.length}
-//             rowsPerPage={rowsPerPage}
-//             page={page}
-//             onPageChange={handleChangePage}
-//             onRowsPerPageChange={handleChangeRowsPerPage}
-//           />
-//         <TableContainer component={Paper}  sx={{
-//           height: '77vh',
-//           overflowX: 'auto',
-//           backgroundColor: '#fff',
-//           color: 'rgba(0, 0, 0, 0.87)',
-//           transition: 'box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
-//           borderRadius: 4,
-//           boxShadow: '0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12)',
-//           width: '100%',
-//         }}>
-//           <Table>
-//             <TableHead>
-//               <TableRow>
-//                 <TableCell>Sr No</TableCell>
-//                 <TableCell>Name of Labour</TableCell>
-//                 <TableCell>Project</TableCell>
-//                 <TableCell>Department</TableCell>
-//                 <TableCell>Labour Category</TableCell>
-//                 <TableCell>Status</TableCell>
-//                 {/* <TableCell>Action</TableCell> */}
-//               </TableRow>
-//             </TableHead>
-//             <TableBody>
-//               {approvedLabours.length > 0 ? (
-//                 approvedLabours.map((labour, index) => (
-//                   <TableRow key={labour.id}>
-//                     <TableCell>{index + 1}</TableCell>
-//                     <TableCell>{labour.name}</TableCell>
-//                     <TableCell>{labour.projectName}</TableCell>
-//                     <TableCell>{labour.department}</TableCell>
-//                     <TableCell>{labour.labourCategory}</TableCell>
-//                     <TableCell>{labour.status}</TableCell>
-
-//                   </TableRow>
-//                 ))
-//               ) : (
-//                 <TableRow>
-//                   <TableCell colSpan={7}>No approved labours found.</TableCell>
-//                 </TableRow>
-//               )}
-//             </TableBody>
-//           </Table>
-//         </TableContainer>
-//         </>
-//       )}
-//     </Box>
-//   );
-// };
-
-// export default ApproveLabour;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// This is new code change 05-07-2024
-
-
-
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, TablePagination, Modal, Fade, Backdrop, Button } from '@mui/material';
-// import Loading from "../Loading/Loading"; 
-// import { useTheme } from '@mui/material/styles';
-// import useMediaQuery from '@mui/material/useMediaQuery';
-// import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-// import { toast, ToastContainer } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
-// import ViewDetails from '../ViewDetails/ViewDetails';
-// import {API_BASE_URL} from "../../Data"
-// import SearchBar from '../SarchBar/SearchBar';
-
-// const ApproveLabour = ({ refresh }) => {
-//   const [approvedLabours, setApprovedLabours] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState(null);
-//   const [page, setPage] = useState(0);
-//   const [rowsPerPage, setRowsPerPage] = useState(5);
-//   const [isPopupOpen, setIsPopupOpen] = useState(false);
-//   const [selectedLabour, setSelectedLabour] = useState(null);
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [searchResults, setSearchResults] = useState([]);
-//   const theme = useTheme();
-//   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-//   useEffect(() => {
-//     fetchApprovedLabours();
-//   }, [refresh]); 
-
-//   const fetchApprovedLabours = async () => {
-//     setLoading(true);
-//     try {
-//       const response = await axios.get(API_BASE_URL +`/labours/approved`);
-//       setApprovedLabours(response.data);
-//       setLoading(false); 
-//     } catch (error) {
-//       console.error('Error fetching approved labours:', error);
-//       setError(error.response ? error.response.data.message : 'Error fetching approved labours. Please try again.');
-//       setLoading(false); 
-//     }
-//   };
-
-//   const handleChangePage = (event, newPage) => {
-//     setPage(newPage);
-//   };
-
-//   const handleChangeRowsPerPage = (event) => {
-//     setRowsPerPage(parseInt(event.target.value, 10));
-//     setPage(0);
-//   };
-
-//   const handleSearch = async (e) => {
-//     e.preventDefault();
-//     if (searchQuery.trim() === '') {
-//       setSearchResults([]);
-//       return;
-//     }
-//     try {
-//       const response = await axios.get(API_BASE_URL + `/labours/search?q=${searchQuery}`);
-//       setSearchResults(response.data);
-//     } catch (error) {
-//       console.error('Error searching:', error);
-//       setError('Error searching. Please try again.');
-//     }
-//   };
-
-//   const openPopup = async (labour) => {
-//     try {
-//       const response = await axios.get( API_BASE_URL + `/labours/${labour.id}`);
-//       setSelectedLabour(response.data);
-//       setIsPopupOpen(true);
-//     } catch (error) {
-//       console.error('Error fetching labour details:', error);
-//       toast.error('Error fetching labour details. Please try again.');
-//     }
-//   };
-
-//   const closePopup = () => {
-//     setSelectedLabour(null);
-//     setIsPopupOpen(false);
-//   };
-
-
-//   return (
-//     <Box py={2} px={1} sx={{ width: isMobile ? '96vw' : 'auto' }}>
-//       <Typography variant="h5" mb={1}>
-//         Approved Labours
-//       </Typography>
-//       <Box ml={-1.6}>
-//         <SearchBar
-//           searchQuery={searchQuery}
-//           setSearchQuery={setSearchQuery}
-//           handleSearch={handleSearch}
-//           searchResults={searchResults}
-//           setSearchResults={setSearchResults}
-//           className="search-bar"
-//         />
-//       </Box>
-
-
-
-//       <ToastContainer />
-
-//       {loading ? (
-//         <Loading /> 
-//       ) : error ? (
-//         <Typography color="error">{error}</Typography>
-//       ) : (
-//         <>
-//           <TablePagination
-//             rowsPerPageOptions={[5, 10, 25]}
-//             component="div"
-//             count={approvedLabours.length}
-//             rowsPerPage={rowsPerPage}
-//             page={page}
-//             onPageChange={handleChangePage}
-//             onRowsPerPageChange={handleChangeRowsPerPage}
-//           />
-//           <TableContainer component={Paper} sx={{
-//             height: '70vh',
-//             overflowX: 'auto',
-//             backgroundColor: '#fff',
-//             color: 'rgba(0, 0, 0, 0.87)',
-//             transition: 'box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
-//             borderRadius: 4,
-//             boxShadow: '0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12)',
-//             width: '100%',
-//           }}>
-//             <Table>
-//               <TableHead>
-//                 <TableRow>
-//                   <TableCell>Sr No</TableCell>
-//                   <TableCell>Name of Labour</TableCell>
-//                   <TableCell>Project</TableCell>
-//                   <TableCell>Department</TableCell>
-//                   <TableCell>Labour Category</TableCell>
-//                   <TableCell>Status</TableCell>
-//                   <TableCell>Details</TableCell>
-//                 </TableRow>
-//               </TableHead>
-//               <TableBody>
-//                 {approvedLabours.length > 0 ? (
-//                   approvedLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((labour, index) => (
-//                     <TableRow key={labour.id}>
-//                       <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-//                       <TableCell>{labour.name}</TableCell>
-//                       <TableCell>{labour.projectName}</TableCell>
-//                       <TableCell>{labour.department}</TableCell>
-//                       <TableCell>{labour.labourCategory}</TableCell>
-//                       <TableCell>{labour.status}</TableCell>
-//                       <TableCell>
-//                         <RemoveRedEyeIcon onClick={() => openPopup(labour)} style={{ cursor: 'pointer' }} />
-//                       </TableCell>
-//                     </TableRow>
-//                   ))
-//                 ) : (
-//                   <TableRow>
-//                     <TableCell colSpan={7}>No approved labours found.</TableCell>
-//                   </TableRow>
-//                 )}
-//               </TableBody>
-//             </Table>
-//           </TableContainer>
-
-//           <Modal
-//             open={isPopupOpen}
-//             onClose={closePopup}
-//             closeAfterTransition
-//             BackdropComponent={Backdrop}
-//             BackdropProps={{ timeout: 500 }}
+//     <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '30px', gap: '50px' }}>
+//       <div className="project-field">
+//         <InputLabel id="project-name-label" style={inputLabelStyle}>
+//           Project Name{renderRequiredAsterisk(true)}
+//         </InputLabel>
+//         <div className="gender-input">
+//           <select
+//             id="projectName"
+//             name="projectName"
+//             value={formData.projectName}
+//             onChange={handleInputChange}
+//             style={getInputStyle('projectName')}
+//             required
 //           >
-//             <Fade in={isPopupOpen}>
-//               <div className="modal">
-//                 {selectedLabour && (
-//                   <ViewDetails selectedLabour={selectedLabour} onClose={closePopup} />
-//                 )}
-//               </div>
-//             </Fade>
-//           </Modal>
-//         </>
-//       )}
-//     </Box>
+//             <option value="">Select a project</option>
+//             {projectNames.map((project) => (
+//               <option key={project.id} value={project.id}>{project.Business_Unit}</option>
+//             ))}
+//           </select>
+//         </div>
+//       </div>
+
+//       <div className="device-field">
+//         <InputLabel id="device-name-label" style={inputLabelStyle}>
+//           Device Name{renderRequiredAsterisk(true)}
+//         </InputLabel>
+//         <div className="gender-input">
+//           <select
+//             id="deviceName"
+//             name="deviceName"
+//             value={formData.deviceName}
+//             onChange={handleInputChange}
+//             style={getInputStyle('deviceName')}
+//             required
+//           >
+//             <option value="">Select a device</option>
+//             {devices.map((device) => (
+//               <option key={device.DeviceID} value={device.DeviceID}>{device.DeviceSName}</option>
+//             ))}
+//           </select>
+//         </div>
+//       </div>
+
+//       <div className="device-location-field">
+//         <InputLabel id="device-location-label" style={inputLabelStyle}>
+//           Device Location{renderRequiredAsterisk(true)}
+//         </InputLabel>
+//         <div className="gender-input">
+//           <select
+//             id="deviceLocation"
+//             name="deviceLocation"
+//             value={formData.deviceLocation}
+//             onChange={handleInputChange}
+//             style={getInputStyle('deviceLocation')}
+//             required
+//           >
+//             <option value="">Select a location</option>
+//             {devices.map((device) => (
+//               <option key={device.DeviceID} value={device.DeviceID}>{device.DeviceLocation}</option>
+//             ))}
+//           </select>
+//         </div>
+//       </div>
+
+
+
+//       <div className="device-location-field">
+//         <InputLabel id="device-location-label" style={inputLabelStyle}>
+//           Serial Number{renderRequiredAsterisk(true)}
+//         </InputLabel>
+//         <div className="gender-input">
+//           <select
+//             id="SerialNumber"
+//             name="SerialNumber"
+//             value={formData.SerialNumber}
+//             onChange={handleInputChange}
+//             style={getInputStyle('SerialNumber')}
+//             required
+//           >
+//             <option value="">Select a location</option>
+//             {devices.map((device) => (
+//               <option key={device.DeviceID} value={device.DeviceID}>{device.SerialNumber}</option>
+//             ))}
+//           </select>
+//         </div>
+//       </div>
+//     </div>
 //   );
 // };
 
-// export default ApproveLabour;
+// export default ApproveLabours;
+
+
+
 
 
 
@@ -332,378 +186,189 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Box,
-  Typography,
-  Modal,
-  Backdrop,
-  Fade,
-  TablePagination,
-  Tabs,
-  Tab
-} from '@mui/material';
-import { toast } from 'react-toastify';
-import "./ApproveLabours.css";
-import SearchBar from '../SarchBar/SearchBar';
-import ViewDetails from '../ViewDetails/ViewDetails';
-import Loading from "../Loading/Loading";
-import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-import { API_BASE_URL } from "../../Data"
+import { InputLabel, Button } from '@mui/material';
+import { API_BASE_URL } from "../../Data";
+import './projectMachine.css'; // Assuming you are importing a CSS file for styling
 
-const ApproveLabours = ({ onApprove, departments, projectNames }) => {
-  const [labours, setLabours] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [selectedLabour, setSelectedLabour] = useState(null);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [tabValue, setTabValue] = useState(0);
-  const theme = useTheme();
-  // const isMobile = useMediaQuery('(max-width: 600px)');
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  useEffect(() => {
-    fetchLabours();
-  }, []);
-
-  const fetchLabours = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${API_BASE_URL}/labours`);
-      console.log('API Response:', response.data);
-      setLabours(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching labours:', error);
-      setError('Error fetching labours. Please try again.');
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (searchQuery.trim() === '') {
-      setSearchResults([]);
-      return;
-    }
-    try {
-      const response = await axios.get(API_BASE_URL + `/labours/search?q=${searchQuery}`);
-      setSearchResults(response.data);
-    } catch (error) {
-      console.error('Error searching:', error);
-      setError('Error searching. Please try again.');
-    }
-  };
-
-
-
-  const openPopup = async (labour) => {
-    try {
-      const response = await axios.get(API_BASE_URL + `/labours/${labour.id}`);
-      const labourDetails = response.data;
-      const projectDescription = getProjectDescription(labourDetails.projectName);
-      const departmentDescription = getDepartmentDescription(labourDetails.department);
-
-      setSelectedLabour({
-        ...labourDetails,
-        projectDescription,
-        departmentDescription,
-      });
-      setIsPopupOpen(true);
-    } catch (error) {
-      console.error('Error fetching labour details:', error);
-      toast.error('Error fetching labour details. Please try again.');
-    }
-  };
-
-  const closePopup = () => {
-    setSelectedLabour(null);
-    setIsPopupOpen(false);
-  };
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-    setPage(0);
-  };
-
-
-  const handleSelectLabour = (selectedLabour) => {
-    setSelectedLabour(selectedLabour);
-  };
-
-
-  const displayLabours = searchResults.length > 0 ? searchResults : labours;
-
-  const filteredLabours = displayLabours.filter(labour => {
-    if (tabValue === 0) {
-      return labour.status === 'Pending';
-    } else if (tabValue === 1) {
-      return labour.status === 'Approved';
-    } else {
-      return labour.status === 'Rejected';
-    }
+const ApproveLabours = () => {
+  const [projectNames, setProjectNames] = useState([]);
+  const [devices, setDevices] = useState([]);
+  const [formData, setFormData] = useState({
+    projectName: '',
+    deviceName: '',
+    deviceLocation: '',
+    SerialNumber: '',
   });
 
-  const getDepartmentDescription = (departmentId) => {
-    if (!departments || departments.length === 0) {
-      return 'Unknown';
-    }
-    const department = departments.find(dept => dept.Id === Number(departmentId));
-    return department ? department.Description : 'Unknown';
+  const renderRequiredAsterisk = (isRequired) => {
+    return isRequired ? <span style={{ color: "red" }}> *</span> : null;
   };
 
-  const getProjectDescription = (projectId) => {
-    console.log('Projects Array:', projectNames);
-    console.log('Project ID:', projectId, 'Type:', typeof projectId);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const projectNamesRes = await axios.get(`${API_BASE_URL}/api/project-names`);
+        const devicesRes = await axios.get(`${API_BASE_URL}/api/devices`);
 
-    if (!projectNames || projectNames.length === 0) {
-      console.log('Projects array is empty or undefined');
-      return 'Unknown';
-    }
+        if (projectNamesRes.status === 200) {
+          setProjectNames(projectNamesRes.data);
+          console.log('Fetched Project Names:', projectNamesRes.data);
+        } else {
+          console.error('Failed to fetch project names:', projectNamesRes.status);
+        }
 
-    if (projectId === undefined || projectId === null) {
-      console.log('Project ID is undefined or null');
-      return 'Unknown';
-    }
+        if (devicesRes.status === 200) {
+          setDevices(devicesRes.data);
+          console.log('Fetched Devices:', devicesRes.data);
+        } else {
+          console.error('Failed to fetch devices:', devicesRes.status);
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    };
 
-    const project = projectNames.find(proj => {
-      console.log(`Checking project: ${proj.id} === ${Number(projectId)} (Type: ${typeof proj.id})`);
-      return proj.id === Number(projectId);
-    });
+    fetchData();
+  }, []);
 
-    console.log('Found Project:', project);
-    return project ? project.Business_Unit : 'Unknown';
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     const response = await axios.post(`${API_BASE_URL}/api/approve-labour`, formData);
+  //     if (response.status === 200) {
+  //       console.log('Data submitted successfully:', response.data);
+  //       // You can add more logic here, like showing a success message
+  //     } else {
+  //       console.error('Failed to submit data:', response.status);
+  //     }
+  //   } catch (err) {
+  //     console.error('Error submitting data:', err);
+  //   }
+  // };
 
+  const getInputStyle = () => {
+    return { 
+      fontWeight: 400,
+      fontSize: '16px',
+      marginBottom: '8px',
+      width: '17vw',
+    };
+  };
+
+  const inputLabelStyle = {
+    color: 'black',
+    fontFamily: "Roboto, Helvetica, Arial, sans-serif",
+    fontWeight: 400,
+    fontSize: '1rem',
+    lineHeight: '1.4375em',
+    letterSpacing: '0.00938em',
+    padding: 0,
+    position: 'relative',
+    display: 'block',
+    transformOrigin: 'top left',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '100%',
+    transition: 'color 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms, transform 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms, max-width 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms',
+    color: 'rgba(0, 0, 0, 0.6)'
+  };
 
   return (
-    <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', }}>
-      {/* <Typography variant="h5" >
-        Labour Details
-      </Typography> */}
-
-      <Box ml={-1.5}>
-        <SearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          handleSearch={handleSearch}
-          searchResults={searchResults}
-          setSearchResults={setSearchResults}
-          handleSelectLabour={handleSelectLabour}
-          className="search-bar"
-        />
-      </Box>
-      {loading && <Loading />}
-
-
-      <Box
-        sx={{
-          width: "auto",
-          height: "auto",
-          bgcolor: "white",
-          marginBottom: "15px",
-          p: 1,
-          borderRadius: 2,
-          boxShadow: 3,
-          alignSelf: "flex-start",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          aria-label="tabs example"
-          sx={{
-            ".MuiTabs-indicator": {
-              display: "none",
-            },
-            minHeight: "auto",
-          }}
-        >
-          <Tab
-            label="Pending"
-            style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
-            sx={{
-              color: tabValue === 0 ? "white" : "black",
-              bgcolor: tabValue === 0 ? "#EFE6F7" : "transparent",
-              borderRadius: 1,
-              textTransform: "none",
-              fontWeight: "bold",
-              mr: 1,
-              minHeight: "auto",
-              minWidth: "auto",
-              // padding: "6px 12px",
-              "&:hover": {
-                bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
-              },
-            }}
-          />
-          <Tab
-            label="Approved"
-            style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
-            sx={{
-              color: tabValue === 1 ? "white" : "black",
-              bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "transparent",
-              borderRadius: 1,
-              textTransform: "none",
-              mr: 1,
-              fontWeight: "bold",
-              minHeight: "auto",
-              minWidth: "auto",
-              // padding: "6px 12px",
-              "&:hover": {
-                bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
-              },
-            }}
-          />
-          <Tab
-            label="Rejected"
-            style={{ color: tabValue === 2 ? "rgb(255, 100, 100)" : "black" }}
-            sx={{
-              color: tabValue === 2 ? "white" : "black",
-              bgcolor: tabValue === 2 ? "rgb(255, 229, 229)" : "transparent",
-              borderRadius: 1,
-              textTransform: "none",
-              fontWeight: "bold",
-              minHeight: "auto",
-              minWidth: "auto",
-              // padding: "6px 12px",
-              "&:hover": {
-                bgcolor: tabValue === 2 ? "rgb(255, 229, 229)" : "rgb(255, 229, 229)",
-              },
-            }}
-          />
-        </Tabs>
-        <TablePagination
-          className="custom-pagination"
-          rowsPerPageOptions={[10, 25, { label: 'All', value: -1 }]}
-          count={filteredLabours.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </Box>
-
-
-
-      <TableContainer component={Paper} sx={{
-        mb: 6,
-        overflowX: 'auto',
-        borderRadius: 2,
-        boxShadow: 3,
-        maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
-        '&::-webkit-scrollbar': {
-          width: '8px',
-        },
-        '&::-webkit-scrollbar-track': {
-          backgroundColor: '#f1f1f1',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          backgroundColor: '#888',
-          borderRadius: '4px',
-        },
-      }}>
-        <Table sx={{ minWidth: 800 }} >
-          <TableHead >
-            <TableRow
-              sx={{
-                '& th': {
-                  padding: '12px',
-                  '@media (max-width: 600px)': {
-                    padding: '10px',
-                  },
-                },
-              }}
-            >
-              <TableCell>Sr No</TableCell>
-              <TableCell>Name of Labour</TableCell>
-              <TableCell>Project</TableCell>
-              <TableCell>Department</TableCell>
-              <TableCell>Labour Category</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Details</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {(rowsPerPage > 0
-              ? filteredLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              : filteredLabours
-            ).map((labour, index) => (
-              console.log('Labour Object:', labour),
-              console.log('Labour Project ID:', labour.project_id),
-              <TableRow
-                key={labour.id}
-                sx={{
-                  '& td': {
-                    padding: '12px',
-                    '@media (max-width: 600px)': {
-                      padding: '10px',
-                    },
-                  },
-                }}
-              >
-                <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                <TableCell>{labour.name}</TableCell>
-                <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
-                <TableCell>{getDepartmentDescription(labour.department)}</TableCell>
-                <TableCell>{labour.labourCategory}</TableCell>
-                <TableCell>{labour.status}</TableCell>
-
-                <TableCell>
-
-                  < RemoveRedEyeIcon onClick={() => openPopup(labour)} />
-
-                </TableCell>
-              </TableRow>
+    <form className="form-container">
+    {/* <form onSubmit={handleSubmit} className="form-container"> */}
+      <div className="form-column">
+        <div className="form-field">
+          <InputLabel id="project-name-label" style={inputLabelStyle}>
+            Project Name{renderRequiredAsterisk(true)}
+          </InputLabel>
+          <select
+            id="projectName"
+            name="projectName"
+            value={formData.projectName}
+            onChange={handleInputChange}
+            style={getInputStyle()}
+            required
+          >
+            <option value="">Select a project</option>
+            {projectNames.map((project) => (
+              <option key={project.id} value={project.id}>{project.Business_Unit}</option>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          </select>
+        </div>
 
+        <div className="form-field">
+          <InputLabel id="device-name-label" style={inputLabelStyle}>
+            Device Name{renderRequiredAsterisk(true)}
+          </InputLabel>
+          <select
+            id="deviceName"
+            name="deviceName"
+            value={formData.deviceName}
+            onChange={handleInputChange}
+            style={getInputStyle()}
+            required
+          >
+            <option value="">Select a device</option>
+            {devices.map((device) => (
+              <option key={device.DeviceID} value={device.DeviceID}>{device.DeviceSName}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
-      <Modal
-        open={isPopupOpen}
-        onClose={closePopup}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{ timeout: 500 }}
-      >
-        <Fade in={isPopupOpen}>
-          <div className="modal">
-            {selectedLabour && (
-              <ViewDetails selectedLabour={selectedLabour} onClose={closePopup} />
-            )}
-          </div>
-        </Fade>
-      </Modal>
-    </Box>
+      <div className="form-column">
+        <div className="form-field">
+          <InputLabel id="device-location-label" style={inputLabelStyle}>
+            Device Location{renderRequiredAsterisk(true)}
+          </InputLabel>
+          <select
+            id="deviceLocation"
+            name="deviceLocation"
+            value={formData.deviceLocation}
+            onChange={handleInputChange}
+            style={getInputStyle()}
+            required
+          >
+            <option value="">Select a location</option>
+            {devices.map((device) => (
+              <option key={device.DeviceID} value={device.DeviceID}>{device.DeviceLocation}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-field">
+          <InputLabel id="serial-number-label" style={inputLabelStyle}>
+            Serial Number{renderRequiredAsterisk(true)}
+          </InputLabel>
+          <select
+            id="SerialNumber"
+            name="SerialNumber"
+            value={formData.SerialNumber}
+            onChange={handleInputChange}
+            style={getInputStyle()}
+            required
+          >
+            <option value="">Select a serial number</option>
+            {devices.map((device) => (
+              <option key={device.DeviceID} value={device.DeviceID}>{device.SerialNumber}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <Button type="submit" variant="contained" color="primary" className="submit-button">
+        Submit
+      </Button>
+    </form>
   );
 };
 
