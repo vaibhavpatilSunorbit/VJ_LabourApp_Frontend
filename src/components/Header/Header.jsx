@@ -12,13 +12,13 @@ import { useUser }    from '../../UserContext/UserContext';
 function Header({OpenSidebar}) {
   const navigate = useNavigate();
   const { user } = useUser();
-  console.log("User in Header:", user);
+  // console.log("User in Header:", user);
   const isMobile = window.innerWidth <= 768;
   const spanStyle = {
     marginTop: '5px',
     fontSize: isMobile ? '13px' : '14px', // Adjust the font size for mobile devices
     color: '#000',
-    marginLeft: isMobile ? '9vw' : '9vw'
+    marginLeft: isMobile ? '9vw' : '7vw'
   };
 
   const handleLogout = () => {

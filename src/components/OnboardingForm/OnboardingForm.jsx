@@ -24,6 +24,8 @@ import { useUser } from '../../UserContext/UserContext';
 import SwitchCameraIcon from '@mui/icons-material/SwitchCamera';
 import { IconButton } from '@mui/material';
 import { FaRegTimesCircle } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
+
 
 const departmentWorkingHoursMapping = {
   'CIVIL': 'FLEXI SHIFT - 8 HRS',
@@ -67,6 +69,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture,  projectList =
   const [popupType, setPopupType] = useState('');
   const [isAddUserCollapsed, setIsAddUserCollapsed] = useState(true);
   const [isLabourDetailsCollapsed, setIsLabourDetailsCollapsed] = useState(true);
+  const location = useLocation();
   // New Chages for dorpdown
   const [projectNames, setProjectNames] = useState([]);
   const [labourCategories, setLabourCategories] = useState([]);
@@ -114,7 +117,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture,  projectList =
     department: '',
     workingHours: '',
     designation: '',
-    title: 'Mr',
+    title: 'Mr.',
     companyName: '',
     Marital_Status: '',
     projectDescription: '',
@@ -776,6 +779,88 @@ if (!localError) {
     startCamera();
   };
 
+  // const handleSelectLabour = (labour) => {
+  //   const {
+  //     LabourID,
+  //     labourOwnership,
+  //     name,
+  //     aadhaarNumber,
+  //     dateOfBirth,
+  //     contactNumber,
+  //     gender,
+  //     dateOfJoining,
+  //     address,
+  //     pincode,
+  //     taluka,
+  //     district,
+  //     village,
+  //     state,
+  //     emergencyContact,
+  //     photoSrc,
+  //     bankName,
+  //     branch,
+  //     accountNumber,
+  //     ifscCode,
+  //     projectName,
+  //     labourCategory,
+  //     department,
+  //     designation,
+  //     workingHours,
+  //     contractorName,
+  //     contractorNumber,
+  //     title,
+  //     Marital_Status,
+  //     companyName,
+  //     Induction_Date,
+  //     Inducted_By,
+  //     uploadAadhaarFront,
+  //     uploadIdProof,
+  //     uploadAadhaarBack,        
+      
+  //   } = labour;
+
+  //   setFormData({
+  //     LabourID,
+  //     labourOwnership,
+  //     name,
+  //     aadhaarNumber,
+  //     dateOfBirth,
+  //     contactNumber,
+  //     gender,
+  //     dateOfJoining,
+  //     address,
+  //     pincode,
+  //     taluka,
+  //     district,
+  //     village,
+  //     state,
+  //     emergencyContact,
+  //     photoSrc,
+  //     bankName,
+  //     branch,
+  //     accountNumber,
+  //     ifscCode,
+  //     projectName,
+  //     labourCategory,
+  //     department,
+  //     workingHours,
+  //     designation,
+  //     contractorName,
+  //     contractorNumber,
+  //     title,
+  //     Marital_Status,
+  //     companyName,
+  //     OnboardName: user.name ,
+  //     Induction_Date,
+  //     Inducted_By,
+  //     uploadAadhaarFront,
+  //     uploadIdProof,
+  //     uploadAadhaarBack,              
+  //   });
+
+  //   setSearchQuery('');
+  //   setSearchResults([]);
+  // };
   const handleSelectLabour = (labour) => {
     const {
       LabourID,
@@ -813,7 +898,6 @@ if (!localError) {
       uploadAadhaarFront,
       uploadIdProof,
       uploadAadhaarBack,        
-      
     } = labour;
 
     setFormData({
@@ -847,25 +931,31 @@ if (!localError) {
       title,
       Marital_Status,
       companyName,
-      OnboardName: user.name ,
+      OnboardName: user.name,
       Induction_Date,
       Inducted_By,
       uploadAadhaarFront,
       uploadIdProof,
       uploadAadhaarBack,              
-      // Nationality: 'Indian',
-      // Payment_Mode: 'NEFT',
-      // Employee_Type: 'PERMANENT',
-      // Current_Status: 'WORKING',
-      // Seating_Office: 'SITE LABOUR',
     });
-
-    setSearchQuery('');
-    setSearchResults([]);
-
-    // console.log('Selected Labour:', labour);
   };
 
+  useEffect(() => {
+    const fetchLabourDetails = async (id) => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/labours/${id}`);
+        const labour = response.data;
+        handleSelectLabour(labour);
+      } catch (error) {
+        console.error('Error fetching labour details:', error);
+      }
+    };
+
+    if (location.state && location.state.labourId) {
+      fetchLabourDetails(location.state.labourId);
+    }
+  }, [location, user.name]);
+  
 
   // const renderPreviewModal = () => {
   //   if (!isModalOpen) return null;
@@ -1292,13 +1382,49 @@ if (!localError) {
       setStateFunction(file.name); // Set the file name for display
       setFormData((prevFormData) => ({
         ...prevFormData,
-        [name]: file, // Set the file object for form submission
+        [name]: file, 
       }));
     } else {
       console.error(`Unknown file input name: ${name}`);
       return;
     }
   }
+
+
+  // const handleFileChangesInduction = async (event) => {
+  //   const { name, files } = event.target;
+
+  //   if (!files.length) return;
+
+  //   // Create an array to store the file objects
+  //   const fileObjects = [];
+
+  //   for (let i = 0; i < files.length; i++) {
+  //     const file = files[i];
+  //     fileObjects.push(file);
+  //   }
+
+  //   const fileStateSetter = {
+  //     uploadInductionDoc: setuploadInductionDoc,
+  //   };
+
+  //   const setStateFunction = fileStateSetter[name];
+  //   if (setStateFunction) {
+  //     // Set the count of selected files for display
+  //     setStateFunction(`${files.length} files selected`);
+
+  //     // Update the form data with the array of file objects
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       [name]: fileObjects,
+  //     }));
+  //   } else {
+  //     console.error(`Unknown file input name: ${name}`);
+  //     return;
+  //   }
+  // };
+
+  
 
 
 
@@ -1676,7 +1802,16 @@ if (!localError) {
   // const handleTitleChange = (e) => {
   //   setFormData({ ...formData, [e.target.name]: e.target.value });
   // };
-
+  const styles = {
+    list: {
+      marginLeft: '-22px',
+      width: 'auto',
+      '@media (min-width: 501px) and (max-width: 800px)': {
+        marginLeft: '-120px',
+        width: '80vw',
+      },
+    },
+  };
   return (
     <Box p={{ paddingRight: 3 }}>
       <div className="onboarding-form-container">
@@ -1690,7 +1825,7 @@ if (!localError) {
         />
 
         <form className="onboarding-form" onSubmit={handleSubmit}>
-          <ul style={{ marginLeft: "-20px" }}>
+          <ul style={styles.list}>
             <li>
               <div className="title" onClick={toggleKYCCollapse}>
                 <PersonOutlineIcon />
@@ -1802,10 +1937,10 @@ if (!localError) {
                               style={getInputStyle('title')}
                             >
                               {/* <option value="">Select Title</option> */}
-                              <option value="MR">MR.</option>
-                              <option value="MRS">MRS.</option>
-                              <option value="MISS">MISS.</option>
-                              <option value="MS">MS.</option>
+                              <option value="MR.">MR.</option>
+                              <option value="MRS.">MRS.</option>
+                              <option value="MISS.">MISS.</option>
+                              <option value="MS.">MS.</option>
                             </select>
                           </div>
                         </div>
@@ -2413,7 +2548,7 @@ if (!localError) {
                 <div className="form-body">
                   {formType === "project" && (
                     <>
-                      <div>
+                      <div className="projectTab">
                         <div className="locations">
                           {formData.labourOwnership === "Contractor" && (
                             <div className="locations">
@@ -2647,6 +2782,7 @@ if (!localError) {
                               name="uploadInductionDoc"
                               onChange={handleFileChangesInduction}
                               accept="image/*"
+                              multiple
                               style={{ display: 'none' }}
                             />
                             <DocumentScannerIcon className="input-icon" />

@@ -150,10 +150,10 @@
 
 
 .onboarding-form-container {
-  width: 100%;
+  width: auto;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 100vh;
+  height: 90vh;
   overflow-x: hidden;
   position: relative;
 }
@@ -424,7 +424,7 @@ display: inline;
   margin-top: 1rem;
   display: flex;
   justify-content: flex-start;
-  margin-bottom: 20vh;
+  margin-bottom: 2rem;
 }
 .navigationBut{
   margin-top: 1rem;
@@ -616,7 +616,7 @@ select option{
 
 
 /* Responsive design */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .onboarding-form-container {
     /* padding: 15px; */
     max-width: 100%;
@@ -674,11 +674,9 @@ select option{
   background-color: #f0f0f0;
 }
 
-
+/* ***************************************** Mobile view ***************** */
 /* Media Queries */
-
-/* Small devices (phones, 600px and down) */
-@media (max-width: 600px) {
+@media (min-width: 51px) and (max-width: 500px) {
   /* .onboarding-form {
     padding: 15px;
     margin-left: 27px;
@@ -692,9 +690,45 @@ select option{
  */
 
 
+ .onboarding-form input {
+  padding: 8px 8px 13px 8px;
+  margin-bottom: 10px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 248px;
+  color: #060606;
+  font-weight: 500;
+  height: 18px;
+  border-color: #efb5f4;
+  box-shadow: 0 0 5px rgb(138 147 235 / 54%);
+}
+
+
+.onboarding-form select, .onboarding-form select {
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 266px;
+  color: #020202bd;
+  font-weight: 500;
+  height: 43px;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 235px; /* Position the icon inside the input field */
+  top: 35%;
+  transform: translateY(-50%);
+  pointer-events: none; /* Ensure the icon doesn't block clicks on the input field */
+  color: #A772D0;
+}
+
   .search-bar button {
     padding: 12px 25px;
-    font-size: 18px;
+    font-size: 12px;
   }
 
 
@@ -773,8 +807,8 @@ hr{
   /* margin-top: 4rem; */
   /* display: flex;
   flex-direction: column; */
-  height: 24vh;
-  /* margin-top: 4rem;  */
+  height: 13vh;
+  margin-top: 4rem;
   display: flex;
   justify-content: flex-start;
   flex-direction: column;
@@ -810,6 +844,189 @@ hr{
   background: #EFE6F7;
   color: #A772D0;
   font-size: 12px;
+  width: 130px;
+  margin-left: 10px;
+  gap: 20px;
+  border-radius: 10px;
+  margin-right: 15vw;
+}
+/* .video-container {
+  margin-bottom: 16px
+} */
+}
+
+
+
+/* ************************************* Table view **************************** */
+/* Small devices (phones, 600px and down) */
+@media (min-width: 501px) and (max-width: 800px) {
+  /* .onboarding-form {
+    padding: 15px;
+    margin-left: 27px;
+  } */
+
+
+/*   
+  .search-bar {
+    padding: 15px;
+  }
+ */
+
+
+ .onboarding-form input {
+  padding: 8px 8px 13px 8px;
+  margin-bottom: 10px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 368px;
+  color: #060606;
+  font-weight: 500;
+  height: 18px;
+  border-color: #efb5f4;
+  box-shadow: 0 0 5px rgb(138 147 235 / 54%);
+}
+
+
+.onboarding-form select, .onboarding-form select {
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 386px;
+  color: #020202bd;
+  font-weight: 500;
+  height: 43px;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 340px; /* Position the icon inside the input field */
+  top: 35%;
+  transform: translateY(-50%);
+  pointer-events: none; /* Ensure the icon doesn't block clicks on the input field */
+  color: #A772D0;
+}
+
+  .search-bar button {
+    padding: 12px 25px;
+    font-size: 18px;
+  }
+
+
+  .onboarding-form h2 {
+    font-size: 1.5rem;
+  }
+
+  .onboarding-form button {
+    font-size: 12px;
+    width: 110px;
+  }
+  .labour-adhaar,
+  .name-contact,
+  .birth-aadhaar,
+  .locations,
+  .state-block,
+  .em-contact-block {
+    display: flex;
+    border: none;
+    gap: 2px;
+    flex-direction: column;
+  }
+.onboarding-form-container h2 {
+  color: #333;
+  font-size: 20px;
+  margin-left: 30px;
+  margin-top: 30px;
+  display: none;
+}
+hr{
+  display: none;
+}
+.labour-ownership {
+  max-width: 100%; /* Ensures full width on mobile devices */
+}
+
+.detail-icons{
+  display: inline;
+  padding-left: 28.2vh;
+  color: black;
+}
+.detail-icons1{
+  display: inline;
+  padding-left: 37.8vh;
+  color: black;
+}
+.detail-icons2{
+  display: inline;
+  padding-left: 32vh;
+  color: black;
+}
+.detail-icons3{
+  display: inline;
+  padding-left: 34.2vh;
+  color: black;
+}
+
+.video-container, .photo-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start
+}
+.photo-container {
+  display: flex;
+  align-items: flex-start;
+  height: 200px;
+  width: 240px;
+  margin-left: -100vw;
+  gap: 10px;
+  justify-content: flex-start;
+  align-content: space-between;
+  flex-direction: column;
+}
+
+.buttons-container {
+  /* margin-top: 4rem; */
+  /* display: flex;
+  flex-direction: column; */
+  height: 13vh;
+  margin-top: 4rem;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+}
+.navigationBut{
+  margin-top: 2rem;
+  
+}
+
+
+ /* .select-box {
+    width: 100%;
+    max-width: 100%; 
+  }
+.select-box option {
+  width: 100%;
+  box-sizing: border-box;
+} */
+.save-btn{
+  width: 90vw;
+  float: right;
+  display: flex;
+  /* margin-top: 20%; */
+}
+.preview-modal{
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); /* Shadow effect */
+  width: 70%; /* Adjust width as needed */
+  height: 90vh;
+}
+#save {
+  background: #EFE6F7;
+  color: #A772D0;
+  font-size: 15px;
   width: 130px;
   margin-left: 10px;
   gap: 20px;

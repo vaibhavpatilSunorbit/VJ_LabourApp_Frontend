@@ -464,7 +464,7 @@ const AddUser = () => {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [searchQuery, setSearchQuery] = useState('');
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     fetchUsers();
@@ -684,7 +684,7 @@ const AddUser = () => {
           <Button
             variant="contained"
             sx={{
-              width: isMobile ? '50%' : '12%', height:'45px', mt:1,
+              width: isMobile ? '30%' : '12%', height:'45px', mt:1,
               backgroundColor: '#EFE6F7',
               color: '#8236BC',
               marginRight: '10px',
@@ -697,7 +697,7 @@ const AddUser = () => {
             Add User
           </Button>
           <TextField
-          sx={{ml:5, width: isMobile ? '30%' : '40%',}}
+          sx={{ml:5, width: isMobile ? '50%' : '40%',}}
             label="Search"
             variant="outlined"
             value={searchQuery}

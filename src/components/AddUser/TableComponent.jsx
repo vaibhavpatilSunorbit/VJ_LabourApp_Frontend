@@ -34,7 +34,7 @@ const TableComponent = ({
         />
       <Paper sx={{ width: "100%", overflow: "hidden", boxShadow: 3, }}>
      
-        <TableContainer sx={{ maxHeight: 450 }}>
+        <TableContainer sx={{ maxHeight: 550 }}>
           <Table stickyHeader aria-label="sticky table">
             <TableHead>
               <TableRow>
