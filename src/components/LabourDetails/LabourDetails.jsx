@@ -73,6 +73,9 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(null);
   const [open, setOpen] = useState(false);
+  const [employeeId, setEmployeeId] = useState(null);
+  const [ledgerId, setLedgerId] = useState(null);
+
 
   // const isMobile = useMediaQuery('(max-width: 600px)');
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -459,9 +462,11 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   };
 
 
-  const API_BASE_URL = 'http://localhost:4000'; 
+  // const API_BASE_URL = 'http://localhost:4000'; 
+  // const API_BASE_URL = "https://laboursandbox.vjerp.com"; 
 
   const handleSubmit = async (e) => {
+    console.log(formData);
     e.preventDefault();
 
     if (!/^\d{2}-\d{4}$/.test(formData.expiryDate)) {
@@ -469,7 +474,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
       return;
     }
 
-    const formattedExpiryDate = formData.expiryDate ? `01-${formData.expiryDate}` : null;
+    const formattedExpiryDate = formData.expiryDate ? `${formData.expiryDate}` : null;
     const formattedFormData = {
       ...formData,
       expiryDate: formattedExpiryDate,
@@ -479,12 +484,14 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
       const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`);
       const dynamicData = dynamicDataResponse.data;
 
+  
+
       const response = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData, {
         headers: {
           'Content-Type': 'application/json',
         }
       });
-
+  
       if (response.data.message === "Record updated successfully") {
         toast.success('Labour details updated successfully.');
         setOpen(false);
@@ -1016,10 +1023,33 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
 
           if (employeeMasterResponse.data.status) {
             toast.success('Employee master details updated successfully.');
+
+            const empData = {
+              empId : employeeMasterResponse.data.outputList.id
+            }
+
+            const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${formData.id}`, empData);
+console.log(employeeDetails.status);
     
+    const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
+      params: {
+        employeeId: employeeMasterResponse.data.outputList.id,
+        monthdesc: formData.Period,
+        gradeId: formData.labourCategoryId,
+        salarybudescription: formData.SalaryBu,
+        workbudesc: formData.WorkingBu,
+        ledgerId:employeeMasterResponse.data.outputList.ledgerId,
+        departmentId:formData.departmentId,
+        designationId:formData.designationId
+      },
+    });
+    const dynamicData2 = dynamicDataResponse2.data;
+console.log('dynamicData2',JSON.stringify(dynamicData2));
+
+
             const orgMasterPayload = {
-              locationName: "SANKALP CONTRACTS PRIVATE LIMITED - HO",
-              workLocationName: "B205",
+              locationName: dynamicData2.description,
+              workLocationName: dynamicData2.parentDesc,
               approvar1: "",
               approvar2: "",
               approvar3: "",
@@ -1030,26 +1060,28 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
               noticePeriod: 0,
               employee: {
                 totalRecordNo: 2,
-                id: 1529,
-                code: "ABC123",
-                employeeName: "SURAJ KARKANTI",
-                companyName: "SANKALP CONTRACTS PRIVATE LIMITED",
-                dojLocal: "2024-07-19T00:00:00.000Z",
-                companyId: 65
+                id: dynamicData2.payrollUnit.empId,
+                code: dynamicData2.payrollUnit.LabourID,
+                employeeName: dynamicData2.payrollUnit.name,
+                companyName: dynamicData2.payrollUnit.companyName,
+                dojLocal: dynamicData2.payrollUnit.dateOfJoining,
+                companyId: dynamicData2.payrollUnit.projectName
               },
-              monthPeriod: {
-                id: 58,
-                description: "July-2024",
-                periodFrom: "2024-07-01T00:00:00.000Z",
-                periodTo: "2024-07-31T00:00:00.000Z",
-                actualPeriod: 7,
-                startDate: "2024-07-01T00:00:00.000Z",
-                endDate: "2024-07-31T00:00:00.000Z",
-                cutOffPeriodFrom: "2024-07-01T00:00:00.000Z",
-                cutOffPeriodTo: "2024-07-31T00:00:00.000Z"
-              },
-              fromDate: "2024-07-18T18:30:00.000Z",
-              fromDateLocal: "2024-07-18T18:30:00.000Z",
+              monthPeriod: dynamicData2.monthPeriod,
+              // monthPeriod: {
+              //   id: dynamicData2.monthPeriod.id,
+              //   description: dynamicData2.monthPeriod.description, 
+              //   periodFrom: dynamicData2.monthPeriod.periodFrom,
+              //   periodTo: dynamicData2.monthPeriod.periodTo,
+              //   actualPeriod: dynamicData2.monthPeriod.actualPeriod,
+              //   startDate: dynamicData2.monthPeriod.startDate, 
+              //   endDate: dynamicData2.monthPeriod.endDate,
+              //   cutOffPeriodFrom: dynamicData2.monthPeriod.cutOffPeriodFrom,
+              //   cutOffPeriodTo: dynamicData2.monthPeriod.cutOffPeriodTo
+              // },
+            
+              fromDate: dynamicData2.payrollUnit.CreationDate,
+              fromDateLocal: dynamicData2.payrollUnit.CreationDate,
               employeeType: {
                 offDay: true,
                 holiDay: true,
@@ -1065,7 +1097,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 tenantId: 1,
                 dbId: 0,
                 createdBy: 2,
-                createdOn: "2007-05-03T15:16:48.187Z",
+                createdOn: dynamicData2.payrollUnit.CreationDate,
                 lastModifiedBy: 2,
                 lastModifiedOn: "2007-05-03T15:16:48.187Z",
                 mode: "",
@@ -1102,7 +1134,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 lastModifiedBy: 2,
                 lastModifiedOn: "2007-05-03T15:16:48.187Z",
                 mode: "",
-                entityName: "CurrentStatus",
+                entityName:  "CurrentStatus",
                 isDraft: false,
                 isChildEntity: false,
                 appId: 0,
@@ -1117,44 +1149,45 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 Index: 0,
                 customObject: {}
               },
-              grade: {
-                belongsTo: 0,
-                id: 1,
-                objectId: "000000000000000000000000",
-                code: "SK",
-                description: "SKILLED",
-                workflowId: "00000000-0000-0000-0000-000000000000",
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                uiid: 28,
-                createdBy: 1914,
-                createdOn: "2024-05-07T12:11:49.719Z",
-                lastModifiedBy: 1914,
-                lastModifiedOn: "2024-05-07T12:11:49.719Z",
-                mode: "",
-                entityName: "Grade",
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: "00000000-0000-0000-0000-000000000000",
-                isInApproval: false,
-                Index: 0,
-                customObject: {}
-              },
+              grade: dynamicData2.grade,
+              // grade: {
+              //   belongsTo: 0,
+              //   id: 1,
+              //   objectId: "000000000000000000000000",
+              //   code: "SK",
+              //   description: formData.labourCategory,
+              //   workflowId: "00000000-0000-0000-0000-000000000000",
+              //   isFinalApproval: false,
+              //   tenantId: 1,
+              //   dbId: 0,
+              //   uiid: 28,
+              //   createdBy: 1914,
+              //   createdOn: formData.CreationDate,
+              //   lastModifiedBy: 1914,
+              //   lastModifiedOn: "2024-05-07T12:11:49.719Z",
+              //   mode: "",
+              //   entityName: "Grade",
+              //   isDraft: false,
+              //   isChildEntity: false,
+              //   appId: 0,
+              //   masterEntryTypeId: 0,
+              //   masterDocumentTypeId: 0,
+              //   importSrlNo: 0,
+              //   isUserAdmin: false,
+              //   isDataBeingImportFromExcel: false,
+              //   isDataBeingValidateOnly: false,
+              //   attachmentId: "00000000-0000-0000-0000-000000000000",
+              //   isInApproval: false,
+              //   Index: 0,
+              //   customObject: {}
+              // },
               location: {
                 level: 5,
                 type: "B",
                 businessSegment: {
-                  id: 3,
+                  id: dynamicData2.id,
                   objectId: "000000000000000000000000",
-                  description: "DEPARTMENT LABOUR",
+                  description: dynamicData2.description,
                   isFinalApproval: false,
                   tenantId: 1,
                   dbId: 0,
@@ -1315,13 +1348,13 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 },
                 templateGroupId: 0,
                 timeZoneId: 0,
-                phone1: "+91-...",
-                email1: "abc@gmail.com",
-                natureId: 0,
-                interUnitLedgerId: 6560,
-                interUnitParentId: 170,
+                phone1: "+91-",
+                email1: dynamicData2.email1,
+                natureId: dynamicData2.natureId,
+                interUnitLedgerId: dynamicData2.interUnitLedgerId,
+                interUnitParentId: dynamicData2.interUnitParentId,
                 interUnitLedger: {
-                  ledgerGroupId: 53
+                  ledgerGroupId: dynamicData2.interUnitLedger.ledgerGroupId
                 },
                 startDate: "2022-04-01T00:00:00.000Z",
                 countryCode: "IND",
@@ -1339,18 +1372,18 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 mollakDescription: "",
                 oracleBUCode: 0,
                 inpcrd: "Not Applicable",
-                id: 80,
+                id: dynamicData2.id,
                 objectId: "000000000000000000000000",
-                code: "HO",
-                description: "SANKALP CONTRACTS PRIVATE LIMITED - HO",
-                parentId: 65,
-                parentDesc: "SANKALP CONTRACTS PRIVATE LIMITED",
+                code: dynamicData2.code,
+                description: dynamicData2.description,
+                parentId: dynamicData2.parentId,
+                parentDesc: dynamicData2.parentDesc,
                 isFinalApproval: false,
                 tenantId: 278,
                 dbId: 0,
                 uiid: 79,
                 createdBy: 1914,
-                createdOn: "2024-05-02T07:26:47.798Z",
+                createdOn: dynamicData2.payrollUnit.CreationDate,
                 lastModifiedBy: 1914,
                 lastModifiedOn: "2024-06-24T01:41:06.389Z",
                 mode: "",
@@ -1372,9 +1405,9 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 level: 0,
                 type: "B",
                 businessSegment: {
-                  id: 3,
+                  id: dynamicData2.parentId,
                   objectId: "000000000000000000000000",
-                  description: "DEPARTMENT LABOUR",
+                  description: dynamicData2.parentDesc,
                   isFinalApproval: false,
                   tenantId: 1,
                   dbId: 0,
@@ -1547,8 +1580,8 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 countryCode: "IND",
                 stateCode: "19",
                 countryDesc: "INDIA",
-                stateDesc: "MAHARASHTRA",
-                cityDesc: "PUNE",
+                stateDesc: dynamicData2.payrollUnit.state,
+                cityDesc: dynamicData2.payrollUnit.district,
                 countryId: 122,
                 stateId: 299,
                 cityId: 0,
@@ -1559,17 +1592,17 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 mollakDescription: "",
                 oracleBUCode: 0,
                 inpcrd: "Not Applicable",
-                id: 66,
+                id: dynamicData2.id,
                 objectId: "000000000000000000000000",
-                code: "AA",
-                description: "B205",
-                parentId: 65,
-                parentDesc: "SANKALP CONTRACTS PRIVATE LIMITED",
+                code: dynamicData2.code,
+                description: dynamicData2.description,
+                parentId: dynamicData2.parentId,
+                parentDesc: dynamicData2.parentDesc,
                 isFinalApproval: false,
                 tenantId: 278,
                 dbId: 0,
                 uiid: 79,
-                createdBy: 108,
+                createdBy:  108,
                 createdOn: "2024-05-02T06:17:37.555Z",
                 lastModifiedBy: 1914,
                 lastModifiedOn: "2024-06-24T01:38:42.075Z",
@@ -1589,9 +1622,9 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 isInApproval: false
               },
               department: {
-                id: 114,
-                code: "CIVIL",
-                description: "CIVIL",
+                id: dynamicData2.department.Id,
+                code: dynamicData2.department.Code,
+                description: dynamicData2.department.Description,
                 parentDesc: null,
                 parentId: 0,
                 isHidden: null,
@@ -1605,9 +1638,9 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
                 lastModifiedBy: 0
               },
               designation: {
-                id: 2992,
-                code: "CAR",
-                description: "CARPENTER",
+                id: dynamicData2.designation.Id,
+                code: dynamicData2.designation.Code,
+                description: dynamicData2.designation.Description,
                 parentDesc: null,
                 parentId: null,
                 isHidden: null,
@@ -1632,6 +1665,16 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
               approvalBaseUrl: "https://vjerp.farvisioncloud.com",
               approvalToken: "0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw"
             };
+
+            const fileData = JSON.stringify(orgMasterPayload, null, 2);
+            const blob = new Blob([fileData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'orgMasterPayload.json';
+            a.click();
+    
+            console.log('Org Master Payload:', orgMasterPayload);
     
             const orgMasterResponse = await axios.post('https://vjerp.farvisioncloud.com/Payroll/odata/Organisations', orgMasterPayload, {
               headers: {

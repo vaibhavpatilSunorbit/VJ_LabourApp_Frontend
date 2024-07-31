@@ -126,7 +126,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture,  projectList =
     Induction_Date: '',
     Inducted_By: '',
     uploadInductionDoc: '',
-    expiryDate: '',
+    expiryDate: ''   
   });
 
   const [formStatus, setFormStatus] = useState({
@@ -1551,29 +1551,88 @@ if (!localError) {
 
   // ********************** changes below working hours ****************
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  // const handleInputChange = (e) => {
+  //   const { name, value } = e.target;
   
-    if (name === 'department') {
-      // Find the department description based on the selected department ID
-      const selectedDepartment = departments.find(dep => dep.Id === parseInt(value));
-      const departmentName = selectedDepartment ? selectedDepartment.Description : '';
+  //   if (name === 'department') {
+  //     // Find the department description based on the selected department ID
+  //     const selectedDepartment = departments.find(dep => dep.Id === parseInt(value));
+  //     const departmentName = selectedDepartment ? selectedDepartment.Description : '';
+  //     const workingHours = departmentWorkingHoursMapping[departmentName] || '';
+  
+  //     // Update both department and working hours in the state
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       department: value,
+  //       workingHours
+  //     }));
+  //   } else {
+  //     // Update other fields normally
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       [name]: value
+  //     }));
+  //   }
+  // };
+
+
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  console.log(`Handling input change for ${name} with value: ${value}`);
+
+  if (name === 'department') {
+    const departmentId = parseInt(value, 10);
+    console.log(`Parsed departmentId: ${departmentId}`);
+
+    const selectedDepartment = departments.find(dep => dep.Id === departmentId);
+    console.log(`Selected department: ${JSON.stringify(selectedDepartment)}`);
+
+    if (selectedDepartment) {
+      const departmentName = selectedDepartment.Description;
+      console.log(`Department name: ${departmentName}`);
+
       const workingHours = departmentWorkingHoursMapping[departmentName] || '';
-  
-      // Update both department and working hours in the state
+      console.log(`Working hours for ${departmentName}: ${workingHours}`);
+
       setFormData((prevFormData) => ({
         ...prevFormData,
         department: value,
+        departmentId,
         workingHours
       }));
     } else {
-      // Update other fields normally
+      console.error(`Department with ID ${departmentId} not found.`);
       setFormData((prevFormData) => ({
         ...prevFormData,
-        [name]: value
+        department: '',
+        departmentId: '',
+        workingHours: ''
       }));
     }
-  };
+  } else {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value
+    }));
+  }
+};
+
+  
+
+
+const handleSelectChange = (e) => {
+  const { name, value } = e.target;
+  const selectedOption = e.target.options[e.target.selectedIndex];
+  const id = selectedOption.getAttribute('data-id');
+
+  setFormData((prevFormData) => ({
+    ...prevFormData,
+    [name]: value, // Set the description
+    [`${name}Id`]: id || null // Set the ID or null if not found
+  }));
+};
+
+  
   
 
   // const handleInputChange = (e) => {
@@ -2658,14 +2717,20 @@ if (!localError) {
                                 id="designation"
                                 name="designation"
                                 value={formData.designation}
-                                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                                // onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                                onChange={handleSelectChange}
                                 style={getInputStyle('designation')}
                                 required
                               >
                                 <option value="" >Select a Designation</option>
                                 {designations.map(designation => (
-                                  <option key={designation.id} value={designation.Description}>{designation.Description}</option>
+                                  <option key={designation.id} value={designation.Description} data-id={designation.id}>
+                                    {designation.Description}
+                                  </option>
                                 ))}
+                                {/* {designations.map(designation => (
+                                  <option key={designation.id} value={designation.Description}>{designation.Description}</option>
+                                ))} */}
                               </select>
                             </div>
                           </div>
@@ -2681,14 +2746,20 @@ if (!localError) {
                                 id="labourCategory"
                                 name="labourCategory"
                                 value={formData.labourCategory}
-                                onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
+                                // onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
+                                onChange={handleSelectChange}
                                 style={getInputStyle('labourCategory')}
                                 required
                               >
                                 <option value="" >Select a Labour Category</option>
                                 {labourCategories.map(category => (
-                                  <option key={category.Id} value={category.Description}>{category.Description}</option>
+                                  <option key={category.Id} value={category.Description} data-id={category.Id}>
+                                    {category.Description}
+                                  </option>
                                 ))}
+                                {/* {labourCategories.map(category => (
+                                  <option key={category.Id} value={category.Description}>{category.Description}</option>
+                                ))} */}
                               </select>
                             </div>
                           </div>

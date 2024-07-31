@@ -336,7 +336,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
       "Working Hours": selectedLabour?.workingHours || "",
       "Induction Date": selectedLabour?.Induction_Date ? format(new Date(selectedLabour.Induction_Date), 'dd-MM-yyyy') : "",
       "Induction By": selectedLabour?.Inducted_By || "",
-      // "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
+      "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
       "Upload AadhaarFront Document": trimUrl(selectedLabour.uploadAadhaarFront) || "",
       "Upload IdProof Document": trimUrl(selectedLabour.uploadIdProof) || "",
       "Upload AadhaarBack Document": trimUrl(selectedLabour.uploadAadhaarBack) || "",
@@ -348,14 +348,25 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
     }
 
     const doc = new jsPDF();
+    // doc.setFontSize(20);
+    // doc.text("Labour Details", 14, 15);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const title = "Labour Details";
+    const titleX = (pageWidth - doc.getStringUnitWidth(title) * doc.internal.getFontSize() / doc.internal.scaleFactor) / 2;
+  
     doc.setFontSize(20);
-    doc.text("Labour Details", 14, 15);
+    doc.text(title, titleX, 15);
 
     if (selectedLabour.photoSrc) {
       try {
         const response = await axios.get(selectedLabour.photoSrc, { responseType: 'blob' });
         const imageUrl = URL.createObjectURL(response.data);
-        doc.addImage(imageUrl, 'JPEG', 10, 20, 50, 50);
+        const imageWidth = 50;
+        const imageHeight = 50;
+        const imageX = (pageWidth - imageWidth) / 2;
+  
+        doc.addImage(imageUrl, 'JPEG', imageX, 20, imageWidth, imageHeight);
+        // doc.addImage(imageUrl, 'JPEG', 10, 20, 50, 50);
       } catch (error) {
         console.error('Error fetching image:', error);
         toast.error('Error fetching image. Please try again.');
@@ -478,7 +489,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
       "Working Hours": selectedLabour?.workingHours || "",
       "Induction Date": selectedLabour?.Induction_Date? format(new Date(selectedLabour.Induction_Date), 'dd-MM-yyyy') : "",
       "Induction By": selectedLabour?.Inducted_By || "",
-      // "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
+      "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
       "Upload AadhaarFront Document": trimUrl(selectedLabour.uploadAadhaarFront) || "",
       "Upload IdProof Document": trimUrl(selectedLabour.uploadIdProof) || "",
       "Upload AadhaarBack Document": trimUrl(selectedLabour.uploadAadhaarBack) || "",
