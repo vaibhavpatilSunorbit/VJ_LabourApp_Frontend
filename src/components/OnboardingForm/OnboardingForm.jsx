@@ -117,7 +117,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture,  projectList =
     department: '',
     workingHours: '',
     designation: '',
-    title: 'Mr.',
+    title: '',
     companyName: '',
     Marital_Status: '',
     projectDescription: '',
@@ -1697,7 +1697,7 @@ const handleSelectChange = (e) => {
       department: department ? department.Description : formData.department
     };
 
-    console.log('Processed Form Data:', processedData); // Debugging
+    console.log('Processed Form Data:', processedData); 
     console.log('Project Names:', projectNames);
     console.log('Departments:', departments);
 
@@ -1995,7 +1995,7 @@ const handleSelectChange = (e) => {
                               onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value})}
                               style={getInputStyle('title')}
                             >
-                              {/* <option value="">Select Title</option> */}
+                              <option value="">Select Title</option>
                               <option value="MR.">MR.</option>
                               <option value="MRS.">MRS.</option>
                               <option value="MISS.">MISS.</option>

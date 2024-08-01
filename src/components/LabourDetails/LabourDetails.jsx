@@ -481,10 +481,14 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
     };
 
     try {
-      const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`);
-      const dynamicData = dynamicDataResponse.data;
 
-  
+      const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
+        params : {
+          businessUnitDesc: formData.companyName
+        }
+      });
+      
+      const dynamicData = dynamicDataResponse.data;  
 
       const response = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData, {
         headers: {
@@ -899,7 +903,9 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
             bank: {
               id: 2
             },
-            employee: {}
+            employee: {},
+            // bankAccountNo: "98765432112",            
+            // companyNEFTNo: "SBIN0004523"
           },
           personalBank: {
             employee: {}
@@ -1049,7 +1055,7 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
 
             const orgMasterPayload = {
               locationName: dynamicData2.description,
-              workLocationName: dynamicData2.parentDesc,
+              workLocationName: dynamicData2.payrollUnit.WorkingBu,
               approvar1: "",
               approvar2: "",
               approvar3: "",
@@ -1065,7 +1071,7 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
                 employeeName: dynamicData2.payrollUnit.name,
                 companyName: dynamicData2.payrollUnit.companyName,
                 dojLocal: dynamicData2.payrollUnit.dateOfJoining,
-                companyId: dynamicData2.payrollUnit.projectName
+                companyId: dynamicData2.parentId
               },
               monthPeriod: dynamicData2.monthPeriod,
               // monthPeriod: {
@@ -1080,8 +1086,8 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
               //   cutOffPeriodTo: dynamicData2.monthPeriod.cutOffPeriodTo
               // },
             
-              fromDate: dynamicData2.payrollUnit.CreationDate,
-              fromDateLocal: dynamicData2.payrollUnit.CreationDate,
+              fromDate: dynamicData2.payrollUnit.dateOfJoining,
+              fromDateLocal: dynamicData2.payrollUnit.dateOfJoining,
               employeeType: {
                 offDay: true,
                 holiDay: true,
@@ -1185,9 +1191,11 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
                 level: 5,
                 type: "B",
                 businessSegment: {
-                  id: dynamicData2.id,
+                  // id: dynamicData2.id,
+                  id: 3,
                   objectId: "000000000000000000000000",
-                  description: dynamicData2.description,
+                  // description: dynamicData2.description,
+                  description: "DEPARTMENT LABOUR",                
                   isFinalApproval: false,
                   tenantId: 1,
                   dbId: 0,
@@ -1377,7 +1385,7 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
                 code: dynamicData2.code,
                 description: dynamicData2.description,
                 parentId: dynamicData2.parentId,
-                parentDesc: dynamicData2.parentDesc,
+                parentDesc: dynamicData2.payrollUnit.companyName,
                 isFinalApproval: false,
                 tenantId: 278,
                 dbId: 0,
@@ -1405,9 +1413,11 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
                 level: 0,
                 type: "B",
                 businessSegment: {
-                  id: dynamicData2.parentId,
+                  // id: dynamicData2.payrollUnit.projectName,
+                  id: 3,
                   objectId: "000000000000000000000000",
-                  description: dynamicData2.parentDesc,
+                  // description: dynamicData2.payrollUnit.WorkingBu,
+                  description: "DEPARTMENT LABOUR",                  
                   isFinalApproval: false,
                   tenantId: 1,
                   dbId: 0,
@@ -1592,12 +1602,12 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
                 mollakDescription: "",
                 oracleBUCode: 0,
                 inpcrd: "Not Applicable",
-                id: dynamicData2.id,
+                id: dynamicData2.payrollUnit.projectName,
                 objectId: "000000000000000000000000",
-                code: dynamicData2.code,
-                description: dynamicData2.description,
+                code: dynamicData2.workbu.code,
+                description: dynamicData2.payrollUnit.WorkingBu,
                 parentId: dynamicData2.parentId,
-                parentDesc: dynamicData2.parentDesc,
+                parentDesc: dynamicData2.payrollUnit.companyName,
                 isFinalApproval: false,
                 tenantId: 278,
                 dbId: 0,
