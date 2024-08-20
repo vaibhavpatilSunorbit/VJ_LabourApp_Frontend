@@ -564,7 +564,7 @@ display: none
 .collapsible-content:not(.collapsed) {
   max-height: 1500px; /* Adjust as needed */
   /* margin-bottom: 30px; */
-  margin-left: 8%;
-  width: 100vw;
+  margin-left: 7.7%;
+  width: 94vw;
 }
 }

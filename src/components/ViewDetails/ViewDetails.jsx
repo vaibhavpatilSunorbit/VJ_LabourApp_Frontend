@@ -279,7 +279,7 @@
 
 
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -293,7 +293,9 @@ import {API_BASE_URL} from '../../Data'
 
 
 const trimUrl = (url) => {
-  const baseUrl = "http://localhost:4000/uploads/";
+  // const baseUrl = "http://localhost:4000/uploads/";
+  // const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
+  const baseUrl = "https://vjlabour.vjerp.com/uploads/";
   // return url ? url.replace(baseUrl, '') : '';
   return typeof url === 'string' ? url.replace(baseUrl, '') : '';
 };
@@ -308,9 +310,9 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
 
 
     const formData = {
-      "Labour ID": selectedLabour.LabourID || "",
+      // "Labour ID": selectedLabour.LabourID || "",
       "Labour Ownership": selectedLabour.labourOwnership || "",
-      "Title": selectedLabour?.title || "",
+      "Title": selectedLabour.title || "",
       "Name": selectedLabour.name || "",
       "Aadhaar No": selectedLabour.aadhaarNumber || "",
       "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'dd-MM-yyyy') : "",
@@ -406,7 +408,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
   const downloadAadhaarCard = async () => {
     try {
       const baseUrl = "";
-      console.log("Selected Labour:", selectedLabour);
+      // console.log("Selected Labour:", selectedLabour);
 
       if (!selectedLabour.uploadAadhaarFront  || !selectedLabour.uploadIdProof) {
         console.error("Aadhaar URLs are missing:", {
@@ -454,6 +456,17 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
       document.body.appendChild(linkId);
       linkId.click();
       document.body.removeChild(linkId);
+
+
+      const responseInductionDoc = await axios.get(`${baseUrl}${selectedLabour.uploadInductionDoc}`, { responseType: 'blob' });
+      const urlInduction = window.URL.createObjectURL(new Blob([responseInductionDoc.data], { type: 'image/jpeg' }));
+      const linkInduction = document.createElement('a');
+      linkInduction.href = urlInduction;
+      linkInduction.setAttribute('download', `Labour_${selectedLabour.id}_Induction_Doc.jpg`);
+      document.body.appendChild(linkInduction);
+      linkInduction.click();
+      document.body.removeChild(linkInduction);
+
       toast.success('Aadhaar card downloaded successfully.');
     } catch (error) {
       console.error('Error downloading Aadhaar card:', error);
@@ -461,10 +474,24 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
     }
   };
 
+  const [openModal, setOpenModal] = useState(false);
+  const [modalImageSrc, setModalImageSrc] = useState('');
+
+
+  const handleOpenModal = (url) => {
+    setModalImageSrc(url);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setModalImageSrc('');
+  };
+
   const formData = {
-    "Labour ID": selectedLabour?.LabourID || "",
+    // "Labour ID": selectedLabour?.LabourID || "",
     "Labour Ownership": selectedLabour.labourOwnership || "",
-      "Title": selectedLabour?.title || "",
+      "Title": selectedLabour.title || "",
       "Name": selectedLabour.name || "",
       "Aadhaar No": selectedLabour.aadhaarNumber || "",
       "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'dd-MM-yyyy') : "",
@@ -490,10 +517,18 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
       "Working Hours": selectedLabour?.workingHours || "",
       "Induction Date": selectedLabour?.Induction_Date? format(new Date(selectedLabour.Induction_Date), 'dd-MM-yyyy') : "",
       "Induction By": selectedLabour?.Inducted_By || "",
-      "Upload Induction Document": trimUrl(selectedLabour.uploadInductionDoc) || "",
-      "Upload AadhaarFront Document": trimUrl(selectedLabour.uploadAadhaarFront) || "",
-      "Upload IdProof Document": trimUrl(selectedLabour.uploadIdProof) || "",
-      "Upload AadhaarBack Document": trimUrl(selectedLabour.uploadAadhaarBack) || "",
+      "Upload Induction Document": selectedLabour.uploadInductionDoc ? (
+        <Button color="primary" onClick={() => handleOpenModal(selectedLabour.uploadInductionDoc)}>View Induction Photo</Button>
+      ) : "N/A",
+      "Upload AadhaarFront Document": selectedLabour.uploadAadhaarFront ? (
+        <Button color="primary" onClick={() => handleOpenModal(selectedLabour.uploadAadhaarFront)}>View Aadhaar Photo</Button>
+      ) : "N/A",
+      "Upload IdProof Document": selectedLabour.uploadIdProof ? (
+        <Button color="primary" onClick={() => handleOpenModal(selectedLabour.uploadIdProof)}>View Id Proof Photo</Button>
+      ) : "N/A",
+      "Upload AadhaarBack Document": selectedLabour.uploadAadhaarBack ? (
+        <Button color="primary" onClick={() => handleOpenModal(selectedLabour.uploadAadhaarBack)}>View Aadhaar Photo</Button>
+      ) : "N/A",
   };
 
   if (selectedLabour?.labourOwnership === "Contractor") {
@@ -509,6 +544,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
   };
   
   return (
+    <>
     <Dialog open={!!selectedLabour} onClose={onClose} PaperProps={{ className: 'custom-dialog' }}>
       <DialogTitle  style={{ display: 'flex', justifyContent: 'space-between', alignItems:'center' }}>
         Labour Details
@@ -539,19 +575,36 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
         )}
       </DialogContent>
       <DialogActions  style={{ display: 'flex', justifyContent: 'center' }}>
-        <Button variant="contained" color="primary" onClick={downloadFullForm}>
+        <Button variant="contained" color="primary" onClick={downloadFullForm} style={{padding:'10px 8px'}}>
           Download Form
         </Button>
         {/* <Button variant="contained" color="primary" onClick={downloadAadhaarCard}>
           Download Aadhaar
         </Button> */}
           {!hideAadhaarButton && (
-          <Button variant="contained" color="primary" onClick={downloadAadhaarCard}>
+          <Button variant="contained" color="primary" onClick={downloadAadhaarCard} style={{padding:'10px 8px'}}>
             Download Aadhaar
           </Button>
         )}
       </DialogActions>
     </Dialog>
+
+
+    <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <IconButton aria-label="close" onClick={handleCloseModal} style={{ position: 'absolute', right: 8, top: 8 }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {modalImageSrc && (
+            <Box display="flex" justifyContent="center">
+              <img src={modalImageSrc} alt="Document" style={{ maxWidth: '100%', maxHeight: '80vh' }} />
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
+</>
   );
 };
 

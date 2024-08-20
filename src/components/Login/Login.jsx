@@ -47,7 +47,7 @@ const Login = () => {
     axios
       .post(`${API_BASE_URL}/users/loginUser`, loginData)
       .then((response) => {
-        console.log(response.data);
+        // console.log(response.data);
         // updateUser(response.data.data); 
         const userData = response.data.data;
         updateUser(userData);
@@ -88,7 +88,7 @@ const Login = () => {
       // .post('http://localhost:5000/users/registerUser', signUpData)
       .post(`${API_BASE_URL}/users/registerUser`, signUpData)
       .then((response) => {
-        console.log(response.data);
+        // console.log(response.data);
         setOpenPopup(true);
         setPopupMessage("Sign Up successful! Please log in.");
         setPopupSeverity("success");

@@ -374,7 +374,7 @@ const uploadAadhaarImageToSurepass = async (file) => {
 
         if (existingAadhaarCheck.data.exists) {
           setMessageType('error');
-          toast.error('USER HAS ALREADY FILLED THE FORM WITH THIS AADHAAR NUMBER.');
+          toast.error('User has Already filled the form with this Aadhaar Number.');
         } else {
           processAadhaarData(ocrFields);
         }
@@ -382,14 +382,14 @@ const uploadAadhaarImageToSurepass = async (file) => {
         processAadhaarData(ocrFields);
       }
     } else {
-      setNewError('ERROR READING AADHAAR DETAILS FROM IMAGE.'.toUpperCase());
+      setNewError('Error reading Aadhaar details from Image.'.toUpperCase());
     }
   } catch (error) {
-    console.error('ERROR UPLOADING AADHAAR IMAGE TO SUREPASS:', error);
+    console.error('Error Uploading Aadhaar image to surepass:', error);
     if (error.response) {
-      console.error('ERROR RESPONSE DATA:', error.response.data);
+      console.error('Error response data:', error.response.data);
     }
-    setNewError('ERROR UPLOADING AADHAAR IMAGE. PLEASE TRY AGAIN.'.toUpperCase());
+    setNewError('Error uploading Aadhaar image. please try again.'.toUpperCase());
   }
 };
 
@@ -629,8 +629,8 @@ if (!localError) {
         setWorkingHours(workingHoursRes.data);
 
 
-        console.log('Fetched Project Names:', projectNamesRes.data);
-        console.log('Fetched Departments:', departmentsRes.data);
+        // console.log('Fetched Project Names:', projectNamesRes.data);
+        // console.log('Fetched Departments:', departmentsRes.data);
 
       } catch (err) {
         console.error(err);
@@ -897,7 +897,8 @@ if (!localError) {
       Inducted_By,
       uploadAadhaarFront,
       uploadIdProof,
-      uploadAadhaarBack,        
+      uploadAadhaarBack,
+      uploadInductionDoc        
     } = labour;
 
     setFormData({
@@ -905,39 +906,42 @@ if (!localError) {
       labourOwnership,
       name,
       aadhaarNumber,
-      dateOfBirth,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : '',
       contactNumber,
       gender,
-      dateOfJoining,
+      dateOfJoining: dateOfJoining ? new Date(dateOfJoining).toISOString().split('T')[0] : '',
       address,
       pincode,
       taluka,
       district,
       village,
       state,
-      emergencyContact,
-      photoSrc,
+      emergencyContact: emergencyContact || '',
+      photoSrc: photoSrc || '',
       bankName,
       branch,
       accountNumber,
       ifscCode,
       projectName,
       labourCategory,
-      department,
+      department: department || '',
       workingHours,
-      designation,
+      designation: designation || '',
       contractorName,
       contractorNumber,
       title,
       Marital_Status,
       companyName,
       OnboardName: user.name,
-      Induction_Date,
-      Inducted_By,
-      uploadAadhaarFront,
-      uploadIdProof,
-      uploadAadhaarBack,              
+      Induction_Date:  Induction_Date ? new Date(Induction_Date).toISOString().split('T')[0] : '',
+      Inducted_By: Inducted_By || '',
+      uploadAadhaarFront: uploadAadhaarFront || '',
+      uploadIdProof: uploadIdProof || '',
+      uploadAadhaarBack: uploadAadhaarBack || '',
+      uploadInductionDoc: uploadInductionDoc || ''              
     });
+    setSearchResults([]);
+    setSearchQuery('');
   };
 
   useEffect(() => {
@@ -1006,8 +1010,8 @@ if (!localError) {
     return isRequired ? <span style={{ color: "red" }}> *</span> : null;
   };
 
-  const kycRequiredFields = [ 'uploadAadhaarFront', 'uploadAadhaarBack','labourOwnership', 'title', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber','gender', 'uploadIdProof'];
-  const personalRequiredFields = ['dateOfJoining', 'address', 'village', 'pincode', 'district', 'taluka', 'state', 'emergencyContact', 'Marital_Status', 'photoSrc'];
+  const kycRequiredFields = [ 'uploadAadhaarFront', 'labourOwnership', 'title', 'name', 'aadhaarNumber', 'dateOfBirth', 'contactNumber','gender', 'uploadIdProof'];
+  const personalRequiredFields = ['dateOfJoining', 'address', 'village', 'pincode', 'district', 'taluka', 'state', 'emergencyContact', 'Marital_Status'];
   const bankDetailsRequiredFields = ['bankName', 'branch', 'accountNumber', 'ifscCode'];
   const projectRequiredFields = [ 'projectName', 'companyName', 'department', 'designation', 'labourCategory', 'workingHours', 'Induction_Date', 'Inducted_By', 'uploadInductionDoc'];
 
@@ -1221,7 +1225,6 @@ if (!localError) {
     }
     setTimeout(() => {
       setSaved(false);
-      // navigate('/labourDetails'); 
     }, 12000);
   };
 
@@ -1578,21 +1581,21 @@ if (!localError) {
 
 const handleInputChange = (e) => {
   const { name, value } = e.target;
-  console.log(`Handling input change for ${name} with value: ${value}`);
+  // console.log(`Handling input change for ${name} with value: ${value}`);
 
   if (name === 'department') {
     const departmentId = parseInt(value, 10);
-    console.log(`Parsed departmentId: ${departmentId}`);
+    // console.log(`Parsed departmentId: ${departmentId}`);
 
     const selectedDepartment = departments.find(dep => dep.Id === departmentId);
-    console.log(`Selected department: ${JSON.stringify(selectedDepartment)}`);
+    // console.log(`Selected department: ${JSON.stringify(selectedDepartment)}`);
 
     if (selectedDepartment) {
       const departmentName = selectedDepartment.Description;
-      console.log(`Department name: ${departmentName}`);
+      // console.log(`Department name: ${departmentName}`);
 
       const workingHours = departmentWorkingHoursMapping[departmentName] || '';
-      console.log(`Working hours for ${departmentName}: ${workingHours}`);
+      // console.log(`Working hours for ${departmentName}: ${workingHours}`);
 
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -1697,9 +1700,9 @@ const handleSelectChange = (e) => {
       department: department ? department.Description : formData.department
     };
 
-    console.log('Processed Form Data:', processedData); 
-    console.log('Project Names:', projectNames);
-    console.log('Departments:', departments);
+    // console.log('Processed Form Data:', processedData); 
+    // console.log('Project Names:', projectNames);
+    // console.log('Departments:', departments);
 
     setSelectedLabour(processedData);
     setIsModalOpen(true);
@@ -1876,11 +1879,14 @@ const handleSelectChange = (e) => {
       <div className="onboarding-form-container">
         <ToastContainer />
         <SearchBar
+         handleSubmit={handleSubmit}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
           searchResults={searchResults}
+          setSearchResults={setSearchResults}
           handleSelectLabour={handleSelectLabour}
+          showResults={true}
         />
 
         <form className="onboarding-form" onSubmit={handleSubmit}>
@@ -2909,7 +2915,13 @@ const handleSelectChange = (e) => {
             <div className={`popup ${popupType}`}>
               <h2>{popupType === 'success' ? 'Thank You!' : 'Error'}</h2>
               <p>{popupMessage}</p>
-              <button className={`ok-button ${popupType}`} onClick={() => setSaved(false)}>
+              <button
+                        className={`ok-button ${popupType}`}
+                        onClick={() => {
+                            setSaved(false);
+                            window.location.reload(); // Reload the page when the Ok button is clicked
+                        }}
+                    >
                 <span className={`icon ${popupType}`}>
                   {popupType === 'success' ? '✔' : '✘'}
                 </span> Ok

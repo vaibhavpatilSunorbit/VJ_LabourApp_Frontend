@@ -181,7 +181,8 @@ const SearchBar = ({
   handleSearch,
   searchResults = [],
   setSearchResults,
-  handleSelectLabour
+  handleSelectLabour,
+  showResults 
 }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -210,12 +211,12 @@ const SearchBar = ({
         </Button>
       </form>
 
-      {searchResults && searchResults.length > 0 && (
+      {showResults && searchResults && searchResults.length > 0 && (
         <div className="search-results">
           <ul>
             {searchResults.map((result) => (
               <li key={result.id}>
-                {result.LabourID} - {result.name} - {result.aadhaarNumber}
+                {result.LabourID} - {result.name} - {result.aadhaarNumber} - {result.OnboardName}
                 <button onClick={() => handleSelectLabour(result)}>Select</button>
               </li>
             ))}

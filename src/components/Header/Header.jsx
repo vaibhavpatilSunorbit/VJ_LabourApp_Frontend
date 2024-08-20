@@ -18,7 +18,7 @@ function Header({OpenSidebar}) {
     marginTop: '5px',
     fontSize: isMobile ? '13px' : '14px', // Adjust the font size for mobile devices
     color: '#000',
-    marginLeft: isMobile ? '9vw' : '7vw'
+    // marginLeft: isMobile ? '9vw' : '7vw'
   };
 
   const handleLogout = () => {
@@ -35,7 +35,7 @@ function Header({OpenSidebar}) {
             {/* <img src={VJLogo} className="vjlogo" alt="logo"/> */}
             
         </div>
-        <div className='header-right headericon' style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent:'flex-end' }}>
+        <div className='header-right headericon' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent:'flex-end' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <BsFillBellFill className='icon' style={{ margin: '0 10px', cursor: 'pointer' }} />
         <Tooltip title="Logout" arrow>

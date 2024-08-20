@@ -4,8 +4,8 @@ import { UilUniversity, UilUserPlus, UilFileAlt } from '@iconscout/react-unicons
 
 
 // export const API_BASE_URL = "https://laboursandbox.vjerp.com";
-export const API_BASE_URL = "http://localhost:4000";
-// export const API_BASE_URL = "https://vjlabour.vjerp.com";
+// export const API_BASE_URL = "http://localhost:4000";
+export const API_BASE_URL = "https://vjlabour.vjerp.com";
 
 
 export const accessPages = [
@@ -96,3 +96,28 @@ export const INDUCTED_BY_OPTIONS = [
   "Vrushabh Sanjay Kagnole",
   "Sachin Mahadu Papal"
 ];
+
+
+
+
+// export const INDUCTED_BY_OPTIONS = [
+// "DHIRAJ DINDIKAR MESHRAM",
+// "SANDIP ADHIKRAV CHAVAN",
+// "OMKAR MAHADEV KADAM",
+// "MAHESH MADHUKAR KATE",
+// "AKSHAY JAYSING SHEDGE",
+// "MANGESH ASHOK PARDHI",
+// "GOUSPAK SALIM PATEL",
+// "AISHWARYA TATYASO SHINDE",
+// "RAHUL KRUSHNARAO DESHMUKH",
+// "CHIRANTAN DEORAM SOMWANSHI",
+// "HARSHAL VIJAY AHIRE",
+// "SANTOSH SADASHIV PATIL",
+// "ANIKET SHIVAJI PARDHI",
+// "ATHAR S SHAIKH",
+// "SATISH SHIVAJI LANDE",
+// "SANKET RAVINDRA HULE",
+// "TUSHAR RAJESH KAMBLE",
+// "VRUSHABH SANJAY KAGNOLE",
+// "SACHIN MAHADU PAPAL",
+// ];

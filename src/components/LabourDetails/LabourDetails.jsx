@@ -57,7 +57,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedLabour, setSelectedLabour] = useState(null);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const [tabValue, setTabValue] = useState(0);
   const [rejectReason, setRejectReason] = useState('');
   const [isRejectPopupOpen, setIsRejectPopupOpen] = useState(false);
@@ -75,7 +75,8 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   const [open, setOpen] = useState(false);
   const [employeeId, setEmployeeId] = useState(null);
   const [ledgerId, setLedgerId] = useState(null);
-
+  const [isEditLabourOpen, setIsEditLabourOpen] = useState(false);
+  // const { labourId } = location.state || {};
 
   // const isMobile = useMediaQuery('(max-width: 600px)');
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -83,23 +84,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   // const history = useHistory();
   
 // console.log("setSelectedLaour",setSelectedLabour)
-  useEffect(() => {
-    fetchLabours();
-  }, []);
 
-  const fetchLabours = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${API_BASE_URL}/labours`);
-      // console.log('API Response:', response.data);
-      setLabours(response.data);
-      setLoading(false);
-    } catch (error) {
-      // console.error('Error fetching labours:', error);
-      setError('Error fetching labours. Please try again.');
-      setLoading(false);
-    }
-  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -166,33 +151,44 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
         </soap:Envelope>`;
         console.log('SOAP Envelope:', soapEnvelope);
 
-        // Step 5: Send the SOAP request
+        // const soapResponse = await axios.post(
+        //   'https://essl.vjerp.com:8530/iclock/webapiservice.asmx?op=AddEmployee',
+        //   soapEnvelope,
+        //   {
+        //     headers: {
+        //       'Content-Type': 'text/xml'
+        //     }
+        //   }
+        // )
+
         const soapResponse = await axios.post(
-          'http://103.186.18.61:8526/iclock/webapiservice.asmx?op=AddEmployee',
+         `${API_BASE_URL}/labours/essl/addEmployee`,
           soapEnvelope,
           {
             headers: {
               'Content-Type': 'text/xml'
             }
           }
-        )
-        .catch(error => {
-          if (error.response) {
-            // Server responded with a status other than 200 range
-            // console.error('Response error:', error.response.status);
-          } else if (error.request) {
-            // Request was made but no response received
-            // console.error('No response received:', error.request);
-          } else {
-            // Something else happened
-            // console.error('Error', error.message);
-          }
-        }); 
+        );
+
+        if (soapResponse.status === 200) {
+          toast.success('ESSL API ran successfully.');
+      }
+      
+        // .catch(error => {
+        //   if (error.response) {
+        //       console.error('Response error:', error.response.status, error.response.data);
+        //   } else if (error.request) {
+        //       console.error('No response received:', error.request);
+        //   } else {
+        //       console.error('Error:', error.message);
+        //   }
+        // });
         
 
 
 
-        // console.log('SOAP response:', soapResponse);
+        console.log('SOAP response:', soapResponse);
 
         // Update labour status in the frontend
         setLabours(prevLabours =>
@@ -313,6 +309,8 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   //   setResubmittedLabours(prev => new Set([...prev, labour.id]));
   //   navigate('/kyc', { state: { labour } });
   // };  
+
+  
   const handleResubmit = async (labour) => {
     try {
       const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${labour.id}`);
@@ -326,13 +324,15 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
       } else {
         toast.error('Failed to resubmit labour. Please try again.');
       }
+      console.log('labourIdResponse',response )
     } catch (error) {
       console.error('Error resubmitting labour:', error);
       toast.error('Error resubmitting labour. Please try again.');
     }
+    
   };
 
-  // console.log("resubmittedLabluasd:",resubmittedLabours)
+  console.log("resubmittedLabluasd:",resubmittedLabours)
 
 
   const handleReject = async (id) => {
@@ -352,6 +352,46 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
     } catch (error) {
       console.error('Error rejecting labour:', error);
       toast.error('Error rejecting labour. Please try again.');
+    }
+  };
+
+
+
+  const handleEditLabour = async (labour) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${labour.id}`);
+      if (response.data.success) {
+        setLabours(prevLabours =>
+          prevLabours.map(l =>
+            l.id === labour.id ? { ...l, uploadAadhaarFront: null, contactNumber: null, isApproved: 1 } : l
+          )
+        );
+        navigate('/kyc', { state: { labourId: labour.id } });
+      } else {
+        toast.error('Failed to Edit labour. Please try again.');
+      }
+      console.log('labourIdResponse', response)
+    } catch (error) {
+      console.error('Error Edit labour:', error);
+      toast.error('Error Edit labour. Please try again.');
+    }
+  };
+
+
+  const handleEditLabourOpen = (labour) => {
+    setSelectedLabour(labour);
+    setIsEditLabourOpen(true);
+  };
+
+  const handleEditLabourClose = () => {
+    setIsEditLabourOpen(false);
+    setSelectedLabour(null);
+  };
+
+  const handleEditLabourConfirm = async () => {
+    if (selectedLabour) {
+      await handleEditLabour(selectedLabour);
+      handleEditLabourClose();
     }
   };
 
@@ -433,6 +473,41 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   };
 
 
+
+
+  const fetchLabours = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/labours`);
+      // console.log('API Response:', response.data);
+      setLabours(response.data);
+      setLoading(false);
+    } catch (error) {
+      // console.error('Error fetching labours:', error);
+      setError('Error fetching labours. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchAndSortLabours = async () => {
+      await fetchLabours();
+      setLabours((prevLabours) => {
+        const sorted = [...prevLabours].sort((a, b) => b.id - a.id);
+        console.log('Sorted Labours:', sorted);
+        return sorted;
+      });
+    };
+  
+    fetchAndSortLabours();
+  }, [tabValue]);
+  
+  
+
+  // useEffect(() => {
+  //   fetchLabours();
+  // }, []);
+
   
   const handleAccountNumberChange = (e) => {
     let cleanedValue = e.target.value.replace(/\D/g, '');
@@ -466,7 +541,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   // const API_BASE_URL = "https://laboursandbox.vjerp.com"; 
 
   const handleSubmit = async (e) => {
-    console.log(formData);
+    // console.log(formData);
     e.preventDefault();
 
     if (!/^\d{2}-\d{4}$/.test(formData.expiryDate)) {
@@ -904,8 +979,8 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
               id: 2
             },
             employee: {},
-            // bankAccountNo: "98765432112",            
-            // companyNEFTNo: "SBIN0004523"
+            bankAccountNo: formData.accountNumber,            
+            companyNEFTNo: 'SBIN0004523'
           },
           personalBank: {
             employee: {}
@@ -1008,15 +1083,15 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
           approvalToken: '0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw'
         };
 
-        const fileData = JSON.stringify(employeeMasterPayload, null, 2);
-        const blob = new Blob([fileData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'employeeMasterPayload.json';
-        a.click();
+        // const fileData = JSON.stringify(employeeMasterPayload, null, 2);
+        // const blob = new Blob([fileData], { type: 'application/json' });
+        // const url = URL.createObjectURL(blob);
+        // const a = document.createElement('a');
+        // a.href = url;
+        // a.download = 'employeeMasterPayload.json';
+        // a.click();
 
-        console.log('Employee Master Payload:', employeeMasterPayload);
+        // console.log('Employee Master Payload:', employeeMasterPayload);
 
         // try {
           const employeeMasterResponse = await axios.post('https://vjerp.farvisioncloud.com/Payroll/odata/Employees', employeeMasterPayload, {
@@ -1050,7 +1125,7 @@ console.log(employeeDetails.status);
       },
     });
     const dynamicData2 = dynamicDataResponse2.data;
-console.log('dynamicData2',JSON.stringify(dynamicData2));
+// console.log('dynamicData2',JSON.stringify(dynamicData2));
 
 
             const orgMasterPayload = {
@@ -1676,15 +1751,15 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
               approvalToken: "0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw"
             };
 
-            const fileData = JSON.stringify(orgMasterPayload, null, 2);
-            const blob = new Blob([fileData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'orgMasterPayload.json';
-            a.click();
+            // const fileData = JSON.stringify(orgMasterPayload, null, 2);
+            // const blob = new Blob([fileData], { type: 'application/json' });
+            // const url = URL.createObjectURL(blob);
+            // const a = document.createElement('a');
+            // a.href = url;
+            // a.download = 'orgMasterPayload.json';
+            // a.click();
     
-            console.log('Org Master Payload:', orgMasterPayload);
+            // console.log('Org Master Payload:', orgMasterPayload);
     
             const orgMasterResponse = await axios.post('https://vjerp.farvisioncloud.com/Payroll/odata/Organisations', orgMasterPayload, {
               headers: {
@@ -1744,17 +1819,17 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
         });
       };
   
-      console.log('Loading logo image from URL:', logoUrl);
+      // console.log('Loading logo image from URL:', logoUrl);
       const logoImg = await loadImage(logoUrl);
-      console.log('Logo image loaded:', logoImg);
+      // console.log('Logo image loaded:', logoImg);
   
       if (!labour.photoSrc) {
         throw new Error('Labour photo URL is undefined');
       }
   
-      console.log('Loading labour photo from URL:', labour.photoSrc);
+      // console.log('Loading labour photo from URL:', labour.photoSrc);
       const labourPhoto = await loadImage(labour.photoSrc);
-      console.log('Labour photo loaded:', labourPhoto);
+      // console.log('Labour photo loaded:', labourPhoto);
   
       // Convert image to data URI
       const getDataUrl = (img) => {
@@ -1911,6 +1986,7 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
 
       <Box ml={-1.5}>
         <SearchBar
+         handleSubmit={handleSubmit}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
@@ -1918,6 +1994,7 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
           searchResults={searchResults}
           setSearchResults={setSearchResults}
           handleSelectLabour={handleSelectLabour}
+          showResults={false}
           className="search-bar"
         />
       </Box>
@@ -2007,7 +2084,7 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
         </Tabs>
         <TablePagination
           className="custom-pagination"
-          rowsPerPageOptions={[10, 25, { label: 'All', value: -1 }]}
+          rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
           count={filteredLabours.length}
           rowsPerPage={rowsPerPage}
           page={page}
@@ -2056,14 +2133,31 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
         <TableCell>Status</TableCell>
         {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
         {tabValue === 1 && <TableCell>LabourID Card</TableCell>}
+        {tabValue === 1 && <TableCell>Edit Labour</TableCell>}
         {((user.userType === 'admin') || (tabValue === 2 && user.userType === 'user')) && <TableCell>Action</TableCell>}
         <TableCell>Details</TableCell>
+   
       </TableRow>
     </TableHead>
     <TableBody>
       {(rowsPerPage > 0
-        ? sortedLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-        : sortedLabours
+       ? [...labours]
+       .filter(labour => {
+         if (tabValue === 0) return labour.status === 'Pending';
+         if (tabValue === 1) return labour.status === 'Approved';
+         if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted';
+         return true; // fallback if no condition matches
+       })
+       .sort((a, b) => b.id - a.id) // Sort in descending order by id
+       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+   : [...labours]
+       .filter(labour => {
+         if (tabValue === 0) return labour.status === 'Pending';
+         if (tabValue === 1) return labour.status === 'Approved';
+         if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted';
+         return true; // fallback if no condition matches
+       })
+       .sort((a, b) => b.id - a.id)
       ).map((labour, index) => (
         <TableRow key={labour.id}>
           <TableCell>{page * rowsPerPage + index + 1}</TableCell>
@@ -2093,9 +2187,43 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
             </TableCell>
           )}
 
+{tabValue === 1 && (
+            <TableCell>
+              {(user.userType === 'user' && labour.status === 'Approved' && !labour.uploadAadhaarFront) && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: 'rgb(229, 255, 225)',
+                    color: 'rgb(43, 217, 144)',
+                    '&:hover': {
+                      backgroundColor: 'rgb(229, 255, 225)',
+                    },
+                  }}
+                  onClick={() => handleEditLabourOpen(labour)}
+                >
+                  Edit
+                </Button>
+              )}
+              {(user.userType === 'admin' && labour.status === 'Approved' && !labour.uploadAadhaarFront) && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: 'rgb(229, 255, 225)',
+                    color: 'rgb(43, 217, 144)',
+                    '&:hover': {
+                      backgroundColor: 'rgb(229, 255, 225)',
+                    },
+                  }}
+                  onClick={() => handleEditLabourOpen(labour)}
+                >
+                  Edit
+                </Button>
+              )}
+            </TableCell>
+          )}
           {user.userType === 'user' && (
             <TableCell>
-              {labour.status === 'Rejected' && (
+              {labour.status === 'Rejected' || labour.status === 'Resubmitted' && (
                 <Button
                   variant="contained"
                   sx={{
@@ -2182,7 +2310,36 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
                   Update
                 </Button>
               )}
-              {labour.status === 'Rejected' && (
+
+{/* {labours.map(labour => ( */}
+        <div key={labour.id}>
+          {((labour.status === 'Rejected' && labour.isApproved !== 1) || labour.status === 'Resubmitted') && (
+            <Box display="flex" alignItems="center">
+              {labour.status !== 'Pending' && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: 'rgb(229, 255, 225)',
+                    color: 'rgb(43, 217, 144)',
+                    '&:hover': {
+                      backgroundColor: 'rgb(229, 255, 225)',
+                    },
+                  }}
+                  onClick={() => handleResubmit(labour)}
+                >
+                  Resubmit
+                </Button>
+              )}
+              {/* {labour.status === 'Resubmitted' && (
+                <CheckCircleIcon style={{ color: 'green', marginLeft: '10px' }} />
+              )} */}
+            </Box>
+          )}
+        </div>
+      {/* ))} */}
+
+              
+              {/* {labour.status === 'Rejected' && (
                 <Box display="flex" alignItems="center">
                 <Button
                   variant="contained"
@@ -2200,21 +2357,11 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
                 {labour.status === 'Resubmitted' && (
                           <CheckCircleIcon style={{ color: 'green', marginLeft: '10px' }} />
                         )}
+
+                        
+
               </Box>
-                // <Button
-                //   variant="contained"
-                //   sx={{
-                //     backgroundColor: 'rgb(229, 255, 225)',
-                //     color: 'rgb(43, 217, 144)',
-                //     '&:hover': {
-                //       backgroundColor: 'rgb(229, 255, 225)',
-                //     },
-                //   }}
-                //   onClick={() => handleResubmit(labour)}
-                // >
-                //   Resubmit
-                // </Button>
-              )}
+              )} */}
             </TableCell>
           )}
 
@@ -2446,6 +2593,41 @@ console.log('dynamicData2',JSON.stringify(dynamicData2));
         </DialogActions>
       </Dialog>
       
+
+      <Dialog
+        open={isEditLabourOpen}
+        onClose={handleEditLabourClose}
+        aria-labelledby="EditLabour-dialog-title"
+        aria-describedby="EditLabour-description"
+      >
+        <DialogTitle id="EditLabour-title">
+          Edit Labour
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="EditLabour-dialog-description">
+            Are you sure you want to Edit this labour?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditLabourClose} variant="outlined" color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleEditLabourConfirm} sx={{
+            backgroundColor: 'rgb(229, 255, 225)',
+            color: 'rgb(43, 217, 144)',
+            width: '100px',
+            marginRight: '10px',
+            marginBottom: '3px',
+            '&:hover': {
+              backgroundColor: 'rgb(229, 255, 225)',
+            },
+          }} autoFocus>
+            Edit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
       <ToastContainer />
 
         <style jsx>{`

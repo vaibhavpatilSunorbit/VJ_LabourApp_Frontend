@@ -101,7 +101,7 @@ const ApproveLabours = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('FormData before sending:', formData);
+      // console.log('FormData before sending:', formData);
       const response = await axios.post(`${API_BASE_URL}/api/approveLabour`, formData);
       if (response.status === 200) {
         toast.success('Data submitted successfully');
@@ -277,8 +277,8 @@ const ApproveLabours = () => {
           Submit
         </Button>
       </form>
-      <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', }}>
-        <TableContainer component={Paper}>
+      <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
+        <TableContainer component={Paper} sx={{ height: '72vh', overflow: 'auto' }}>
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
@@ -291,6 +291,7 @@ const ApproveLabours = () => {
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
+              <TableCell>Sr. No.</TableCell>
                 <TableCell>Business Unit</TableCell>
                 <TableCell>Device Name</TableCell>
                 <TableCell>Device Location</TableCell>
@@ -300,11 +301,14 @@ const ApproveLabours = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {projectDeviceStatus.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+              {projectDeviceStatus.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
                 <TableRow
                   key={row.DeviceID}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
+                       <TableCell component="th" scope="row">
+              {(page * rowsPerPage) + index + 1}
+            </TableCell>
                   <TableCell component="th" scope="row">
                     {row.BusinessUnit}
                   </TableCell>
