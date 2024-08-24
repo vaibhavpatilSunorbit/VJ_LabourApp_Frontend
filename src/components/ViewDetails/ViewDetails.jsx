@@ -293,9 +293,9 @@ import {API_BASE_URL} from '../../Data'
 
 
 const trimUrl = (url) => {
-  // const baseUrl = "http://localhost:4000/uploads/";
+  const baseUrl = "http://localhost:4000/uploads/";
   // const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
-  const baseUrl = "https://vjlabour.vjerp.com/uploads/";
+  // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
   // return url ? url.replace(baseUrl, '') : '';
   return typeof url === 'string' ? url.replace(baseUrl, '') : '';
 };
@@ -310,16 +310,16 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
 
 
     const formData = {
-      // "Labour ID": selectedLabour.LabourID || "",
+      "Labour ID": selectedLabour.LabourID || "",
       "Labour Ownership": selectedLabour.labourOwnership || "",
       "Title": selectedLabour.title || "",
       "Name": selectedLabour.name || "",
       "Aadhaar No": selectedLabour.aadhaarNumber || "",
-      "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'dd-MM-yyyy') : "",
+      "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'dd-MM-yyyy') : format(new Date(), 'dd-MM-yyyy'),
       "Contact No": selectedLabour.contactNumber || "",
       "Emergency Contact": selectedLabour?.emergencyContact || "", 
       "Gender": selectedLabour.gender || "",
-      "Date of Joining": selectedLabour.dateOfJoining ? format(new Date(selectedLabour.dateOfJoining), 'dd-MM-yyyy') : "",
+      "Date of Joining": selectedLabour.dateOfJoining ? format(new Date(selectedLabour.dateOfJoining), 'dd-MM-yyyy') : format(new Date(), 'dd-MM-yyyy'),
       "Address": selectedLabour.address || "",
       "Village": selectedLabour?.village || "",
       "Pincode": selectedLabour.pincode || "",
@@ -336,7 +336,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
       "Designation": selectedLabour?.designation || "",
       "Labour Category": selectedLabour?.labourCategory || "",    
       "Working Hours": selectedLabour?.workingHours || "",
-      "Induction Date": selectedLabour?.Induction_Date ? format(new Date(selectedLabour.Induction_Date), 'dd-MM-yyyy') : "",
+      "Induction Date": selectedLabour.Induction_Date ? format(new Date(selectedLabour.Induction_Date), 'dd-MM-yyyy') : format(new Date(), 'dd-MM-yyyy'),
       "Induction By": selectedLabour?.Inducted_By || "",
       // "Upload Induction Document": selectedLabour?.uploadInductionDoc || "",
       "Upload Induction Document": trimUrl(selectedLabour.uploadInductionDoc) || "",
@@ -489,7 +489,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
   };
 
   const formData = {
-    // "Labour ID": selectedLabour?.LabourID || "",
+    "Labour ID": selectedLabour?.LabourID || "",
     "Labour Ownership": selectedLabour.labourOwnership || "",
       "Title": selectedLabour.title || "",
       "Name": selectedLabour.name || "",
