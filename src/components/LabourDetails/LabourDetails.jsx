@@ -23,7 +23,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  InputLabel
+  InputLabel,
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -44,7 +44,7 @@ import { useUser } from '../../UserContext/UserContext';
 // import logoImage from '../../images/Labour_ID_Card.png';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { format } from 'date-fns';
-
+import { ClipLoader } from 'react-spinners'; 
 
 
 const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
@@ -54,6 +54,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingExcel, setLoadingExcel] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedLabour, setSelectedLabour] = useState(null);
   const [page, setPage] = useState(0);
@@ -1787,17 +1788,12 @@ console.log(employeeDetails.status);
   };
 
 
-
- 
   const handleDownloadPDF = async (labourId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
       const labour = response.data;
-  
       const doc = new jsPDF();
-  
       const logoUrl = `${process.env.PUBLIC_URL}/images/vjlogo.png`; // Use the public URL
-      
   
       // Verify that the logoUrl is correctly defined
       if (!logoUrl) {
@@ -1819,19 +1815,7 @@ console.log(employeeDetails.status);
         });
       };
   
-      // console.log('Loading logo image from URL:', logoUrl);
-      const logoImg = await loadImage(logoUrl);
-      // console.log('Logo image loaded:', logoImg);
-  
-      if (!labour.photoSrc) {
-        throw new Error('Labour photo URL is undefined');
-      }
-  
-      // console.log('Loading labour photo from URL:', labour.photoSrc);
-      const labourPhoto = await loadImage(labour.photoSrc);
-      // console.log('Labour photo loaded:', labourPhoto);
-  
-      // Convert image to data URI
+      // Function to convert an image element to a data URL
       const getDataUrl = (img) => {
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
@@ -1841,72 +1825,80 @@ console.log(employeeDetails.status);
         return canvas.toDataURL('image/png');
       };
   
+      const logoImg = await loadImage(logoUrl);
       const logoDataUrl = getDataUrl(logoImg);
-      const labourPhotoDataUrl = getDataUrl(labourPhoto);
   
-      // Add logo
-      doc.addImage(logoDataUrl, 'PNG', 10, 10, 50, 15); 
+      // Add logo to PDF
+      doc.addImage(logoDataUrl, 'PNG', 10, 10, 50, 15);
       doc.setFontSize(20);
       doc.setFont("helvetica", "bold");
-      doc.text('LABOUR ID CARD', 70, 20 );
+      doc.text('LABOUR ID CARD', 70, 20);
   
-      // Add image
-      doc.addImage(labourPhotoDataUrl, 'PNG', 10, 30, 50, 70); 
-      doc.setLineWidth(1); // Set line width for darker border
-    doc.setDrawColor(0, 0, 0); // Set border color to black
-    doc.rect(10, 30, 50, 70); // Add border around image
-
-    // const formatDate = (dateString) => {
-    //   if (!dateString) return 'N/A';
-    //   const date = new Date(dateString);
-    //   return date.toISOString().split('T')[0]; 
-    // };
-
-    const formatDate = (dateString) => {
-      if (!dateString) return 'N/A';
-      const date = new Date(dateString);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-      const year = date.getFullYear();
-      return `${day}-${month}-${year}`;
-    };
-
+      // Check if labour photo is available
+      let labourPhotoDataUrl = null;
+      if (labour.photoSrc) {
+        try {
+          const labourPhoto = await loadImage(labour.photoSrc);
+          labourPhotoDataUrl = getDataUrl(labourPhoto);
+        } catch (error) {
+          console.warn('Labour photo could not be loaded:', error);
+        }
+      } else {
+        console.warn('Labour photo URL is undefined or missing');
+      }
+  
+      // If labour photo is available, add to PDF
+      if (labourPhotoDataUrl) {
+        doc.addImage(labourPhotoDataUrl, 'PNG', 10, 30, 50, 70);
+        doc.setLineWidth(1); // Set line width for darker border
+        doc.setDrawColor(0, 0, 0); // Set border color to black
+        doc.rect(10, 30, 50, 70); // Add border around image
+      }
+  
+      const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+  
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
       const lineHeight = 7;
       const startX = 70;
-      const valueStartX = 120; 
+      const valueStartX = 120;
       let startY = 32;
-      
-
+  
       const addDetail = (label, value) => {
         doc.text(`${label.toUpperCase()}`, startX, startY);
-      doc.text(`: ${value ? value.toUpperCase() : 'N/A'}`, valueStartX, startY);
+        doc.text(`: ${value ? value.toUpperCase() : 'N/A'}`, valueStartX, startY);
         startY += lineHeight;
       };
-
+  
       const departmentDescription = getDepartmentDescription(labour.department);
   
       addDetail('Name', labour.name);
-    addDetail('Location', labour.location);
-    addDetail('Date of Birth', formatDate(labour.dateOfBirth));
-    addDetail('Aadhaar No.', labour.aadhaarNumber);
-    addDetail('Department', departmentDescription);
-    addDetail('Designation', labour.designation);
-    addDetail('Emergency No.', labour.emergencyContact);
-    addDetail('Inducted by', labour.Inducted_By);
-    addDetail('Induction date', formatDate(labour.Induction_Date));
-    addDetail('Date Of joining', formatDate(labour.dateOfJoining));
-    addDetail('Valid till', formatDate(labour.ValidTill));
-
-    const cardX = 5;
-    const cardY = 3;
-    const cardWidth = 200;
-    const cardHeight = startY + 2;
-
-    doc.setLineWidth(1); // Set line width for the outer border
-    doc.setDrawColor(0, 0, 0); // Set outer border color to black
-    doc.rect(cardX, cardY, cardWidth, cardHeight);
+      addDetail('Location', labour.location);
+      addDetail('Date of Birth', formatDate(labour.dateOfBirth));
+      addDetail('Aadhaar No.', labour.aadhaarNumber);
+      addDetail('Department', departmentDescription);
+      addDetail('Designation', labour.designation);
+      addDetail('Emergency No.', labour.emergencyContact);
+      addDetail('Inducted by', labour.Inducted_By);
+      addDetail('Induction date', formatDate(labour.Induction_Date));
+      addDetail('Date Of joining', formatDate(labour.dateOfJoining));
+      addDetail('Valid till', formatDate(labour.ValidTill));
+  
+      const cardX = 5;
+      const cardY = 3;
+      const cardWidth = 200;
+      const cardHeight = startY + 2;
+  
+      doc.setLineWidth(1); // Set line width for the outer border
+      doc.setDrawColor(0, 0, 0); // Set outer border color to black
+      doc.rect(cardX, cardY, cardWidth, cardHeight);
   
       doc.save(`LabourID_${labour.LabourID || labourId}.pdf`);
     } catch (error) {
@@ -1914,6 +1906,133 @@ console.log(employeeDetails.status);
       toast.error('Error generating PDF. Please try again.');
     }
   };
+
+ 
+  // const handleDownloadPDF = async (labourId) => {
+  //   try {
+  //     const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
+  //     const labour = response.data;
+  
+  //     const doc = new jsPDF();
+  
+  //     const logoUrl = `${process.env.PUBLIC_URL}/images/vjlogo.png`; // Use the public URL
+      
+  
+  //     // Verify that the logoUrl is correctly defined
+  //     if (!logoUrl) {
+  //       throw new Error('Logo URL is undefined');
+  //     }
+  
+  //     // Load the logo image
+  //     const loadImage = (url) => {
+  //       return new Promise((resolve, reject) => {
+  //         const img = new Image();
+  //         img.crossOrigin = 'Anonymous';
+  //         img.onload = () => resolve(img);
+  //         img.onerror = (error) => {
+  //           console.error(`Failed to load image: ${url}`, error);
+  //           reject(new Error(`Failed to load image: ${url}`));
+  //         };
+  //         img.src = url;
+  //         console.log(`Attempting to load image from URL: ${url}`);
+  //       });
+  //     };
+  
+  //     // console.log('Loading logo image from URL:', logoUrl);
+  //     const logoImg = await loadImage(logoUrl);
+  //     // console.log('Logo image loaded:', logoImg);
+  
+  //     if (!labour.photoSrc) {
+  //       throw new Error('Labour photo URL is undefined');
+  //     }
+  
+  //     // console.log('Loading labour photo from URL:', labour.photoSrc);
+  //     const labourPhoto = await loadImage(labour.photoSrc);
+  //     // console.log('Labour photo loaded:', labourPhoto);
+  
+  //     // Convert image to data URI
+  //     const getDataUrl = (img) => {
+  //       const canvas = document.createElement('canvas');
+  //       canvas.width = img.width;
+  //       canvas.height = img.height;
+  //       const ctx = canvas.getContext('2d');
+  //       ctx.drawImage(img, 0, 0);
+  //       return canvas.toDataURL('image/png');
+  //     };
+  
+  //     const logoDataUrl = getDataUrl(logoImg);
+  //     const labourPhotoDataUrl = getDataUrl(labourPhoto);
+  
+  //     // Add logo
+  //     doc.addImage(logoDataUrl, 'PNG', 10, 10, 50, 15); 
+  //     doc.setFontSize(20);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.text('LABOUR ID CARD', 70, 20 );
+  
+  //     // Add image
+  //     doc.addImage(labourPhotoDataUrl, 'PNG', 10, 30, 50, 70); 
+  //     doc.setLineWidth(1); // Set line width for darker border
+  //   doc.setDrawColor(0, 0, 0); // Set border color to black
+  //   doc.rect(10, 30, 50, 70); // Add border around image
+
+  //   // const formatDate = (dateString) => {
+  //   //   if (!dateString) return 'N/A';
+  //   //   const date = new Date(dateString);
+  //   //   return date.toISOString().split('T')[0]; 
+  //   // };
+
+  //   const formatDate = (dateString) => {
+  //     if (!dateString) return 'N/A';
+  //     const date = new Date(dateString);
+  //     const day = String(date.getDate()).padStart(2, '0');
+  //     const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  //     const year = date.getFullYear();
+  //     return `${day}-${month}-${year}`;
+  //   };
+
+  //     doc.setFontSize(12);
+  //     doc.setFont("helvetica", "normal");
+  //     const lineHeight = 7;
+  //     const startX = 70;
+  //     const valueStartX = 120; 
+  //     let startY = 32;
+      
+
+  //     const addDetail = (label, value) => {
+  //       doc.text(`${label.toUpperCase()}`, startX, startY);
+  //     doc.text(`: ${value ? value.toUpperCase() : 'N/A'}`, valueStartX, startY);
+  //       startY += lineHeight;
+  //     };
+
+  //     const departmentDescription = getDepartmentDescription(labour.department);
+  
+  //     addDetail('Name', labour.name);
+  //   addDetail('Location', labour.location);
+  //   addDetail('Date of Birth', formatDate(labour.dateOfBirth));
+  //   addDetail('Aadhaar No.', labour.aadhaarNumber);
+  //   addDetail('Department', departmentDescription);
+  //   addDetail('Designation', labour.designation);
+  //   addDetail('Emergency No.', labour.emergencyContact);
+  //   addDetail('Inducted by', labour.Inducted_By);
+  //   addDetail('Induction date', formatDate(labour.Induction_Date));
+  //   addDetail('Date Of joining', formatDate(labour.dateOfJoining));
+  //   addDetail('Valid till', formatDate(labour.ValidTill));
+
+  //   const cardX = 5;
+  //   const cardY = 3;
+  //   const cardWidth = 200;
+  //   const cardHeight = startY + 2;
+
+  //   doc.setLineWidth(1); // Set line width for the outer border
+  //   doc.setDrawColor(0, 0, 0); // Set outer border color to black
+  //   doc.rect(cardX, cardY, cardWidth, cardHeight);
+  
+  //     doc.save(`LabourID_${labour.LabourID || labourId}.pdf`);
+  //   } catch (error) {
+  //     console.error('Error generating PDF:', error);
+  //     toast.error('Error generating PDF. Please try again.');
+  //   }
+  // };
 
 
 
@@ -1938,9 +2057,9 @@ console.log(employeeDetails.status);
   //   return department ? department.Description : 'Unknown';
   // };
 
-  const sortedLabours = tabValue === 1 
-  ? filteredLabours.sort((a, b) => a.LabourID.localeCompare(b.LabourID))
-  : filteredLabours.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  // const sortedLabours = tabValue === 1 
+  // ? filteredLabours.sort((a, b) => a.LabourID.localeCompare(b.LabourID))
+  // : filteredLabours.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const getDepartmentDescription = (departmentId) => {
     if (!departments || departments.length === 0) {
@@ -1974,6 +2093,34 @@ console.log(employeeDetails.status);
 
     // console.log('Found Project:', project);
     return project ? project.Business_Unit : 'Unknown';
+  };
+
+
+  const handleDownload = async () => {
+    setLoadingExcel(true); 
+    try {
+      const response = await axios.get(`${API_BASE_URL}/download-excel`, {
+        responseType: 'blob', // Important for handling binary data
+      });
+
+      // Create a blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      const today = new Date();
+      const date = today.toISOString().split('T')[0]; // Format the date as YYYY-MM-DD
+      link.href = url;
+      link.setAttribute('download', `labourOnboarding_data_${date}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    
+      toast.success('Excel downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading the Excel file:', error);
+      toast.error('Failed to download Excel file.');
+    }finally {
+      setLoadingExcel(false); // Hide loader after download completes or fails
+    }
   };
 
 
@@ -2082,6 +2229,35 @@ console.log(employeeDetails.status);
             }}
           />
         </Tabs>
+
+        <Button
+          onClick={handleDownload}
+          style={{ color: tabValue === 6 ? "#54c668" : "#54c668" }}
+            sx={{
+              color: tabValue === 6 ? "white" : "black",
+              bgcolor: tabValue === 6 ? "rgb(53 202 79 / 89%)" : "#ecf9ee",
+              borderRadius: 1,
+              textTransform: "none",
+              fontWeight: "bold",
+              minHeight: "auto",
+              minWidth: "auto",
+              px:2,
+              py:1.2,
+              // padding: "6px 12px",
+              "&:hover": {
+                bgcolor: tabValue === 2 ? "rgb(204 255 213 / 89%)" : "rgb(204 255 213 / 89%)",
+              },
+            }}
+            disabled={loadingExcel}
+        >
+        {loadingExcel && (
+           <Box component="span" sx={{ display: 'flex', alignItems: 'center', paddingRight: '4px' }}>
+    <ClipLoader size={20} color={"rgb(14 198 46)"}  loadingExcel={loadingExcel} /> 
+    </Box>
+  )}
+  {' Download Excel'}
+        </Button>
+
         <TablePagination
           className="custom-pagination"
           rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
@@ -2148,7 +2324,7 @@ console.log(employeeDetails.status);
          if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted';
          return true; // fallback if no condition matches
        })
-       .sort((a, b) => b.id - a.id) // Sort in descending order by id
+       .sort((a, b) => b.LabourID - a.LabourID) // Sort in descending order by id
        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
    : [...labours]
        .filter(labour => {
@@ -2157,7 +2333,7 @@ console.log(employeeDetails.status);
          if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted';
          return true; // fallback if no condition matches
        })
-       .sort((a, b) => b.id - a.id)
+       .sort((a, b) => b.LabourID - a.LabourID)
       ).map((labour, index) => (
         <TableRow key={labour.id}>
           <TableCell>{page * rowsPerPage + index + 1}</TableCell>
@@ -2189,7 +2365,7 @@ console.log(employeeDetails.status);
 
 {tabValue === 1 && (
             <TableCell>
-              {(user.userType === 'user' && labour.status === 'Approved' && !labour.uploadAadhaarFront) && (
+              {(user.userType === 'user' && labour.status === 'Approved' && !labour.address) && (
                 <Button
                   variant="contained"
                   sx={{
@@ -2204,7 +2380,7 @@ console.log(employeeDetails.status);
                   Edit
                 </Button>
               )}
-              {(user.userType === 'admin' && labour.status === 'Approved' && !labour.uploadAadhaarFront) && (
+              {(user.userType === 'admin' && labour.status === 'Approved' && !labour.address) && (
                 <Button
                   variant="contained"
                   sx={{

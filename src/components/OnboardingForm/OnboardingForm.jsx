@@ -225,7 +225,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture,  projectList =
 
 
 
-const uploadAadhaarImageToSurepass = async (file) => {
+const uploadAadhaarImageToSurepass = async (file) => {  
   const formData = new FormData();
   formData.append('file', file);
 
@@ -254,14 +254,14 @@ const uploadAadhaarImageToSurepass = async (file) => {
         processAadhaarData(ocrFields);
       }
     } else {
-      setNewError('Error reading Aadhaar details from Image.'.toUpperCase());
+      setNewError('Error reading Aadhaar details from Image.');
     }
   } catch (error) {
     console.error('Error Uploading Aadhaar image to surepass:', error);
     if (error.response) {
       console.error('Error response data:', error.response.data);
     }
-    setNewError('Error uploading Aadhaar image. please try again.'.toUpperCase());
+    setNewError('Error uploading Aadhaar image. please try again.');
   }
 };
 
@@ -947,25 +947,36 @@ if (!localError) {
       // }
 
       let response;
-      const labourId = formData.id; 
-console.log("labourIdsssssssssssssss", labourId)
-      try {
-        if (labourId) {
-          console.log('Updating existing labour with ID:', labourId);
-          response = await axios.put(`${API_BASE_URL}/labours/updatelabour/${labourId}`, formDataToSend, {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-        } else {
-          console.log('Creating a new labour entry.');
-          response = await axios.post(API_BASE_URL + `/labours`, formDataToSend, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-        }
-      
+      const labourId = formData.id;
+      const labourIdCode = formData.LabourID;
+
+      console.log("LabourIdCode:", labourIdCode);
+      console.log("LabourId:", labourId);
+
+     try {
+      if (labourId && labourIdCode) {
+        console.log('Updating existing labour with ID and Code:', labourId, labourIdCode);
+        response = await axios.put(`${API_BASE_URL}/labours/updatelabour/${labourId}`, formDataToSend, {
+          headers: {
+            // 'Content-Type': 'application/json',
+          },
+        });
+      } else if (labourId) {
+        console.log('Updating existing labour with ID:', labourId);
+        response = await axios.post(`${API_BASE_URL}/labours/${labourId}/updateRecord`, formDataToSend, {
+          headers: {
+            // 'Content-Type': 'application/json',
+          },
+        });
+      } else {
+        console.log('Creating a new labour entry.');
+        response = await axios.post(`${API_BASE_URL}/labours`, formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
+
         if (response.status !== 200 && response.status !== 201) {
           throw new Error('Form submission failed');
         }
@@ -1390,7 +1401,7 @@ const handleSelectChange = (e) => {
           showResults={true}
         />
 
-        <form className="onboarding-form" onSubmit={handleSubmit}>
+        <form className="onboarding-form">
           <ul style={styles.list}>
             <li>
               <div className="title" onClick={toggleKYCCollapse}>
@@ -2393,7 +2404,7 @@ const handleSelectChange = (e) => {
                               id="save"
                               className={`btn btn-save save-button ${saved ? 'saved' : ''}`}
                               disabled={loading}
-                              // onClick={handleSubmit}
+                              onClick={handleSubmit}
                             >
                               {saved ? <FaCheck className="icon" /> : 'Submit'}
                             </button>

@@ -293,9 +293,9 @@ import {API_BASE_URL} from '../../Data'
 
 
 const trimUrl = (url) => {
-  const baseUrl = "http://localhost:4000/uploads/";
+  // const baseUrl = "http://localhost:4000/uploads/";
   // const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
-  // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
+  const baseUrl = "https://vjlabour.vjerp.com/uploads/";
   // return url ? url.replace(baseUrl, '') : '';
   return typeof url === 'string' ? url.replace(baseUrl, '') : '';
 };
@@ -405,74 +405,138 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
     doc.save(`Labour_${selectedLabour.id}_FullForm.pdf`);
   };
 
+
+
   const downloadAadhaarCard = async () => {
     try {
-      const baseUrl = "";
-      // console.log("Selected Labour:", selectedLabour);
-
-      if (!selectedLabour.uploadAadhaarFront  || !selectedLabour.uploadIdProof) {
-        console.error("Aadhaar URLs are missing:", {
-          uploadAadhaarFront: selectedLabour.uploadAadhaarFront,
-          uploadIdProof: selectedLabour.uploadIdProof,
-          // uploadAadhaarBack: selectedLabour.uploadAadhaarBack,          
-        });
-        toast.error("Aadhaar card URLs are missing. Please check the labour details.");
+      const baseUrl = "";  // Ensure this base URL is correctly set
+      const { uploadAadhaarFront, uploadAadhaarBack, uploadIdProof, uploadInductionDoc } = selectedLabour;
+  
+      // Check for missing Aadhaar URLs and log them
+      if (!uploadAadhaarFront && !uploadIdProof && !uploadAadhaarBack && !uploadInductionDoc) {
+        console.error("All document URLs are missing.");
+        toast.error("No documents are available for download.");
         return;
       }
-
-      const responseFront = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarFront}`, { responseType: 'blob' });
-      const urlFront = window.URL.createObjectURL(new Blob([responseFront.data], { type: 'image/jpeg' }));
-      const linkFront = document.createElement('a');
-      linkFront.href = urlFront;
-      linkFront.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Front.jpg`);
-      document.body.appendChild(linkFront);
-      linkFront.click();
-      document.body.removeChild(linkFront);
-
-      // const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
-      // const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
-      // const linkBack = document.createElement('a');
-      // linkBack.href = urlBack;
-      // linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
-      // document.body.appendChild(linkBack);
-      // linkBack.click();
-      // document.body.removeChild(linkBack);
-      
-      if (selectedLabour.uploadAadhaarBack) {
-        const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
-        const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
-        const linkBack = document.createElement('a');
-        linkBack.href = urlBack;
-        linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
-        document.body.appendChild(linkBack);
-        linkBack.click();
-        document.body.removeChild(linkBack);
+  
+      // Define an async function to handle downloading of a single file
+      const downloadFile = async (fileUrl, fileName) => {
+        try {
+          const response = await axios.get(`${baseUrl}${fileUrl}`, { responseType: 'blob' });
+          const url = window.URL.createObjectURL(new Blob([response.data], { type: 'image/jpeg' }));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', fileName);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (error) {
+          console.error(`Error downloading ${fileName}:`, error);
+          toast.error(`Error downloading ${fileName}.`);
+        }
+      };
+  
+      // Check and download each document if it exists
+      if (uploadAadhaarFront) {
+        await downloadFile(uploadAadhaarFront, `Labour_${selectedLabour.id}_Aadhaar_Front.jpg`);
+      } else {
+        console.warn("Aadhaar Front not uploaded.");
       }
-      const responseId = await axios.get(`${baseUrl}${selectedLabour.uploadIdProof}`, { responseType: 'blob' });
-      const urlId = window.URL.createObjectURL(new Blob([responseId.data], { type: 'image/jpeg' }));
-      const linkId = document.createElement('a');
-      linkId.href = urlId;
-      linkId.setAttribute('download', `Labour_${selectedLabour.id}_ID_Proof.jpg`);
-      document.body.appendChild(linkId);
-      linkId.click();
-      document.body.removeChild(linkId);
-
-
-      const responseInductionDoc = await axios.get(`${baseUrl}${selectedLabour.uploadInductionDoc}`, { responseType: 'blob' });
-      const urlInduction = window.URL.createObjectURL(new Blob([responseInductionDoc.data], { type: 'image/jpeg' }));
-      const linkInduction = document.createElement('a');
-      linkInduction.href = urlInduction;
-      linkInduction.setAttribute('download', `Labour_${selectedLabour.id}_Induction_Doc.jpg`);
-      document.body.appendChild(linkInduction);
-      linkInduction.click();
-      document.body.removeChild(linkInduction);
-
-      toast.success('Aadhaar card downloaded successfully.');
+  
+      if (uploadAadhaarBack) {
+        await downloadFile(uploadAadhaarBack, `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
+      } else {
+        console.warn("Aadhaar Back not uploaded.");
+      }
+  
+      if (uploadIdProof) {
+        await downloadFile(uploadIdProof, `Labour_${selectedLabour.id}_ID_Proof.jpg`);
+      } else {
+        console.warn("ID Proof not uploaded.");
+      }
+  
+      if (uploadInductionDoc) {
+        await downloadFile(uploadInductionDoc, `Labour_${selectedLabour.id}_Induction_Doc.jpg`);
+      } else {
+        console.warn("Induction Document not uploaded.");
+      }
+  
+      // Provide feedback to the user that download is complete
+      toast.success('Uploaded documents have been downloaded successfully.');
     } catch (error) {
-      console.error('Error downloading Aadhaar card:', error);
-      toast.error('Error downloading Aadhaar card. Please try again.');
+      console.error('Error during document download process:', error);
+      toast.error('An error occurred while downloading documents. Please try again.');
     }
   };
+
+  // const downloadAadhaarCard = async () => {
+  //   try {
+  //     const baseUrl = "";
+  //     // console.log("Selected Labour:", selectedLabour);
+
+  //     if (!selectedLabour.uploadAadhaarFront  || !selectedLabour.uploadIdProof) {
+  //       console.error("Aadhaar URLs are missing:", {
+  //         uploadAadhaarFront: selectedLabour.uploadAadhaarFront,
+  //         uploadIdProof: selectedLabour.uploadIdProof,
+  //         // uploadAadhaarBack: selectedLabour.uploadAadhaarBack,          
+  //       });
+  //       toast.error("Aadhaar card URLs are missing. Please check the labour details.");
+  //       return;
+  //     }
+
+  //     const responseFront = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarFront}`, { responseType: 'blob' });
+  //     const urlFront = window.URL.createObjectURL(new Blob([responseFront.data], { type: 'image/jpeg' }));
+  //     const linkFront = document.createElement('a');
+  //     linkFront.href = urlFront;
+  //     linkFront.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Front.jpg`);
+  //     document.body.appendChild(linkFront);
+  //     linkFront.click();
+  //     document.body.removeChild(linkFront);
+
+  //     // const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
+  //     // const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
+  //     // const linkBack = document.createElement('a');
+  //     // linkBack.href = urlBack;
+  //     // linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
+  //     // document.body.appendChild(linkBack);
+  //     // linkBack.click();
+  //     // document.body.removeChild(linkBack);
+      
+  //     if (selectedLabour.uploadAadhaarBack) {
+  //       const responseBack = await axios.get(`${baseUrl}${selectedLabour.uploadAadhaarBack}`, { responseType: 'blob' });
+  //       const urlBack = window.URL.createObjectURL(new Blob([responseBack.data], { type: 'image/jpeg' }));
+  //       const linkBack = document.createElement('a');
+  //       linkBack.href = urlBack;
+  //       linkBack.setAttribute('download', `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
+  //       document.body.appendChild(linkBack);
+  //       linkBack.click();
+  //       document.body.removeChild(linkBack);
+  //     }
+  //     const responseId = await axios.get(`${baseUrl}${selectedLabour.uploadIdProof}`, { responseType: 'blob' });
+  //     const urlId = window.URL.createObjectURL(new Blob([responseId.data], { type: 'image/jpeg' }));
+  //     const linkId = document.createElement('a');
+  //     linkId.href = urlId;
+  //     linkId.setAttribute('download', `Labour_${selectedLabour.id}_ID_Proof.jpg`);
+  //     document.body.appendChild(linkId);
+  //     linkId.click();
+  //     document.body.removeChild(linkId);
+
+
+  //     const responseInductionDoc = await axios.get(`${baseUrl}${selectedLabour.uploadInductionDoc}`, { responseType: 'blob' });
+  //     const urlInduction = window.URL.createObjectURL(new Blob([responseInductionDoc.data], { type: 'image/jpeg' }));
+  //     const linkInduction = document.createElement('a');
+  //     linkInduction.href = urlInduction;
+  //     linkInduction.setAttribute('download', `Labour_${selectedLabour.id}_Induction_Doc.jpg`);
+  //     document.body.appendChild(linkInduction);
+  //     linkInduction.click();
+  //     document.body.removeChild(linkInduction);
+
+  //     toast.success('Aadhaar card downloaded successfully.');
+  //   } catch (error) {
+  //     console.error('Error downloading Aadhaar card:', error);
+  //     toast.error('Error downloading Aadhaar card. Please try again.');
+  //   }
+  // };
 
   const [openModal, setOpenModal] = useState(false);
   const [modalImageSrc, setModalImageSrc] = useState('');
