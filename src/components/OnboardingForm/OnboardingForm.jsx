@@ -893,8 +893,10 @@ if (!localError) {
     e.preventDefault();
  
     if (!validateForm()) return;
-    setSaved(false);
     setLoading(true);
+    setSaved(false);
+    
+    // const { user } = useUser();
 
     try {
       const formDataToSend = new FormData();
@@ -945,6 +947,12 @@ if (!localError) {
       // if (response.status !== 201) {
       //   throw new Error('Form submission failed');
       // }
+
+      if (user.name) {
+        formDataToSend.append('OnboardName', user.name);
+      } else {
+        console.error('OnboardName is not available in user context');
+      }
 
       let response;
       const labourId = formData.id;
@@ -1031,7 +1039,7 @@ if (!localError) {
     }
     setTimeout(() => {
       setSaved(false);
-    }, 12000);
+    }, 9000);
   };
 
 
@@ -2431,7 +2439,7 @@ const handleSelectChange = (e) => {
                         className={`ok-button ${popupType}`}
                         onClick={() => {
                             setSaved(false);
-                            window.location.reload(); // Reload the page when the Ok button is clicked
+                            // window.location.reload(); 
                         }}
                     >
                 <span className={`icon ${popupType}`}>
