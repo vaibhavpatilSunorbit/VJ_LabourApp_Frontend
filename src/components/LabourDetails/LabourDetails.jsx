@@ -3558,7 +3558,7 @@ const handleApprove = async (id) => {
         <TableCell>Name of Labour</TableCell>
         <TableCell>Project</TableCell>
         <TableCell>Department</TableCell>
-        {(tabValue === 0 || tabValue === 1) && <TableCell>Onboarded By</TableCell>}
+        {(tabValue === 0 || tabValue === 1 || tabValue === 1 || tabValue === 2) && <TableCell>Onboarded By</TableCell>}
         <TableCell>Status</TableCell>
         {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
         {tabValue === 1 && <TableCell>LabourID Card</TableCell>}
@@ -3594,7 +3594,7 @@ const handleApprove = async (id) => {
           <TableCell>{labour.name}</TableCell>
           <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
           <TableCell>{getDepartmentDescription(labour.department)}</TableCell>
-          {(tabValue === 0 || tabValue === 1) && (
+          {(tabValue === 0 || tabValue === 1 || tabValue === 2) && (
             <TableCell>{labour.OnboardName}</TableCell>
           )}
           <TableCell>{labour.status}</TableCell>
@@ -3652,7 +3652,10 @@ const handleApprove = async (id) => {
           )}
           {user.userType === 'user' && (
             <TableCell>
-              {labour.status === 'Rejected' || labour.status === 'Resubmitted' && (
+               <div key={labour.id}>
+          {((labour.status === 'Rejected' && labour.isApproved !== 1) || labour.status === 'Resubmitted') && (
+            <Box display="flex" alignItems="center">
+              {labour.status !== 'Pending' && (
                 <Button
                   variant="contained"
                   sx={{
@@ -3667,6 +3670,12 @@ const handleApprove = async (id) => {
                   Resubmit
                 </Button>
               )}
+              {/* {labour.status === 'Resubmitted' && (
+                <CheckCircleIcon style={{ color: 'green', marginLeft: '10px' }} />
+              )} */}
+            </Box>
+          )}
+        </div>
               {labour.status === 'Approved' && (
                 <Button
                   variant="contained"
