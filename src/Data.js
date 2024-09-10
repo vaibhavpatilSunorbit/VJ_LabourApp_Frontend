@@ -4,8 +4,8 @@ import { UilUniversity, UilUserPlus, UilFileAlt } from '@iconscout/react-unicons
 
 
 // export const API_BASE_URL = "https://laboursandbox.vjerp.com";
-export const API_BASE_URL = "http://localhost:4000";
-// export const API_BASE_URL = "https://vjlabour.vjerp.com";
+// export const API_BASE_URL = "http://localhost:4000";
+export const API_BASE_URL = "https://vjlabour.vjerp.com";
 
 
 export const accessPages = [

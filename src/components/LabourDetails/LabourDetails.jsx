@@ -123,7 +123,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
 //         // console.log('Next ID:', nextID);
 
 //         // Step 2: Approve the labour and get labour details
-//         const approveResponse = await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { LabourID: nextID });
+//         const approveResponse = await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID: nextID });
 //         // console.log('Approve response data:', approveResponse.data.data);
 
 //         const labour = approveResponse.data.data; // Assuming this contains labour details
@@ -181,7 +181,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
 //         // Update labour status in the frontend
 //         setLabours(prevLabours =>
 //           prevLabours.map(labour =>
-//             labour.id === id ? { ...labour, status: 'Approved', isApproved: 1, LabourID: nextID } : labour
+//             labour.id === id ? { ...labour, status: 'Approved', isApproved: 1, labourID: nextID } : labour
 //           )
 //         );
 
@@ -224,15 +224,17 @@ const handleApprove = async (id) => {
   handleApproveConfirmClose();
 
   try {
-    // Step 1: Get the next ID and store LabourID in state
+    // Step 1: Get the next ID and store labourID in state
     const { data: { nextID } } = await axios.get(`${API_BASE_URL}/labours/next-id`);
-    const labourID = nextID; // Store LabourID to use in payloads
+    const labourID = nextID; 
 
-    // Step 2: Approve the labour and get labour details
-    const approveResponse = await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { LabourID: labourID });
-    const labour = approveResponse.data.data; // Assuming this contains labour details
+    // const approveResponse = await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID: labourID });
+    // const labour = approveResponse.data.data; 
+    const labourResponse = await axios.get(`${API_BASE_URL}/labours/${id}`, { labourID });
+    const labour = labourResponse.data;
+    console.log("labourResponse.data.data......",labourResponse.data)
+    console.log("labourID********",  labourID)
 
-    // Step 3: Fetch the SerialNumber from the backend
     const response = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${labour.projectName}`);
     const serialNumber = response.data.serialNumber;
 
@@ -264,18 +266,46 @@ const handleApprove = async (id) => {
       }
     );
     if (soapResponse.status === 200) {
-      toast.success('ESSL API run successfully.');
+      const commandId = soapResponse.data.CommandId; // Assuming CommandId is returned in the SOAP response
 
-      // Fetch dynamic data for employeeMasterPayload
-      const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
-        params: {
-          businessUnitDesc: labour.companyName,
-          workingHours: labour.workingHours
-        }
-      });
+      // Step 5: Polling to check for status change
+      const pollStatus = async () => {
+        const { data: commandStatus } = await axios.get(`${API_BASE_URL}/labours/commandstatus/${commandId}`);
+        return commandStatus.status;
+      };
+
+      let status = await pollStatus();
+      let retries = 0;
+      const maxRetries = 15;  // Set a maximum number of retries to avoid infinite looping
+      const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); // Helper function to delay each poll
+
+      while (status === 'Pending' && retries < maxRetries) {
+        await delay(5000);  // Wait for 5 seconds before polling again
+        status = await pollStatus();
+        retries++;
+      }
+
+      if (status === 'Success') {
+        // Proceed with approving the labour and running all APIs
+
+        // Dynamic Data Fetch
+        const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
+          params: {
+            businessUnitDesc: labour.companyName,
+            workingHours: labour.workingHours
+          }
+        });
+      // toast.success('ESSL API run successfully.');
+      // const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
+      //   params: {
+      //     businessUnitDesc: labour.companyName,
+      //     workingHours: labour.workingHours
+      //   }
+      // });
+
       const dynamicData = dynamicDataResponse.data;
 
-      // Construct employeeMasterPayload with dynamic LabourID
+      // Construct employeeMasterPayload with dynamic labourID
       const employeeMasterPayload = {
         companyName: labour.companyName,
         company: {
@@ -446,11 +476,11 @@ const handleApprove = async (id) => {
           timeZoneId: 0,
           ...dynamicData 
         },
-        code: labour.LabourID,
+        code: labourID,
         title: labour.title,
         firstName: labour.name,
         lastName: labour.name.split(' ')[1] || '',
-        userName: labour.LabourID,
+        userName: labourID,
         gender: labour.gender,
         maritalStatus: labour.Marital_Status,
         dob: labour.dateOfBirth,
@@ -461,7 +491,7 @@ const handleApprove = async (id) => {
         confirmDate: labour.ConfirmDate,
         doj: labour.dateOfJoining,
         employeeName: labour.name,
-        BiometricNo: labour.LabourID,
+        BiometricNo: labourID,
         employeeAddress: [
           {
             city: {
@@ -816,7 +846,7 @@ const handleApprove = async (id) => {
         });
         const dynamicData2 = dynamicDataResponse2.data;
 
-        // Construct organizationMasterPayload with dynamic LabourID
+        // Construct organizationMasterPayload with dynamic labourID
         const organizationMasterPayload = {
           locationName: dynamicData2.description,
           workLocationName: dynamicData2.payrollUnit.WorkingBu,
@@ -831,7 +861,7 @@ const handleApprove = async (id) => {
           employee: {
             totalRecordNo: 2,
             id: dynamicData2.payrollUnit.empId,
-            code: dynamicData2.payrollUnit.LabourID,
+            code: dynamicData2.payrollUnit.labourID,
             employeeName: dynamicData2.payrollUnit.name,
             companyName: dynamicData2.payrollUnit.companyName,
             dojLocal: dynamicData2.payrollUnit.dateOfJoining,
@@ -1455,7 +1485,7 @@ const handleApprove = async (id) => {
         // API call to save employeeMasterPayload and organizationMasterPayload
         await axios.post(`${API_BASE_URL}/saveApiResponsePayload`, {
           userId: labour.id,
-          LabourID: labourID,  // Use dynamic LabourID here
+          labourID: labourID,  // Use dynamic labourID here
           name: labour.name,
           aadharNumber: labour.aadhaarNumber,
           employeeMasterPayload: employeeMasterPayload,
@@ -1473,8 +1503,12 @@ const handleApprove = async (id) => {
         });
 
         toast.success('Employee and Org master details updated and saved successfully.');
-
-      } else {
+        await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID });
+        toast.success('Labour approved successfully.');
+      }else {
+        // If status is 'Pending' or 'Failure', do not proceed with approval
+        toast.error('Labour cannot be approved due to pending or failed command status.');
+      }} else {
         toast.error('Failed to update ESSL details.');
       }
     }
@@ -1482,7 +1516,7 @@ const handleApprove = async (id) => {
     // Update labour status in the frontend
     setLabours(prevLabours =>
       prevLabours.map(labour =>
-        labour.id === id ? { ...labour, status: 'Approved', isApproved: 1, LabourID: labourID } : labour
+        labour.id === id ? { ...labour, status: 'Approved', isApproved: 1, labourID } : labour
       )
     );
 
@@ -1783,1262 +1817,6 @@ const handleApprove = async (id) => {
     }
   };
 
-//   const handleSubmit = async (e) => {
-//     // console.log(formData);
-//     e.preventDefault();
-
-// //     if (!/^\d{2}-\d{4}$/.test(formData.expiryDate)) {
-// //       toast.error('Invalid expiry date format. Please use MM-YYYY.');
-// //       return;
-// //     }
-
-// //     const formattedExpiryDate = formData.expiryDate ? `${formData.expiryDate}` : null;
-// //     const formattedFormData = {
-// //       ...formData,
-// //       expiryDate: formattedExpiryDate,
-// //     };
-
-// //     try {
-
-// //       const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
-// //         params : {
-// //           businessUnitDesc: formData.companyName,
-// //           workingHours: formData.workingHours
-// //         }
-// //       });
-      
-// //       const dynamicData = dynamicDataResponse.data;  
-
-// //       const response = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData, {
-// //         headers: {
-// //           'Content-Type': 'application/json',
-// //         }
-// //       });
-  
-// //       if (response.data.message === "Record updated successfully") {
-// //         toast.success('Labour details updated successfully.');
-// //         setOpen(false);
-// //         fetchLabours();
-
-// //         const employeeMasterPayload = {
-// //           companyName: formData.companyName,
-// //           company: {
-// //             level: 3,
-// //             type: 'C',
-// //             businessSegment: {
-// //               id: 3,
-// //               objectId: '000000000000000000000000',
-// //               isFinalApproval: false,
-// //               tenantId: 1,
-// //               dbId: 0,
-// //               createdBy: 0,
-// //               createdOn: null,
-// //               lastModifiedBy: 0,
-// //               lastModifiedOn: null,
-// //               mode: '',
-// //               entityName: 'Segment',
-// //               isDraft: false,
-// //               isChildEntity: false,
-// //               appId: 0,
-// //               masterEntryTypeId: 0,
-// //               masterDocumentTypeId: 0,
-// //               importSrlNo: 0,
-// //               isUserAdmin: false,
-// //               isDataBeingImportFromExcel: false,
-// //               isDataBeingValidateOnly: false,
-// //               attachmentId: '00000000-0000-0000-0000-000000000000',
-// //               isInApproval: false
-// //             },
-// //             zone: {
-// //               id: 0,
-// //               objectId: '000000000000000000000000',
-// //               isFinalApproval: false,
-// //               tenantId: 1,
-// //               dbId: 0,
-// //               createdBy: 0,
-// //               createdOn: null,
-// //               lastModifiedBy: 0,
-// //               lastModifiedOn: null,
-// //               mode: '',
-// //               entityName: 'BusinessUnitZone',
-// //               isDraft: false,
-// //               isChildEntity: false,
-// //               appId: 0,
-// //               masterEntryTypeId: 0,
-// //               masterDocumentTypeId: 0,
-// //               importSrlNo: 0,
-// //               isUserAdmin: false,
-// //               isDataBeingImportFromExcel: false,
-// //               isDataBeingValidateOnly: false,
-// //               attachmentId: '00000000-0000-0000-0000-000000000000',
-// //               isInApproval: false
-// //             },
-// //             fiscalYear: {
-// //               yearStartDate: '2022-04-01T00:00:00.000Z',
-// //               yearEndDate: '2023-03-31T00:00:00.000Z',
-// //               fiscalYearTemplateId: 0,
-// //               startPeriodId: 0,
-// //               endPeriodId: 0,
-// //               yearType: 0,
-// //               isMidTermYear: false,
-// //               midTermYearStartDate: null,
-// //               id: 15,
-// //               objectId: '000000000000000000000000',
-// //               description: '01-04-2022-31-03-2023',
-// //               isFinalApproval: false,
-// //               tenantId: 1,
-// //               dbId: 0,
-// //               createdBy: 0,
-// //               createdOn: null,
-// //               lastModifiedBy: 0,
-// //               lastModifiedOn: null,
-// //               mode: '',
-// //               entityName: 'FiscalYear',
-// //               isDraft: false,
-// //               isChildEntity: false,
-// //               appId: 0,
-// //               masterEntryTypeId: 0,
-// //               masterDocumentTypeId: 0,
-// //               importSrlNo: 0,
-// //               isUserAdmin: false,
-// //               isDataBeingImportFromExcel: false,
-// //               isDataBeingValidateOnly: false,
-// //               attachmentId: '00000000-0000-0000-0000-000000000000',
-// //               isInApproval: false
-// //             },
-// //             localCurrency: {
-// //               subUnitFactor: 0,
-// //               printOrder: 0,
-// //               id: 12,
-// //               objectId: '000000000000000000000000',
-// //               description: 'RUPEES',
-// //               isFinalApproval: false,
-// //               tenantId: 1,
-// //               dbId: 0,
-// //               createdBy: 0,
-// //               createdOn: null,
-// //               lastModifiedBy: 0,
-// //               lastModifiedOn: null,
-// //               mode: '',
-// //               entityName: 'Currency',
-// //               isDraft: false,
-// //               isChildEntity: false,
-// //               appId: 0,
-// //               masterEntryTypeId: 0,
-// //               masterDocumentTypeId: 0,
-// //               importSrlNo: 0,
-// //               isUserAdmin: false,
-// //               isDataBeingImportFromExcel: false,
-// //               isDataBeingValidateOnly: false,
-// //               attachmentId: '00000000-0000-0000-0000-000000000000',
-// //               isInApproval: false
-// //             },
-// //             reportingCurrency1: {
-// //               subUnitFactor: 0,
-// //               printOrder: 0,
-// //               id: 12,
-// //               objectId: '000000000000000000000000',
-// //               description: 'RUPEES',
-// //               isFinalApproval: false,
-// //               tenantId: 1,
-// //               dbId: 0,
-// //               createdBy: 0,
-// //               createdOn: null,
-// //               lastModifiedBy: 0,
-// //               lastModifiedOn: null,
-// //               mode: '',
-// //               entityName: 'Currency',
-// //               isDraft: false,
-// //               isChildEntity: false,
-// //               appId: 0,
-// //               masterEntryTypeId: 0,
-// //               masterDocumentTypeId: 0,
-// //               importSrlNo: 0,
-// //               isUserAdmin: false,
-// //               isDataBeingImportFromExcel: false,
-// //               isDataBeingValidateOnly: false,
-// //               attachmentId: '00000000-0000-0000-0000-000000000000',
-// //               isInApproval: false
-// //             },
-// //             reportingCurrency2: {
-// //               subUnitFactor: 0,
-// //               printOrder: 0,
-// //               id: 0,
-// //               objectId: '000000000000000000000000',
-// //               isFinalApproval: false,
-// //               tenantId: 1,
-// //               dbId: 0,
-// //               createdBy: 0,
-// //               createdOn: null,
-// //               lastModifiedBy: 0,
-// //               lastModifiedOn: null,
-// //               mode: '',
-// //               entityName: 'Currency',
-// //               isDraft: false,
-// //               isChildEntity: false,
-// //               appId: 0,
-// //               masterEntryTypeId: 0,
-// //               masterDocumentTypeId: 0,
-// //               importSrlNo: 0,
-// //               isUserAdmin: false,
-// //               isDataBeingImportFromExcel: false,
-// //               isDataBeingValidateOnly: false,
-// //               attachmentId: '00000000-0000-0000-0000-000000000000',
-// //               isInApproval: false
-// //             },
-// //             templateGroupId: 0,
-// //             timeZoneId: 0,
-// //             ...dynamicData 
-// //           },
-// //           code: formData.LabourID,
-// //           title: formData.title,
-// //           firstName: formData.name,
-// //           lastName: formData.name.split(' ')[1] || '',
-// //           userName: formData.LabourID,
-// //           gender: formData.gender,
-// //           maritalStatus: formData.Marital_Status,
-// //           dob: formData.dateOfBirth,
-// //           retirementDate: formData.retirementDate,
-// //           nationality: formData.Nationality,
-// //           calenderType: 1,
-// //           groupJoinDate: formData.Group_Join_Date,
-// //           confirmDate: formData.ConfirmDate,
-// //           doj: formData.dateOfJoining,
-// //           employeeName: formData.name,
-// //           BiometricNo: formData.LabourID,
-// //           employeeAddress: [
-// //             {
-// //               city: {
-// //                 id: 0,
-// //                 objectId: '000000000000000000000000',
-// //                 code: '0000039',
-// //                 description: formData.village,
-// //                 isFinalApproval: false,
-// //                 tenantId: 1,
-// //                 dbId: 0,
-// //                 createdBy: 0,
-// //                 createdOn: null,
-// //                 lastModifiedBy: 0,
-// //                 lastModifiedOn: null,
-// //                 mode: '',
-// //                 entityName: 'City',
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: '00000000-0000-0000-0000-000000000000',
-// //                 isInApproval: false
-// //               },
-// //               state: {
-// //                 gstStateId: '27',
-// //                 isUnionTeritory: 0,
-// //                 id: 299,
-// //                 objectId: '000000000000000000000000',
-// //                 code: '19',
-// //                 description: formData.state,
-// //                 isFinalApproval: false,
-// //                 tenantId: 1,
-// //                 dbId: 0,
-// //                 createdBy: 0,
-// //                 createdOn: null,
-// //                 lastModifiedBy: 0,
-// //                 lastModifiedOn: null,
-// //                 mode: '',
-// //                 entityName: 'State',
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: '00000000-0000-0000-0000-000000000000',
-// //                 isInApproval: false
-// //               },
-// //               country: {
-// //                 id: 122,
-// //                 objectId: '000000000000000000000000',
-// //                 code: 'IND',
-// //                 description: 'INDIA',
-// //                 isFinalApproval: false,
-// //                 tenantId: 1,
-// //                 dbId: 0,
-// //                 createdBy: 0,
-// //                 createdOn: null,
-// //                 lastModifiedBy: 0,
-// //                 lastModifiedOn: null,
-// //                 mode: '',
-// //                 entityName: 'Country',
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: '00000000-0000-0000-0000-000000000000',
-// //                 isInApproval: false
-// //               },
-// //               countryName: 'INDIA',
-// //               countryId: 122,
-// //               stateName: formData.state,
-// //               stateId: 299,
-// //               cityName: formData.district,
-// //               cityId: 0,
-// //               type: 'P'
-// //             },
-// //             {
-// //               city: {
-// //                 id: 0,
-// //                 objectId: '000000000000000000000000',
-// //                 code: '0000039',
-// //                 description: formData.district,
-// //                 isFinalApproval: false,
-// //                 tenantId: 1,
-// //                 dbId: 0,
-// //                 createdBy: 0,
-// //                 createdOn: null,
-// //                 lastModifiedBy: 0,
-// //                 lastModifiedOn: null,
-// //                 mode: '',
-// //                 entityName: 'City',
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: '00000000-0000-0000-0000-000000000000',
-// //                 isInApproval: false
-// //               },
-// //               state: {
-// //                 gstStateId: '27',
-// //                 isUnionTeritory: 0,
-// //                 id: 299,
-// //                 objectId: '000000000000000000000000',
-// //                 code: '19',
-// //                 description: formData.state,
-// //                 isFinalApproval: false,
-// //                 tenantId: 1,
-// //                 dbId: 0,
-// //                 createdBy: 0,
-// //                 createdOn: null,
-// //                 lastModifiedBy: 0,
-// //                 lastModifiedOn: null,
-// //                 mode: '',
-// //                 entityName: 'State',
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: '00000000-0000-0000-0000-000000000000',
-// //                 isInApproval: false
-// //               },
-// //               country: {
-// //                 id: 122,
-// //                 objectId: '000000000000000000000000',
-// //                 code: 'IND',
-// //                 description: 'INDIA',
-// //                 isFinalApproval: false,
-// //                 tenantId: 1,
-// //                 dbId: 0,
-// //                 createdBy: 0,
-// //                 createdOn: null,
-// //                 lastModifiedBy: 0,
-// //                 lastModifiedOn: null,
-// //                 mode: '',
-// //                 entityName: 'Country',
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: '00000000-0000-0000-0000-000000000000',
-// //                 isInApproval: false
-// //               },
-// //               countryName: 'INDIA',
-// //               countryId: 122,
-// //               stateName: 'MAHARASHTRA',
-// //               stateId: 299,
-// //               cityName: 'PUNE',
-// //               cityId: 0,
-// //               type: 'C'
-// //             }
-// //           ],
-// //           contactInfo: [
-// //             {
-// //               serialNo: 1,
-// //               type: 'Phone',
-// //               id: 0,
-// //               value: formData.contactNumber,
-// //               mode: 'I'
-// //             },
-// //             {
-// //               serialNo: 1,
-// //               type: 'Mobile',
-// //               id: 0,
-// //               value: formData.contactNumber,
-// //               mode: 'I'
-// //             },
-// //             {
-// //               serialNo: 1,
-// //               type: 'Email',
-// //               id: 0,
-// //               value: '',
-// //               mode: 'I'
-// //             }
-// //           ],
-// //           shiftId: dynamicData.shiftId,
-// //           shiftName: dynamicData.shiftName,
-// //           extraInfo: {
-// //             aadharNo: formData.aadhaarNumber,
-// //             isHandicap: false
-// //           },
-// //           paymentBank: {
-// //             paymentMode: {
-// //               id: 4
-// //             },
-// //             bank: {
-// //               id: 2
-// //             },
-// //             employee: {},
-// //             bankAccountNo: formData.accountNumber,            
-// //             companyNEFTNo: 'SBIN0004523'
-// //           },
-// //           personalBank: {
-// //             employee: {}
-// //           },
-// //           pf: {
-// //             companyPf: {}
-// //           },
-// //           Esi: {
-// //             companyEsi: {}
-// //           },
-// //           passport: {
-// //             companyPf: {}
-// //           },
-// //           visa: {},
-// //           leaveOpening: [
-// //             {
-// //               employeeId: 0,
-// //               isResignEmployee: false,
-// //               empRetirementDate: null,
-// //               empJoinDate: null,
-// //               leave: {
-// //                 type: 0,
-// //                 id: 1,
-// //                 objectId: '000000000000000000000000',
-// //                 description: 'PRIVLIAGE LEAVE',
-// //                 isFinalApproval: false,
-// //                 tenantId: 1,
-// //                 dbId: 0,
-// //                 createdBy: 0,
-// //                 createdOn: null,
-// //                 lastModifiedBy: 0,
-// //                 lastModifiedOn: null,
-// //                 mode: '',
-// //                 entityName: 'Leave',
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: '00000000-0000-0000-0000-000000000000',
-// //                 isInApproval: false
-// //               },
-// //               openingBalance: 0,
-// //               currentBalance: 0,
-// //               isLeaveEntryDone: false,
-// //               serialNo: 0,
-// //               isApplicable: true,
-// //               isEmployeeMaster: false,
-// //               amount: 0,
-// //               id: 0,
-// //               objectId: '000000000000000000000000',
-// //               entryTypeId: 0,
-// //               fiscalYearId: 0,
-// //               taggedTaskId: 0,
-// //               yearType: 0,
-// //               refObjectId: '000000000000000000000000',
-// //               documentClassificationId: 0,
-// //               isFinalApproval: false,
-// //               tenantId: 1,
-// //               dbId: 0,
-// //               createdBy: 0,
-// //               createdOn: null,
-// //               lastModifiedBy: 0,
-// //               lastModifiedOn: null,
-// //               mode: '',
-// //               entityName: 'EmployeeLeave',
-// //               isDraft: false,
-// //               isChildEntity: false,
-// //               appId: 0,
-// //               masterEntryTypeId: 0,
-// //               masterDocumentTypeId: 0,
-// //               importSrlNo: 0,
-// //               isUserAdmin: false,
-// //               isDataBeingImportFromExcel: false,
-// //               isDataBeingValidateOnly: false,
-// //               attachmentId: '00000000-0000-0000-0000-000000000000',
-// //               isInApproval: false,
-// //               financialYear: {
-// //                 id: 24,
-// //                 description: '01-01-2024-31-12-2024',
-// //                 fiscalYearTemplate: 2,
-// //                 yearStartDate: '2024-01-01T00:00:00.000Z',
-// //                 yearEndDate: '2024-12-31T00:00:00.000Z',
-// //                 startPeriodId: 51,
-// //                 endPeriodId: 63,
-// //                 yearType: 2
-// //               }
-// //             }
-// //           ],
-// //           entryTypeId: 275,
-// //           uiid: 18,
-// //           isDraft: false,
-// //           documentDate: '2024-07-18T18:30:00.000Z',
-// //           machineAddress: '103.186.18.36',
-// //           approvalBaseUrl: 'https://vjerp.farvisioncloud.com',
-// //           approvalToken: '0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw'
-// //         };
-
-// //         // const fileData = JSON.stringify(employeeMasterPayload, null, 2);
-// //         // const blob = new Blob([fileData], { type: 'application/json' });
-// //         // const url = URL.createObjectURL(blob);
-// //         // const a = document.createElement('a');
-// //         // a.href = url;
-// //         // a.download = 'employeeMasterPayload.json';
-// //         // a.click();
-
-// //         // console.log('Employee Master Payload:', employeeMasterPayload);
-
-// //         // try {
-// //           const employeeMasterResponse = await axios.post('https://vjerp.farvisioncloud.com/Payroll/odata/Employees', employeeMasterPayload, {
-// //             headers: {
-// //               'Content-Type': 'application/json',
-// //               'Accept': 'application/json',
-// //               'Authorization': 'apikey 8d1588e79eb31ed7cb57ff57325510572baa1008d575537615e295d3bbd7d558',
-// //             }
-// //           });
-
-// //           if (employeeMasterResponse.data.status) {
-// //             toast.success('Employee master details updated successfully.');
-
-// //             const empData = {
-// //               empId : employeeMasterResponse.data.outputList.id
-// //             }
-
-// //             const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${formData.id}`, empData);
-// // console.log(employeeDetails.status);
-    
-// //     const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
-// //       params: {
-// //         employeeId: employeeMasterResponse.data.outputList.id,
-// //         monthdesc: formData.Period,
-// //         gradeId: formData.labourCategoryId,
-// //         salarybudescription: formData.SalaryBu,
-// //         workbudesc: formData.WorkingBu,
-// //         ledgerId:employeeMasterResponse.data.outputList.ledgerId,
-// //         departmentId:formData.departmentId,
-// //         designationId:formData.designationId
-// //       },
-// //     });
-// //     const dynamicData2 = dynamicDataResponse2.data;
-// // // console.log('dynamicData2',JSON.stringify(dynamicData2));
-
-
-// //             const orgMasterPayload = {
-// //               locationName: dynamicData2.description,
-// //               workLocationName: dynamicData2.payrollUnit.WorkingBu,
-// //               approvar1: "",
-// //               approvar2: "",
-// //               approvar3: "",
-// //               division: {
-// //                 Index: -1,
-// //                 customObject: {}
-// //               },
-// //               noticePeriod: 0,
-// //               employee: {
-// //                 totalRecordNo: 2,
-// //                 id: dynamicData2.payrollUnit.empId,
-// //                 code: dynamicData2.payrollUnit.LabourID,
-// //                 employeeName: dynamicData2.payrollUnit.name,
-// //                 companyName: dynamicData2.payrollUnit.companyName,
-// //                 dojLocal: dynamicData2.payrollUnit.dateOfJoining,
-// //                 companyId: dynamicData2.parentId
-// //               },
-// //               monthPeriod: dynamicData2.monthPeriod,
-// //               // monthPeriod: {
-// //               //   id: dynamicData2.monthPeriod.id,
-// //               //   description: dynamicData2.monthPeriod.description, 
-// //               //   periodFrom: dynamicData2.monthPeriod.periodFrom,
-// //               //   periodTo: dynamicData2.monthPeriod.periodTo,
-// //               //   actualPeriod: dynamicData2.monthPeriod.actualPeriod,
-// //               //   startDate: dynamicData2.monthPeriod.startDate, 
-// //               //   endDate: dynamicData2.monthPeriod.endDate,
-// //               //   cutOffPeriodFrom: dynamicData2.monthPeriod.cutOffPeriodFrom,
-// //               //   cutOffPeriodTo: dynamicData2.monthPeriod.cutOffPeriodTo
-// //               // },
-            
-// //               fromDate: dynamicData2.payrollUnit.dateOfJoining,
-// //               fromDateLocal: dynamicData2.payrollUnit.dateOfJoining,
-// //               employeeType: {
-// //                 offDay: true,
-// //                 holiDay: true,
-// //                 periodCategory: 1,
-// //                 employmentNature: 1,
-// //                 attendanceType: 1,
-// //                 id: 1,
-// //                 objectId: "000000000000000000000000",
-// //                 code: "Perm",
-// //                 description: "Permanent",
-// //                 workflowId: "00000000-0000-0000-0000-000000000000",
-// //                 isFinalApproval: false,
-// //                 tenantId: 1,
-// //                 dbId: 0,
-// //                 createdBy: 2,
-// //                 createdOn: dynamicData2.payrollUnit.CreationDate,
-// //                 lastModifiedBy: 2,
-// //                 lastModifiedOn: "2007-05-03T15:16:48.187Z",
-// //                 mode: "",
-// //                 entityName: "EmployeeCategory",
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                 isInApproval: false,
-// //                 Index: 0,
-// //                 customObject: {}
-// //               },
-// //               currentStatus: {
-// //                 ignore: false,
-// //                 left: false,
-// //                 isChangable: true,
-// //                 reasonCode: "W",
-// //                 id: 1,
-// //                 objectId: "000000000000000000000000",
-// //                 code: "WORKING",
-// //                 description: "WORKING",
-// //                 workflowId: "00000000-0000-0000-0000-000000000000",
-// //                 isFinalApproval: false,
-// //                 tenantId: 1,
-// //                 dbId: 0,
-// //                 createdBy: 2,
-// //                 createdOn: "2007-05-03T15:16:48.187Z",
-// //                 lastModifiedBy: 2,
-// //                 lastModifiedOn: "2007-05-03T15:16:48.187Z",
-// //                 mode: "",
-// //                 entityName:  "CurrentStatus",
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                 isInApproval: false,
-// //                 Index: 0,
-// //                 customObject: {}
-// //               },
-// //               grade: dynamicData2.grade,
-// //               // grade: {
-// //               //   belongsTo: 0,
-// //               //   id: 1,
-// //               //   objectId: "000000000000000000000000",
-// //               //   code: "SK",
-// //               //   description: formData.labourCategory,
-// //               //   workflowId: "00000000-0000-0000-0000-000000000000",
-// //               //   isFinalApproval: false,
-// //               //   tenantId: 1,
-// //               //   dbId: 0,
-// //               //   uiid: 28,
-// //               //   createdBy: 1914,
-// //               //   createdOn: formData.CreationDate,
-// //               //   lastModifiedBy: 1914,
-// //               //   lastModifiedOn: "2024-05-07T12:11:49.719Z",
-// //               //   mode: "",
-// //               //   entityName: "Grade",
-// //               //   isDraft: false,
-// //               //   isChildEntity: false,
-// //               //   appId: 0,
-// //               //   masterEntryTypeId: 0,
-// //               //   masterDocumentTypeId: 0,
-// //               //   importSrlNo: 0,
-// //               //   isUserAdmin: false,
-// //               //   isDataBeingImportFromExcel: false,
-// //               //   isDataBeingValidateOnly: false,
-// //               //   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //               //   isInApproval: false,
-// //               //   Index: 0,
-// //               //   customObject: {}
-// //               // },
-// //               location: {
-// //                 level: 5,
-// //                 type: "B",
-// //                 businessSegment: {
-// //                   // id: dynamicData2.id,
-// //                   id: 3,
-// //                   objectId: "000000000000000000000000",
-// //                   // description: dynamicData2.description,
-// //                   description: "DEPARTMENT LABOUR",                
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "Segment",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 zone: {
-// //                   id: 0,
-// //                   objectId: "000000000000000000000000",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "BusinessUnitZone",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 fiscalYear: {
-// //                   yearStartDate: "2022-04-01T00:00:00.000Z",
-// //                   yearEndDate: "2023-03-31T00:00:00.000Z",
-// //                   fiscalYearTemplateId: 0,
-// //                   startPeriodId: 0,
-// //                   endPeriodId: 0,
-// //                   yearType: 0,
-// //                   isMidTermYear: false,
-// //                   midTermYearStartDate: null,
-// //                   id: 15,
-// //                   objectId: "000000000000000000000000",
-// //                   description: "01-04-2022-31-03-2023",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "FiscalYear",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 localCurrency: {
-// //                   subUnitFactor: 0,
-// //                   printOrder: 0,
-// //                   id: 12,
-// //                   objectId: "000000000000000000000000",
-// //                   description: "RUPEES",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "Currency",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 reportingCurrency1: {
-// //                   subUnitFactor: 0,
-// //                   printOrder: 0,
-// //                   id: 12,
-// //                   objectId: "000000000000000000000000",
-// //                   description: "RUPEES",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "Currency",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 reportingCurrency2: {
-// //                   subUnitFactor: 0,
-// //                   printOrder: 0,
-// //                   id: 0,
-// //                   objectId: "000000000000000000000000",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "Currency",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 templateGroupId: 0,
-// //                 timeZoneId: 0,
-// //                 phone1: "+91-",
-// //                 email1: dynamicData2.email1,
-// //                 natureId: dynamicData2.natureId,
-// //                 interUnitLedgerId: dynamicData2.interUnitLedgerId,
-// //                 interUnitParentId: dynamicData2.interUnitParentId,
-// //                 interUnitLedger: {
-// //                   ledgerGroupId: dynamicData2.interUnitLedger.ledgerGroupId
-// //                 },
-// //                 startDate: "2022-04-01T00:00:00.000Z",
-// //                 countryCode: "IND",
-// //                 stateCode: "19",
-// //                 countryDesc: "INDIA",
-// //                 stateDesc: "MAHARASHTRA",
-// //                 cityDesc: "PUNE",
-// //                 countryId: 122,
-// //                 stateId: 299,
-// //                 cityId: 0,
-// //                 isDiscontinueBU: false,
-// //                 isDiscontinuedStatusChanged: false,
-// //                 isParentDiscontinued: false,
-// //                 mollakCode: 0,
-// //                 mollakDescription: "",
-// //                 oracleBUCode: 0,
-// //                 inpcrd: "Not Applicable",
-// //                 id: dynamicData2.id,
-// //                 objectId: "000000000000000000000000",
-// //                 code: dynamicData2.code,
-// //                 description: dynamicData2.description,
-// //                 parentId: dynamicData2.parentId,
-// //                 parentDesc: dynamicData2.payrollUnit.companyName,
-// //                 isFinalApproval: false,
-// //                 tenantId: 278,
-// //                 dbId: 0,
-// //                 uiid: 79,
-// //                 createdBy: 1914,
-// //                 createdOn: dynamicData2.payrollUnit.CreationDate,
-// //                 lastModifiedBy: 1914,
-// //                 lastModifiedOn: "2024-06-24T01:41:06.389Z",
-// //                 mode: "",
-// //                 isImported: false,
-// //                 entityName: "BusinessUnit",
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                 isInApproval: false
-// //               },
-// //               workLocation: {
-// //                 level: 0,
-// //                 type: "B",
-// //                 businessSegment: {
-// //                   // id: dynamicData2.payrollUnit.projectName,
-// //                   id: 3,
-// //                   objectId: "000000000000000000000000",
-// //                   // description: dynamicData2.payrollUnit.WorkingBu,
-// //                   description: "DEPARTMENT LABOUR",                  
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "Segment",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 zone: {
-// //                   id: 0,
-// //                   objectId: "000000000000000000000000",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "BusinessUnitZone",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 fiscalYear: {
-// //                   yearStartDate: "2022-04-01T00:00:00.000Z",
-// //                   yearEndDate: "2023-03-31T00:00:00.000Z",
-// //                   fiscalYearTemplateId: 0,
-// //                   startPeriodId: 0,
-// //                   endPeriodId: 0,
-// //                   yearType: 0,
-// //                   isMidTermYear: false,
-// //                   midTermYearStartDate: null,
-// //                   id: 15,
-// //                   objectId: "000000000000000000000000",
-// //                   description: "01-04-2022-31-03-2023",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "FiscalYear",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 localCurrency: {
-// //                   subUnitFactor: 0,
-// //                   printOrder: 0,
-// //                   id: 12,
-// //                   objectId: "000000000000000000000000",
-// //                   description: "RUPEES",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "Currency",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 reportingCurrency1: {
-// //                   subUnitFactor: 0,
-// //                   printOrder: 0,
-// //                   id: 12,
-// //                   objectId: "000000000000000000000000",
-// //                   description: "RUPEES",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "Currency",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 reportingCurrency2: {
-// //                   subUnitFactor: 0,
-// //                   printOrder: 0,
-// //                   id: 0,
-// //                   objectId: "000000000000000000000000",
-// //                   isFinalApproval: false,
-// //                   tenantId: 1,
-// //                   dbId: 0,
-// //                   createdBy: 0,
-// //                   createdOn: null,
-// //                   lastModifiedBy: 0,
-// //                   lastModifiedOn: null,
-// //                   mode: "",
-// //                   entityName: "Currency",
-// //                   isDraft: false,
-// //                   isChildEntity: false,
-// //                   appId: 0,
-// //                   masterEntryTypeId: 0,
-// //                   masterDocumentTypeId: 0,
-// //                   importSrlNo: 0,
-// //                   isUserAdmin: false,
-// //                   isDataBeingImportFromExcel: false,
-// //                   isDataBeingValidateOnly: false,
-// //                   attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                   isInApproval: false
-// //                 },
-// //                 templateGroupId: 0,
-// //                 timeZoneId: 0,
-// //                 phone1: "+91-...",
-// //                 email1: "abc@gmail.com",
-// //                 natureId: 0,
-// //                 interUnitLedgerId: 6560,
-// //                 interUnitParentId: 170,
-// //                 interUnitLedger: {
-// //                   ledgerGroupId: 53
-// //                 },
-// //                 startDate: "2022-04-01T00:00:00.000Z",
-// //                 countryCode: "IND",
-// //                 stateCode: "19",
-// //                 countryDesc: "INDIA",
-// //                 stateDesc: dynamicData2.payrollUnit.state,
-// //                 cityDesc: dynamicData2.payrollUnit.district,
-// //                 countryId: 122,
-// //                 stateId: 299,
-// //                 cityId: 0,
-// //                 isDiscontinueBU: false,
-// //                 isDiscontinuedStatusChanged: false,
-// //                 isParentDiscontinued: false,
-// //                 mollakCode: 0,
-// //                 mollakDescription: "",
-// //                 oracleBUCode: 0,
-// //                 inpcrd: "Not Applicable",
-// //                 id: dynamicData2.payrollUnit.projectName,
-// //                 objectId: "000000000000000000000000",
-// //                 code: dynamicData2.workbu.code,
-// //                 description: dynamicData2.payrollUnit.WorkingBu,
-// //                 parentId: dynamicData2.parentId,
-// //                 parentDesc: dynamicData2.payrollUnit.companyName,
-// //                 isFinalApproval: false,
-// //                 tenantId: 278,
-// //                 dbId: 0,
-// //                 uiid: 79,
-// //                 createdBy:  108,
-// //                 createdOn: "2024-05-02T06:17:37.555Z",
-// //                 lastModifiedBy: 1914,
-// //                 lastModifiedOn: "2024-06-24T01:38:42.075Z",
-// //                 mode: "",
-// //                 isImported: false,
-// //                 entityName: "BusinessUnit",
-// //                 isDraft: false,
-// //                 isChildEntity: false,
-// //                 appId: 0,
-// //                 masterEntryTypeId: 0,
-// //                 masterDocumentTypeId: 0,
-// //                 importSrlNo: 0,
-// //                 isUserAdmin: false,
-// //                 isDataBeingImportFromExcel: false,
-// //                 isDataBeingValidateOnly: false,
-// //                 attachmentId: "00000000-0000-0000-0000-000000000000",
-// //                 isInApproval: false
-// //               },
-// //               department: {
-// //                 id: dynamicData2.department.Id,
-// //                 code: dynamicData2.department.Code,
-// //                 description: dynamicData2.department.Description,
-// //                 parentDesc: null,
-// //                 parentId: 0,
-// //                 isHidden: null,
-// //                 uiid: 0,
-// //                 isEditable: null,
-// //                 isDeleted: null,
-// //                 activeTill: null,
-// //                 createdOn: "2021-06-11T11:27:41.990Z",
-// //                 createdBy: 0,
-// //                 lastModifiedOn: "2021-06-11T11:27:41.990Z",
-// //                 lastModifiedBy: 0
-// //               },
-// //               designation: {
-// //                 id: dynamicData2.designation.Id,
-// //                 code: dynamicData2.designation.Code,
-// //                 description: dynamicData2.designation.Description,
-// //                 parentDesc: null,
-// //                 parentId: null,
-// //                 isHidden: null,
-// //                 uiid: null,
-// //                 isEditable: true,
-// //                 isDeleted: null,
-// //                 activeTill: null,
-// //                 createdOn: "2024-06-26T05:26:48.004Z",
-// //                 createdBy: 1914,
-// //                 lastModifiedOn: "2024-06-26T05:26:48.004Z",
-// //                 lastModifiedBy: 1914
-// //               },
-// //               office: {
-// //                 rnum: 2,
-// //                 id: 3,
-// //                 code: "SL",
-// //                 description: "SITE LABOUR"
-// //               },
-// //               uiid: 32,
-// //               IsImported: false,
-// //               machineAddress: "103.186.18.36",
-// //               approvalBaseUrl: "https://vjerp.farvisioncloud.com",
-// //               approvalToken: "0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw"
-// //             };
-
-// //             // const fileData = JSON.stringify(orgMasterPayload, null, 2);
-// //             // const blob = new Blob([fileData], { type: 'application/json' });
-// //             // const url = URL.createObjectURL(blob);
-// //             // const a = document.createElement('a');
-// //             // a.href = url;
-// //             // a.download = 'orgMasterPayload.json';
-// //             // a.click();
-    
-// //             // console.log('Org Master Payload:', orgMasterPayload);
-    
-// //             const orgMasterResponse = await axios.post('https://vjerp.farvisioncloud.com/Payroll/odata/Organisations', orgMasterPayload, {
-// //               headers: {
-// //                 'Content-Type': 'application/json',
-// //                 'Accept': 'application/json',
-// //                 'Authorization': 'apikey 8d1588e79eb31ed7cb57ff57325510572baa1008d575537615e295d3bbd7d558',
-// //               }
-// //             });
-    
-// //             if (orgMasterResponse.data.status) {
-// //               toast.success('Org master details updated successfully.');
-
-// //               await axios.post(`${API_BASE_URL}/saveApiResponsePayload`, {
-// //                 userId: formData.id,
-// //                 LabourID: formData.LabourID,
-// //                 name: formData.name,
-// //                 aadharNumber: formData.aadhaarNumber,
-// //                 esslResponse: {}, // Assuming you get this response earlier
-// //                 employeeMasterPayload: employeeMasterPayload,
-// //                 organizationMasterPayload: orgMasterPayload,
-// //               });
-// //             } else {
-// //               toast.error('Failed to update org master details.');
-// //             }
-// //           } else {
-// //             toast.error('Failed to update employee master details.');
-// //           }
-// //         } else {
-// //           toast.error('Failed to update labour details. Please try again.');
-// //         }
-// //       } catch (error) {
-// //         console.error('Error updating labour details:', error);
-// //         toast.error('Error updating labour details. Please try again.');
-// //       }
-//   };
 
 
   const handleDownloadPDF = async (labourId) => {
@@ -3153,7 +1931,7 @@ const handleApprove = async (id) => {
       doc.setDrawColor(0, 0, 0); // Set outer border color to black
       doc.rect(cardX, cardY, cardWidth, cardHeight);
   
-      doc.save(`LabourID_${labour.LabourID || labourId}.pdf`);
+      doc.save(`labourID_${labour.labourID || labourId}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Error generating PDF. Please try again.');
@@ -3280,7 +2058,7 @@ const handleApprove = async (id) => {
   //   doc.setDrawColor(0, 0, 0); // Set outer border color to black
   //   doc.rect(cardX, cardY, cardWidth, cardHeight);
   
-  //     doc.save(`LabourID_${labour.LabourID || labourId}.pdf`);
+  //     doc.save(`labourID_${labour.labourID || labourId}.pdf`);
   //   } catch (error) {
   //     console.error('Error generating PDF:', error);
   //     toast.error('Error generating PDF. Please try again.');
@@ -3311,7 +2089,7 @@ const handleApprove = async (id) => {
   // };
 
   // const sortedLabours = tabValue === 1 
-  // ? filteredLabours.sort((a, b) => a.LabourID.localeCompare(b.LabourID))
+  // ? filteredLabours.sort((a, b) => a.labourID.localeCompare(b.labourID))
   // : filteredLabours.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const getDepartmentDescription = (departmentId) => {
@@ -3561,7 +2339,7 @@ const handleApprove = async (id) => {
         {(tabValue === 0 || tabValue === 1 || tabValue === 1 || tabValue === 2) && <TableCell>Onboarded By</TableCell>}
         <TableCell>Status</TableCell>
         {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
-        {tabValue === 1 && <TableCell>LabourID Card</TableCell>}
+        {tabValue === 1 && <TableCell>labourID Card</TableCell>}
         {tabValue === 1 && <TableCell>Edit Labour</TableCell>}
         {((user.userType === 'admin') || (tabValue === 2 && user.userType === 'user')) && <TableCell>Action</TableCell>}
         <TableCell>Details</TableCell>
@@ -3577,7 +2355,7 @@ const handleApprove = async (id) => {
          if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted';
          return true; // fallback if no condition matches
        })
-       .sort((a, b) => b.LabourID - a.LabourID) // Sort in descending order by id
+       .sort((a, b) => b.labourID - a.labourID) // Sort in descending order by id
        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
    : [...labours]
        .filter(labour => {
@@ -3586,11 +2364,11 @@ const handleApprove = async (id) => {
          if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted';
          return true; // fallback if no condition matches
        })
-       .sort((a, b) => b.LabourID - a.LabourID)
+       .sort((a, b) => b.labourID - a.labourID)
       ).map((labour, index) => (
         <TableRow key={labour.id}>
           <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-          {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.LabourID}</TableCell>}
+          {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.labourID}</TableCell>}
           <TableCell>{labour.name}</TableCell>
           <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
           <TableCell>{getDepartmentDescription(labour.department)}</TableCell>
