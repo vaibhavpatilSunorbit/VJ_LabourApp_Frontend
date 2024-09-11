@@ -285,15 +285,19 @@ const handleApprove = async (id) => {
         retries++;
       }
 
-      if (status === 'Success') {
-        // Proceed with approving the labour and running all APIs
+      // Stop execution if status is 'Pending' or 'Failure'
+      if (status === 'Pending' || status === 'Failure') {
+        toast.error('Labour cannot be approved due to pending or failed command status.');
+        return; // End the function execution here
+      }
 
-        // Dynamic Data Fetch
+      // If status is 'Success', proceed with the rest of the APIs
+      if (status === 'Success') {
         const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
           params: {
             businessUnitDesc: labour.companyName,
-            workingHours: labour.workingHours
-          }
+            workingHours: labour.workingHours,
+          },
         });
       // toast.success('ESSL API run successfully.');
       // const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
@@ -2368,7 +2372,7 @@ const handleApprove = async (id) => {
       ).map((labour, index) => (
         <TableRow key={labour.id}>
           <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-          {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.labourID}</TableCell>}
+          {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.LabourID}</TableCell>}
           <TableCell>{labour.name}</TableCell>
           <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
           <TableCell>{getDepartmentDescription(labour.department)}</TableCell>

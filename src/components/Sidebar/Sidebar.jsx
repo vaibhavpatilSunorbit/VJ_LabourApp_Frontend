@@ -261,6 +261,7 @@ import profileIcon2 from '../../images/curriculum-vitae.png';
 import profileIcon3 from '../../images/icons8-add-user-50 (1).png';
 import profileIcon4 from '../../images/labor.png';
 import profileIcon5 from '../../images/approval.png';
+import profileIcon6 from '../../images/approval.png';
 import VJLogo from "../../images/VJlogo-1-removebg.png";
 import { SidebarData } from '../../Data';
 import { useUser } from '../../UserContext/UserContext';
@@ -349,6 +350,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
               item.heading === "Add User" ? profileIcon3 :
                 item.heading === "Labour Details" ? profileIcon4 :
                   item.heading === "Project Machine" ? profileIcon5 :
+                  item.heading === "Attendance Report" ? profileIcon5 :
                     profileIcon5
             } alt="Profile Icon" className="img-white-fill" style={{ height: "30px" }} />
             <Link to={`/${item.path}`} className={`sidebar-link ${location.pathname === `/${item.path}` ? 'active-subsection' : ''}`}>
