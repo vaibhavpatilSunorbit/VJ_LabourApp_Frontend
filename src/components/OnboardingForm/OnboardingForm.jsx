@@ -225,45 +225,100 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture,  projectList =
 
 
 
-const uploadAadhaarImageToSurepass = async (file) => {  
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
-      }
-    });
-    
-    const { data } = response;
-    if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
-      const ocrFields = data.data.ocr_fields[0];
-
-      if (formStatus !== 'Resubmitted' || isApproved !== 3) {
-        const existingAadhaarCheck = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
-
-        if (existingAadhaarCheck.data.exists) {
+  const uploadAadhaarImageToSurepass = async (file, formStatus, isApproved) => {  
+    const formData = new FormData();
+    formData.append('file', file);
+  
+    try {
+      const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
+        }
+      });
+  
+      console.log('OCR API Response:', response);  
+  
+      const { data } = response;
+      if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
+        const ocrFields = data.data.ocr_fields[0];
+  
+        // Check Aadhaar details with backend
+        const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
+        console.log('Check Aadhaar API Response:', checkAadhaarResponse.data);  // Log the response from the backend
+  
+        // Skip Aadhaar check if LabourID is present
+        if (checkAadhaarResponse.data.LabourID) {
+          console.log(`Skipping Aadhaar check for LabourID: ${checkAadhaarResponse.data.LabourID}`);
+          processAadhaarData(ocrFields); // Process the Aadhaar data without checking for duplicates
+          return; // Exit the function to avoid further checks
+        }
+  
+        // Skip Aadhaar check if formStatus is 'Resubmitted' and isApproved === 3
+        if (formStatus === 'Resubmitted' && isApproved === 3) {
+          console.log("Skipping Aadhaar check for Resubmitted and isApproved 3");
+          processAadhaarData(ocrFields); // Process the Aadhaar data for Resubmitted case
+          return; // Exit the function to avoid further checks
+        }
+  
+        // Proceed with Aadhaar check if the above conditions are not met
+        if (checkAadhaarResponse.data.exists) {
           setMessageType('error');
-          toast.error('User has Already filled the form with this Aadhaar Number.');
+          toast.error('User has already filled the form with this Aadhaar Number.');
         } else {
           processAadhaarData(ocrFields);
         }
       } else {
-        processAadhaarData(ocrFields);
+        setNewError('Error reading Aadhaar details from Image.');
       }
-    } else {
-      setNewError('Error reading Aadhaar details from Image.');
+    } catch (error) {
+      console.error('Error Uploading Aadhaar image to surepass:', error);
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+      }
+      setNewError('Error uploading Aadhaar image. Please try again.');
     }
-  } catch (error) {
-    console.error('Error Uploading Aadhaar image to surepass:', error);
-    if (error.response) {
-      console.error('Error response data:', error.response.data);
-    }
-    setNewError('Error uploading Aadhaar image. please try again.');
-  }
-};
+  };
+  
+// const uploadAadhaarImageToSurepass = async (file) => {  
+//   const formData = new FormData();
+//   formData.append('file', file);
+
+//   try {
+//     const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
+//       headers: {
+//         'Content-Type': 'multipart/form-data',
+//         'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
+//       }
+//     });
+    
+//     const { data } = response;
+//     if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
+//       const ocrFields = data.data.ocr_fields[0];
+
+//       if (formStatus !== 'Resubmitted' || isApproved !== 3) {
+//         const existingAadhaarCheck = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
+
+//         if (existingAadhaarCheck.data.exists) {
+//           setMessageType('error');
+//           toast.error('User has Already filled the form with this Aadhaar Number.');
+//         } else {
+//           processAadhaarData(ocrFields);
+//         }
+//       } else {
+//         processAadhaarData(ocrFields);
+//       }
+//     } else {
+//       setNewError('Error reading Aadhaar details from Image.');
+//     }
+//   } catch (error) {
+//     console.error('Error Uploading Aadhaar image to surepass:', error);
+//     if (error.response) {
+//       console.error('Error response data:', error.response.data);
+//     }
+//     setNewError('Error uploading Aadhaar image. please try again.');
+//   }
+// };
 
 
 const processAadhaarData = (ocrFields) => {
@@ -2236,7 +2291,7 @@ const handleSelectChange = (e) => {
                           </div>
                           <div className="project-field">
                             <InputLabel id="designation-label" sx={{ color: 'black' }}>
-                              Designation{renderRequiredAsterisk(true)}
+                              Trade{renderRequiredAsterisk(true)}
                             </InputLabel>
                             <div className="gender-input">
                               <select
@@ -2248,7 +2303,7 @@ const handleSelectChange = (e) => {
                                 style={getInputStyle('designation')}
                                 // required
                               >
-                                <option value="" >Select a Designation</option>
+                                <option value="" >Select a Trade</option>
                                 {designations.map(designation => (
                                   <option key={designation.id} value={designation.Description} data-id={designation.id}>
                                     {designation.Description}
@@ -2338,7 +2393,7 @@ const handleSelectChange = (e) => {
                         </div>
                           <div className="project-field">
                             <InputLabel id="working-hours-label" sx={{ color: 'black' }}>
-                              Induction By{renderRequiredAsterisk(true)}
+                             Safety Induction By{renderRequiredAsterisk(true)}
                             </InputLabel>
                             <div className="gender-input">
                               <select
@@ -2349,7 +2404,7 @@ const handleSelectChange = (e) => {
                                 style={getInputStyle('Inducted_By')}
                                 // required
                               >
-                                <option value="" >Select Inducted By</option>
+                                <option value="" >Select Safety Inducted By</option>
                                 {INDUCTED_BY_OPTIONS.map((name, index) => (
                                   <option key={index} value={name}>{name}</option>
                                 ))}
@@ -2587,6 +2642,5 @@ const handleSelectChange = (e) => {
 
 
 export default OnboardingForm;
-
 
 

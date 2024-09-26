@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -41,7 +42,6 @@ import { API_BASE_URL } from "../../Data";
 import InfoIcon from '@mui/icons-material/Info';
 import jsPDF from 'jspdf';
 import { useUser } from '../../UserContext/UserContext';
-// import logoImage from '../../images/Labour_ID_Card.png';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { format } from 'date-fns';
 import { ClipLoader } from 'react-spinners'; 
@@ -77,14 +77,15 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   const [employeeId, setEmployeeId] = useState(null);
   const [ledgerId, setLedgerId] = useState(null);
   const [isEditLabourOpen, setIsEditLabourOpen] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [IsApproved, setIsApproved] = useState(false);
+  const [labourIds, setLabourIds] = useState([]);
+  const [isApproving, setIsApproving] = useState(false);
+  const [approvedLabours, setApprovedLabours] = useState([]); // Array to track approved labours
+  const [approvingLabours, setApprovingLabours] = useState([]);
   // const { labourId } = location.state || {};
 
-  // const isMobile = useMediaQuery('(max-width: 600px)');
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-
-  // const history = useHistory();
-  
-// console.log("setSelectedLaour",setSelectedLabour)
 
 
   const handleSearch = async (e) => {
@@ -97,7 +98,6 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
       const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
     } catch (error) {
-      // console.error('Error searching:', error);
       setError('Error searching. Please try again.');
     }
   };
@@ -112,133 +112,22 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
     setIsApproveConfirmOpen(false);
   };
 
-//   const handleApprove = async (id) => {
-//     // console.log('Approving labour ID:', id);
-//     // console.log('Logged-in user:', user);
-//     handleApproveConfirmClose();
 
-//     try {
-//         // Step 1: Get the next ID
-//         const { data: { nextID } } = await axios.get(`${API_BASE_URL}/labours/next-id`);
-//         // console.log('Next ID:', nextID);
-
-//         // Step 2: Approve the labour and get labour details
-//         const approveResponse = await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID: nextID });
-//         // console.log('Approve response data:', approveResponse.data.data);
-
-//         const labour = approveResponse.data.data; // Assuming this contains labour details
-//         // console.log('Approved labour details:', labour);
-
-//         // Step 3: Fetch the SerialNumber from the backend
-//         const response = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${labour.projectName}`);
-//         const serialNumber = response.data.serialNumber;
-//         // console.log('Fetched SerialNumber:', serialNumber);
-
-//         // Step 4: Construct the SOAP envelope
-//         const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
-//         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-//           <soap:Body>
-//             <AddEmployee xmlns="http://tempuri.org/">
-//               <APIKey>11</APIKey>
-//               <EmployeeCode>${nextID}</EmployeeCode>
-//               <EmployeeName>${labour.name}</EmployeeName>
-//               <CardNumber>${nextID}</CardNumber>
-//               <SerialNumber>${serialNumber}</SerialNumber>
-//               <UserName>test</UserName>
-//               <UserPassword>Test@123</UserPassword>
-//               <CommandId>25</CommandId>
-//             </AddEmployee>
-//           </soap:Body>
-//         </soap:Envelope>`;
-//         console.log('SOAP Envelope:', soapEnvelope);
-
-//         // const soapResponse = await axios.post(
-//         //   'https://essl.vjerp.com:8530/iclock/webapiservice.asmx?op=AddEmployee',
-//         //   soapEnvelope,
-//         //   {
-//         //     headers: {
-//         //       'Content-Type': 'text/xml'
-//         //     }
-//         //   }
-//         // )
-
-//         const soapResponse = await axios.post(
-//          `${API_BASE_URL}/labours/essl/addEmployee`,
-//           soapEnvelope,
-//           {
-//             headers: {
-//               'Content-Type': 'text/xml'
-//             }
-//           }
-//         );
-
-//         if (soapResponse.status === 200) {
-//           toast.success('ESSL API run successfully.');
-//       }
-      
-//         console.log('SOAP response:', soapResponse);
-
-//         // Update labour status in the frontend
-//         setLabours(prevLabours =>
-//           prevLabours.map(labour =>
-//             labour.id === id ? { ...labour, status: 'Approved', isApproved: 1, labourID: nextID } : labour
-//           )
-//         );
-
-//         toast.success('Labour approved successfully.');
-//         onApprove();
-//         setPopupMessage(
-//           <div
-//             style={{
-//               display: 'flex',
-//               flexDirection: 'column',
-//               justifyContent: 'space-evenly',
-//               alignItems: 'center',
-//               textAlign: 'center',
-//               lineHeight: '1.5',
-//               padding: '20px',
-//               backgroundColor: '#f8f9fa',
-//               borderRadius: '10px',
-//               boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-//             }}
-//           >
-//             <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your details have been successfully submitted.</p>
-//             <p style={{ fontSize: '1.2em', color: '#343a40' }}>
-//               Your Labour ID is <span style={{ fontSize: '1.5em', color: '#007bff', fontWeight: 700 }}>{nextID}</span>.
-//             </p>
-//             <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
-//           </div>
-//         );
-//         setPopupType('success');
-//         setSaved(true);
-//     } catch (error) {
-//         // console.error('Error approving labour:', error);
-//         toast.error('Error approving labour. Please try again.');
-//     }
-// };
-
-  
-  
-  
-const handleApprove = async (id) => {
-  handleApproveConfirmClose();
-
+const approveLabour = async (id) => {
   try {
-    // Step 1: Get the next ID and store labourID in state
     const { data: { nextID } } = await axios.get(`${API_BASE_URL}/labours/next-id`);
-    const labourID = nextID; 
+    const labourID = nextID;
 
-    // const approveResponse = await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID: labourID });
-    // const labour = approveResponse.data.data; 
-    const labourResponse = await axios.get(`${API_BASE_URL}/labours/${id}`, { labourID });
+    const labourResponse = await axios.get(`${API_BASE_URL}/labours/${id}`);
     const labour = labourResponse.data;
+
+    console.log("Generated unique labourID for approval:", labourID);
     console.log("labourResponse.data.data......",labourResponse.data)
     console.log("labourID********",  labourID)
 
     const response = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${labour.projectName}`);
     const serialNumber = response.data.serialNumber;
 
-    // Step 4: Construct the SOAP envelope
     const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
         <soap:Body>
@@ -266,7 +155,7 @@ const handleApprove = async (id) => {
       }
     );
     if (soapResponse.status === 200) {
-      const commandId = soapResponse.data.CommandId; // Assuming CommandId is returned in the SOAP response
+      const commandId = soapResponse.data.CommandId; 
 
       // Step 5: Polling to check for status change
       const pollStatus = async () => {
@@ -276,22 +165,18 @@ const handleApprove = async (id) => {
 
       let status = await pollStatus();
       let retries = 0;
-      const maxRetries = 15;  // Set a maximum number of retries to avoid infinite looping
-      const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); // Helper function to delay each poll
+      const maxRetries = 25;  
 
       while (status === 'Pending' && retries < maxRetries) {
-        await delay(5000);  // Wait for 5 seconds before polling again
+        await new Promise((resolve) => setTimeout(resolve, 5000));  // Wait for 5 seconds before polling again
         status = await pollStatus();
         retries++;
       }
 
-      // Stop execution if status is 'Pending' or 'Failure'
       if (status === 'Pending' || status === 'Failure') {
         toast.error('Labour cannot be approved due to pending or failed command status.');
-        return; // End the function execution here
       }
 
-      // If status is 'Success', proceed with the rest of the APIs
       if (status === 'Success') {
         const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
           params: {
@@ -299,13 +184,6 @@ const handleApprove = async (id) => {
             workingHours: labour.workingHours,
           },
         });
-      // toast.success('ESSL API run successfully.');
-      // const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
-      //   params: {
-      //     businessUnitDesc: labour.companyName,
-      //     workingHours: labour.workingHours
-      //   }
-      // });
 
       const dynamicData = dynamicDataResponse.data;
 
@@ -826,7 +704,7 @@ const handleApprove = async (id) => {
       });
 
       if (employeeMasterResponse.data.status) {
-        toast.success('Employee master details updated successfully.');
+        console.log('Employee master details updated successfully.');
 
         const empData = {
           empId: employeeMasterResponse.data.outputList.id
@@ -1483,7 +1361,7 @@ const handleApprove = async (id) => {
         });
 
         if (orgMasterResponse.data.status) {
-          toast.success('Org master details updated successfully.');
+          console.log('Org master details updated successfully.');
         }
 
         // API call to save employeeMasterPayload and organizationMasterPayload
@@ -1506,81 +1384,133 @@ const handleApprove = async (id) => {
           organizationMasterFullResponse: orgMasterResponse.data,
         });
 
-        toast.success('Employee and Org master details updated and saved successfully.');
+        // console.log('Employee and Org master details updated and saved successfully.');
         await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID });
-        toast.success('Labour approved successfully.');
+        toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
+        setApprovingLabours((prev) => prev.filter((labourId) => labourId !== id)); // Remove from processing list
+        setApprovedLabours((prev) => [...prev, id]);
       }else {
-        // If status is 'Pending' or 'Failure', do not proceed with approval
-        toast.error('Labour cannot be approved due to pending or failed command status.');
-      }} else {
+        throw new Error(`Failed to approve labour ${labour.name}. Status: ${status}`);
+      } return labourID;
+    } else {
         toast.error('Failed to update ESSL details.');
       }
     }
 
-    // Update labour status in the frontend
-    setLabours(prevLabours =>
-      prevLabours.map(labour =>
-        labour.id === id ? { ...labour, status: 'Approved', isApproved: 1, labourID } : labour
-      )
-    );
-
-    toast.success('Labour approved successfully.');
-    onApprove();
-    setPopupMessage(
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-evenly',
-          alignItems: 'center',
-          textAlign: 'center',
-          lineHeight: '1.5',
-          padding: '20px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '10px',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your details have been successfully submitted.</p>
-        <p style={{ fontSize: '1.2em', color: '#343a40' }}>
-          Your Labour ID is <span style={{ fontSize: '1.5em', color: '#007bff', fontWeight: 700 }}>{labourID}</span>.
-        </p>
-        <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
-      </div>
-    );
-    setPopupType('success');
-    setSaved(true);
-  } catch (error) {
-    console.error('Error approving labour:', error);
-    toast.error('Error approving labour. Please try again.');
-  }
+} catch (error) {
+  console.error(`Error approving labour with ID ${id}:`, error);
+  toast.error(`Error approving labour with ID ${labour.name}.`);
+  setApprovingLabours((prev) => prev.filter((labourId) => labourId !== id));
+  throw error;
+}
 };
 
-   
-
-  
-  const handleResubmit = async (labour) => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${labour.id}`);
-      if (response.data.success) {
-        setLabours(prevLabours =>
-          prevLabours.map(l =>
-            l.id === labour.id ? { ...l, status: 'Resubmitted', isApproved: 3 } : l
-          )
-        );
-        navigate('/kyc', { state: { labourId: labour.id } });
-      } else {
-        toast.error('Failed to resubmit labour. Please try again.');
-      }
-      console.log('labourIdResponse',response )
-    } catch (error) {
-      console.error('Error resubmitting labour:', error);
-      toast.error('Error resubmitting labour. Please try again.');
-    }
+const approve = async() => {
     
+    setIsApproving(true);
+    while (labourIds.length > 0) {
+      const currentId = labourIds[0];
+  
+      try {
+        const success = await approveLabour(currentId);
+        if (success) {
+          setLabourIds((prev) => prev.slice(1));
+        } else {
+          console.log(`Skipping labour ${currentId} due to failure.`);
+          break;
+        }
+      } catch (error) {
+        console.log(`Skipping labour ${currentId} due to error.`);
+        setLabourIds((prev) => prev.slice(1));
+      }
+    }
+    setIsApproving(false);
+}
+
+useEffect(() => {
+  const processLabourApprovals = async () => {
+    if (labourIds.length === 0 || isApproving) return;
+
+    setIsApproving(true); 
+
+    const currentId = labourIds[0]; 
+
+    try {
+      const success = await approveLabour(currentId);
+      if (success) {
+        setLabourIds((prev) => prev.slice(1)); // Remove the first element after success
+      }
+    } catch (error) {
+      console.log(`Skipping labour ${currentId} due to error.`);
+      setLabourIds((prev) => prev.slice(1)); 
+    }
+
+    setIsApproving(false);
   };
 
-  console.log("resubmittedLabluasd:",resubmittedLabours)
+  if (labourIds.length > 0) {
+    processLabourApprovals();
+  }
+}, [labourIds, isApproving]); 
+
+  
+const handleApprove = async (id) => {
+
+  handleApproveConfirmClose();
+  if (!Array.isArray(id)) {
+    id = [id];
+  }
+  setApprovingLabours((prev) => [...prev, ...id]);
+
+  setLabourIds((prev) => [...prev, ...id]);
+  // approve();
+  
+  setPopupMessage(
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        textAlign: 'center',
+        lineHeight: '1.5',
+        padding: '20px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '10px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      }}
+    >
+       <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your approval process has been started in the background.</p>
+      <p style={{ fontSize: '1.2em', color: '#343a40' }}>You will be notified once each labour is approved sequentially.</p>
+      <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
+    </div>
+  );
+  setPopupType('success');
+  setSaved(true);
+
+}
+
+const handleResubmit = async (labour) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${labour.id}`);
+    if (response.data.success) {
+      setLabours(prevLabours =>
+        prevLabours.map(l =>
+          l.id === labour.id ? { ...l, status: 'Resubmitted', isApproved: 3 } : l
+        )
+      );
+      navigate('/kyc', { state: { labourId: labour.id } });
+    } else {
+      toast.error('Failed to resubmit labour. Please try again.');
+    }
+    console.log('labourIdResponse',response )
+  } catch (error) {
+    console.error('Error resubmitting labour:', error);
+    toast.error('Error resubmitting labour. Please try again.');
+  }
+  
+};
+
 
 
   const handleReject = async (id) => {
@@ -1607,7 +1537,7 @@ const handleApprove = async (id) => {
 
   const handleEditLabour = async (labour) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${labour.id}`);
+      const response = await axios.put(`${API_BASE_URL}/labours/editLabour/${labour.id}`);
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(l =>
@@ -1742,7 +1672,7 @@ const handleApprove = async (id) => {
       await fetchLabours();
       setLabours((prevLabours) => {
         const sorted = [...prevLabours].sort((a, b) => b.id - a.id);
-        console.log('Sorted Labours:', sorted);
+        // console.log('Sorted Labours:', sorted);
         return sorted;
       });
     };
@@ -1787,6 +1717,7 @@ const handleApprove = async (id) => {
 
   // const API_BASE_URL = 'http://localhost:4000'; 
   // const API_BASE_URL = "https://laboursandbox.vjerp.com"; 
+   // const API_BASE_URL = "https://vjlabour.vjerp.com"; 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1943,133 +1874,6 @@ const handleApprove = async (id) => {
   };
 
  
-  // const handleDownloadPDF = async (labourId) => {
-  //   try {
-  //     const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
-  //     const labour = response.data;
-  
-  //     const doc = new jsPDF();
-  
-  //     const logoUrl = `${process.env.PUBLIC_URL}/images/vjlogo.png`; // Use the public URL
-      
-  
-  //     // Verify that the logoUrl is correctly defined
-  //     if (!logoUrl) {
-  //       throw new Error('Logo URL is undefined');
-  //     }
-  
-  //     // Load the logo image
-  //     const loadImage = (url) => {
-  //       return new Promise((resolve, reject) => {
-  //         const img = new Image();
-  //         img.crossOrigin = 'Anonymous';
-  //         img.onload = () => resolve(img);
-  //         img.onerror = (error) => {
-  //           console.error(`Failed to load image: ${url}`, error);
-  //           reject(new Error(`Failed to load image: ${url}`));
-  //         };
-  //         img.src = url;
-  //         console.log(`Attempting to load image from URL: ${url}`);
-  //       });
-  //     };
-  
-  //     // console.log('Loading logo image from URL:', logoUrl);
-  //     const logoImg = await loadImage(logoUrl);
-  //     // console.log('Logo image loaded:', logoImg);
-  
-  //     if (!labour.photoSrc) {
-  //       throw new Error('Labour photo URL is undefined');
-  //     }
-  
-  //     // console.log('Loading labour photo from URL:', labour.photoSrc);
-  //     const labourPhoto = await loadImage(labour.photoSrc);
-  //     // console.log('Labour photo loaded:', labourPhoto);
-  
-  //     // Convert image to data URI
-  //     const getDataUrl = (img) => {
-  //       const canvas = document.createElement('canvas');
-  //       canvas.width = img.width;
-  //       canvas.height = img.height;
-  //       const ctx = canvas.getContext('2d');
-  //       ctx.drawImage(img, 0, 0);
-  //       return canvas.toDataURL('image/png');
-  //     };
-  
-  //     const logoDataUrl = getDataUrl(logoImg);
-  //     const labourPhotoDataUrl = getDataUrl(labourPhoto);
-  
-  //     // Add logo
-  //     doc.addImage(logoDataUrl, 'PNG', 10, 10, 50, 15); 
-  //     doc.setFontSize(20);
-  //     doc.setFont("helvetica", "bold");
-  //     doc.text('LABOUR ID CARD', 70, 20 );
-  
-  //     // Add image
-  //     doc.addImage(labourPhotoDataUrl, 'PNG', 10, 30, 50, 70); 
-  //     doc.setLineWidth(1); // Set line width for darker border
-  //   doc.setDrawColor(0, 0, 0); // Set border color to black
-  //   doc.rect(10, 30, 50, 70); // Add border around image
-
-  //   // const formatDate = (dateString) => {
-  //   //   if (!dateString) return 'N/A';
-  //   //   const date = new Date(dateString);
-  //   //   return date.toISOString().split('T')[0]; 
-  //   // };
-
-  //   const formatDate = (dateString) => {
-  //     if (!dateString) return 'N/A';
-  //     const date = new Date(dateString);
-  //     const day = String(date.getDate()).padStart(2, '0');
-  //     const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-  //     const year = date.getFullYear();
-  //     return `${day}-${month}-${year}`;
-  //   };
-
-  //     doc.setFontSize(12);
-  //     doc.setFont("helvetica", "normal");
-  //     const lineHeight = 7;
-  //     const startX = 70;
-  //     const valueStartX = 120; 
-  //     let startY = 32;
-      
-
-  //     const addDetail = (label, value) => {
-  //       doc.text(`${label.toUpperCase()}`, startX, startY);
-  //     doc.text(`: ${value ? value.toUpperCase() : 'N/A'}`, valueStartX, startY);
-  //       startY += lineHeight;
-  //     };
-
-  //     const departmentDescription = getDepartmentDescription(labour.department);
-  
-  //     addDetail('Name', labour.name);
-  //   addDetail('Location', labour.location);
-  //   addDetail('Date of Birth', formatDate(labour.dateOfBirth));
-  //   addDetail('Aadhaar No.', labour.aadhaarNumber);
-  //   addDetail('Department', departmentDescription);
-  //   addDetail('Designation', labour.designation);
-  //   addDetail('Emergency No.', labour.emergencyContact);
-  //   addDetail('Inducted by', labour.Inducted_By);
-  //   addDetail('Induction date', formatDate(labour.Induction_Date));
-  //   addDetail('Date Of joining', formatDate(labour.dateOfJoining));
-  //   addDetail('Valid till', formatDate(labour.ValidTill));
-
-  //   const cardX = 5;
-  //   const cardY = 3;
-  //   const cardWidth = 200;
-  //   const cardHeight = startY + 2;
-
-  //   doc.setLineWidth(1); // Set line width for the outer border
-  //   doc.setDrawColor(0, 0, 0); // Set outer border color to black
-  //   doc.rect(cardX, cardY, cardWidth, cardHeight);
-  
-  //     doc.save(`labourID_${labour.labourID || labourId}.pdf`);
-  //   } catch (error) {
-  //     console.error('Error generating PDF:', error);
-  //     toast.error('Error generating PDF. Please try again.');
-  //   }
-  // };
-
-
 
   const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
@@ -2083,19 +1887,6 @@ const handleApprove = async (id) => {
     }
   });
 
-  // Function to get department description from ID
-  // const getDepartmentDescription = (departmentId) => {
-  //   if (!departments || departments.length === 0) {
-  //     return 'Unknown';
-  //   }
-  //   const department = departments.find(dept => dept.Id === Number(departmentId));
-  //   return department ? department.Description : 'Unknown';
-  // };
-
-  // const sortedLabours = tabValue === 1 
-  // ? filteredLabours.sort((a, b) => a.labourID.localeCompare(b.labourID))
-  // : filteredLabours.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
   const getDepartmentDescription = (departmentId) => {
     if (!departments || departments.length === 0) {
       return 'Unknown';
@@ -2108,8 +1899,6 @@ const handleApprove = async (id) => {
 
 
   const getProjectDescription = (projectId) => {
-    // console.log('Projects Array:', projectNames);
-    // console.log('Project ID:', projectId, 'Type:', typeof projectId);
 
     if (!projectNames || projectNames.length === 0) {
       // console.log('Projects array is empty or undefined');
@@ -2342,6 +2131,24 @@ const handleApprove = async (id) => {
         <TableCell>Department</TableCell>
         {(tabValue === 0 || tabValue === 1 || tabValue === 1 || tabValue === 2) && <TableCell>Onboarded By</TableCell>}
         <TableCell>Status</TableCell>
+        {tabValue === 0 && (
+          <>
+            <TableCell>FormFill Date</TableCell>
+          </>
+        )}
+        {tabValue === 1 && (
+          <>
+            <TableCell>Approve Date</TableCell>
+            <TableCell>Edit Date</TableCell>
+          </>
+        )}
+
+        {tabValue === 2 && (
+          <>
+            <TableCell>Reject Date</TableCell>
+            <TableCell>Resubmit Date</TableCell>
+          </>
+        )}
         {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
         {tabValue === 1 && <TableCell>labourID Card</TableCell>}
         {tabValue === 1 && <TableCell>Edit Labour</TableCell>}
@@ -2380,6 +2187,24 @@ const handleApprove = async (id) => {
             <TableCell>{labour.OnboardName}</TableCell>
           )}
           <TableCell>{labour.status}</TableCell>
+          {tabValue === 0 && (
+            <>
+              <TableCell>{labour.CreationDate ? new Date(labour.CreationDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+            </>
+          )}
+           {tabValue === 1 && (
+            <>
+              <TableCell>{labour.ApproveLabourDate ? new Date(labour.ApproveLabourDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+              <TableCell>{labour.EditLabourDate ? new Date(labour.EditLabourDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+            </>
+          )}
+
+          {tabValue === 2 && (
+            <>
+              <TableCell>{labour.RejectLabourDate ? new Date(labour.RejectLabourDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+              <TableCell>{labour.ResubmitLabourDate ? new Date(labour.ResubmitLabourDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+            </>
+          )}
           {tabValue === 2 && (
             <TableCell>
                <Box display="flex" justifyContent="center" alignItems="center">
@@ -2478,7 +2303,7 @@ const handleApprove = async (id) => {
 
           {user.userType === 'admin' && (
             <TableCell>
-              {labour.status === 'Pending' && (
+               {labour.status === 'Pending' && !approvedLabours.includes(labour.id) && !approvingLabours.includes(labour.id) && (
                 <>
                   <Button
                     variant="contained"
@@ -2987,20 +2812,3 @@ const handleApprove = async (id) => {
 };
 
 export default LabourDetails;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

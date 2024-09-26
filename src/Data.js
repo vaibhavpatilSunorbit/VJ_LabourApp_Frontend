@@ -66,13 +66,7 @@ export const SidebarData = [
     heading: "Project Machine",
     path: "approveLabours",
     roles: ["admin"],
-  },
-  {
-    icon: UilFileAlt,
-    heading: "Attendance Report",
-    path: "attendanceReport",
-    roles: ["admin", "user"],
-  },
+  }
 ];
 
 
@@ -100,7 +94,8 @@ export const INDUCTED_BY_OPTIONS = [
   "Sanket Ravindra Hule",
   "Tushar Rajesh Kamble",
   "Vrushabh Sanjay Kagnole",
-  "Sachin Mahadu Papal"
+  "Sachin Mahadu Papal",
+  "Aditya Pravin Kumbhar"
 ];
 
 
