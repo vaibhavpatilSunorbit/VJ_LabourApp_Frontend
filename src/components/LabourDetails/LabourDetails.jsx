@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
   Table,
@@ -25,6 +25,9 @@ import {
   DialogContentText,
   DialogTitle,
   InputLabel,
+  IconButton,
+  Menu,
+  MenuItem
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -45,9 +48,10 @@ import { useUser } from '../../UserContext/UserContext';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { format } from 'date-fns';
 import { ClipLoader } from 'react-spinners'; 
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 
-const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
+const LabourDetails = ({ onApprove, departments, projectNames , labour, labourlist }) => {
   const { user } = useUser();
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,7 +87,16 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour   }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [approvedLabours, setApprovedLabours] = useState([]); // Array to track approved labours
   const [approvingLabours, setApprovingLabours] = useState([]);
+  const [esslStatuses, setEsslStatuses] = useState({});
+  const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
   // const { labourId } = location.state || {};
+
+  const [anchorEl, setAnchorEl] = useState(null); // For the dropdown menu
+  const [filter, setFilter] = useState(""); // To store selected filter
+  const [filteredIconLabours, setFilteredIconLabours] = useState([]);
+  const [selectedFilter, setSelectedFilter] = useState("All");
+  const [statuses, setStatuses] = useState({});
+  const hasFetchedStatuses = useRef(false);
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -1488,27 +1501,59 @@ const handleApprove = async (id) => {
   setPopupType('success');
   setSaved(true);
 
-}
+};
+
+
+useEffect(() => {
+  fetchAttendanceLabours(1); // Start fetching from page 1
+}, []);
+
+const fetchAttendanceLabours = async (currentPage) => {
+  try {
+    setLoading(true);
+    const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`, {
+      params: { page: currentPage, limit: 1000 } // Fetch 1000 labors per request
+    });
+
+    if (response.data.labors.length > 0) {
+      setLabours(prevLabours => [...prevLabours, ...response.data.labors]); // Append new labors to the list
+      setPage(currentPage + 1); // Increment the page for the next batch
+    } else {
+      setHasMore(false); 
+    }
+    setLoading(false);
+  } catch (error) {
+    console.error("Error fetching labours:", error);
+    setLoading(false);
+  }
+};
+
 
 const handleResubmit = async (labour) => {
   try {
+    setLoading(true); 
     const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${labour.id}`);
+    
     if (response.data.success) {
       setLabours(prevLabours =>
         prevLabours.map(l =>
-          l.id === labour.id ? { ...l, status: 'Resubmitted', isApproved: 3 } : l
+          l.id === labour.id 
+            ? { ...l, status: l.status === 'Disable' ? 'Disable' : 'Resubmitted', isApproved: l.status === 'Disable' ? l.isApproved : 3 }
+            : l
         )
       );
       navigate('/kyc', { state: { labourId: labour.id } });
+
+      if (hasMore) await fetchAttendanceLabours(page); // Fetch the next batch of labor if needed
     } else {
       toast.error('Failed to resubmit labour. Please try again.');
     }
-    console.log('labourIdResponse',response )
+    setLoading(false);
   } catch (error) {
     console.error('Error resubmitting labour:', error);
     toast.error('Error resubmitting labour. Please try again.');
+    setLoading(false);
   }
-  
 };
 
 
@@ -1883,7 +1928,7 @@ const handleResubmit = async (labour) => {
     } else if (tabValue === 1) {
       return labour.status === 'Approved';
     } else {
-      return labour.status === 'Rejected' || labour.status === 'Resubmitted';
+      return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
     }
   });
 
@@ -1947,10 +1992,125 @@ const handleResubmit = async (labour) => {
     }
   };
 
+  // Show here to status of Employee master api and Essl api..............................
+  useEffect(() => {
+    const fetchStatuses = async (labourIds) => {
+      try {
+        const response = await axios.post(`${API_BASE_URL}/labours/getCombinedStatuses`, { labourIds });
+        return response.data;  // Return the entire list of statuses
+      } catch (error) {
+        console.error('Error fetching statuses:', error);
+        return [];
+      }
+    };
 
+    const updateStatuses = async () => {
+      const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
+      const labourIds = labourList.map(labour => labour.LabourID || labour.id); // Collect all labour IDs
 
+      if (labourIds.length > 0) {
+        const statuses = await fetchStatuses(labourIds);
+
+        const updatedStatuses = {};
+        statuses.forEach(status => {
+          updatedStatuses[status.LabourID] = {
+            esslStatus: status.esslStatus === 'success',
+            employeeMasterStatus: status.employeeMasterStatus === 'true'
+          };
+        });
+
+        setStatuses(updatedStatuses); // Update state with the mapped statuses
+      }
+    };
+
+    if (!hasFetchedStatuses.current && labours.length > 0) {
+      updateStatuses();
+      hasFetchedStatuses.current = true;  // Set to true after the first call
+    }
+  }, [searchResults, filteredIconLabours, labours]); 
+
+  // Filter icon with filter the labours for tha icon.....................
+  const handleFilterClick = (event) => {
+    setAnchorEl(event.currentTarget); // Set the anchor element to open the menu
+  };
+
+  // Function to handle closing the filter menu
+  const handleCloseBtn = () => {
+    setAnchorEl(null); // Close the menu
+  };
+
+  // Function to handle fetching labours and applying the filter based on the dropdown selection
+  const handleFilterSelect = async (filterType, page = 1, limit = 50) => {
+    setLoading(true);
+    setError(null); // Reset error state before fetching
+
+    try {
+      const response = await axios.get(`${API_BASE_URL}/labours`, {
+        params: {
+          page: page, 
+          limit: limit
+        }
+      });
+      const labours = response.data;
+
+      let filtered;
+      if (filterType === "OnboardingForm") {
+        // Fetch labours with uploadAadhaarFront present
+        filtered = labours.filter(
+          (labour) =>
+            labour.uploadAadhaarFront && labour.uploadAadhaarFront.trim() !== ""
+        );
+      } else if (filterType === "Farvision") {
+        // Fetch labours where uploadAadhaarFront is null, empty, or undefined
+        filtered = labours.filter(
+          (labour) =>
+            !labour.uploadAadhaarFront || labour.uploadAadhaarFront.trim() === ""
+        );
+      }else if (filterType === "All") {
+        filtered = labours;
+      }
+
+      setSelectedFilter(filterType);
+      setFilteredIconLabours(filtered); // Update the filtered labours state
+      setLabours(labours); // Update the full labours state
+      setPage(0);
+      console.log(`Filtered ${filterType} Labours:`, filtered);
+      setLoading(false);
+    } catch (error) {
+      setError("Error fetching labours. Please try again.");
+      setLoading(false);
+    }
+
+    setAnchorEl(null); // Close dropdown
+  };
+
+  const getFilteredLaboursForTab = () => {
+    if (tabValue === 0) {
+      // Pending tab: Filter labours with "Pending" status
+      return filteredIconLabours.length > 0
+        ? filteredIconLabours.filter(labour => labour.status === 'Pending')
+        : labours.filter(labour => labour.status === 'Pending');
+    } else if (tabValue === 1) {
+      // Approved tab: Filter labours with "Approved" status
+      return filteredIconLabours.length > 0
+        ? filteredIconLabours.filter(labour => labour.status === 'Approved')
+        : labours.filter(labour => labour.status === 'Approved');
+    } else if (tabValue === 2) {
+      // Rejected tab: Filter labours with "Rejected" or "Resubmitted" status
+      return filteredIconLabours.length > 0
+        ? filteredIconLabours.filter(
+            labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
+          )
+        : labours.filter(
+            labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
+          );
+    }
+    // return filteredIconLabours.length > 0 ? filteredIconLabours : labours;
+    return filteredLabours.length > 0 ? filteredLabours : labours;
+  };
+  
   return (
-    <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', }}>
+    <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto',}}>
       {/* <Typography variant="h5" >
         Labour Details
       </Typography> */}
@@ -2082,10 +2242,46 @@ const handleResubmit = async (labour) => {
   {' Download Excel'}
         </Button>
 
+      {/* Filter Icon */}
+      <Box display="flex" alignItems="center">
+  {/* Icon button for the filter */}
+  <IconButton
+    onClick={handleFilterClick}
+    sx={{ marginLeft: "auto", color: "rgb(84, 198, 104)", background: "rgb(204 255 213 / 89%)",  '&:hover': {  color: "rgb(84, 198, 104)", backgroundColor: "rgb(162 241 176 / 89%)"}}}
+  >
+    <FilterAltIcon />
+  </IconButton>
+  
+  {/* Display the selected filter next to the icon */}
+  {selectedFilter && (
+    <Typography sx={{ marginLeft: 1, color: "black" }}>
+      {selectedFilter}
+    </Typography>
+  )}
+
+        {/* Dropdown menu for filter options */}
+        <Menu
+          anchorEl={anchorEl} // Menu opens anchored to the icon button
+          open={Boolean(anchorEl)} // If anchorEl has a value, the menu is open
+          onClose={handleCloseBtn} // Close the menu when clicking outside
+        >
+          <MenuItem onClick={() => handleFilterSelect("OnboardingForm")}>
+            OnboardingForm
+          </MenuItem>
+          <MenuItem onClick={() => handleFilterSelect("Farvision")}>
+            Farvision
+          </MenuItem>
+          <MenuItem onClick={() => handleFilterSelect("All")}>
+            All
+          </MenuItem>
+        </Menu>
+        </Box>
+
         <TablePagination
           className="custom-pagination"
           rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-          count={filteredLabours.length}
+          count={getFilteredLaboursForTab().length}
+        //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -2096,8 +2292,9 @@ const handleResubmit = async (labour) => {
 
 
       <TableContainer component={Paper} sx={{
-  mb: 6,
+   mb: isMobile ? 6 : 0,
   overflowX: 'auto',
+  overflowY: 'auto',
   borderRadius: 2,
   boxShadow: 3,
   maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -2112,7 +2309,8 @@ const handleResubmit = async (labour) => {
     borderRadius: '4px',
   },
 }}>
-  <Table sx={{ minWidth: 800 }}>
+  <Box sx={{ width: '100%', overflowX: 'auto'  }}>
+  <Table stickyHeader sx={{ minWidth: 800 }}>
     <TableHead>
       <TableRow
         sx={{
@@ -2121,6 +2319,10 @@ const handleResubmit = async (labour) => {
             '@media (max-width: 600px)': {
               padding: '10px',
             },
+            backgroundColor: 'white', // Ensure the background color is set
+            position: 'sticky',
+            top: 0,
+            zIndex: 1,
           },
         }}
       >
@@ -2131,6 +2333,12 @@ const handleResubmit = async (labour) => {
         <TableCell>Department</TableCell>
         {(tabValue === 0 || tabValue === 1 || tabValue === 1 || tabValue === 2) && <TableCell>Onboarded By</TableCell>}
         <TableCell>Status</TableCell>
+        {tabValue === 1 && (
+          <>
+            <TableCell>Essl Status</TableCell> 
+            <TableCell>Employee Status</TableCell>
+          </>
+        )}
         {tabValue === 0 && (
           <>
             <TableCell>FormFill Date</TableCell>
@@ -2159,20 +2367,20 @@ const handleResubmit = async (labour) => {
     </TableHead>
     <TableBody>
       {(rowsPerPage > 0
-      ? (searchResults.length > 0 ? searchResults : [...labours])
+      ? (searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours]))
        .filter(labour => {
          if (tabValue === 0) return labour.status === 'Pending';
          if (tabValue === 1) return labour.status === 'Approved';
-         if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted';
+         if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
          return true; // fallback if no condition matches
        })
        .sort((a, b) => b.labourID - a.labourID) // Sort in descending order by id
        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-   : [...labours]
+   : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours])
        .filter(labour => {
          if (tabValue === 0) return labour.status === 'Pending';
          if (tabValue === 1) return labour.status === 'Approved';
-         if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted';
+         if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
          return true; // fallback if no condition matches
        })
        .sort((a, b) => b.labourID - a.labourID)
@@ -2187,6 +2395,18 @@ const handleResubmit = async (labour) => {
             <TableCell>{labour.OnboardName}</TableCell>
           )}
           <TableCell>{labour.status}</TableCell>
+          {tabValue === 1 && (
+          <>
+            <TableCell>
+              {statuses[labour.LabourID]?.esslStatus || statuses[labour.id]?.esslStatus ? (<span style={{ color: 'green' }}>✔</span>
+                ) : (<span style={{ color: 'red' }}>✘</span>)}
+            </TableCell>
+            <TableCell>
+              {statuses[labour.LabourID]?.employeeMasterStatus || statuses[labour.id]?.employeeMasterStatus ? (<span style={{ color: 'green' }}>✔</span>
+                ) : (<span style={{ color: 'red' }}>✘</span>)}
+            </TableCell>
+          </>
+        )}
           {tabValue === 0 && (
             <>
               <TableCell>{labour.CreationDate ? new Date(labour.CreationDate).toLocaleDateString('en-GB') : '-'}</TableCell>
@@ -2260,7 +2480,7 @@ const handleResubmit = async (labour) => {
           {user.userType === 'user' && (
             <TableCell>
                <div key={labour.id}>
-          {((labour.status === 'Rejected' && labour.isApproved !== 1) || labour.status === 'Resubmitted') && (
+          {((labour.status === 'Rejected' && labour.isApproved !== 1) || labour.status === 'Resubmitted' || labour.status === 'Disable') && (
             <Box display="flex" alignItems="center">
               {labour.status !== 'Pending' && (
                 <Button
@@ -2358,7 +2578,7 @@ const handleResubmit = async (labour) => {
 
 {/* {labours.map(labour => ( */}
         <div key={labour.id}>
-          {((labour.status === 'Rejected' && labour.isApproved !== 1) || labour.status === 'Resubmitted') && (
+          {((labour.status === 'Rejected' && labour.isApproved !== 1) || labour.status === 'Resubmitted' || labour.status === 'Disable') && (
             <Box display="flex" alignItems="center">
               {labour.status !== 'Pending' && (
                 <Button
@@ -2417,6 +2637,7 @@ const handleResubmit = async (labour) => {
       ))}
     </TableBody>
   </Table>
+  </Box>
 </TableContainer>
 
 

@@ -1008,23 +1008,33 @@ if (!localError) {
       } else {
         console.error('OnboardName is not available in user context');
       }
-
+      
       let response;
       const labourId = formData.id;
       const labourIdCode = formData.LabourID;
+      const labourStatus = formData.status || '';
 
       console.log("LabourIdCode:", labourIdCode);
       console.log("LabourId:", labourId);
+      console.log("labourStatus.........:", labourStatus);
+      console.log("formdataToLaboursssss.........:", formData);
 
      try {
-      if (labourId && labourIdCode) {
+      if (labourStatus === 'Disable' && labourId) {
+        console.log('Disabling existing labour with ID:', labourId);
+        response = await axios.put(`${API_BASE_URL}/labours/updatelabourDisableStatus/${labourId}`, formDataToSend, {
+            headers: {
+                // 'Content-Type': 'application/json',
+            },
+        });
+      } else  if (labourId && labourIdCode) {
         console.log('Updating existing labour with ID and Code:', labourId, labourIdCode);
         response = await axios.put(`${API_BASE_URL}/labours/updatelabour/${labourId}`, formDataToSend, {
           headers: {
             // 'Content-Type': 'application/json',
           },
         });
-      } else if (labourId) {
+    } else if (labourId) {
         console.log('Updating existing labour with ID:', labourId);
         response = await axios.post(`${API_BASE_URL}/labours/${labourId}/updateRecord`, formDataToSend, {
           headers: {
@@ -1039,6 +1049,10 @@ if (!localError) {
           },
         });
       }
+
+      if (response.data.status === 'Disable') {
+        response.data.status = 'Resubmitted';
+    }
 
         if (response.status !== 200 && response.status !== 201) {
           throw new Error('Form submission failed');
@@ -1096,7 +1110,6 @@ if (!localError) {
       setSaved(false);
     }, 9000);
   };
-
 
 
 
