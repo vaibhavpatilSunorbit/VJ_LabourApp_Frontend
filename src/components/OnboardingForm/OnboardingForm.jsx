@@ -338,11 +338,34 @@ const genderMap = {
 
 const gender = genderMap[ocrFields.gender?.value] || ocrFields.gender?.value;
 
+// Function to check if the age is under 18
+const checkAge = (dob) => {
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+  if (today < birthdayThisYear) {
+    age--;
+  }
+  return age < 18;
+};
+
 if (ocrFields.document_type === 'aadhaar_front_bottom') {
+
+  const dob = ocrFields.dob?.value;
+    
+  // Check if date of birth is less than 18 years
+  if (dob && checkAge(dob)) {
+    localError = 'Labour is underage. Age must be 18 or older.';
+    toast.error(localError);
+    return; // Exit the function, don't fill the form fields
+  }
+
   setFormData((prev) => ({
     ...prev,
     name: ocrFields.full_name?.value,
-    dateOfBirth: ocrFields.dob?.value,
+    dateOfBirth: dob,
+    // dateOfBirth: ocrFields.dob?.value,
     // gender: ocrFields.gender?.value,
     gender: gender,
     aadhaarNumber: ocrFields.aadhaar_number.value,
