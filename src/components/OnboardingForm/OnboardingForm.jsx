@@ -86,7 +86,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture,  projectList =
   const [emergencyError, setEmergencyError] = useState('');
   const [aadhaarFront, setAadhaarFront] = useState(null);
   const [aadhaarBack, setAadhaarBack] = useState(null);
-  const { labourId } = location.state || {};
+  const { labourId, onFormSubmitSuccess } = location.state || {};
   const [aadhaarFrontData, setAadhaarFrontData] = useState({});
   const [formData, setFormData] = useState({
     uploadAadhaarFront: '',
@@ -1053,6 +1053,26 @@ if (!localError) {
       if (response.data.status === 'Disable') {
         response.data.status = 'Resubmitted';
     }
+
+
+    if  ((labourStatus === 'Approved') && (response.status === 200 || response.status === 201)) {
+     console.log('Labour Approved Successfully ..//..//..//.', labourStatus)
+    }
+
+    if (['Rejected', 'Resubmitted', 'Disable'].includes(labourStatus) && (response.status === 200 || response.status === 201)) {
+      // Call API to update hideResubmit field
+      await axios.put(`${API_BASE_URL}/labours/updateHideResubmit/${labourId}`, { hideResubmit: true });
+
+      // Notify LabourDetails that the resubmit was successful for the selected statuses
+      if (onFormSubmitSuccess) {
+        console.log('Passing to onFormSubmitSuccess:', { labourId, hideResubmit: true });
+        onFormSubmitSuccess({ labourId, hideResubmit: true });
+      }
+
+      console.log('Form successfully submitted for labourId:', labourId);
+    }
+    
+      console.log('labourId/////////////....', labourId)
 
         if (response.status !== 200 && response.status !== 201) {
           throw new Error('Form submission failed');

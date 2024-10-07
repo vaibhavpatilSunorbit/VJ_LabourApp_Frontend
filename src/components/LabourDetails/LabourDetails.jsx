@@ -32,7 +32,7 @@ import {
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import "./LabourDetails.css";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import SearchBar from '../SarchBar/SearchBar';
 import ViewDetails from '../ViewDetails/ViewDetails';
 import Loading from "../Loading/Loading";
@@ -76,6 +76,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
   const theme = useTheme();
   const [resubmittedLabours, setResubmittedLabours] = useState(new Set());
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState(null);
   const [open, setOpen] = useState(false);
   const [employeeId, setEmployeeId] = useState(null);
@@ -90,6 +91,7 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
   const [esslStatuses, setEsslStatuses] = useState({});
   const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
   // const { labourId } = location.state || {};
+  const { hideResubmit, labourId } = location.state || {};
 
   const [anchorEl, setAnchorEl] = useState(null); // For the dropdown menu
   const [filter, setFilter] = useState(""); // To store selected filter
@@ -97,6 +99,8 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [statuses, setStatuses] = useState({});
   const hasFetchedStatuses = useRef(false);
+  const [submittedLabourIds, setSubmittedLabourIds] = useState([]);
+
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -1504,20 +1508,43 @@ const handleApprove = async (id) => {
 };
 
 
+// useEffect(() => {
+//   fetchAttendanceLabours(1); // Start fetching from page 1
+// }, []);
+
+// const fetchAttendanceLabours = async (currentPage) => {
+//   try {
+//     setLoading(true);
+//     const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`, {
+//       params: { page: currentPage, limit: 1000 } // Fetch 1000 labors per request
+//     });
+
+//     if (response.data.labors.length > 0) {
+//       setLabours(prevLabours => [...prevLabours, ...response.data.labors]); // Append new labors to the list
+//       setPage(currentPage + 1); // Increment the page for the next batch
+//     } else {
+//       setHasMore(false); 
+//     }
+//     setLoading(false);
+//   } catch (error) {
+//     console.error("Error fetching labours:", error);
+//     setLoading(false);
+//   }
+// };
+
+
 useEffect(() => {
-  fetchAttendanceLabours(1); // Start fetching from page 1
+  fetchAttendanceLabours(); // Start fetching cached labours
 }, []);
 
-const fetchAttendanceLabours = async (currentPage) => {
+const fetchAttendanceLabours = async () => {
   try {
     setLoading(true);
-    const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`, {
-      params: { page: currentPage, limit: 1000 } // Fetch 1000 labors per request
-    });
+    const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`);
 
-    if (response.data.labors.length > 0) {
-      setLabours(prevLabours => [...prevLabours, ...response.data.labors]); // Append new labors to the list
-      setPage(currentPage + 1); // Increment the page for the next batch
+    if (response.data.labours.length > 0) {
+      setLabours(response.data.labours);  // Set labours directly from the cached result
+      console.log('response.data.labours........///......[[[[[',response.data.labours)
     } else {
       setHasMore(false); 
     }
@@ -1528,6 +1555,13 @@ const fetchAttendanceLabours = async (currentPage) => {
   }
 };
 
+
+
+useEffect(() => {
+  if (hideResubmit && labourId) {
+    setSubmittedLabourIds(prevIds => [...prevIds, labourId]);
+  }
+}, [hideResubmit, labourId]);
 
 const handleResubmit = async (labour) => {
   try {
@@ -1542,6 +1576,7 @@ const handleResubmit = async (labour) => {
             : l
         )
       );
+      setSubmittedLabourIds(prevIds => [...prevIds, labour.id]);
       navigate('/kyc', { state: { labourId: labour.id } });
 
       if (hasMore) await fetchAttendanceLabours(page); // Fetch the next batch of labor if needed
@@ -1555,7 +1590,6 @@ const handleResubmit = async (labour) => {
     setLoading(false);
   }
 };
-
 
 
   const handleReject = async (id) => {
@@ -2482,7 +2516,7 @@ const handleResubmit = async (labour) => {
                <div key={labour.id}>
           {((labour.status === 'Rejected' && labour.isApproved !== 1) || labour.status === 'Resubmitted' || labour.status === 'Disable') && (
             <Box display="flex" alignItems="center">
-              {labour.status !== 'Pending' && (
+              {labour.status !== 'Pending' && labour.hideResubmit !== true && !submittedLabourIds.includes(labour.id) && (
                 <Button
                   variant="contained"
                   sx={{
@@ -2491,6 +2525,7 @@ const handleResubmit = async (labour) => {
                     '&:hover': {
                       backgroundColor: 'rgb(229, 255, 225)',
                     },
+                    display: submittedLabourIds.includes(labour.id) ? 'none' : 'inline-block' // Hide button if resubmitted
                   }}
                   onClick={() => handleResubmit(labour)}
                 >
@@ -2580,7 +2615,7 @@ const handleResubmit = async (labour) => {
         <div key={labour.id}>
           {((labour.status === 'Rejected' && labour.isApproved !== 1) || labour.status === 'Resubmitted' || labour.status === 'Disable') && (
             <Box display="flex" alignItems="center">
-              {labour.status !== 'Pending' && (
+              {labour.status !== 'Pending' && labour.hideResubmit !== true && !submittedLabourIds.includes(labour.id) && (
                 <Button
                   variant="contained"
                   sx={{
@@ -2589,6 +2624,7 @@ const handleResubmit = async (labour) => {
                     '&:hover': {
                       backgroundColor: 'rgb(229, 255, 225)',
                     },
+                    display: submittedLabourIds.includes(labour.id) ? 'none' : 'inline-block' // Hide button if resubmitted
                   }}
                   onClick={() => handleResubmit(labour)}
                 >
