@@ -84,10 +84,10 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
   const [isEditLabourOpen, setIsEditLabourOpen] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [IsApproved, setIsApproved] = useState(false);
-  const [labourIds, setLabourIds] = useState([]);
+  // const [labourIds, setLabourIds] = useState([]);
   const [isApproving, setIsApproving] = useState(false);
-  const [approvedLabours, setApprovedLabours] = useState([]); // Array to track approved labours
-  const [approvingLabours, setApprovingLabours] = useState([]);
+  // const [approvedLabours, setApprovedLabours] = useState([]); // Array to track approved labours
+  // const [approvingLabours, setApprovingLabours] = useState([]);
   const [esslStatuses, setEsslStatuses] = useState({});
   const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
   // const { labourId } = location.state || {};
@@ -100,8 +100,12 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
   const [statuses, setStatuses] = useState({});
   const hasFetchedStatuses = useRef(false);
   const [submittedLabourIds, setSubmittedLabourIds] = useState([]);
+  const [approvingLabours, setApprovingLabours] = useState(() => JSON.parse(localStorage.getItem('approvingLabours')) || []);
+  const [approvedLabours, setApprovedLabours] = useState(() => JSON.parse(localStorage.getItem('approvedLabours')) || []);
+  const [labourIds, setLabourIds] = useState(() => JSON.parse(localStorage.getItem('labourIds')) || []);
+  const [processingLabours, setProcessingLabours] = useState([]);
 
-
+  
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
 
@@ -119,6 +123,35 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
     }
   };
 
+  // const handleApproveConfirmOpen = (labour) => {
+  //   setLabourToApprove(labour);
+  //   setIsApproveConfirmOpen(true);
+  // };
+
+  // const handleApproveConfirmClose = () => {
+  //   setLabourToApprove(null);
+  //   setIsApproveConfirmOpen(false);
+  // };
+
+  useEffect(() => {
+    localStorage.setItem('approvingLabours', JSON.stringify(approvingLabours));
+  }, [approvingLabours]);
+
+  useEffect(() => {
+    const uniqueApprovedLabours = [...new Set(approvedLabours)];
+    localStorage.setItem('approvedLabours', JSON.stringify(uniqueApprovedLabours));
+  }, [approvedLabours]);
+
+  useEffect(() => {
+    if (approvingLabours.length > 0) {
+      // Start processing only if not already processing labours
+      const pendingLabours = approvingLabours.filter(labourId => !approvedLabours.includes(labourId));
+      if (pendingLabours.length > 0 && processingLabours.length === 0) {
+        approveLabourQueue(pendingLabours);
+      }
+    }
+  }, []); 
+
   const handleApproveConfirmOpen = (labour) => {
     setLabourToApprove(labour);
     setIsApproveConfirmOpen(true);
@@ -129,6 +162,88 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
     setIsApproveConfirmOpen(false);
   };
 
+
+  const handleApprove = async (id) => {
+    handleApproveConfirmClose();
+  
+    // Ensure id is always an array (even for single labour approval)
+    if (!Array.isArray(id)) {
+      id = [id];
+    }
+
+    // Filter out labours that are already in the approval queue or have already been approved
+    const laboursToApprove = id.filter(labourId => 
+      !approvingLabours.includes(labourId) && !approvedLabours.includes(labourId)
+    );
+
+    if (laboursToApprove.length === 0) {
+      toast.info("These labours are already in the approval process or have been approved.");
+      return; // Exit if there's nothing to approve
+    }
+
+    // Add the current labour(s) to the approving queue
+    setApprovingLabours((prev) => [...prev, ...laboursToApprove]);
+    // setLabourIds((prev) => [...prev, ...laboursToApprove]);
+
+    // Show the popup message notifying the user that the approval process has started
+    setPopupMessage(
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-evenly',
+          alignItems: 'center',
+          textAlign: 'center',
+          lineHeight: '1.5',
+          padding: '20px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '10px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your approval process has been started in the background.</p>
+        <p style={{ fontSize: '1.2em', color: '#343a40' }}>You will be notified once each labour is approved sequentially.</p>
+        <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
+      </div>
+    );
+    setPopupType('success');
+    setSaved(true);
+
+    // Process labour approval sequentially
+    await approveLabourQueue(laboursToApprove);  // Pass the array of filtered labour IDs to process sequentially
+  };
+
+
+  const approveLabourQueue = async (labourIds) => {
+    if (labourIds.length === 0) return;
+
+    const [currentLabourId, ...remainingLabourIds] = labourIds;
+
+    try {
+      // Mark the current labour as processing
+      setProcessingLabours((prev) => [...prev, currentLabourId]);
+
+      // Approve the current labour
+      await approveLabour(currentLabourId);
+
+      // After successful approval, only add to approvedLabours here after API success
+      setApprovedLabours((prev) => [...new Set([...prev, currentLabourId])]);
+
+      // toast.success(`Labour ${currentLabourId} approved successfully!`);
+    } catch (error) {
+      toast.error(`Failed to approve labour ${currentLabourId}`);
+      setApprovedLabours([]);
+    }
+
+    // Remove the processed labour from the approving queue
+    setApprovingLabours((prev) => prev.filter((id) => id !== currentLabourId));
+    setProcessingLabours((prev) => prev.filter((id) => id !== currentLabourId)); // Remove from processing list
+
+    // Process the next labour in the queue if any remaining
+    if (remainingLabourIds.length > 0) {
+      await approveLabourQueue(remainingLabourIds);
+    }
+  };
 
 const approveLabour = async (id) => {
   try {
@@ -182,16 +297,17 @@ const approveLabour = async (id) => {
 
       let status = await pollStatus();
       let retries = 0;
-      const maxRetries = 25;  
+      const maxRetries = 30;  
 
       while (status === 'Pending' && retries < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));  // Wait for 5 seconds before polling again
+        await new Promise((resolve) => setTimeout(resolve, 8000));  // Wait for 5 seconds before polling again
         status = await pollStatus();
         retries++;
       }
 
       if (status === 'Pending' || status === 'Failure') {
         toast.error('Labour cannot be approved due to pending or failed command status.');
+        setApprovedLabours([]);
       }
 
       if (status === 'Success') {
@@ -1403,9 +1519,9 @@ const approveLabour = async (id) => {
 
         // console.log('Employee and Org master details updated and saved successfully.');
         await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID });
+        // setApprovingLabours((prev) => prev.filter((labourId) => labourId !== id)); // Remove from processing list
+        setApprovedLabours((prev) => [...new Set([...prev, id])]);
         toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
-        setApprovingLabours((prev) => prev.filter((labourId) => labourId !== id)); // Remove from processing list
-        setApprovedLabours((prev) => [...prev, id]);
       }else {
         throw new Error(`Failed to approve labour ${labour.name}. Status: ${status}`);
       } return labourID;
@@ -1417,7 +1533,8 @@ const approveLabour = async (id) => {
 } catch (error) {
   console.error(`Error approving labour with ID ${id}:`, error);
   toast.error(`Error approving labour with ID ${labour.name}.`);
-  setApprovingLabours((prev) => prev.filter((labourId) => labourId !== id));
+  setApprovedLabours([]);
+  // setApprovingLabours((prev) => prev.filter((labourId) => labourId !== id));
   throw error;
 }
 };
@@ -1471,41 +1588,41 @@ useEffect(() => {
 }, [labourIds, isApproving]); 
 
   
-const handleApprove = async (id) => {
+// const handleApprove = async (id) => {
 
-  handleApproveConfirmClose();
-  if (!Array.isArray(id)) {
-    id = [id];
-  }
-  setApprovingLabours((prev) => [...prev, ...id]);
+//   handleApproveConfirmClose();
+//   if (!Array.isArray(id)) {
+//     id = [id];
+//   }
+//   setApprovingLabours((prev) => [...prev, ...id]);
 
-  setLabourIds((prev) => [...prev, ...id]);
-  // approve();
+//   setLabourIds((prev) => [...prev, ...id]);
+//   // approve();
   
-  setPopupMessage(
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-evenly',
-        alignItems: 'center',
-        textAlign: 'center',
-        lineHeight: '1.5',
-        padding: '20px',
-        backgroundColor: '#f8f9fa',
-        borderRadius: '10px',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-      }}
-    >
-       <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your approval process has been started in the background.</p>
-      <p style={{ fontSize: '1.2em', color: '#343a40' }}>You will be notified once each labour is approved sequentially.</p>
-      <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
-    </div>
-  );
-  setPopupType('success');
-  setSaved(true);
-
-};
+//   setPopupMessage(
+//     <div
+//       style={{
+//         display: 'flex',
+//         flexDirection: 'column',
+//         justifyContent: 'space-evenly',
+//         alignItems: 'center',
+//         textAlign: 'center',
+//         lineHeight: '1.5',
+//         padding: '20px',
+//         backgroundColor: '#f8f9fa',
+//         borderRadius: '10px',
+//         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+//       }}
+//     >
+//        <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your approval process has been started in the background.</p>
+//       <p style={{ fontSize: '1.2em', color: '#343a40' }}>You will be notified once each labour is approved sequentially.</p>
+//       <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
+//     </div>
+//   );
+//   setPopupType('success');
+//   setSaved(true);
+//   await approveLabourQueue(id);
+// };
 
 
 // useEffect(() => {

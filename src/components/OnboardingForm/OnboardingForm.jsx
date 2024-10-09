@@ -347,16 +347,25 @@ const checkAge = (dob) => {
   if (today < birthdayThisYear) {
     age--;
   }
-  return age < 18;
+  // return age < 18 || age > 60;
+  if (age < 18) return 'underage';    // Labour is under 18
+  if (age > 60) return 'overage';     // Labour exceeds 60
+  return 'valid';  
 };
 
 if (ocrFields.document_type === 'aadhaar_front_bottom') {
 
   const dob = ocrFields.dob?.value;
     
-  // Check if date of birth is less than 18 years
-  if (dob && checkAge(dob)) {
+  const ageStatus = dob && checkAge(dob);
+  if (ageStatus === 'underage') {
     localError = 'Labour is underage. Age must be 18 or older.';
+    toast.error(localError);
+    return; // Exit the function, don't fill the form fields
+  }
+
+  if (ageStatus === 'overage') {
+    localError = 'Labour exceeds the age limit. Age must be 60 or younger.';
     toast.error(localError);
     return; // Exit the function, don't fill the form fields
   }
