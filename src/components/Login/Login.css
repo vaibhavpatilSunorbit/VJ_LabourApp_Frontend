@@ -1,11 +1,11 @@
-/* Base styles */
+
 .login-container {
     width: 100vw;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f0f0f0; /* Background color for the login page */
+    background-color: #f0f0f0; 
   }
   
   .login-paper {
@@ -13,50 +13,50 @@
     max-width: 900px;
     text-align: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: white; /* Background color for the paper */
+    background-color: white;
     border-radius: 8px;
   }
   
   .logo-image {
-    width: 150px; /* Adjust size as needed */
-    height: auto; /* Maintain aspect ratio */
-    margin-bottom: 20px; /* Spacing below the logo */
+    width: 150px; 
+    height: auto; 
+    margin-bottom: 20px; 
   }
   
   .input-field {
-    margin-bottom: 15px; /* Spacing between input fields */
+    margin-bottom: 15px; 
   }
   
   .input-text {
-    background-color: #e90808; /* Background color for text fields */
-    transition: background-color 0.3s ease; /* Smooth transition on hover */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Box shadow for text fields */
+    background-color: #e90808; 
+    transition: background-color 0.3s ease; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
   }
   
   .input-text:hover {
-    background-color: #e0e0e0; /* Background color change on hover */
+    background-color: #e0e0e0; 
   }
   
   .submit-button {
-    background-color: #1976d2; /* Primary button color */
-    color: white; /* Text color */
-    margin-top: 10px; /* Spacing above the button */
+    background-color: #1976d2; 
+    color: white; 
+    margin-top: 10px; 
   }
   
   .submit-button:hover {
-    background-color: #1565c0; /* Darker shade on hover */
+    background-color: #1565c0; 
   }
   
   .toggle-signup-button {
-    text-transform: none; /* Disable uppercase transformation */
-    margin-top: 10px; /* Spacing above the button */
+    text-transform: none; 
+    margin-top: 10px; 
   }
   
   .logout-button {
-    margin-top: 20px; /* Spacing above the button */
+    margin-top: 20px; 
   }
   
-  /* Mobile responsive styles */
+  
   @media (max-width: 600px) {
     .login-paper {
       padding: 10px;
@@ -66,19 +66,271 @@
     }
   
     .logo-image {
-      width: 120px; /* Smaller size for mobile */
-      margin-bottom: 15px; /* Adjust spacing */
+      width: 120px; 
+      margin-bottom: 15px; 
     }
   
     .input-field {
-      margin-bottom: 10px; /* Adjust spacing */
+      margin-bottom: 10px; 
     }
   
     .submit-button,
     .toggle-signup-button,
     .logout-button {
-      width: 100%; /* Full width buttons */
-      margin-top: 10px; /* Adjust spacing */
+      width: 100%; 
+      margin-top: 10px; 
     }
   }
   
+
+
+
+
+.login-button {
+  width: 302px;
+  height: 39px;
+  background: #5469d4;
+  font-size: 16px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border-radius: 5px;
+}
+
+.login-button:hover {
+  background: #3e50ab; 
+}
+
+.emailCss{
+  font-size: 15px;
+  font-weight: 500;
+}
+.heading{
+  font-size: 18px;
+}
+.headingLabour{
+  display: flex;
+  justify-content: center;
+  font-weight: 500;
+  padding: 10px 20px;
+  font-size: 20px;
+}
+
+
+
+
+
+
+h1 {
+    letter-spacing: -1px;
+}
+a {
+  color: #5469d4;
+  text-decoration: unset;
+}
+.login-root {
+    background: #fff;
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+.loginbackground {
+    min-height: 692px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 0;
+    overflow: hidden;
+}
+.flex-flex {
+    display: flex;
+}
+.align-center {
+  align-items: center; 
+}
+.center-center {
+  align-items: center;
+  justify-content: center;
+}
+.box-root {
+    box-sizing: border-box;
+}
+.loginbackground-gridContainer {
+  display: grid;
+  grid-template-columns: [start] 1fr [left-gutter] repeat(16, 86.6px) [left-gutter] 1fr [end];
+  grid-template-rows: [top] 1fr [top-gutter] repeat(8, 64px) [bottom-gutter] 1fr [bottom];
+  justify-content: center;
+  margin: 0 -2%;
+  transform: rotate(-12deg) skew(-12deg);
+}
+
+.box-divider--light-all-2 {
+    box-shadow: inset 0 0 0 2px #e3e8ee;
+}
+.box-background--blue {
+    background-color: #5469d4;
+}
+.box-background--white {
+  background-color: #ffffff; 
+}
+.box-background--blue800 {
+    background-color: #212d63;
+}
+.box-background--gray100 {
+    background-color: #e3e8ee;
+}
+.box-background--cyan200 {
+    background-color: #7fd3ed;
+}
+.padding-top--64 {
+  padding-top: 64px;
+}
+.padding-top--24 {
+  padding-top: 24px;
+}
+.padding-top--48 {
+  padding-top: 48px;
+}
+.padding-bottom--24 {
+  padding-bottom: 24px;
+}
+.padding-horizontal--48 {
+  padding: 8px 48px 48px 48px;
+}
+.padding-bottom--15 {
+  padding-bottom: 15px;
+}
+
+
+.flex-justifyContent--center {
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+.formbg {
+    margin: 0px auto;
+    width: 100%;
+    max-width: 448px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: rgba(60, 66, 87, 0.12) 0px 7px 14px 0px, rgba(0, 0, 0, 0.12) 0px 3px 6px 0px;
+}
+span {
+    line-height: 28px;
+    color: #1a1f36;
+}
+label {
+    margin-bottom: 10px;
+}
+.reset-pass a,label {
+    font-size: 14px;
+    font-weight: 600;
+    display: block;
+}
+.reset-pass > a {
+    text-align: right;
+    margin-bottom: 10px;
+}
+.grid--50-50 {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    align-items: center;
+}
+
+.field input {
+    font-size: 16px;
+    line-height: 28px;
+    padding: 2px 16px;
+    width: 100%;
+    min-height: 44px;
+    border: unset;
+    border-radius: 4px;
+    outline-color: rgb(84 105 212 / 0.5);
+    background-color: rgb(255, 255, 255);
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, 
+                rgba(0, 0, 0, 0) 0px 0px 0px 0px, 
+                rgba(0, 0, 0, 0) 0px 0px 0px 0px, 
+                rgba(60, 66, 87, 0.16) 0px 0px 0px 1px, 
+                rgba(0, 0, 0, 0) 0px 0px 0px 0px, 
+                rgba(0, 0, 0, 0) 0px 0px 0px 0px, 
+                rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+}
+
+input[type="submit"] {
+    background-color: rgb(84, 105, 212);
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, 
+                rgba(0, 0, 0, 0) 0px 0px 0px 0px, 
+                rgba(0, 0, 0, 0.12) 0px 1px 1px 0px, 
+                rgb(84, 105, 212) 0px 0px 0px 1px, 
+                rgba(0, 0, 0, 0) 0px 0px 0px 0px, 
+                rgba(0, 0, 0, 0) 0px 0px 0px 0px, 
+                rgba(60, 66, 87, 0.08) 0px 2px 5px 0px;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+.field-checkbox input {
+    width: 20px;
+    height: 15px;
+    margin-right: 5px; 
+    box-shadow: unset;
+    min-height: unset;
+}
+.field-checkbox label {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+a.ssolink {
+    display: block;
+    text-align: center;
+    font-weight: 600;
+}
+.footer-link span {
+    text-align: center;
+}
+.listing a {
+    color: #697386;
+    font-weight: 600;
+    margin: 0 10px;
+}
+
+.animationRightLeft {
+  animation: animationRightLeft 4s ease-in-out infinite;
+}
+.animationLeftRight {
+  animation: animationLeftRight 4s ease-in-out infinite;
+}
+.tans3s {
+  animation: animationLeftRight 4ase-in-out infinite;
+}
+.tans4s {
+  animation: animationLeftRight 4s ease-in-out infinite;
+}
+
+@keyframes animationLeftRight {
+  0% {
+    transform: translateX(0px);
+  }
+  50% {
+    transform: translateX(1000px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+} 
+
+@keyframes animationRightLeft {
+  0% {
+    transform: translateX(0px);
+  }
+  50% {
+    transform: translateX(-1000px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+} 

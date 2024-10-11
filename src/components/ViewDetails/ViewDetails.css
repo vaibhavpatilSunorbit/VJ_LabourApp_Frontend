@@ -10,7 +10,10 @@
 
 .modal-content {
   overflow-x: auto;
-  /* box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.1);     */
+  max-height: 70vh;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
 }
 
 .close-button {
@@ -39,10 +42,10 @@
 
 .label {
   font-weight: bold;
-  flex: 0 0 250px; /* Set the flex-basis to 150px to control the width */
+  flex: 0 0 250px; 
   @media (max-width: 600px) {
     margin-bottom: 4px;
-    flex: 1 1 auto; /* Make the label full-width on small screens */
+    flex: 1 1 auto; 
   }
 }
 
@@ -76,7 +79,6 @@
   padding: 20px;
   background-color: #fff;
   border-radius: 8px;
-  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
 }
 @media (max-width: 600px) {
   .modal-content {

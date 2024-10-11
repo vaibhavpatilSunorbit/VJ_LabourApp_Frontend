@@ -612,7 +612,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
     <Dialog open={!!selectedLabour} onClose={onClose} PaperProps={{ className: 'custom-dialog' }}>
       <DialogTitle  style={{ display: 'flex', justifyContent: 'space-between', alignItems:'center' }}>
         Labour Details
-        <IconButton aria-label="close" onClick={onClose} >
+        <IconButton aria-label="close" onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -639,14 +639,14 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
         )}
       </DialogContent>
       <DialogActions  style={{ display: 'flex', justifyContent: 'center' }}>
-        <Button variant="contained" color="primary" onClick={downloadFullForm} style={{padding:'10px 8px'}}>
+        <Button variant="contained"  sx={{ backgroundColor: 'rgb(229, 255, 225)', color: 'rgb(43, 217, 144)',padding:'8px 5px', '&:hover': { backgroundColor: 'rgb(211 255 204)',},}} onClick={downloadFullForm} >
           Download Form
         </Button>
         {/* <Button variant="contained" color="primary" onClick={downloadAadhaarCard}>
           Download Aadhaar
         </Button> */}
           {!hideAadhaarButton && (
-          <Button variant="contained" color="primary" onClick={downloadAadhaarCard} style={{padding:'10px 8px'}}>
+          <Button variant="contained" sx={{ backgroundColor: 'rgb(229, 255, 225)', color: 'rgb(43, 217, 144)',padding:'8px 5px', '&:hover': { backgroundColor: 'rgb(211 255 204)',},}} onClick={downloadAadhaarCard}>
             Download Aadhaar
           </Button>
         )}

@@ -235,7 +235,7 @@
 
 /* Input styles */
 .onboarding-form input{
-  padding: 8px 8px 13px 8px;
+  padding: 10px 8px 12px 8px;
   margin-bottom: 10px;
   border: 2px solid #ccc;
   border-radius: 4px;
@@ -551,7 +551,7 @@ li{
   color:#A772D0;
   font-size: 15px;
   width: 140px;
-  border-radius: 10px;
+  border-radius: 6px;
   /* margin-right: 110px; */
   border: none;
   cursor: pointer;
@@ -648,7 +648,7 @@ select option{
   font-size: 15px;
   width: 150px;
   margin-left: 10px;
-  border-radius: 10px;
+  border-radius: 6px;
   margin-right: 110px;
   
 }
@@ -691,7 +691,7 @@ select option{
 
 
  .onboarding-form input {
-  padding: 8px 8px 13px 8px;
+  padding: 10px 8px 12px 8px;
   margin-bottom: 10px;
   border: 2px solid #ccc;
   border-radius: 4px;
@@ -847,7 +847,7 @@ hr{
   width: 130px;
   margin-left: 10px;
   gap: 20px;
-  border-radius: 10px;
+  border-radius: 6px;
   margin-right: 15vw;
 }
 /* .video-container {
@@ -874,7 +874,7 @@ hr{
 
 
  .onboarding-form input {
-  padding: 8px 8px 13px 8px;
+  padding: 10px 8px 12px 8px;
   margin-bottom: 10px;
   border: 2px solid #ccc;
   border-radius: 4px;
@@ -1030,7 +1030,7 @@ hr{
   width: 130px;
   margin-left: 10px;
   gap: 20px;
-  border-radius: 10px;
+  border-radius: 6px;
   margin-right: 15vw;
 }
 /* .video-container {
@@ -1156,7 +1156,7 @@ display: none
   }
   
   .onboarding-form input {
-    padding: 8px 8px 13px 8px;
+    padding: 10px 8px 12px 8px;
     margin-bottom: 10px;
     border: 2px solid #ccc;
     border-radius: 4px;
@@ -1236,7 +1236,7 @@ display: none
   .onboarding-form button {
     padding: 13px 20px;
     border: none;
-    border-radius: 9px;
+    border-radius: 6px;
     width: 160px;
     background-color: #EFE6F7;
     color: #8236BC;

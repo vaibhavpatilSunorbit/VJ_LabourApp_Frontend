@@ -15,8 +15,8 @@ function Header({OpenSidebar}) {
   // console.log("User in Header:", user);
   const isMobile = window.innerWidth <= 768;
   const spanStyle = {
-    marginTop: '5px',
-    fontSize: isMobile ? '13px' : '14px', // Adjust the font size for mobile devices
+    marginTop: '2px',
+    fontSize: isMobile ? '14px' : '14px', // Adjust the font size for mobile devices
     color: '#000',
     // marginLeft: isMobile ? '9vw' : '7vw'
   };
@@ -45,7 +45,7 @@ function Header({OpenSidebar}) {
             style={{ margin: '0 10px', cursor: 'pointer' }}
           />
         </Tooltip>
-        <BsPersonCircle className='icon' style={{ margin: '0 10px', cursor: 'pointer' }} />
+        <BsPersonCircle className='icon' style={{ margin: '0 20px', cursor: 'pointer' }} />
       </div>
       <span style={spanStyle}>
         {user ? user.name : "Guest"}

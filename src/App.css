@@ -2,6 +2,7 @@
 *{
   margin: 0px;
   font-family: 'Roboto', sans-serif;
+   /* font-family: 'Poppins', sans-serif; */
 }
 
 body, html {
@@ -120,7 +121,7 @@ input[type="submit"] {
   width: auto;
   grid-area: sidebar;
   height: 100%;
-  background-color:#293649;
+  background-color:#13315c;
   overflow-y: auto;
   transition: all 0.5s;
   -webkit-transition: all 0.5s;

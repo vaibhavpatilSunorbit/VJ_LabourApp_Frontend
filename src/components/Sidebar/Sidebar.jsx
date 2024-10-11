@@ -315,6 +315,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
         <img src={VJLogo} className="vjlogo" alt="logo" />
         <span className='icon close_icon' onClick={OpenSidebar} style={{ marginLeft: '50px', marginRight: '30px' }}><ArrowCircleLeftIcon /></span>
       </div>
+      <div className="menu">
       <div className="application-section">
         <div className="application-header" onClick={toggleCollapse}>
           <img src={profileIcon2} alt="Profile Icon" className="img-white-fill" style={{ height: "30px" }} />
@@ -357,6 +358,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
             </Link>
           </div>
         ))}
+      </div>
       </div>
     </aside>
   );
@@ -587,9 +589,3 @@ export default Sidebar;
 // }
 
 // export default Sidebar;
-
-
-
-
-
-

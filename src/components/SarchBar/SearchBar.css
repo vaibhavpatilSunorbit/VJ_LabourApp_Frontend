@@ -72,10 +72,10 @@
 
 .search-bar button {
   background-color:#EFE6F7;
-  height: 45px;
+  height: 49px;
   color: #8236BC;
   border: none;
-  border-radius: 14px;
+  border-radius: 6px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s ease;
