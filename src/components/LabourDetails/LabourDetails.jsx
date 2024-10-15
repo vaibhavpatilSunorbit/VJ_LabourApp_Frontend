@@ -27,7 +27,7 @@ import {
   InputLabel,
   IconButton,
   Menu,
-  MenuItem
+  MenuItem, Select
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -104,7 +104,11 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
   const [approvedLabours, setApprovedLabours] = useState(() => JSON.parse(localStorage.getItem('approvedLabours')) || []);
   const [labourIds, setLabourIds] = useState(() => JSON.parse(localStorage.getItem('labourIds')) || []);
   const [processingLabours, setProcessingLabours] = useState([]);
-
+  const [selectedSite, setSelectedSite] = useState({});
+  const [newSite, setNewSite] = useState(null);
+  const [openDialogSite, setOpenDialogSite] = useState(false);
+  const [statusesSite, setStatusesSite] = useState({});
+  const [previousTabValue, setPreviousTabValue] = useState(tabValue); 
   
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -1663,6 +1667,7 @@ const fetchAttendanceLabours = async () => {
       setLabours(response.data.labours);  // Set labours directly from the cached result
       console.log('response.data.labours........///......[[[[[',response.data.labours)
     } else {
+      console.log('No new labours without attendance found.');
       setHasMore(false); 
     }
     setLoading(false);
@@ -2259,6 +2264,127 @@ const handleResubmit = async (labour) => {
     // return filteredIconLabours.length > 0 ? filteredIconLabours : labours;
     return filteredLabours.length > 0 ? filteredLabours : labours;
   };
+
+
+  //////////////////////////  Site Transfer Code for labour  ////////////////////////////////////////////
+
+  const handleSiteChange = (labour, siteId) => {
+    setSelectedLabour(labour);
+    setNewSite(siteId);
+    setOpenDialogSite(true); // Open the confirmation dialog
+  };
+
+  const confirmTransfer = async () => {
+    setOpenDialogSite(false); // Close the dialog
+
+    try {
+      console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
+      setSelectedSite((prev) => ({ ...prev, [selectedLabour.LabourID]: newSite }));
+
+      // Fetch SerialNumber from selected site ID
+      const siteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
+      console.log('Fetched site details:', siteResponse.data);
+      // Check if SerialNumber exists in the response
+      const SerialNumber = siteResponse.data.serialNumber || 'Unknown'; // Access the correct key
+      console.log(`Using SerialNumber: ${SerialNumber}`);
+  
+
+      const soapEnvelope = `
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <AddEmployee xmlns="http://tempuri.org/">
+              <APIKey>11</APIKey>
+              <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
+              <EmployeeName>${selectedLabour.name}</EmployeeName>
+              <CardNumber>${selectedLabour.id}</CardNumber>
+              <SerialNumber>${SerialNumber}</SerialNumber>
+              <UserName>test</UserName>
+              <UserPassword>Test@123</UserPassword>
+              <CommandId>25</CommandId>
+            </AddEmployee>
+          </soap:Body>
+        </soap:Envelope>`;
+
+      const soapResponse = await axios.post(
+        `${API_BASE_URL}/labours/essl/addEmployee`,
+        soapEnvelope,
+        { headers: { 'Content-Type': 'text/xml' } }
+      );
+
+      if (soapResponse.status === 200) {
+        const commandId = soapResponse.data.CommandId;
+
+        await axios.post(`${API_BASE_URL}/api/transfer`, {
+          userId: selectedLabour.id,
+          LabourID: selectedLabour.LabourID,
+          name: selectedLabour.name,
+          currentSite: selectedLabour.projectName,
+          currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit, // Send Business_Unit name
+          transferSite: newSite,
+          transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit, // Send new Business_Unit name
+          esslStatus: 'Transferred',
+          esslCommandId: commandId,
+          esslPayload: soapEnvelope,
+          esslApiResponse: JSON.stringify(soapResponse.data),
+        });
+
+        setLabours((prevLabours) =>
+          prevLabours.map((labour) =>
+            labour.LabourID === selectedLabour.LabourID
+              ? { ...labour, projectName: projectNames.find((p) => p.id === newSite).Business_Unit }
+              : labour
+          )
+        );
+        toast.success(`Labour ${selectedLabour.name} Transferred Site Successfully.`);
+      }
+    } catch (error) {
+      console.error('Error during site transfer:', error);
+    }
+  };
+
+///////////////////////////  Fetch Transfer labour from db Table  //////////////////////////////////////
+
+
+  const fetchTransferSiteNames = async (labourIds) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
+      return response.data; // Assuming response.data contains [{ LabourID, transferSiteName }]
+    } catch (error) {
+      console.error('Error fetching transfer site names:', error);
+      return [];
+    }
+  };
+
+  // Fetch and map transfer site names to labour data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+
+      const labourList =
+      searchResults.length > 0 ? searchResults : filteredIconLabours.length > 0 ? filteredIconLabours : labours;
+      const labourIds = labourList.map((labour) => labour.LabourID || labour.id); // Collect all Labour IDs
+
+      if (labourIds.length > 0) {
+        const statusesData = await fetchTransferSiteNames(labourIds);
+
+        // Map transfer site names to the corresponding labour IDs
+        const updatedStatuses = statusesData.reduce((acc, status) => {
+          acc[status.LabourID] = status.transferSiteName || 'Not Transferred';
+          return acc;
+        }, {});
+
+        setStatusesSite(updatedStatuses); // Update state with mapped data
+      }
+
+      setLoading(false);
+    };
+
+    if (previousTabValue !== tabValue) {
+      fetchData();
+      setPreviousTabValue(tabValue); // Update the previous tab value
+    }
+  }, [searchResults, filteredIconLabours, labours]); // Dependencies
+
   
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto',}}>
@@ -2513,6 +2639,9 @@ const handleResubmit = async (labour) => {
         {tabValue === 1 && <TableCell>Edit Labour</TableCell>}
         {((user.userType === 'admin') || (tabValue === 2 && user.userType === 'user')) && <TableCell>Action</TableCell>}
         <TableCell>Details</TableCell>
+        {tabValue === 1 && <TableCell>Transfer Site</TableCell>}
+        {tabValue === 1 && <TableCell>New Transfer Site</TableCell>}
+
    
       </TableRow>
     </TableHead>
@@ -2786,6 +2915,24 @@ const handleResubmit = async (labour) => {
           <TableCell>
             <RemoveRedEyeIcon onClick={() => openPopup(labour)} style={{cursor: 'pointer'}}/>
           </TableCell>
+
+          {tabValue !== 0 && tabValue !== 2 && <TableCell>
+                <Select
+                  value={selectedSite[labour.LabourID] || ''}
+                  onChange={(e) => handleSiteChange(labour, e.target.value)}
+                  displayEmpty
+                  sx={{ minWidth: 150 }}
+                >
+                  <MenuItem value="" disabled>Select New Site</MenuItem>
+                  {projectNames.map((project) => (
+                    <MenuItem key={project.id} value={project.id}>
+                      {project.Business_Unit}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </TableCell>}
+
+              {tabValue !== 0 && tabValue !== 2 && <TableCell>{statusesSite[labour.LabourID] || 'Not Transferred'}</TableCell>}
         </TableRow>
       ))}
     </TableBody>
@@ -3046,6 +3193,33 @@ const handleResubmit = async (labour) => {
         </DialogActions>
       </Dialog>
 
+
+
+      <Dialog open={openDialogSite} onClose={() => setOpenDialogSite(false)}>
+        <DialogTitle>Confirm Transfer</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="EditLabour-dialog-description">
+            Are you sure you want to transfer {selectedLabour?.name} to the new site?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialogSite(false)} variant="outlined" color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={confirmTransfer} sx={{
+            backgroundColor: 'rgb(229, 255, 225)',
+            color: 'rgb(43, 217, 144)',
+            width: '100px',
+            marginRight: '10px',
+            marginBottom: '3px',
+            '&:hover': {
+              backgroundColor: 'rgb(229, 255, 225)',
+            },
+          }} autoFocus>
+            Transfer
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <ToastContainer />
 

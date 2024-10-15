@@ -169,8 +169,66 @@
 }
 
 
+.css-11u53oe-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.css-11u53oe-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.css-11u53oe-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+  padding: 15px 17px 7px 9px
+}
 
 
+.css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper {
+  background-color: #fff;
+  color: rgba(0, 0, 0, 0.87);
+  -webkit-transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  border-radius: 4px;
+  box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+  position: absolute;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 16px;
+  min-height: 16px;
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 32px);
+  outline: 0;
+  max-height: calc(100% - 120px);
+  max-width: calc(31% - 5px);
+  -webkit-overflow-scrolling: touch;
+  width: 31%;
+}
+
+.css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper::-webkit-scrollbar {
+  height: 8px; /* Horizontal scrollbar height */
+}
+
+.css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Track color */
+  border-radius: 10px;
+}
+
+.css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1; /* Thumb color */
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box; /* To create a padding effect */
+}
+
+.css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper::-webkit-scrollbar-thumb:hover {
+  background-color: #a0a0a0; /* Darker thumb on hover */
+}
+
+/* Firefox scrollbar styling */
+.css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Optional: Smooth Scrolling */
+.css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper {
+  scroll-behavior: smooth;
+}
+
+.css-kk1bwy-MuiButtonBase-root-MuiMenuItem-root:hover {
+  background-color: red; /* Light grey on hover */
+}
 
 
 
