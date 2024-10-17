@@ -86,8 +86,6 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
   const [IsApproved, setIsApproved] = useState(false);
   // const [labourIds, setLabourIds] = useState([]);
   const [isApproving, setIsApproving] = useState(false);
-  // const [approvedLabours, setApprovedLabours] = useState([]); // Array to track approved labours
-  // const [approvingLabours, setApprovingLabours] = useState([]);
   const [esslStatuses, setEsslStatuses] = useState({});
   const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
   // const { labourId } = location.state || {};
@@ -103,15 +101,15 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
   const [approvingLabours, setApprovingLabours] = useState(() => JSON.parse(localStorage.getItem('approvingLabours')) || []);
   const [approvedLabours, setApprovedLabours] = useState(() => JSON.parse(localStorage.getItem('approvedLabours')) || []);
   const [labourIds, setLabourIds] = useState(() => JSON.parse(localStorage.getItem('labourIds')) || []);
-  const [processingLabours, setProcessingLabours] = useState([]);
+  const [processingLabours, setProcessingLabours] = useState(new Set());
   const [selectedSite, setSelectedSite] = useState({});
   const [newSite, setNewSite] = useState(null);
   const [openDialogSite, setOpenDialogSite] = useState(false);
   const [statusesSite, setStatusesSite] = useState({});
   const [previousTabValue, setPreviousTabValue] = useState(tabValue); 
+  const [isProcessing, setIsProcessing] = useState(false); 
   
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -127,35 +125,6 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
     }
   };
 
-  // const handleApproveConfirmOpen = (labour) => {
-  //   setLabourToApprove(labour);
-  //   setIsApproveConfirmOpen(true);
-  // };
-
-  // const handleApproveConfirmClose = () => {
-  //   setLabourToApprove(null);
-  //   setIsApproveConfirmOpen(false);
-  // };
-
-  useEffect(() => {
-    localStorage.setItem('approvingLabours', JSON.stringify(approvingLabours));
-  }, [approvingLabours]);
-
-  useEffect(() => {
-    const uniqueApprovedLabours = [...new Set(approvedLabours)];
-    localStorage.setItem('approvedLabours', JSON.stringify(uniqueApprovedLabours));
-  }, [approvedLabours]);
-
-  useEffect(() => {
-    if (approvingLabours.length > 0) {
-      // Start processing only if not already processing labours
-      const pendingLabours = approvingLabours.filter(labourId => !approvedLabours.includes(labourId));
-      if (pendingLabours.length > 0 && processingLabours.length === 0) {
-        approveLabourQueue(pendingLabours);
-      }
-    }
-  }, []); 
-
   const handleApproveConfirmOpen = (labour) => {
     setLabourToApprove(labour);
     setIsApproveConfirmOpen(true);
@@ -166,88 +135,6 @@ const LabourDetails = ({ onApprove, departments, projectNames , labour, labourli
     setIsApproveConfirmOpen(false);
   };
 
-
-  const handleApprove = async (id) => {
-    handleApproveConfirmClose();
-  
-    // Ensure id is always an array (even for single labour approval)
-    if (!Array.isArray(id)) {
-      id = [id];
-    }
-
-    // Filter out labours that are already in the approval queue or have already been approved
-    const laboursToApprove = id.filter(labourId => 
-      !approvingLabours.includes(labourId) && !approvedLabours.includes(labourId)
-    );
-
-    if (laboursToApprove.length === 0) {
-      toast.info("These labours are already in the approval process or have been approved.");
-      return; // Exit if there's nothing to approve
-    }
-
-    // Add the current labour(s) to the approving queue
-    setApprovingLabours((prev) => [...prev, ...laboursToApprove]);
-    // setLabourIds((prev) => [...prev, ...laboursToApprove]);
-
-    // Show the popup message notifying the user that the approval process has started
-    setPopupMessage(
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-evenly',
-          alignItems: 'center',
-          textAlign: 'center',
-          lineHeight: '1.5',
-          padding: '20px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '10px',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your approval process has been started in the background.</p>
-        <p style={{ fontSize: '1.2em', color: '#343a40' }}>You will be notified once each labour is approved sequentially.</p>
-        <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
-      </div>
-    );
-    setPopupType('success');
-    setSaved(true);
-
-    // Process labour approval sequentially
-    await approveLabourQueue(laboursToApprove);  // Pass the array of filtered labour IDs to process sequentially
-  };
-
-
-  const approveLabourQueue = async (labourIds) => {
-    if (labourIds.length === 0) return;
-
-    const [currentLabourId, ...remainingLabourIds] = labourIds;
-
-    try {
-      // Mark the current labour as processing
-      setProcessingLabours((prev) => [...prev, currentLabourId]);
-
-      // Approve the current labour
-      await approveLabour(currentLabourId);
-
-      // After successful approval, only add to approvedLabours here after API success
-      setApprovedLabours((prev) => [...new Set([...prev, currentLabourId])]);
-
-      // toast.success(`Labour ${currentLabourId} approved successfully!`);
-    } catch (error) {
-      toast.error(`Failed to approve labour ${currentLabourId}`);
-      setApprovedLabours([]);
-    }
-
-    // Remove the processed labour from the approving queue
-    setApprovingLabours((prev) => prev.filter((id) => id !== currentLabourId));
-    setProcessingLabours((prev) => prev.filter((id) => id !== currentLabourId)); // Remove from processing list
-
-    // Process the next labour in the queue if any remaining
-    if (remainingLabourIds.length > 0) {
-      await approveLabourQueue(remainingLabourIds);
-    }
-  };
 
 const approveLabour = async (id) => {
   try {
@@ -1533,7 +1420,7 @@ const approveLabour = async (id) => {
         toast.error('Failed to update ESSL details.');
       }
     }
-
+    return labourID;
 } catch (error) {
   console.error(`Error approving labour with ID ${id}:`, error);
   toast.error(`Error approving labour with ID ${labour.name}.`);
@@ -1592,41 +1479,41 @@ useEffect(() => {
 }, [labourIds, isApproving]); 
 
   
-// const handleApprove = async (id) => {
+const handleApprove = async (id) => {
 
-//   handleApproveConfirmClose();
-//   if (!Array.isArray(id)) {
-//     id = [id];
-//   }
-//   setApprovingLabours((prev) => [...prev, ...id]);
+  handleApproveConfirmClose();
+  if (!Array.isArray(id)) {
+    id = [id];
+  }
+  setApprovingLabours((prev) => [...prev, ...id]);
 
-//   setLabourIds((prev) => [...prev, ...id]);
-//   // approve();
+  setLabourIds((prev) => [...prev, ...id]);
+  // approve();
   
-//   setPopupMessage(
-//     <div
-//       style={{
-//         display: 'flex',
-//         flexDirection: 'column',
-//         justifyContent: 'space-evenly',
-//         alignItems: 'center',
-//         textAlign: 'center',
-//         lineHeight: '1.5',
-//         padding: '20px',
-//         backgroundColor: '#f8f9fa',
-//         borderRadius: '10px',
-//         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-//       }}
-//     >
-//        <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your approval process has been started in the background.</p>
-//       <p style={{ fontSize: '1.2em', color: '#343a40' }}>You will be notified once each labour is approved sequentially.</p>
-//       <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
-//     </div>
-//   );
-//   setPopupType('success');
-//   setSaved(true);
-//   await approveLabourQueue(id);
-// };
+  setPopupMessage(
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        textAlign: 'center',
+        lineHeight: '1.5',
+        padding: '20px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '10px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      }}
+    >
+       <p style={{ fontSize: '1.2em', color: '#343a40' }}>Your approval process has been started in the background.</p>
+      <p style={{ fontSize: '1.2em', color: '#343a40' }}>You will be notified once each labour is approved sequentially.</p>
+      <p style={{ fontSize: '1.2em', color: '#343a40' }}>Thanks!</p>
+    </div>
+  );
+  setPopupType('success');
+  setSaved(true);
+  // await approveLabourQueue(id);
+};
 
 
 // useEffect(() => {
@@ -2637,10 +2524,10 @@ const handleResubmit = async (labour) => {
         {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
         {tabValue === 1 && <TableCell>labourID Card</TableCell>}
         {tabValue === 1 && <TableCell>Edit Labour</TableCell>}
-        {((user.userType === 'admin') || (tabValue === 2 && user.userType === 'user')) && <TableCell>Action</TableCell>}
+        {((user.userType === 'admin') || ( tabValue !== 0 && user.userType === 'user')) && <TableCell>Action</TableCell>}
         <TableCell>Details</TableCell>
-        {tabValue === 1 && <TableCell>Transfer Site</TableCell>}
-        {tabValue === 1 && <TableCell>New Transfer Site</TableCell>}
+        {(tabValue === 1 && user.userType === 'admin') && <TableCell>Transfer Site</TableCell>}
+        {(tabValue === 1 && user.userType === 'admin') && <TableCell>New Transfer Site</TableCell>}
 
    
       </TableRow>
@@ -2916,12 +2803,19 @@ const handleResubmit = async (labour) => {
             <RemoveRedEyeIcon onClick={() => openPopup(labour)} style={{cursor: 'pointer'}}/>
           </TableCell>
 
-          {tabValue !== 0 && tabValue !== 2 && <TableCell>
+          {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && <TableCell>
                 <Select
                   value={selectedSite[labour.LabourID] || ''}
                   onChange={(e) => handleSiteChange(labour, e.target.value)}
                   displayEmpty
                   sx={{ minWidth: 150 }}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        width: 280, 
+                      },
+                    },
+                  }}
                 >
                   <MenuItem value="" disabled>Select New Site</MenuItem>
                   {projectNames.map((project) => (
@@ -2932,7 +2826,7 @@ const handleResubmit = async (labour) => {
                 </Select>
               </TableCell>}
 
-              {tabValue !== 0 && tabValue !== 2 && <TableCell>{statusesSite[labour.LabourID] || 'Not Transferred'}</TableCell>}
+              {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && <TableCell>{statusesSite[labour.LabourID] || '-'}</TableCell>}
         </TableRow>
       ))}
     </TableBody>
@@ -3199,7 +3093,11 @@ const handleResubmit = async (labour) => {
         <DialogTitle>Confirm Transfer</DialogTitle>
         <DialogContent>
           <DialogContentText id="EditLabour-dialog-description">
-            Are you sure you want to transfer {selectedLabour?.name} to the new site?
+            Are you sure you want to transfer Labour {' '} 
+            <span style={{ fontWeight: 'bold' }}>{selectedLabour?.name} </span>
+            with JCcode {' '} 
+            <span style={{ fontWeight: 'bold' }}>{selectedLabour?.LabourID}   </span>
+            to the new site?
           </DialogContentText>
         </DialogContent>
         <DialogActions>

@@ -184,15 +184,13 @@
   position: absolute;
   overflow-y: auto;
   overflow-x: hidden;
-  min-width: 16px;
+  /* min-width: 16px; */
+  max-width: calc(20% - 32px);
   min-height: 16px;
-  max-width: calc(100% - 32px);
   max-height: calc(100% - 32px);
   outline: 0;
-  max-height: calc(100% - 120px);
-  max-width: calc(31% - 5px);
   -webkit-overflow-scrolling: touch;
-  width: 31%;
+  /* width: 31%; */
 }
 
 .css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper::-webkit-scrollbar {
