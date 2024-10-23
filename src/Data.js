@@ -62,9 +62,20 @@ export const SidebarData = [
   },
   {
     icon: UilFileAlt,
-    // heading: "Approved Labours",
     heading: "Project Machine",
     path: "approveLabours",
+    roles: ["admin"],
+  },
+  {
+    icon: UilFileAlt,
+    heading: "Attendance Report",
+    path: "attendanceReport",
+    roles: ["admin"],
+  },
+  {
+    icon: UilFileAlt,
+    heading: "Wages Report",
+    path: "wagesReport",
     roles: ["admin"],
   }
 ];

@@ -13,7 +13,8 @@ import { API_BASE_URL } from "./Data";
 import './App.css';
 import EditLabour from './EditLabour/EditLabour';
 import ProtectedRoute from './components/ProtectedRoutes';
-// import AttendanceReport from './components/AttendanceReport/AttendanceReport';
+import AttendanceReport from './components/AttendanceReport/AttendanceReport';
+import WagesReport from './components/WagesReport/WagesReport';
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -88,7 +89,8 @@ function App() {
                     <Route path="/approveLabours" element={<ApproveLabours refresh={refresh} departments={departments} projectNames={projectNames}/>} />
                     <Route path="/addUser" element={<AddUser onFormSubmit={handleFormSubmit} />} />
                     <Route path="/edit-labour" element={<EditLabour />} />
-                    {/* <Route path="/attendanceReport" element={<AttendanceReport onFormSubmit={handleFormSubmit} />} /> */}
+                    <Route path="/attendanceReport" element={<AttendanceReport onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/wagesReport" element={<WagesReport onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }

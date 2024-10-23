@@ -2526,8 +2526,8 @@ const handleResubmit = async (labour) => {
         {tabValue === 1 && <TableCell>Edit Labour</TableCell>}
         {((user.userType === 'admin') || ( tabValue !== 0 && user.userType === 'user')) && <TableCell>Action</TableCell>}
         <TableCell>Details</TableCell>
-        {(tabValue === 1 && user.userType === 'admin') && <TableCell>Transfer Site</TableCell>}
-        {(tabValue === 1 && user.userType === 'admin') && <TableCell>New Transfer Site</TableCell>}
+        {(tabValue === 3 && user.userType === 'admin') && <TableCell>Transfer Site</TableCell>}
+        {(tabValue === 3 && user.userType === 'admin') && <TableCell>New Transfer Site</TableCell>}
 
    
       </TableRow>
@@ -2803,7 +2803,7 @@ const handleResubmit = async (labour) => {
             <RemoveRedEyeIcon onClick={() => openPopup(labour)} style={{cursor: 'pointer'}}/>
           </TableCell>
 
-          {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && <TableCell>
+          {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && tabValue !== 1 &&<TableCell>
                 <Select
                   value={selectedSite[labour.LabourID] || ''}
                   onChange={(e) => handleSiteChange(labour, e.target.value)}
@@ -2826,7 +2826,7 @@ const handleResubmit = async (labour) => {
                 </Select>
               </TableCell>}
 
-              {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && <TableCell>{statusesSite[labour.LabourID] || '-'}</TableCell>}
+              {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && tabValue !== 1 &&<TableCell>{statusesSite[labour.LabourID] || '-'}</TableCell>}
         </TableRow>
       ))}
     </TableBody>

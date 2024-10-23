@@ -45,7 +45,7 @@ function Header({OpenSidebar}) {
             style={{ margin: '0 10px', cursor: 'pointer' }}
           />
         </Tooltip>
-        <BsPersonCircle className='icon' style={{ margin: '0 20px', cursor: 'pointer' }} />
+        <BsPersonCircle className='icon' style={{ margin: '0 12px', cursor: 'pointer' }} />
       </div>
       <span style={spanStyle}>
         {user ? user.name : "Guest"}

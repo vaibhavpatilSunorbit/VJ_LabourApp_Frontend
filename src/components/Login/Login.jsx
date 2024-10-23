@@ -369,7 +369,7 @@ const Login = () => {
     {/* </div> */}
 
     {/* Centering the form on the screen */}
-    <div className="box-root flex-flex flex-direction--column" style={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', position: 'relative', top:'-583px', flexDirection:'column' }}>
+    <div className="box-root flex-flex flex-direction--column" style={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', position: 'relative', top:'-620px', flexDirection:'column' }}>
       <div className="box-root padding-top--48 padding-bottom--24 flex-flex flex-justifyContent--center">
       <img src={LogoImage} alt="Logo" style={{ width: '250px', height: 'auto'}} />
       </div>
