@@ -194,7 +194,7 @@ const SearchBar = ({
       <form onSubmit={handleSubmit} className="search-form">
         <TextField
           className="search-input"
-          label="Search Labours"
+          label="Search By Name, Labour ID, Aadhaar Number or Onboard By"
           variant="outlined"
           value={searchQuery}
           onChange={(e) => {

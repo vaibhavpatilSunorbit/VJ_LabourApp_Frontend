@@ -20,13 +20,15 @@ import {
     MenuItem,
     Tabs,
     Tab,
+    InputAdornment
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import SearchBar from '../SarchBar/SearchBar';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
-import "./attendanceReport.css"
+import "./attendanceReport.css";
+import SearchIcon from '@mui/icons-material/Search';
 
 const AttendanceReport = () => {
     const theme = useTheme();
@@ -46,6 +48,7 @@ const AttendanceReport = () => {
     const [presentDays, setPresentDays] = useState(0);
     const [totalOvertime, setTotalOvertime] = useState(0);
     const [tabValue, setTabValue] = useState(0);
+    const [selectedLabourId, setSelectedLabourId] = useState('');
 
 
     const months = [
@@ -106,9 +109,10 @@ const AttendanceReport = () => {
     };
     
     const fetchAttendanceForMonth = async () => {
-        if (!selectedLabour) return;
+        if (!selectedLabourId || !selectedMonth) return;
+        setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/attendance/${selectedLabour.LabourID}`, {
+            const response = await axios.get(`${API_BASE_URL}/labours/attendance/${selectedLabourId}`, {
                 params: { month: selectedMonth, year: selectedYear }
             });
             const { monthlyAttendance, totalDays, presentDays, totalOvertimeHours } = response.data;
@@ -119,13 +123,14 @@ const AttendanceReport = () => {
         } catch (error) {
             console.error('Error fetching attendance data:', error);
         }
+        setLoading(false);
     };
 
     useEffect(() => {
-        if (selectedLabour && selectedMonth) {
+        if (selectedLabourId && selectedMonth) {
             fetchAttendanceForMonth();
         }
-    }, [selectedLabour, selectedMonth]);
+    }, [selectedLabourId, selectedMonth]);
 
     // Function to display attendance for each day of the selected month
     const renderAttendanceForMonth = () => {
@@ -186,6 +191,14 @@ const AttendanceReport = () => {
     const handleModalClose = () => {
         setModalOpen(false);
         setAttendanceData([]);
+    };
+
+    const handleSearchLabour = (event) => {
+        const searchQuery = event.target.value.toLowerCase();
+        const filteredLabours = labours.filter((labour) =>
+            labour.LabourID && labour.LabourID.toLowerCase().includes(searchQuery)
+        );
+        setLabours(filteredLabours);
     };
 
     const calculateTotalHours = (attendanceEntry) => {
@@ -252,6 +265,74 @@ const AttendanceReport = () => {
         
         </Tabs>
 
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {/* Search Labour ID */}
+                    <TextField
+                        variant="outlined"
+                        placeholder="Search Labour ID"
+                        onChange={handleSearchLabour}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon />
+                                </InputAdornment>
+                            )
+                        }}
+                    />
+
+                    {/* Labour ID Dropdown */}
+                    <Select
+                        value={selectedLabourId}
+                        onChange={(e) => setSelectedLabourId(e.target.value)}
+                        fullWidth
+                        displayEmpty
+                    >
+                        <MenuItem value="" disabled>Select Labour ID</MenuItem>
+                        {labours.map((labour) => (
+                            <MenuItem key={labour.LabourID} value={labour.LabourID}>
+                                {labour.LabourID} - {labour.name}
+                            </MenuItem>
+                        ))}
+                    </Select>
+
+                    {/* Month Selector */}
+                    <Select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        displayEmpty
+                    >
+                        <MenuItem value="" disabled>Select Month</MenuItem>
+                        {months.map((month) => (
+                            <MenuItem key={month.value} value={month.value}>
+                                {month.label}
+                            </MenuItem>
+                        ))}
+                    </Select>
+
+                    {/* Year Selector */}
+                    <Select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        displayEmpty
+                    >
+                        {[selectedYear, selectedYear - 1].map((year) => (
+                            <MenuItem key={year} value={year}>
+                                {year}
+                            </MenuItem>
+                        ))}
+                    </Select>
+
+                    {/* Fetch Attendance Button */}
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={fetchAttendanceForMonth}
+                        disabled={loading}
+                    >
+                        Search
+                    </Button>
+                </Box>
+            {/* </Box> */}
         <TablePagination
           className="custom-pagination"
           rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
@@ -303,6 +384,18 @@ const AttendanceReport = () => {
             <DialogTitle>Attendance for {selectedLabour?.name} and LabourID {selectedLabour?.LabourID}</DialogTitle>
             <DialogContent>
                 <Box sx={{display:'flex', flexDirection:'row', gap:'20px'}}>
+                <Select
+                    value={selectedLabourId} 
+                    onChange={(e) => setSelectedLabourId(e.target.value)} 
+                    fullWidth
+                    label="Select Labour ID" 
+                >
+                   {labours.map((labour) => (
+                       <MenuItem key={labour.LabourID} value={labour.LabourID}>
+                       {labour.LabourID} - {labour.name}
+                   </MenuItem>
+                    ))}
+                </Select>
                 <Select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
@@ -365,6 +458,21 @@ const AttendanceReport = () => {
 };
 
 export default AttendanceReport;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
