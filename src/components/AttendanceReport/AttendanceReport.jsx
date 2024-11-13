@@ -96,11 +96,13 @@ const AttendanceReport = () => {
 
     useEffect(() => {
         fetchLabours();
+        fetchCachedAttendance();
     }, []);
 
     const handleModalOpen = (labour) => {
         if (labour && labour.LabourID) {
             setSelectedLabour(labour);
+            setSelectedLabourId(labour.LabourID);
             // fetchAttendanceData(labour.LabourID, startDate, endDate);
             setModalOpen(true);
         } else {
@@ -132,28 +134,79 @@ const AttendanceReport = () => {
         }
     }, [selectedLabourId, selectedMonth]);
 
+
+    const fetchCachedAttendance = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${API_BASE_URL}/labours/cachedattendance`);
+            const attendanceList = response.data;
+            setAttendanceData(attendanceList);
+        } catch (error) {
+            console.error('Error fetching cached attendance data:', error);
+        }
+        setLoading(false);
+    };
+
+
+
+
+    
+    const fetchAttendanceForMonthAll = async () => {
+        if (!selectedMonth) return;
+        setLoading(true);
+        try {
+            const response = await axios.get(`${API_BASE_URL}/labours/attendance`, {
+                params: { month: selectedMonth, year: selectedYear }
+            });
+    
+            const attendanceList = response.data;
+    
+            setAttendanceData(attendanceList);
+    
+            const totalDaysSum = attendanceList.reduce((acc, labor) => acc + labor.totalDays, 0);
+            const presentDaysSum = attendanceList.reduce((acc, labor) => acc + labor.presentDays, 0);
+            const totalOvertimeSum = attendanceList.reduce((acc, labor) => acc + labor.totalOvertimeHours, 0);
+    
+            setTotalDays(totalDaysSum);
+            setPresentDays(presentDaysSum);
+            setTotalOvertime(totalOvertimeSum);
+        } catch (error) {
+            console.error('Error fetching attendance data:', error);
+        }
+        setLoading(false);
+    };
+    
+    useEffect(() => {
+        if (selectedMonth) {
+            fetchAttendanceForMonth();
+        }
+    }, [selectedMonth, selectedYear]);
+    
+
+
     // Function to display attendance for each day of the selected month
     const renderAttendanceForMonth = () => {
         const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate(); // Get days in the selected month
         const result = [];
-
+    
         for (let day = 1; day <= daysInMonth; day++) {
             const formattedDay = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
+    
             // Check if there's attendance data for the current day
             const attendanceForDay = attendanceData.find(a => a.punch_date === formattedDay);
-
-            // Safeguard to ensure `selectedLabour` exists and has `workingHours`
+    
             if (selectedLabour && selectedLabour.workingHours) {
                 const shiftHours = selectedLabour.workingHours.includes('9') ? 9 : 8;
-
+    
                 if (attendanceForDay) {
                     const totalHours = calculateTotalHours(attendanceForDay);
                     const overtime = totalHours > shiftHours ? totalHours - shiftHours : 0;
-
+    
                     result.push({
                         date: formattedDay,
                         status: 'P',
+                        firstPunch: attendanceForDay.punch_in || '-',
+                        lastPunch: attendanceForDay.punch_out || '-',
                         totalHours,
                         overtime,
                         shift: selectedLabour.workingHours
@@ -162,6 +215,8 @@ const AttendanceReport = () => {
                     result.push({
                         date: formattedDay,
                         status: 'A', // Absent if no attendance data for the day
+                        firstPunch: '-',
+                        lastPunch: '-',
                         totalHours: '-',
                         overtime: '-',
                         shift: selectedLabour.workingHours
@@ -169,9 +224,32 @@ const AttendanceReport = () => {
                 }
             }
         }
-
-        return result;
+    
+        return result; // Return the calculated attendance data
     };
+    
+    // Fetch and set attendance data for the selected month and labor
+    // const fetchAttendanceForMonth = async () => {
+    //     if (!selectedLabourId || !selectedMonth) return;
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.get(`${API_BASE_URL}/labours/attendance/${selectedLabourId}`, {
+    //             params: { month: selectedMonth, year: selectedYear }
+    //         });
+    //         const { monthlyAttendance, totalDays, presentDays, totalOvertimeHours } = response.data;
+    
+    //         // Update the attendanceData state with the processed data
+    //         const attendanceForMonth = renderAttendanceForMonth(); // Call the function here
+    //         setAttendanceData(attendanceForMonth);
+    
+    //         setTotalDays(totalDays);
+    //         setPresentDays(presentDays);
+    //         setTotalOvertime(totalOvertimeHours);
+    //     } catch (error) {
+    //         console.error('Error fetching attendance data:', error);
+    //     }
+    //     setLoading(false);
+    // };
 
     const handleOverTime = (labourId) => {
         const labour = labours.find((l) => l.LabourID === labourId);
@@ -281,7 +359,7 @@ const AttendanceReport = () => {
                     />
 
                     {/* Labour ID Dropdown */}
-                    <Select
+                    {/* <Select
                         value={selectedLabourId}
                         onChange={(e) => setSelectedLabourId(e.target.value)}
                         fullWidth
@@ -293,7 +371,7 @@ const AttendanceReport = () => {
                                 {labour.LabourID} - {labour.name}
                             </MenuItem>
                         ))}
-                    </Select>
+                    </Select> */}
 
                     {/* Month Selector */}
                     <Select
@@ -326,7 +404,7 @@ const AttendanceReport = () => {
                     <Button
                         variant="contained"
                         color="primary"
-                        onClick={fetchAttendanceForMonth}
+                        onClick={fetchAttendanceForMonthAll}
                         disabled={loading}
                     >
                         Search
@@ -351,22 +429,20 @@ const AttendanceReport = () => {
                         <TableCell>Sr No</TableCell>
                         <TableCell>Labour ID</TableCell>
                         <TableCell>Name of Labour</TableCell>
-                        <TableCell>First Punch In</TableCell>
-                        <TableCell>Last Punch Out</TableCell>
                         <TableCell>Total Days</TableCell>
                         <TableCell>Present Days</TableCell>
                         <TableCell>Overtime (Hours)</TableCell>
                         <TableCell>Actions</TableCell>
                     </TableRow>
                 </TableHead>
-                <TableBody>
-                        {labours.map((labour, index) => (
-                            <TableRow key={labour.LabourID}>
+                {/* <TableBody>
+                        {labours
+                            .filter(labour => labour.LabourID && labour.status === 'Approved')
+                            .map((labour, index) => (
+                                <TableRow key={labour.LabourID}>
                                 <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                 <TableCell>{labour.LabourID}</TableCell>
                                 <TableCell>{labour.name}</TableCell>
-                                <TableCell>{labour.firstPunch || '-'}</TableCell>
-                                <TableCell>{labour.lastPunch || '-'}</TableCell>
                                 <TableCell>{totalDays || '-'}</TableCell>
                                 <TableCell>{presentDays || '-'}</TableCell>
                                 <TableCell>{labour.overtime || '-'}</TableCell>
@@ -375,12 +451,31 @@ const AttendanceReport = () => {
                                 </TableCell>
                             </TableRow>
                     ))}
-                </TableBody>
+                </TableBody> */}
+                  <TableBody>
+                        {/* {labours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((labour, index) => { */}
+                        {labours.filter(labour => labour.status === 'Approved').slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((labour, index) => {
+                            const labourAttendance = attendanceData.find(att => att.labourId === labour.LabourID);
+                            return (
+                                <TableRow key={labour.LabourID}>
+                                    <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                    <TableCell>{labour.LabourID}</TableCell>
+                                    <TableCell>{labour.name}</TableCell>
+                                    <TableCell>{labourAttendance ? labourAttendance.totalDays : '-'}</TableCell>
+                                    <TableCell>{labourAttendance ? labourAttendance.presentDays : '-'}</TableCell>
+                                    <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell>
+                                    <TableCell>
+                                        <Button onClick={() => handleModalOpen(labour)}>Edit</Button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
             </Table>
         </TableContainer>
 
         {/* Modal to view attendance for the selected month */}
-        <Dialog open={modalOpen} onClose={handleModalClose}>
+        <Dialog open={modalOpen} onClose={handleModalClose} className='moduleForAttendance'>
             <DialogTitle>Attendance for {selectedLabour?.name} and LabourID {selectedLabour?.LabourID}</DialogTitle>
             <DialogContent>
                 <Box sx={{display:'flex', flexDirection:'row', gap:'20px'}}>
@@ -431,6 +526,9 @@ const AttendanceReport = () => {
                             <TableCell>Total Hours</TableCell>
                             <TableCell>Overtime (Hours)</TableCell>
                             <TableCell>Shift</TableCell>
+                            <TableCell>First Punch In(Manually)</TableCell>
+                            <TableCell>Last Punch Our(Manually)</TableCell>
+                            <TableCell>Overtime (Manually)</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -443,7 +541,45 @@ const AttendanceReport = () => {
                             <TableCell>{day.totalHours}</TableCell>
                             <TableCell>{day.overtime}</TableCell>
                             <TableCell>{day.shift}</TableCell>
-                            
+                            <TableCell>
+                <TextField
+                    value={day.firstPunch || ''}
+                    onChange={(e) => {
+                        const newData = [...attendanceData];
+                        newData[index].firstPunch = e.target.value;
+                        setAttendanceData(newData);
+                    }}
+                    variant="outlined"
+                    size="small"
+                    placeholder="First Punch"
+                />
+            </TableCell>
+            <TableCell>
+                <TextField
+                    value={day.lastPunch || ''}
+                    onChange={(e) => {
+                        const newData = [...attendanceData];
+                        newData[index].lastPunch = e.target.value;
+                        setAttendanceData(newData);
+                    }}
+                    variant="outlined"
+                    size="small"
+                    placeholder="Last Punch"
+                />
+            </TableCell>
+            <TableCell>
+                <TextField
+                    value={day.overtime || ''}
+                    onChange={(e) => {
+                        const newData = [...attendanceData];
+                        newData[index].overtime = e.target.value;
+                        setAttendanceData(newData);
+                    }}
+                    variant="outlined"
+                    size="small"
+                    placeholder="Overtime (Hours)"
+                />
+            </TableCell>
                         </TableRow>
                     ))}
                     </TableBody>
@@ -459,6 +595,365 @@ const AttendanceReport = () => {
 
 export default AttendanceReport;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//           CODE CHANGE IN DATE - 04-11-2024
+
+// import React, { useState, useEffect } from 'react';
+// import axios from 'axios';
+// import {
+//     Table,
+//     TableBody,
+//     TableCell,
+//     TableContainer,
+//     TableHead,
+//     TableRow,
+//     Paper,
+//     Button,
+//     Box,
+//     TextField,
+//     Select,
+//     MenuItem,
+//     InputAdornment,
+//     Checkbox,
+//     Typography,
+//     Grid
+// } from '@mui/material';
+// import SearchIcon from '@mui/icons-material/Search';
+// import { API_BASE_URL } from '../../Data';
+// import './attendanceReport.css';
+
+// const AttendanceReport = () => {
+//     const [labours, setLabours] = useState([]);
+//     const [attendanceData, setAttendanceData] = useState([]);
+//     const [selectedLabourId, setSelectedLabourId] = useState('');
+//     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+//     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+//     const [searchQuery, setSearchQuery] = useState('');
+//     const [loading, setLoading] = useState(false);
+//     const [shiftHours, setShiftHours] = useState(8);
+//     const [subProjects, setSubProjects] = useState([]);
+//     const [missedPunchCount, setMissedPunchCount] = useState(0);
+
+//     // Fixed holidays
+//     const holidays = ["2024-01-26", "2024-08-15", "2024-05-01", "2024-10-02"];
+
+//     const months = [
+//         { value: 1, label: 'January' },
+//         { value: 2, label: 'February' },
+//         { value: 3, label: 'March' },
+//         { value: 4, label: 'April' },
+//         { value: 5, label: 'May' },
+//         { value: 6, label: 'June' },
+//         { value: 7, label: 'July' },
+//         { value: 8, label: 'August' },
+//         { value: 9, label: 'September' },
+//         { value: 10, label: 'October' },
+//         { value: 11, label: 'November' },
+//         { value: 12, label: 'December' }
+//     ];
+
+//     useEffect(() => {
+//         fetchLabours();
+//         fetchSubProjects();
+//     }, []);
+
+//     const fetchLabours = async () => {
+//         setLoading(true);
+//         try {
+//             const response = await axios.get(`${API_BASE_URL}/labours`);
+//             setLabours(response.data);
+//         } catch (error) {
+//             console.error('Error fetching labours:', error);
+//         } finally {
+//             setLoading(false);
+//         }
+//     };
+
+//     const fetchSubProjects = async () => {
+//         try {
+//             const response = await axios.get(`${API_BASE_URL}/subprojects`);
+//             setSubProjects(response.data);
+//         } catch (error) {
+//             console.error('Error fetching subprojects:', error);
+//         }
+//     };
+
+//     const fetchAttendanceForMonth = async () => {
+//         setLoading(true);
+//         try {
+//             const response = await axios.get(`${API_BASE_URL}/labours/attendance/${selectedLabourId}`, {
+//                 params: { month: selectedMonth, year: selectedYear }
+//             });
+//             const { monthlyAttendance } = response.data;
+
+//             // Calculate missedPunchCount
+//             let missedPunches = 0;
+//             const updatedAttendanceData = monthlyAttendance.map((day) => {
+//                 const hasFirstPunch = !!day.firstPunch;
+//                 const hasLastPunch = !!day.lastPunch;
+//                 if ((hasFirstPunch && !hasLastPunch) || (!hasFirstPunch && hasLastPunch)) {
+//                     missedPunches++;
+//                 }
+//                 return day;
+//             });
+
+//             setMissedPunchCount(missedPunches);
+//             setAttendanceData(updatedAttendanceData);
+//         } catch (error) {
+//             console.error('Error fetching attendance data:', error);
+//         } finally {
+//             setLoading(false);
+//         }
+//     };
+
+//     const handleSearchLabour = (event) => {
+//         setSearchQuery(event.target.value.toLowerCase());
+//     };
+
+//     const calculateTotalHours = (punchIn, punchOut) => {
+//         const inTime = new Date(`1970-01-01T${punchIn}`);
+//         const outTime = new Date(`1970-01-01T${punchOut}`);
+//         const totalHours = (outTime - inTime) / (1000 * 60 * 60);
+//         return totalHours;
+//     };
+
+//     const handleManualOTChange = (e, date) => {
+//         setAttendanceData(prevData =>
+//             prevData.map(day =>
+//                 day.date === date
+//                     ? { ...day, manualOT: e.target.value }
+//                     : day
+//             )
+//         );
+//     };
+
+//     const handlePunchInChange = (e, date) => {
+//         setAttendanceData(prevData =>
+//             prevData.map(day =>
+//                 day.date === date
+//                     ? { ...day, manualFirstPunch: e.target.value }
+//                     : day
+//             )
+//         );
+//     };
+
+//     const handlePunchOutChange = (e, date) => {
+//         setAttendanceData(prevData =>
+//             prevData.map(day =>
+//                 day.date === date
+//                     ? { ...day, manualLastPunch: e.target.value }
+//                     : day
+//             )
+//         );
+//     };
+
+//     const handleStatusChange = (e, date) => {
+//         setAttendanceData(prevData =>
+//             prevData.map(day =>
+//                 day.date === date
+//                     ? { ...day, status: e.target.checked ? 'P' : 'A' }
+//                     : day
+//             )
+//         );
+//     };
+
+//     const handleSubProjectChange = (e, date) => {
+//         setAttendanceData(prevData =>
+//             prevData.map(day =>
+//                 day.date === date
+//                     ? { ...day, subProject: e.target.value }
+//                     : day
+//             )
+//         );
+//     };
+
+//     const handleSaveChanges = async () => {
+//         try {
+//             await axios.post(`${API_BASE_URL}/labours/attendance/update`, {
+//                 labourId: selectedLabourId,
+//                 attendanceData
+//             });
+//             fetchAttendanceForMonth(); // Refresh data after save
+//         } catch (error) {
+//             console.error('Error saving attendance data:', error);
+//         }
+//     };
+
+//     const filteredLabours = labours.filter(labour =>
+//         labour.name.toLowerCase().includes(searchQuery) || labour.LabourID.toString().includes(searchQuery)
+//     );
+
+//     return (
+//         <Box mb={1} py={0} px={1}>
+//         {/* Display Missed Punch Count */}
+//         <Box mb={2}>
+//             <Typography variant="h6">Summary</Typography>
+//             <Typography>Total Missed Punches: {missedPunchCount}</Typography>
+//         </Box>
+
+//         {/* Search and Filter Controls */}
+//         <Box display="flex" gap={2} alignItems="center">
+//             <TextField
+//                 variant="outlined"
+//                 placeholder="Search Labour ID or Name"
+//                 value={searchQuery}
+//                 onChange={handleSearchLabour}
+//                 InputProps={{
+//                     startAdornment: (
+//                         <InputAdornment position="start">
+//                             <SearchIcon />
+//                         </InputAdornment>
+//                     )
+//                 }}
+//             />
+//             <Select
+//                 value={selectedLabourId}
+//                 onChange={(e) => setSelectedLabourId(e.target.value)}
+//                 displayEmpty
+//             >
+//                 <MenuItem value="" disabled>Select Labour</MenuItem>
+//                 {filteredLabours.map(labour => (
+//                     <MenuItem key={labour.LabourID} value={labour.LabourID}>
+//                         {labour.LabourID} - {labour.name}
+//                     </MenuItem>
+//                 ))}
+//             </Select>
+//             <Select
+//                 value={shiftHours}
+//                 onChange={(e) => setShiftHours(e.target.value)}
+//             >
+//                 <MenuItem value={8}>8 Hours Shift</MenuItem>
+//                 <MenuItem value={9}>9 Hours Shift</MenuItem>
+//             </Select>
+//             <Select
+//                 value={selectedMonth}
+//                 onChange={(e) => setSelectedMonth(e.target.value)}
+//                 displayEmpty
+//             >
+//                 <MenuItem value="" disabled>Select Month</MenuItem>
+//                 {months.map(month => (
+//                     <MenuItem key={month.value} value={month.value}>
+//                         {month.label}
+//                     </MenuItem>
+//                 ))}
+//             </Select>
+//             <Button variant="contained" color="primary" onClick={fetchAttendanceForMonth} disabled={loading}>
+//                 Fetch Attendance
+//             </Button>
+//         </Box>
+
+//         {/* Attendance Data Table */}
+//         <TableContainer component={Paper} sx={{ mt: 3 }}>
+//             <Table>
+//                 <TableHead>
+//                     <TableRow>
+//                         <TableCell>JC Code</TableCell>
+//                         <TableCell>Name</TableCell>
+//                         <TableCell>Date</TableCell>
+//                         <TableCell>First Punch In</TableCell>
+//                         <TableCell>Last Punch Out</TableCell>
+//                         <TableCell>Total Hours Worked</TableCell>
+//                         <TableCell>Present/Absent</TableCell>
+//                         <TableCell>OT Hrs (System)</TableCell>
+//                         <TableCell>OT Hrs (Manual)</TableCell>
+//                         <TableCell>First Punch In (Manual)</TableCell>
+//                         <TableCell>Last Punch Out (Manual)</TableCell>
+//                         <TableCell>Subproject</TableCell>
+//                         <TableCell>Holiday/Weekly Off</TableCell>
+//                     </TableRow>
+//                 </TableHead>
+//                 <TableBody>
+//                     {attendanceData.map((day) => {
+//                         const totalHours = calculateTotalHours(day.firstPunch, day.lastPunch);
+//                         const isHoliday = holidays.includes(day.date);
+//                         const isWeeklyOff = new Date(day.date).getDay() === 0;
+
+//                         return (
+//                             <TableRow key={day.date}>
+//                                 <TableCell>{day.JCCode}</TableCell>
+//                                 <TableCell>{day.name}</TableCell>
+//                                 <TableCell>{day.date}</TableCell>
+//                                 <TableCell>{day.firstPunch}</TableCell>
+//                                 <TableCell>{day.lastPunch}</TableCell>
+//                                 <TableCell>{totalHours}</TableCell>
+//                                 <TableCell>
+//                                     <Checkbox
+//                                         checked={day.status === 'P'}
+//                                         onChange={(e) => handleStatusChange(e, day.date)}
+//                                     />
+//                                     {day.status === 'P' ? 'Present' : 'Absent'}
+//                                 </TableCell>
+//                                 <TableCell>{day.overtime || 0}</TableCell>
+//                                 <TableCell>
+//                                     <TextField
+//                                         type="number"
+//                                         value={day.manualOT || ''}
+//                                         onChange={(e) => handleManualOTChange(e, day.date)}
+//                                     />
+//                                 </TableCell>
+//                                 <TableCell>
+//                                     <TextField
+//                                         type="time"
+//                                         value={day.manualFirstPunch || ''}
+//                                         onChange={(e) => handlePunchInChange(e, day.date)}
+//                                     />
+//                                 </TableCell>
+//                                 <TableCell>
+//                                     <TextField
+//                                         type="time"
+//                                         value={day.manualLastPunch || ''}
+//                                         onChange={(e) => handlePunchOutChange(e, day.date)}
+//                                     />
+//                                 </TableCell>
+//                                 <TableCell>
+//                                     <Select
+//                                         value={day.subProject || ''}
+//                                         onChange={(e) => handleSubProjectChange(e, day.date)}
+//                                     >
+//                                         <MenuItem value="" disabled>Select Subproject</MenuItem>
+//                                         {subProjects.map((proj) => (
+//                                             <MenuItem key={proj.id} value={proj.id}>
+//                                                 {proj.name}
+//                                             </MenuItem>
+//                                         ))}
+//                                     </Select>
+//                                 </TableCell>
+//                                 <TableCell>
+//                                     {isHoliday ? 'Holiday' : isWeeklyOff ? 'Weekly Off' : '-'}
+//                                 </TableCell>
+//                             </TableRow>
+//                         );
+//                     })}
+//                 </TableBody>
+//             </Table>
+//         </TableContainer>
+
+//         <Button variant="contained" color="secondary" onClick={handleSaveChanges} sx={{ mt: 2 }}>
+//             Save Changes
+//         </Button>
+//     </Box>
+// );
+// };
+
+// export default AttendanceReport;
 
 
 
