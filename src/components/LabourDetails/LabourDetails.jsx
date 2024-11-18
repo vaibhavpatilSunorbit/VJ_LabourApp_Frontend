@@ -49,6 +49,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { format } from 'date-fns';
 import { ClipLoader } from 'react-spinners'; 
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import CircleIcon from '@mui/icons-material/Circle';
 
 
 const LabourDetails = ({ onApprove, departments, projectNames , labour, labourlist }) => {
@@ -1430,6 +1431,70 @@ const approveLabour = async (id) => {
 }
 };
 
+const disableApproveLabour = async (id) => {
+  console.log('id---===---',id);
+  try {
+    const { data: labourResponse } = await axios.get(`${API_BASE_URL}/labours/${id}`);
+    const labour = labourResponse;
+  // console.log('labour---===---', JSON.stringify(labour));
+    
+    if (labour.status === 'Pending') {
+      console.log(`Labour ${labour.name} has status Pending. Executing special approval process.`);
+      const labourID = labourResponse.LabourID; // Assume labour ID comes from API
+      console.log("Generated unique labourID for approval:", labourID);
+
+      const { data: projectResponse } = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${labour.projectName}`);
+      const serialNumber = projectResponse.serialNumber;
+
+      const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <AddEmployee xmlns="http://tempuri.org/">
+              <APIKey>11</APIKey>
+              <EmployeeCode>${labourID}</EmployeeCode>
+              <EmployeeName>${labour.name}</EmployeeName>
+              <CardNumber>${labour.id}</CardNumber>
+              <SerialNumber>${serialNumber}</SerialNumber>
+              <UserName>test</UserName>
+              <UserPassword>Test@123</UserPassword>
+              <CommandId>25</CommandId>
+            </AddEmployee>
+          </soap:Body>
+        </soap:Envelope>`;
+
+      console.log('SOAP Envelope:', soapEnvelope);
+
+      const soapResponse = await axios.post(
+        `${API_BASE_URL}/labours/essl/addEmployee`,
+        soapEnvelope,
+        { headers: { 'Content-Type': 'text/xml' } }
+      );
+
+      if (soapResponse.status === 200) {
+        console.log('SOAP API Response:', soapResponse.data);
+
+         // Approve the labour and update state
+         await axios.put(`${API_BASE_URL}/labours/approveDisableLabour/${id}`, { labourID });
+         setApprovedLabours((prev) => [...new Set([...prev, id])]);
+         toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
+       } else {
+         throw new Error('Failed to add labour to the ESSL system.');
+       }
+     } else {
+       console.log(`Labour ${labour.name} does not have a Disable status or LabourID is missing.`);
+     }
+ 
+     return labour.labourID;
+   } catch (error) {
+     console.error(`Error approving labour with ID ${id}:`, error);
+     toast.error(`Error approving labour with ID ${id}.`);
+     throw error;
+   }
+ };
+
+
+
+
 const approve = async() => {
     
     setIsApproving(true);
@@ -1454,29 +1519,69 @@ const approve = async() => {
 
 useEffect(() => {
   const processLabourApprovals = async () => {
-    if (labourIds.length === 0 || isApproving) return;
+    if (labourIds.length === 0 || isApproving) return; // Check if there are IDs to process and avoid duplicate executions
 
-    setIsApproving(true); 
+    setIsApproving(true); // Mark as processing
 
-    const currentId = labourIds[0]; 
+    const currentId = labourIds[0]; // Get the first labour ID in the queue
 
     try {
-      const success = await approveLabour(currentId);
-      if (success) {
-        setLabourIds((prev) => prev.slice(1)); // Remove the first element after success
-      }
-    } catch (error) {
-      console.log(`Skipping labour ${currentId} due to error.`);
-      setLabourIds((prev) => prev.slice(1)); 
-    }
+      // Fetch labour details
+      const { data: labour } = await axios.get(`${API_BASE_URL}/labours/${currentId}`); // Assuming `labour` is the response object
+      console.log('labour------====', labour)
 
-    setIsApproving(false);
+      if (labour.isResubmit && labour.LabourID) {
+        console.log(`Processing disabled labour: ${labour.name} with ID: ${labour.LabourID}`);
+        await disableApproveLabour(labour.id); // Call the disable-specific function
+      } else {
+        console.log(`Processing regular labour: ${labour.name}`);
+        await approveLabour(labour.id); // Call the regular approval function
+      }
+
+      // Remove the processed labour ID from the queue
+      setLabourIds((prev) => prev.slice(1));
+    } catch (error) {
+      console.error(`Error processing labour with ID ${currentId}:`, error);
+
+      // Remove the errored labour ID from the queue
+      setLabourIds((prev) => prev.slice(1));
+    } finally {
+      setIsApproving(false); // Mark as not processing
+    }
   };
 
-  if (labourIds.length > 0) {
+  if (labourIds.length > 0 && !isApproving) {
     processLabourApprovals();
   }
-}, [labourIds, isApproving]); 
+}, [labourIds, isApproving]);
+
+
+
+// useEffect(() => {
+//   const processLabourApprovals = async () => {
+//     if (labourIds.length === 0 || isApproving) return;
+
+//     setIsApproving(true); 
+
+//     const currentId = labourIds[0]; 
+
+//     try {
+//       const success = await approveLabour(currentId);
+//       if (success) {
+//         setLabourIds((prev) => prev.slice(1)); // Remove the first element after success
+//       }
+//     } catch (error) {
+//       console.log(`Skipping labour ${currentId} due to error.`);
+//       setLabourIds((prev) => prev.slice(1)); 
+//     }
+
+//     setIsApproving(false);
+//   };
+
+//   if (labourIds.length > 0) {
+//     processLabourApprovals();
+//   }
+// }, [labourIds, isApproving]); 
 
   
 const handleApprove = async (id) => {
@@ -2406,6 +2511,20 @@ const handleResubmit = async (labour) => {
   {' Download Excel'}
         </Button>
 
+        <Box display="flex" alignItems="center" ml={2}>
+    {/* Green Dot */}
+    <CircleIcon
+      sx={{
+        color: "#4CAF50", // Green color
+        fontSize: "13px", // Size of the dot
+        marginRight: "4px",
+      }}
+    />
+    <Typography sx={{ fontSize: "0.875rem", color: "#5e636e" }}>
+      Disable
+    </Typography>
+  </Box>
+
       {/* Filter Icon */}
       <Box display="flex" alignItems="center">
   {/* Icon button for the filter */}
@@ -2440,6 +2559,7 @@ const handleResubmit = async (labour) => {
           </MenuItem>
         </Menu>
         </Box>
+
 
         <TablePagination
           className="custom-pagination"
@@ -2488,6 +2608,12 @@ const handleResubmit = async (labour) => {
             top: 0,
             zIndex: 1,
           },
+          '& td': {
+            padding: '16px 9px', // Applying padding to all td elements
+            '@media (max-width: 600px)': {
+              padding: '14px 8px', // Adjust padding for smaller screens if needed
+            },
+          },
         }}
       >
         <TableCell>Sr No</TableCell>
@@ -2532,7 +2658,16 @@ const handleResubmit = async (labour) => {
    
       </TableRow>
     </TableHead>
-    <TableBody>
+    <TableBody 
+      sx={{
+        '& td': {
+          padding: '16px 9px', // Applying padding to all td elements
+          '@media (max-width: 600px)': {
+            padding: '14px 8px', // Adjust padding for smaller screens if needed
+          },
+        },
+      }}
+    >
       {(rowsPerPage > 0
       ? (searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours]))
        .filter(labour => {
@@ -2561,7 +2696,64 @@ const handleResubmit = async (labour) => {
           {(tabValue === 0 || tabValue === 1 || tabValue === 2) && (
             <TableCell>{labour.OnboardName}</TableCell>
           )}
-          <TableCell>{labour.status}</TableCell>
+          {/* <TableCell>{labour.status}</TableCell> */}
+          <TableCell sx={{ position: 'relative' }}>
+  <Box
+    sx={{
+      position: 'relative', 
+      padding: '7px 16px',
+      borderRadius: '20px',
+      display: 'inline-block',
+      textAlign: 'center',
+      fontWeight: 'bold',
+      fontSize: '0.875rem',
+      ...(labour.status === 'Pending' && {
+        backgroundColor: '#EFE6F7', 
+        color: '#8236BC', 
+      }),
+      ...(labour.status === 'Approved' && {
+        backgroundColor: '#E5FFE1', 
+        color: '#54a36d', 
+      }),
+      ...(labour.status === 'Rejected' && {
+        backgroundColor: 'rgba(255, 105, 97, 0.3)', 
+        color: '#F44336', 
+      }),
+      ...(labour.status === 'Resubmitted' && {
+        backgroundColor: 'rgba(255, 223, 186, 0.3)', 
+        color: '#FF6F00', 
+      }),
+      ...(labour.status === 'Disable' && {
+        backgroundColor: 'rgb(245, 237, 237)', 
+        color: '#5e636e', 
+      }),
+    }}
+  >
+    {labour.status}
+
+    {/* Display the indicator based on conditions */}
+    {labour.status === 'Pending' && labour.LabourID && (
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '-8px', // Positioning the indicator above and to the right
+          right: '-8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {/* Green Dot */}
+        <CircleIcon
+          sx={{
+            color: '#4CAF50', // Green color
+            fontSize: '12px', // Smaller size for the dot
+          }}
+        />
+      </Box>
+    )}
+  </Box>
+</TableCell>
           {tabValue === 1 && (
           <>
             <TableCell>
