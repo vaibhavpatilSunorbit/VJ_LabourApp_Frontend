@@ -28,7 +28,10 @@ import SearchBar from '../SarchBar/SearchBar';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import "./attendanceReport.css";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import SearchIcon from '@mui/icons-material/Search';
+// toast.configure();
 
 const AttendanceReport = () => {
     const theme = useTheme();
@@ -57,6 +60,10 @@ const AttendanceReport = () => {
         overtime: "",
         remark: "",
     });
+    const [error, setError] = useState(null);
+    const [filteredIconLabours, setFilteredIconLabours] = useState([]);
+
+
 
  const handleManualEditDialogOpen = (day) => {
         setSelectedDay(day);
@@ -109,16 +116,16 @@ const AttendanceReport = () => {
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
-            setSearchResults([]);
-            return;
+          setSearchResults([]);
+          return;
         }
         try {
-            const response = await axios.get(`/labours/search?q=${searchQuery}`);
-            setSearchResults(response.data);
+          const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+          setSearchResults(response.data);
         } catch (error) {
-            console.error('Error searching:', error);
+          setError('Error searching. Please try again.');
         }
-    };
+      };
 
     // Fetch labours and sort by LabourID
     const fetchLabours = async () => {
@@ -129,6 +136,7 @@ const AttendanceReport = () => {
             setLabours(sortedLabours);
             setLoading(false);
         } catch (error) {
+            setError('Error fetching labours. Please try again.');
             setLoading(false);
             console.error('Error fetching labours:', error);
         }
@@ -164,7 +172,6 @@ const AttendanceReport = () => {
             const updatedAttendance = monthlyAttendance.map(day => ({
                 ...day,
                 isHoliday: day.status === 'H',
-                isWeeklyOff: day.status === 'WO'
             }));
     
             setAttendanceData(updatedAttendance);
@@ -173,6 +180,14 @@ const AttendanceReport = () => {
             setTotalOvertime(totalOvertimeHours);
         } catch (error) {
             console.error('Error fetching attendance data:', error);
+    
+            // Check for response message and show toast
+            if (error.response || error.response.data || error.response.data.message) {
+                console.log('error.response.data.message',error.response.data.message)
+                toast.error(error.response.data.message); // Show the exact message from the API
+            } else {
+                toast.error('Error fetching attendance data. Please try again later.');
+            }
         }
         setLoading(false);
     };
@@ -232,8 +247,15 @@ const AttendanceReport = () => {
             setTotalDays(totalDaysSum);
             setPresentDays(presentDaysSum);
             setTotalOvertime(totalOvertimeSum);
-        } catch (error) {
+        }catch (error) {
             console.error('Error fetching attendance data:', error);
+    
+            // Check for response message and show toast
+            if (error.response || error.response.data || error.response.data.message) {
+                toast.error(error.response.data.message); // Show the exact message from the API
+            } else {
+                toast.error('Error fetching attendance data. Please try again later.');
+            }
         }
         setLoading(false);
     };
@@ -342,8 +364,8 @@ const AttendanceReport = () => {
     };
 
     const calculateTotalHours = (attendanceEntry) => {
-        const punchIn = new Date(`1970-01-01T${attendanceEntry.punch_in}Z`);  // Assuming punch_in is a time string
-        const punchOut = new Date(`1970-01-01T${attendanceEntry.punch_out}Z`);  // Assuming punch_out is a time string
+        const punchIn = new Date(`${attendanceEntry.punch_in}Z`);  // Assuming punch_in is a time string
+        const punchOut = new Date(`${attendanceEntry.punch_out}Z`);  // Assuming punch_out is a time string
         const totalHours = (punchOut - punchIn) / (1000 * 60 * 60);  // Convert milliseconds to hours
         return totalHours.toFixed(2);  // Returning the total hours as a fixed decimal value (e.g., 8.25 hours)
     };
@@ -380,6 +402,9 @@ const AttendanceReport = () => {
       alert("Failed to save attendance.");
     }
   };
+  const handleSelectLabour = (selectedLabour) => {
+    setSelectedLabour(selectedLabour);
+  };
 
   
     const displayLabours = labours;
@@ -387,9 +412,14 @@ const AttendanceReport = () => {
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <Box ml={-1.5}>
                 <SearchBar
-                    handleSubmit={handleSearch}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
+                    //  handleSubmit={handleSubmit}
+                     searchQuery={searchQuery}
+                     setSearchQuery={setSearchQuery}
+                     handleSearch={handleSearch}
+                    searchResults={searchResults}
+                    setSearchResults={setSearchResults}
+                    handleSelectLabour={handleSelectLabour}
+                    showResults={false}
                 />
             </Box>
             {loading && <Loading />}
@@ -425,20 +455,24 @@ const AttendanceReport = () => {
 
                 </Tabs>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, paddingRight: 5}}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, paddingRight: 5, alignItems:'flex-end', width:'60%'}}>
                     {/* Search Labour ID */}
-                    <TextField
-                        variant="outlined"
-                        placeholder="Search Labour ID"
-                        onChange={handleSearchLabour}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <SearchIcon />
-                                </InputAdornment>
-                            )
-                        }}
-                    />
+                    {/* <SearchIcon />
+    <input
+        type="text"
+        placeholder="Search Labour ID"
+        onChange={handleSearchLabour}
+        style={{
+            display:'flex',
+            justifyContent:'center',
+            border: 'none',
+            outline: 'none',
+            fontSize: '16px',
+            padding: '4px 0',
+            backgroundColor: 'transparent',
+            width: '100%'
+        }}
+    /> */}
 
                     {/* Labour ID Dropdown */}
                     {/* <Select
@@ -458,6 +492,7 @@ const AttendanceReport = () => {
                     {/* Month Selector */}
                     <Select
                         value={selectedMonth}
+                        sx={{width:'20%'}}
                         onChange={(e) => setSelectedMonth(e.target.value)}
                         displayEmpty
                     >
@@ -472,6 +507,7 @@ const AttendanceReport = () => {
                     {/* Year Selector */}
                     <Select
                         value={selectedYear}
+                        sx={{width:'20%'}}
                         onChange={(e) => setSelectedYear(e.target.value)}
                         displayEmpty
                     >
@@ -485,11 +521,17 @@ const AttendanceReport = () => {
                     {/* Fetch Attendance Button */}
                     <Button
                         variant="contained"
-                        color="primary"
+                        sx={{
+                            backgroundColor: 'rgb(229, 255, 225)',
+                            color: 'rgb(43, 217, 144)',
+                            '&:hover': {
+                              backgroundColor: 'rgb(229, 255, 225)',
+                            },
+                          }}
                         onClick={fetchAttendanceForMonthAll}
                         disabled={loading}
                     >
-                        Search
+                        Featch Attendance
                     </Button>
                 </Box>
                 {/* </Box> */}
@@ -511,6 +553,7 @@ const AttendanceReport = () => {
                             <TableCell>Sr No</TableCell>
                             <TableCell>Labour ID</TableCell>
                             <TableCell>Name of Labour</TableCell>
+                            <TableCell>Labour Shift</TableCell>
                             <TableCell>Total Days</TableCell>
                             <TableCell>Present Days</TableCell>
                             <TableCell>Overtime (Hours)</TableCell>
@@ -536,18 +579,36 @@ const AttendanceReport = () => {
                 </TableBody> */}
                     <TableBody>
                         {/* {labours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((labour, index) => { */}
-                        {labours.filter(labour => labour.status === 'Approved').slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((labour, index) => {
+                        {(
+        rowsPerPage > 0
+            ? (searchResults.length > 0 
+                ? searchResults 
+                : (filteredIconLabours.length > 0 
+                    ? filteredIconLabours 
+                    : [...labours]))
+            : []
+    )
+                        .filter(labour => labour.status === 'Approved').slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((labour, index) => {
                             const labourAttendance = attendanceData.find(att => att.labourId === labour.LabourID);
                             return (
                                 <TableRow key={labour.LabourID}>
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     <TableCell>{labour.LabourID}</TableCell>
                                     <TableCell>{labour.name}</TableCell>
+                                    <TableCell>{labour.workingHours}</TableCell>
                                     <TableCell>{labourAttendance ? labourAttendance.totalDays : '-'}</TableCell>
                                     <TableCell>{labourAttendance ? labourAttendance.presentDays : '-'}</TableCell>
                                     <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell>
                                     <TableCell>
-                                        <Button onClick={() => handleModalOpen(labour)}>Edit</Button>
+                                        <Button onClick={() => handleModalOpen(labour)}
+                                             sx={{
+                                                backgroundColor: 'rgb(229, 255, 225)',
+                                                color: 'rgb(43, 217, 144)',
+                                                '&:hover': {
+                                                  backgroundColor: 'rgb(229, 255, 225)',
+                                                },
+                                              }}
+                                            >Edit</Button>
                                     </TableCell>
                                 </TableRow>
                             );
@@ -685,12 +746,13 @@ const AttendanceReport = () => {
         maxWidth="lg"
       >
         <DialogTitle>
-          Attendance for {selectedLabour?.name} (ID: {selectedLabour?.LabourID})
+          Attendance for {selectedLabour?.name} (LabourID : {selectedLabour?.LabourID})
         </DialogTitle>
         <DialogContent>
-          <Box>
+          <Box sx={{display: 'flex', gap:'30px'}}>
             <Select
               value={selectedMonth}
+              sx={{width:'20%'}}
               onChange={(e) => setSelectedMonth(e.target.value)}
               displayEmpty
             >
@@ -705,13 +767,24 @@ const AttendanceReport = () => {
             </Select>
             <Select
               value={selectedYear}
+              sx={{width:'20%'}}
               onChange={(e) => setSelectedYear(e.target.value)}
               displayEmpty
             >
               <MenuItem value={selectedYear}>{selectedYear}</MenuItem>
               <MenuItem value={selectedYear - 1}>{selectedYear - 1}</MenuItem>
             </Select>
-            <Button onClick={fetchAttendanceForMonth}>Fetch</Button>
+            <Button onClick={fetchAttendanceForMonth}
+              sx={{
+                backgroundColor: 'rgb(229, 255, 225)',
+                color: 'rgb(43, 217, 144)',
+                width: '10%',
+                marginTop: '6px',
+                '&:hover': {
+                  backgroundColor: 'rgb(229, 255, 225)',
+                },
+              }}
+            >Fetch</Button>
           </Box>
           <Table>
             <TableHead>
@@ -720,9 +793,9 @@ const AttendanceReport = () => {
                 <TableCell>Status</TableCell>
                 <TableCell>Punch In</TableCell>
                 <TableCell>Punch Out</TableCell>
+                <TableCell>Total Hours</TableCell>
                 <TableCell>Overtime</TableCell>
                 <TableCell>Holiday</TableCell>
-                <TableCell>Weekly Off</TableCell>
                 <TableCell>Remark</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -734,13 +807,20 @@ const AttendanceReport = () => {
                   <TableCell>{day.status}</TableCell>
                   <TableCell>{day.firstPunch}</TableCell>
                   <TableCell>{day.lastPunch}</TableCell>
+                  <TableCell>{day.totalHours}</TableCell>
                   <TableCell>{day.overtime}</TableCell>
                   <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell>
                   <TableCell>{day.isWeeklyOff ? "Yes" : "No"}</TableCell>
                   <TableCell>{day.remark || "-"}</TableCell>
                   <TableCell>
                     <Button
-                      variant="outlined"
+                      sx={{
+                        backgroundColor: 'rgb(229, 255, 225)',
+                        color: 'rgb(43, 217, 144)',
+                        '&:hover': {
+                          backgroundColor: 'rgb(229, 255, 225)',
+                        },
+                      }}
                       onClick={() => handleManualEditDialogOpen(day)}
                     >
                       Edit
@@ -752,9 +832,27 @@ const AttendanceReport = () => {
           </Table>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleModalClose}>Close</Button>
-          <Button variant="contained" onClick={saveFullMonthAttendance}>
-            Save Attendance
+          <Button onClick={handleModalClose}
+            sx={{
+                backgroundColor: '#fce4ec',
+                color: 'rgb(255, 100, 100)',
+                width: '100px',
+                '&:hover': {
+                  backgroundColor: '#f8bbd0',
+                },
+              }}
+          >Close</Button>
+          <Button variant="contained"
+           sx={{
+            backgroundColor: 'rgb(229, 255, 225)',
+            color: 'rgb(43, 217, 144)',
+            width: '100px',
+            '&:hover': {
+              backgroundColor: 'rgb(229, 255, 225)',
+            },
+          }}
+          onClick={saveFullMonthAttendance}>
+            Save
           </Button>
         </DialogActions>
       </Dialog>
@@ -767,7 +865,7 @@ const AttendanceReport = () => {
   maxWidth="sm"
 >
   <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>Edit Attendance</DialogTitle>
-  <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+  <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2}}>
     <TextField
       label="Punch In (Manually)"
       type="time"
@@ -777,6 +875,7 @@ const AttendanceReport = () => {
       onChange={(e) =>
         setManualEditData({ ...manualEditData, punchIn: e.target.value })
       }
+      sx={{marginTop:'14px'}}
     />
     <TextField
       label="Punch Out (Manually)"
@@ -810,22 +909,29 @@ const AttendanceReport = () => {
       }
     />
   </DialogContent>
-  <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, px: 2 }}>
+  <DialogActions sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, px: 2, gap: 0 }}>
     <Button
       onClick={handleManualEditDialogClose}
-      sx={{ textTransform: 'capitalize', color: 'gray' }}
+      sx={{
+        backgroundColor: '#fce4ec',
+        color: 'rgb(255, 100, 100)',
+        width: '100px',
+        '&:hover': {
+          backgroundColor: '#f8bbd0',
+        },
+      }}
     >
       Cancel
     </Button>
     <Button
       variant="contained"
-      color="primary"
       onClick={handleSaveManualEdit}
       sx={{
-        textTransform: 'capitalize',
-        backgroundColor: '#1976d2',
+        backgroundColor: 'rgb(229, 255, 225)',
+        color: 'rgb(43, 217, 144)',
+        width: '100px',
         '&:hover': {
-          backgroundColor: '#1565c0',
+          backgroundColor: 'rgb(229, 255, 225)',
         },
       }}
     >

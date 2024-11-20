@@ -15,6 +15,7 @@ import EditLabour from './EditLabour/EditLabour';
 import ProtectedRoute from './components/ProtectedRoutes';
 import AttendanceReport from './components/AttendanceReport/AttendanceReport';
 import WagesReport from './components/WagesReport/WagesReport';
+import PeopleReport from './components/PeopleReport/PeopleReport';
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -91,6 +92,7 @@ function App() {
                     <Route path="/edit-labour" element={<EditLabour />} />
                     <Route path="/attendanceReport" element={<AttendanceReport onFormSubmit={handleFormSubmit} />} />
                     <Route path="/wagesReport" element={<WagesReport onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/peopleReport" element={<PeopleReport onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }

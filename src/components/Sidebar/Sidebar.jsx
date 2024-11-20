@@ -92,7 +92,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
       </div>
 
       <div className="other-sections">
-        {SidebarData.filter(item => (!user?.accessPages || user?.accessPages?.includes(item.heading) || item.heading === "Attendance Report" || item.heading === "Wages Report") && item.heading !== "Application").map((item, index) => (
+        {SidebarData.filter(item => (!user?.accessPages || user?.accessPages?.includes(item.heading) || item.heading === "Attendance Report" || item.heading === "Wages Report" || item.heading === "People") && item.heading !== "Application").map((item, index) => (
           <div
             key={index}
             className={`profile-icon1 ${activeSection === item.heading ? 'active-section' : ''}`}

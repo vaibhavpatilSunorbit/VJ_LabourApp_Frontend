@@ -77,6 +77,12 @@ export const SidebarData = [
     heading: "Wages Report",
     path: "wagesReport",
     roles: ["admin"],
+  },
+  {
+    icon: UilFileAlt,
+    heading: "People",
+    path: "peopleReport",
+    roles: ["admin"],
   }
 ];
 
