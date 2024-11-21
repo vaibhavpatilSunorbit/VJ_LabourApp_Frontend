@@ -27,7 +27,7 @@ import {
     InputLabel,
     IconButton,
     Menu,
-    MenuItem, Select
+    MenuItem, Select, Avatar
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -52,7 +52,7 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import CircleIcon from '@mui/icons-material/Circle';
 
 
-const LabourDetails = ({ departments, projectNames, labour }) => {
+const PeopleReport = ({ departments, projectNames, labour }) => {
     const { user } = useUser();
     const [labours, setLabours] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -91,6 +91,7 @@ const LabourDetails = ({ departments, projectNames, labour }) => {
     const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
     // const { labourId } = location.state || {};
     const { hideResubmit, labourId } = location.state || {};
+    const [labourDetails, setLabourDetails] = useState(null);
 
     const [anchorEl, setAnchorEl] = useState(null); // For the dropdown menu
     const [filter, setFilter] = useState(""); // To store selected filter
@@ -429,29 +430,29 @@ const LabourDetails = ({ departments, projectNames, labour }) => {
         } else if (tabValue === 1) {
             // Employees tab: Filter labours with "labourOwnership = VJ"
             return filteredIconLabours.length > 0
-                ? filteredIconLabours.filter(labour => labour.labourOwnership === 'VJ')
-                : labours.filter(labour => labour.labourOwnership === 'VJ');
+                ? filteredIconLabours.filter(labour => labour.labourOwnership === 'VJ' && labour.status === 'Approved')
+                : labours.filter(labour => labour.labourOwnership === 'VJ' && labour.status === 'Approved');
         } else if (tabValue === 2) {
             // Contractors tab: Filter labours with "labourOwnership = CONTRACTOR"
             return filteredIconLabours.length > 0
-                ? filteredIconLabours.filter(labour => labour.labourOwnership === 'CONTRACTOR')
-                : labours.filter(labour => labour.labourOwnership === 'CONTRACTOR');
+                ? filteredIconLabours.filter(labour => labour.labourOwnership === 'CONTRACTOR' && labour.status === 'Approved')
+                : labours.filter(labour => labour.labourOwnership === 'CONTRACTOR' && labour.status === 'Approved');
         } else if (tabValue === 3) {
             // Rejected tab: Filter labours with status in ["Rejected", "Resubmit", "Disable"]
             return filteredIconLabours.length > 0
                 ? filteredIconLabours.filter(labour =>
-                      ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
-                  )
+                    ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
+                )
                 : labours.filter(labour =>
-                      ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
-                  );
+                    ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
+                );
         }
         // Default: Return all labours if no specific tab matches
         // return filteredIconLabours.length > 0 ? filteredIconLabours : labours;
         return filteredLabours.length > 0 ? filteredLabours : labours;
     };
-    
-    
+
+
 
     const confirmTransfer = async () => {
         setOpenDialogSite(false); // Close the dialog
@@ -497,8 +498,8 @@ const LabourDetails = ({ departments, projectNames, labour }) => {
     const labourCounts = useMemo(() => {
         return {
             all: labours.filter(labour => labour.status === 'Approved').length,
-            employees: labours.filter(labour => labour.labourOwnership === 'VJ').length,
-            contractors: labours.filter(labour => labour.labourOwnership === 'CONTRACTOR').length,
+            employees: labours.filter(labour => labour.labourOwnership === 'VJ' && labour.status === 'Approved').length,
+            contractors: labours.filter(labour => labour.labourOwnership === 'CONTRACTOR' && labour.status === 'Approved').length,
             rejected: labours.filter(labour =>
                 ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
             ).length,
@@ -526,11 +527,13 @@ const LabourDetails = ({ departments, projectNames, labour }) => {
         }
     };
 
-
+    const handleEditPeople = (labour) => {
+        navigate(`/peopleEditDetails`, { state: { labourId: labour.id } }); // Pass labour.id in the state
+    };
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
-            {/* <Typography variant="h5" >
-        Labour Details
+            {/* <Typography variant="h6" sx={{marginLeft:'8px'}} >
+        People
       </Typography> */}
 
             <Box ml={-1.5}>
@@ -676,7 +679,7 @@ const LabourDetails = ({ departments, projectNames, labour }) => {
                             <ClipLoader size={20} color={"rgb(14 198 46)"} loadingExcel={loadingExcel} />
                         </Box>
                     )}
-                    {' Download Excel'}
+                    {' Import Excel'}
                 </Button>
 
 
@@ -808,7 +811,7 @@ const LabourDetails = ({ departments, projectNames, labour }) => {
                             ).map((labour, index) => (
                                 <TableRow key={labour.id}>
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                    {tabValue !== 3 &&<TableCell>{labour.LabourID}</TableCell>}
+                                    {tabValue !== 3 && <TableCell>{labour.LabourID}</TableCell>}
                                     <TableCell>{labour.name}</TableCell>
                                     <TableCell>{labour.status}</TableCell>
                                     <TableCell sx={{ position: 'relative' }}>
@@ -819,19 +822,19 @@ const LabourDetails = ({ departments, projectNames, labour }) => {
 
                                             {/* Display the indicator based on conditions */}
                                             {labour.status === 'Approved' && labour.LabourID && (
-                                               <Button
-                                               variant="contained"
-                                               sx={{
-                                                 backgroundColor: 'rgb(229, 255, 225)',
-                                                 color: 'rgb(43, 217, 144)',
-                                                 '&:hover': {
-                                                   backgroundColor: 'rgb(229, 255, 225)',
-                                                 },
-                                               }}
-                                            //    onClick={() => handleEditLabourOpen(labour)}
-                                             >
-                                               Edit
-                                             </Button>
+                                                <Button
+                                                    variant="contained"
+                                                    sx={{
+                                                        backgroundColor: 'rgb(229, 255, 225)',
+                                                        color: 'rgb(43, 217, 144)',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgb(229, 255, 225)',
+                                                        },
+                                                    }}
+                                                    onClick={() => handleEditPeople(labour)}
+                                                >
+                                                    Edit
+                                                </Button>
                                             )}
                                         </Box>
                                     </TableCell>
@@ -850,4 +853,4 @@ const LabourDetails = ({ departments, projectNames, labour }) => {
     );
 };
 
-export default LabourDetails;
+export default PeopleReport;

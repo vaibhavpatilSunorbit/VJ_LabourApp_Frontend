@@ -49,9 +49,10 @@
   
 .loader {
     width: 50px;
-    padding: 6px;
+    /* padding: -1px; */
     border-radius: 50%;
     background: #BB86FC;
+    /* background: #13315c; */
     --_m: 
       conic-gradient(#0000 10%,#000),
       linear-gradient(#000 0 0) content-box;
