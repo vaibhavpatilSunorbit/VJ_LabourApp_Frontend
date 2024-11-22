@@ -11,6 +11,7 @@ import {
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../../Data";
+import { differenceInYears, differenceInMonths, differenceInDays } from "date-fns"
 
 const PeopleEditDetails = () => {
     const [loading, setLoading] = useState(true);

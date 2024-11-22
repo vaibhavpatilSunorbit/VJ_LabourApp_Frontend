@@ -20,6 +20,7 @@ import {
     MenuItem,
     Tabs,
     Tab,
+    Typography,
     InputAdornment
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -30,6 +31,7 @@ import { API_BASE_URL } from "../../Data";
 import "./attendanceReport.css";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import CircleIcon from '@mui/icons-material/Circle';
 import SearchIcon from '@mui/icons-material/Search';
 // toast.configure();
 
@@ -62,6 +64,8 @@ const AttendanceReport = () => {
     });
     const [error, setError] = useState(null);
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
 
 
 
@@ -406,6 +410,35 @@ const AttendanceReport = () => {
     setSelectedLabour(selectedLabour);
   };
 
+  const fetchAttendanceWithLoading = async () => {
+    setIsLoading(true);
+    try {
+      await fetchAttendanceForMonth(); // Fetch data
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const StatusLegend = () => (
+    <Box display="flex" flexDirection="row" alignItems="baseline" ml={2} mt={2}>
+      <Box display="flex" alignItems="center" mb={1} mr={2}>
+        <CircleIcon sx={{ color: "#4CAF50", fontSize: "13px", marginRight: "4px" }} />
+        <Typography sx={{ fontSize: "0.875rem", color: "#5e636e" }}>Present (P)</Typography>
+      </Box>
+      <Box display="flex" alignItems="center" mb={1} mr={2}>
+        <CircleIcon sx={{ color: "#F44336", fontSize: "13px", marginRight: "4px" }} />
+        <Typography sx={{ fontSize: "0.875rem", color: "#5e636e" }}>Half Day (HD)</Typography>
+      </Box>
+      <Box display="flex" alignItems="center" mb={1} mr={2}>
+        <CircleIcon sx={{ color: "#8236BC", fontSize: "13px", marginRight: "4px" }} />
+        <Typography sx={{ fontSize: "0.875rem", color: "#5e636e" }}>Holiday (H)</Typography>
+      </Box>
+      <Box display="flex" alignItems="center">
+        <CircleIcon sx={{ color: "#FF6F00", fontSize: "13px", marginRight: "4px" }} />
+        <Typography sx={{ fontSize: "0.875rem", color: "#5e636e" }}>Absent (A)</Typography>
+      </Box>
+    </Box>
+  );
   
     const displayLabours = labours;
     return (
@@ -739,206 +772,268 @@ const AttendanceReport = () => {
             </Box> */}
 
              {/* Main Modal */}
-             <Dialog
-        open={modalOpen}
-        onClose={handleModalClose}
-        fullWidth
-        maxWidth="lg"
-      >
-        <DialogTitle>
-          Attendance for {selectedLabour?.name} (LabourID : {selectedLabour?.LabourID})
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{display: 'flex', gap:'30px'}}>
-            <Select
-              value={selectedMonth}
-              sx={{width:'20%'}}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              displayEmpty
+            <Dialog
+                open={modalOpen}
+                onClose={handleModalClose}
+                fullWidth
+                maxWidth="lg"
             >
-              <MenuItem value="" disabled>
-                Select Month
-              </MenuItem>
-              {months.map((month) => (
-                <MenuItem key={month.value} value={month.value}>
-                  {month.label}
-                </MenuItem>
-              ))}
-            </Select>
-            <Select
-              value={selectedYear}
-              sx={{width:'20%'}}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              displayEmpty
-            >
-              <MenuItem value={selectedYear}>{selectedYear}</MenuItem>
-              <MenuItem value={selectedYear - 1}>{selectedYear - 1}</MenuItem>
-            </Select>
-            <Button onClick={fetchAttendanceForMonth}
-              sx={{
-                backgroundColor: 'rgb(229, 255, 225)',
-                color: 'rgb(43, 217, 144)',
-                width: '10%',
-                marginTop: '6px',
-                '&:hover': {
-                  backgroundColor: 'rgb(229, 255, 225)',
-                },
-              }}
-            >Fetch</Button>
-          </Box>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Punch In</TableCell>
-                <TableCell>Punch Out</TableCell>
-                <TableCell>Total Hours</TableCell>
-                <TableCell>Overtime</TableCell>
-                <TableCell>Holiday</TableCell>
-                <TableCell>Remark</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {attendanceData.map((day, index) => (
-                <TableRow key={index}>
-                  <TableCell>{day.date}</TableCell>
-                  <TableCell>{day.status}</TableCell>
-                  <TableCell>{day.firstPunch}</TableCell>
-                  <TableCell>{day.lastPunch}</TableCell>
-                  <TableCell>{day.totalHours}</TableCell>
-                  <TableCell>{day.overtime}</TableCell>
-                  <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell>
-                  <TableCell>{day.isWeeklyOff ? "Yes" : "No"}</TableCell>
-                  <TableCell>{day.remark || "-"}</TableCell>
-                  <TableCell>
-                    <Button
-                      sx={{
-                        backgroundColor: 'rgb(229, 255, 225)',
-                        color: 'rgb(43, 217, 144)',
-                        '&:hover': {
-                          backgroundColor: 'rgb(229, 255, 225)',
-                        },
-                      }}
-                      onClick={() => handleManualEditDialogOpen(day)}
+                <DialogTitle>
+                    Attendance for {selectedLabour?.name} (LabourID: {selectedLabour?.LabourID})
+                </DialogTitle>
+                <DialogContent
+                    sx={{
+                        height: "500px", // Fixed height for dialog content
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    <Box sx={{ display: "flex", gap: "30px", mb: 2 }}>
+                        <Select
+                            value={selectedMonth}
+                            sx={{ width: "14%" }}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled>
+                                Select Month
+                            </MenuItem>
+                            {months.map((month) => (
+                                <MenuItem key={month.value} value={month.value}>
+                                    {month.label}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                        <Select
+                            value={selectedYear}
+                            sx={{ width: "14%" }}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value={selectedYear}>{selectedYear}</MenuItem>
+                            <MenuItem value={selectedYear - 1}>{selectedYear - 1}</MenuItem>
+                        </Select>
+                        <Button
+                            onClick={fetchAttendanceWithLoading}
+                            sx={{
+                                backgroundColor: "rgb(229, 255, 225)",
+                                color: "rgb(43, 217, 144)",
+                                width: "10%",
+                                marginTop: "6px",
+                                "&:hover": {
+                                    backgroundColor: "rgb(229, 255, 225)",
+                                },
+                            }}
+                        >
+                            Fetch
+                        </Button>
+
+                        <StatusLegend />
+                    </Box>
+                    <Box
+                        sx={{
+                            flex: 1,
+                            overflow: "auto",
+                            display: "flex",
+                            justifyContent: isLoading ? "center" : "flex-start",
+                            alignItems: isLoading ? "center" : "stretch",
+                            position: "relative",
+                        }}
                     >
-                      Edit
+                        {isLoading ? (
+                            <Loading /> // Display Loading component centered in the table area
+                        ) : (
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Date</TableCell>
+                                        <TableCell>Status</TableCell>
+                                        <TableCell>Punch In</TableCell>
+                                        <TableCell>Punch Out</TableCell>
+                                        <TableCell>Total Hours</TableCell>
+                                        <TableCell>Overtime</TableCell>
+                                        <TableCell>Holiday</TableCell>
+                                        <TableCell>Remark</TableCell>
+                                        <TableCell>Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {attendanceData.map((day, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{day.date}</TableCell>
+                                            <TableCell>
+                                                <Box
+                                                    sx={{
+                                                        position: "relative",
+                                                        padding: "7px 16px",
+                                                        borderRadius: "4px",
+                                                        display: "inline-block",
+                                                        textAlign: "center",
+                                                        fontWeight: "bold",
+                                                        fontSize: "0.875rem",
+                                                        ...(day.status === "H" && {
+                                                            backgroundColor: "#EFE6F7",
+                                                            color: "#8236BC",
+                                                        }),
+                                                        ...(day.status === "P" && {
+                                                            backgroundColor: "#E5FFE1",
+                                                            color: "#4CAF50",
+                                                        }),
+                                                        ...(day.status === "HD" && {
+                                                            backgroundColor: "rgba(255, 105, 97, 0.3)",
+                                                            color: "#F44336",
+                                                        }),
+                                                        ...(day.status === "A" && {
+                                                            backgroundColor: "rgba(255, 223, 186, 0.3)",
+                                                            color: "#FF6F00",
+                                                        }),
+                                                    }}
+                                                >
+                                                    {day.status}
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>{day.firstPunch || "-"}</TableCell>
+                                            <TableCell>{day.lastPunch || "-"}</TableCell>
+                                            <TableCell>{day.totalHours || "0.00"}</TableCell>
+                                            {/* <TableCell>{day.overtime || "0.0"}</TableCell> */}
+                                            <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell>
+                                            <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell>
+                                            <TableCell>{day.remark || "-"}</TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    sx={{
+                                                        backgroundColor: "rgb(229, 255, 225)",
+                                                        color: "rgb(43, 217, 144)",
+                                                        "&:hover": {
+                                                            backgroundColor: "rgb(229, 255, 225)",
+                                                        },
+                                                    }}
+                                                    onClick={() => handleManualEditDialogOpen(day)}
+                                                >
+                                                    Edit
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={handleModalClose}
+                        sx={{
+                            backgroundColor: "#fce4ec",
+                            color: "rgb(255, 100, 100)",
+                            width: "100px",
+                            "&:hover": {
+                                backgroundColor: "#f8bbd0",
+                            },
+                        }}
+                    >
+                        Close
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleModalClose}
-            sx={{
-                backgroundColor: '#fce4ec',
-                color: 'rgb(255, 100, 100)',
-                width: '100px',
-                '&:hover': {
-                  backgroundColor: '#f8bbd0',
-                },
-              }}
-          >Close</Button>
-          <Button variant="contained"
-           sx={{
-            backgroundColor: 'rgb(229, 255, 225)',
-            color: 'rgb(43, 217, 144)',
-            width: '100px',
-            '&:hover': {
-              backgroundColor: 'rgb(229, 255, 225)',
-            },
-          }}
-          onClick={saveFullMonthAttendance}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
+                    <Button
+                        variant="contained"
+                        sx={{
+                            backgroundColor: "rgb(229, 255, 225)",
+                            color: "rgb(43, 217, 144)",
+                            width: "100px",
+                            "&:hover": {
+                                backgroundColor: "rgb(229, 255, 225)",
+                            },
+                        }}
+                        onClick={saveFullMonthAttendance}
+                    >
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            
 
       {/* Manual Edit Dialog */}
-      <Dialog
-  open={editManualDialogOpen}
-  onClose={handleManualEditDialogClose}
-  fullWidth
-  maxWidth="sm"
->
-  <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>Edit Attendance</DialogTitle>
-  <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2}}>
-    <TextField
-      label="Punch In (Manually)"
-      type="time"
-      variant="outlined"
-      fullWidth
-      value={manualEditData.punchIn}
-      onChange={(e) =>
-        setManualEditData({ ...manualEditData, punchIn: e.target.value })
-      }
-      sx={{marginTop:'14px'}}
-    />
-    <TextField
-      label="Punch Out (Manually)"
-      type="time"
-      variant="outlined"
-      fullWidth
-      value={manualEditData.punchOut}
-      onChange={(e) =>
-        setManualEditData({ ...manualEditData, punchOut: e.target.value })
-      }
-    />
-    <TextField
-      label="Overtime (Manually)"
-      type="number"
-      variant="outlined"
-      fullWidth
-      value={manualEditData.overtime}
-      onChange={(e) =>
-        setManualEditData({ ...manualEditData, overtime: e.target.value })
-      }
-    />
-    <TextField
-      label="Remark"
-      variant="outlined"
-      fullWidth
-      multiline
-      rows={3}
-      value={manualEditData.remark}
-      onChange={(e) =>
-        setManualEditData({ ...manualEditData, remark: e.target.value })
-      }
-    />
-  </DialogContent>
-  <DialogActions sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, px: 2, gap: 0 }}>
-    <Button
-      onClick={handleManualEditDialogClose}
-      sx={{
-        backgroundColor: '#fce4ec',
-        color: 'rgb(255, 100, 100)',
-        width: '100px',
-        '&:hover': {
-          backgroundColor: '#f8bbd0',
-        },
-      }}
-    >
-      Cancel
-    </Button>
-    <Button
-      variant="contained"
-      onClick={handleSaveManualEdit}
-      sx={{
-        backgroundColor: 'rgb(229, 255, 225)',
-        color: 'rgb(43, 217, 144)',
-        width: '100px',
-        '&:hover': {
-          backgroundColor: 'rgb(229, 255, 225)',
-        },
-      }}
-    >
-      Save
-    </Button>
-  </DialogActions>
-</Dialog>
+            <Dialog
+                open={editManualDialogOpen}
+                onClose={handleManualEditDialogClose}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>Edit Attendance</DialogTitle>
+                <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+                    <TextField
+                        label="Punch In (Manually)"
+                        type="time"
+                        variant="outlined"
+                        fullWidth
+                        value={manualEditData.punchIn}
+                        onChange={(e) =>
+                            setManualEditData({ ...manualEditData, punchIn: e.target.value })
+                        }
+                        sx={{ marginTop: '14px' }}
+                    />
+                    <TextField
+                        label="Punch Out (Manually)"
+                        type="time"
+                        variant="outlined"
+                        fullWidth
+                        value={manualEditData.punchOut}
+                        onChange={(e) =>
+                            setManualEditData({ ...manualEditData, punchOut: e.target.value })
+                        }
+                    />
+                    <TextField
+                        label="Overtime (Manually)"
+                        type="number"
+                        variant="outlined"
+                        fullWidth
+                        value={manualEditData.overtime}
+                        onChange={(e) =>
+                            setManualEditData({ ...manualEditData, overtime: e.target.value })
+                        }
+                    />
+                    <TextField
+                        label="Remark"
+                        variant="outlined"
+                        fullWidth
+                        multiline
+                        rows={3}
+                        value={manualEditData.remark}
+                        onChange={(e) =>
+                            setManualEditData({ ...manualEditData, remark: e.target.value })
+                        }
+                    />
+                </DialogContent>
+                <DialogActions sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, px: 2, gap: 0 }}>
+                    <Button
+                        onClick={handleManualEditDialogClose}
+                        sx={{
+                            backgroundColor: '#fce4ec',
+                            color: 'rgb(255, 100, 100)',
+                            width: '100px',
+                            '&:hover': {
+                                backgroundColor: '#f8bbd0',
+                            },
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleSaveManualEdit}
+                        sx={{
+                            backgroundColor: 'rgb(229, 255, 225)',
+                            color: 'rgb(43, 217, 144)',
+                            width: '100px',
+                            '&:hover': {
+                                backgroundColor: 'rgb(229, 255, 225)',
+                            },
+                        }}
+                    >
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
         </Box>
     );
