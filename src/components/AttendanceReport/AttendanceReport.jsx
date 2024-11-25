@@ -148,7 +148,7 @@ const AttendanceReport = () => {
 
     useEffect(() => {
         fetchLabours();
-        fetchCachedAttendance();
+        fetchAttendanceForMonthAll();
     }, []);
 
     const handleModalOpen = (labour) => {
@@ -209,16 +209,17 @@ const AttendanceReport = () => {
             const response = await axios.get(`${API_BASE_URL}/labours/cachedattendance`);
             const attendanceList = response.data;
 
-            // Process attendance to only include times for first and last punches
             const processedAttendance = attendanceList.map(att => ({
                 ...att,
                 firstPunch: att.firstPunch ? new Date(att.firstPunch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '-',
                 lastPunch: att.lastPunch ? new Date(att.lastPunch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '-',
-                totalOvertimeHours: att.totalOvertimeHours ? Math.floor(att.totalOvertimeHours * 10) / 10 : '-'
+                totalOvertimeHours: att.totalOvertimeHours ? parseFloat(att.totalOvertimeHours.toFixed(1)) : '-'
             }));
+
             setAttendanceData(processedAttendance);
         } catch (error) {
             console.error('Error fetching cached attendance data:', error);
+            toast.error('Failed to fetch cached attendance data. Please try again later.');
         }
         setLoading(false);
     };
@@ -226,47 +227,66 @@ const AttendanceReport = () => {
 
 
     const fetchAttendanceForMonthAll = async () => {
-        if (!selectedMonth) return;
+        if (!selectedMonth || !selectedYear) {
+            toast.warning('Please select a valid month and year.');
+            return;
+        }
         setLoading(true);
         try {
+            // Fetch data for all labours from the API
             const response = await axios.get(`${API_BASE_URL}/labours/attendance`, {
                 params: { month: selectedMonth, year: selectedYear }
             });
-
+    
             const attendanceList = response.data;
-
-            const processedAttendance = attendanceList.map(att => ({
-                ...att,
-                firstPunch: att.firstPunch ? new Date(att.firstPunch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
-                lastPunch: att.lastPunch ? new Date(att.lastPunch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
-                totalOvertimeHours: att.totalOvertimeHours ? Math.floor(att.totalOvertimeHours * 10) / 10 : '-'
+    
+            // Process the attendance data for all labours
+            const processedAttendance = attendanceList.map(labour => ({
+                labourId: labour.labourId,
+                totalDays: labour.totalDays,
+                presentDays: labour.presentDays,
+                halfDays: labour.halfDays,
+                absentDays: labour.absentDays,
+                holidayDays: labour.holidayDays,
+                shift: labour.shift,
+                totalOvertimeHours: labour.totalOvertimeHours,
+                // Add isHoliday or any other properties to each day in monthlyAttendance
+                monthlyAttendance: labour.monthlyAttendance.map(day => ({
+                    ...day,
+                    isHoliday: day.status === 'H',
+                    isWeeklyOff: day.status === 'WO', // Example: Add a weekly off status if needed
+                }))
             }));
-
+    
             setAttendanceData(processedAttendance);
-
-            const totalDaysSum = processedAttendance.reduce((acc, labor) => acc + labor.totalDays, 0);
-            const presentDaysSum = processedAttendance.reduce((acc, labor) => acc + labor.presentDays, 0);
-            const totalOvertimeSum = processedAttendance.reduce((acc, labor) => acc + (typeof labor.totalOvertimeHours === 'number' ? labor.totalOvertimeHours : 0), 0);
-
+    
+            // Calculate summary metrics
+            const totalDaysSum = processedAttendance.reduce((acc, labour) => acc + labour.totalDays, 0);
+            const presentDaysSum = processedAttendance.reduce((acc, labour) => acc + labour.presentDays, 0);
+            const totalOvertimeSum = processedAttendance.reduce(
+                (acc, labour) => acc + (typeof labour.totalOvertimeHours === 'number' ? labour.totalOvertimeHours : 0),
+                0
+            );
+    
             setTotalDays(totalDaysSum);
             setPresentDays(presentDaysSum);
             setTotalOvertime(totalOvertimeSum);
-        }catch (error) {
+        } catch (error) {
             console.error('Error fetching attendance data:', error);
     
-            // Check for response message and show toast
-            if (error.response || error.response.data || error.response.data.message) {
-                toast.error(error.response.data.message); // Show the exact message from the API
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
             } else {
                 toast.error('Error fetching attendance data. Please try again later.');
             }
         }
         setLoading(false);
     };
+    
 
     useEffect(() => {
         if (selectedMonth) {
-            fetchAttendanceForMonth();
+            fetchAttendanceForMonthAll();
         }
     }, [selectedMonth, selectedYear]);
 
@@ -593,23 +613,7 @@ const AttendanceReport = () => {
                             <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
-                    {/* <TableBody>
-                        {labours
-                            .filter(labour => labour.LabourID && labour.status === 'Approved')
-                            .map((labour, index) => (
-                                <TableRow key={labour.LabourID}>
-                                <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                <TableCell>{labour.LabourID}</TableCell>
-                                <TableCell>{labour.name}</TableCell>
-                                <TableCell>{totalDays || '-'}</TableCell>
-                                <TableCell>{presentDays || '-'}</TableCell>
-                                <TableCell>{labour.overtime || '-'}</TableCell>
-                                <TableCell>
-                                    <Button onClick={() => handleModalOpen(labour)}>Edit</Button>
-                                </TableCell>
-                            </TableRow>
-                    ))}
-                </TableBody> */}
+                   
                     <TableBody>
                         {/* {labours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((labour, index) => { */}
                         {(
