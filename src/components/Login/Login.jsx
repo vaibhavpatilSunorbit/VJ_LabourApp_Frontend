@@ -262,6 +262,31 @@ const Login = () => {
   const loginUser = () => {
     setIsLoading(true);
 
+    // Check for specific input validations
+  if (!userEmail && !password) {
+    setOpenPopup(true);
+    setPopupMessage("Please Enter Correct Email and Password");
+    setPopupSeverity("error");
+    setIsLoading(false);
+    return;
+  }
+
+  if (!userEmail) {
+    setOpenPopup(true);
+    setPopupMessage("Please Enter Correct Email");
+    setPopupSeverity("error");
+    setIsLoading(false);
+    return;
+  }
+
+  if (!password) {
+    setOpenPopup(true);
+    setPopupMessage("Please Enter Correct Password");
+    setPopupSeverity("error");
+    setIsLoading(false);
+    return;
+  }
+
     const loginData = {
       emailID: userEmail,
       pasword: password
@@ -283,13 +308,38 @@ const Login = () => {
       })
       .catch((error) => {
         console.error("Error:", error);
-        setOpenPopup(true);
-        setPopupMessage("Please Enter Correct Email and Password");
-        setPopupSeverity("error");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+     // Safely check for the presence of error data
+     const errorMessage = error?.response?.data?.message;
+
+     if (errorMessage) {
+       if (errorMessage.includes("password")) {
+         setOpenPopup(true);
+         setPopupMessage("Please Enter Correct Password");
+       } else if (errorMessage.includes("email")) {
+         setOpenPopup(true);
+         setPopupMessage("Please Enter Correct Email");
+       } else {
+         setOpenPopup(true);
+         setPopupMessage("Please Enter Correct Email and Password");
+       }
+     } else {
+       setOpenPopup(true);
+       setPopupMessage("Enter Correct Email and Password. Please try again.");
+     }
+
+     setPopupSeverity("error");
+   })
+   .finally(() => {
+     setIsLoading(false);
+   });
+
+      //   setOpenPopup(true);
+      //   setPopupMessage("Please Enter Correct Email and Password");
+      //   setPopupSeverity("error");
+      // })
+      // .finally(() => {
+      //   setIsLoading(false);
+      // });
   };
 
   const signUpUser = () => {

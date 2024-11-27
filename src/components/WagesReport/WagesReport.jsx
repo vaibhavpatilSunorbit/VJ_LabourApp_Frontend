@@ -654,7 +654,7 @@ const AttendanceReport = () => {
                             <TableCell>Monthly Wages</TableCell>
                             <TableCell>Yearly Wages</TableCell>
                             {Object.values(payStructure).includes('Daily Wages') && <TableCell>Daily Wages</TableCell>}
-                            {Object.values(payStructure).includes('Fixed Monthly Wages') && <TableCell>Weakely Off</TableCell>}
+                            {Object.values(payStructure).includes('Fixed Monthly Wages') && <TableCell>Weekly Off</TableCell>}
                             {Object.values(payStructure).includes('Daily Wages') && (
                                 <>
                                     <TableCell>Overtime (Hours)</TableCell>

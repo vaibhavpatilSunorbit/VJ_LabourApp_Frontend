@@ -29,7 +29,7 @@ import SearchBar from '../SarchBar/SearchBar';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import "./attendanceReport.css";
-import { toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CircleIcon from '@mui/icons-material/Circle';
 import SearchIcon from '@mui/icons-material/Search';
@@ -72,6 +72,7 @@ const AttendanceReport = () => {
  const handleManualEditDialogOpen = (day) => {
         setSelectedDay(day);
         setManualEditData({
+            date: day.date, 
             punchIn: day.firstPunch || "",
             punchOut: day.lastPunch || "",
             overtime: day.overtime || "",
@@ -84,21 +85,47 @@ const AttendanceReport = () => {
         setEditManualDialogOpen(false);
     };
 
-    const handleSaveManualEdit = () => {
-        // Update the selected day's attendance data
-        const updatedAttendanceData = attendanceData.map((day) =>
-            day.date === selectedDay.date
-                ? {
-                      ...day,
-                      firstPunch: manualEditData.punchIn,
-                      lastPunch: manualEditData.punchOut,
-                      overtime: manualEditData.overtime,
-                      remark: manualEditData.remark,
-                  }
-                : day
-        );
-        setAttendanceData(updatedAttendanceData);
-        handleManualEditDialogClose();
+    const handleSaveManualEdit = async () => {
+        try {
+            // Construct the payload
+            const payload = {
+                labourId: selectedDay.labourId, // Corrected from labour.LabourId
+                date: selectedDay.date,
+                firstPunchManually: manualEditData.punchIn,
+                lastPunchManually: manualEditData.punchOut,
+                overtimeManually: manualEditData.overtime,
+                remarkManually: manualEditData.remark,
+            };
+    
+            console.log('selectedDay.labourId:', selectedDay); // Debug log
+            console.log('Request payload:', payload); // Debug log
+    
+            // Call the backend to upsert the data
+            await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+    
+            // Update attendanceData locally
+            const updatedAttendanceData = attendanceData.map((day) =>
+                day.date === selectedDay.date
+                    ? {
+                          ...day,
+                          firstPunch: manualEditData.punchIn,
+                          lastPunch: manualEditData.punchOut,
+                          overtime: manualEditData.overtime,
+                          remark: manualEditData.remark,
+                      }
+                    : day
+            );
+    
+            setAttendanceData(updatedAttendanceData);
+    
+            toast.success('Attendance updated successfully!');
+            handleManualEditDialogClose();
+        } catch (error) {
+            console.error('Error saving attendance:', error);
+            toast.error(
+                error.response?.data?.message || 'Error saving attendance. Please try again later.'
+            );
+        }
     };
 
 
@@ -161,34 +188,86 @@ const AttendanceReport = () => {
             console.error('LabourID is null or undefined for the selected labour.');
         }
     };
+    
+
+    // const fetchAttendanceForMonth = async () => {
+    //     if (!selectedLabourId || !selectedMonth) return;
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.get(`${API_BASE_URL}/labours/attendance/${selectedLabourId}`, {
+    //             params: { month: selectedMonth, year: selectedYear }
+    //         });
+            
+    //         const { monthlyAttendance, totalDays, presentDays, totalOvertimeHours } = response.data;
+    
+    //         // Add isHoliday and isWeeklyOff properties to each attendance day
+    //         const updatedAttendance = monthlyAttendance.map(day => ({
+    //             ...day,
+    //             isHoliday: day.status === 'H',
+    //         }));
+    
+    //         setAttendanceData(updatedAttendance);
+    //         setTotalDays(totalDays);
+    //         setPresentDays(presentDays);
+    //         setTotalOvertime(totalOvertimeHours);
+    //     } catch (error) {
+    //         console.error('Error fetching attendance data:', error);
+    
+    //         // Check for response message and show toast
+    //         if (error.response || error.response.data || error.response.data.message) {
+    //             console.log('error.response.data.message',error.response.data.message)
+    //             toast.error(error.response.data.message); // Show the exact message from the API
+    //         } else {
+    //             toast.error('Error fetching attendance data. Please try again later.');
+    //         }
+    //     }
+    //     setLoading(false);
+    // };
+    
+    // useEffect(() => {
+    //     if (selectedLabourId && selectedMonth) {
+    //         fetchAttendanceForMonth();
+    //     }
+    // }, [selectedLabourId, selectedMonth]);
+
 
     const fetchAttendanceForMonth = async () => {
         if (!selectedLabourId || !selectedMonth) return;
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/attendance/${selectedLabourId}`, {
+            const response = await axios.get(`${API_BASE_URL}/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
                 params: { month: selectedMonth, year: selectedYear }
             });
-            
-            const { monthlyAttendance, totalDays, presentDays, totalOvertimeHours } = response.data;
     
-            // Add isHoliday and isWeeklyOff properties to each attendance day
-            const updatedAttendance = monthlyAttendance.map(day => ({
-                ...day,
-                isHoliday: day.status === 'H',
-            }));
+            const attendanceList = response.data;
     
-            setAttendanceData(updatedAttendance);
-            setTotalDays(totalDays);
-            setPresentDays(presentDays);
-            setTotalOvertime(totalOvertimeHours);
+            // Generate a full list of dates for the selected month
+            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+            const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
+                const date = new Date(selectedYear, selectedMonth - 1, i + 1); // Month is 0-indexed
+                const attendanceRecord = attendanceList.find(
+                    (record) => new Date(record.Date).toDateString() === date.toDateString()
+                );
+    
+                return {
+                    // date: date.toISOString().split('T')[0], // Format: yyyy-mm-dd
+                    date: attendanceRecord?.Date.split('T')[0] || date.toISOString().split('T')[0], // Format: yyyy-mm-dd
+                    status: attendanceRecord ? attendanceRecord.Status : 'NA',
+                    firstPunch: attendanceRecord?.FirstPunch || '-',
+                    lastPunch: attendanceRecord?.LastPunch || '-',
+                    totalHours: attendanceRecord?.TotalHours || '0.00',
+                    overtime: attendanceRecord?.Overtime || '0.0',
+                    isHoliday: attendanceRecord?.Status === 'H',
+                    labourId : attendanceRecord?.LabourId || 'NA',
+                };
+            });
+    
+            setAttendanceData(fullMonthAttendance);
         } catch (error) {
             console.error('Error fetching attendance data:', error);
     
-            // Check for response message and show toast
-            if (error.response || error.response.data || error.response.data.message) {
-                console.log('error.response.data.message',error.response.data.message)
-                toast.error(error.response.data.message); // Show the exact message from the API
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
             } else {
                 toast.error('Error fetching attendance data. Please try again later.');
             }
@@ -196,11 +275,12 @@ const AttendanceReport = () => {
         setLoading(false);
     };
     
+    
     useEffect(() => {
-        if (selectedLabourId && selectedMonth) {
+        if (selectedMonth && selectedYear) {
             fetchAttendanceForMonth();
         }
-    }, [selectedLabourId, selectedMonth]);
+    }, [selectedMonth, selectedYear]);
 
 
     const fetchCachedAttendance = async () => {
@@ -226,6 +306,63 @@ const AttendanceReport = () => {
 
 
 
+    // const fetchAttendanceForMonthAll = async () => {
+    //     if (!selectedMonth || !selectedYear) {
+    //         toast.warning('Please select a valid month and year.');
+    //         return;
+    //     }
+    //     setLoading(true);
+    //     try {
+    //         // Fetch data for all labours from the API
+    //         const response = await axios.get(`${API_BASE_URL}/labours/attendance`, {
+    //             params: { month: selectedMonth, year: selectedYear }
+    //         });
+    
+    //         const attendanceList = response.data;
+    
+    //         // Process the attendance data for all labours
+    //         const processedAttendance = attendanceList.map(labour => ({
+    //             labourId: labour.labourId,
+    //             totalDays: labour.totalDays,
+    //             presentDays: labour.presentDays,
+    //             halfDays: labour.halfDays,
+    //             absentDays: labour.absentDays,
+    //             holidayDays: labour.holidayDays,
+    //             shift: labour.shift,
+    //             totalOvertimeHours: labour.totalOvertimeHours,
+    //             // Add isHoliday or any other properties to each day in monthlyAttendance
+    //             monthlyAttendance: labour.monthlyAttendance.map(day => ({
+    //                 ...day,
+    //                 isHoliday: day.status === 'H',
+    //                 isWeeklyOff: day.status === 'WO', // Example: Add a weekly off status if needed
+    //             }))
+    //         }));
+    
+    //         setAttendanceData(processedAttendance);
+    
+    //         // Calculate summary metrics
+    //         const totalDaysSum = processedAttendance.reduce((acc, labour) => acc + labour.totalDays, 0);
+    //         const presentDaysSum = processedAttendance.reduce((acc, labour) => acc + labour.presentDays, 0);
+    //         const totalOvertimeSum = processedAttendance.reduce(
+    //             (acc, labour) => acc + (typeof labour.totalOvertimeHours === 'number' ? labour.totalOvertimeHours : 0),
+    //             0
+    //         );
+    
+    //         setTotalDays(totalDaysSum);
+    //         setPresentDays(presentDaysSum);
+    //         setTotalOvertime(totalOvertimeSum);
+    //     } catch (error) {
+    //         console.error('Error fetching attendance data:', error);
+    
+    //         if (error.response?.data?.message) {
+    //             toast.error(error.response.data.message);
+    //         } else {
+    //             toast.error('Error fetching attendance data. Please try again later.');
+    //         }
+    //     }
+    //     setLoading(false);
+    // };
+    
     const fetchAttendanceForMonthAll = async () => {
         if (!selectedMonth || !selectedYear) {
             toast.warning('Please select a valid month and year.');
@@ -233,62 +370,43 @@ const AttendanceReport = () => {
         }
         setLoading(true);
         try {
-            // Fetch data for all labours from the API
-            const response = await axios.get(`${API_BASE_URL}/labours/attendance`, {
-                params: { month: selectedMonth, year: selectedYear }
+            const response = await axios.get(`${API_BASE_URL}/labours/attendancelabours`, {
+                params: { month: selectedMonth, year: selectedYear },
             });
     
             const attendanceList = response.data;
     
-            // Process the attendance data for all labours
-            const processedAttendance = attendanceList.map(labour => ({
-                labourId: labour.labourId,
-                totalDays: labour.totalDays,
-                presentDays: labour.presentDays,
-                halfDays: labour.halfDays,
-                absentDays: labour.absentDays,
-                holidayDays: labour.holidayDays,
-                shift: labour.shift,
-                totalOvertimeHours: labour.totalOvertimeHours,
-                // Add isHoliday or any other properties to each day in monthlyAttendance
-                monthlyAttendance: labour.monthlyAttendance.map(day => ({
-                    ...day,
-                    isHoliday: day.status === 'H',
-                    isWeeklyOff: day.status === 'WO', // Example: Add a weekly off status if needed
-                }))
+            const processedAttendance = attendanceList.map((labour, index) => ({
+                srNo: index + 1,
+                labourId: labour.LabourId,
+                name: labour.Name, // Ensure 'name' is included if required
+                totalDays: labour.TotalDays,
+                presentDays: labour.PresentDays,
+                halfDays: labour.HalfDays,
+                absentDays: labour.AbsentDays,
+                totalOvertimeHours: labour.TotalOvertimeHours,
+                shift: labour.Shift,
             }));
     
             setAttendanceData(processedAttendance);
-    
-            // Calculate summary metrics
-            const totalDaysSum = processedAttendance.reduce((acc, labour) => acc + labour.totalDays, 0);
-            const presentDaysSum = processedAttendance.reduce((acc, labour) => acc + labour.presentDays, 0);
-            const totalOvertimeSum = processedAttendance.reduce(
-                (acc, labour) => acc + (typeof labour.totalOvertimeHours === 'number' ? labour.totalOvertimeHours : 0),
-                0
-            );
-    
-            setTotalDays(totalDaysSum);
-            setPresentDays(presentDaysSum);
-            setTotalOvertime(totalOvertimeSum);
         } catch (error) {
             console.error('Error fetching attendance data:', error);
-    
-            if (error.response?.data?.message) {
-                toast.error(error.response.data.message);
-            } else {
-                toast.error('Error fetching attendance data. Please try again later.');
-            }
+            toast.error(error.response?.data?.message || 'Error fetching attendance data. Please try again later.');
         }
         setLoading(false);
     };
-    
 
     useEffect(() => {
-        if (selectedMonth) {
+        if (selectedMonth && selectedYear) {
             fetchAttendanceForMonthAll();
         }
     }, [selectedMonth, selectedYear]);
+
+    // useEffect(() => {
+    //     if (selectedMonth) {
+    //         fetchAttendanceForMonthAll();
+    //     }
+    // }, [selectedMonth, selectedYear]);
 
 
 
@@ -376,7 +494,8 @@ const AttendanceReport = () => {
 
     const handleModalClose = () => {
         setModalOpen(false);
-        setAttendanceData([]);
+        fetchAttendanceForMonthAll()
+        // setAttendanceData([]);
     };
 
     const handleSearchLabour = (event) => {
@@ -463,6 +582,7 @@ const AttendanceReport = () => {
     const displayLabours = labours;
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
+             <ToastContainer />
             <Box ml={-1.5}>
                 <SearchBar
                     //  handleSubmit={handleSubmit}
@@ -584,7 +704,7 @@ const AttendanceReport = () => {
                         onClick={fetchAttendanceForMonthAll}
                         disabled={loading}
                     >
-                        Featch Attendance
+                        Fetch Attendance
                     </Button>
                 </Box>
                 {/* </Box> */}
@@ -614,8 +734,7 @@ const AttendanceReport = () => {
                         </TableRow>
                     </TableHead>
                    
-                    <TableBody>
-                        {/* {labours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((labour, index) => { */}
+                    {/* <TableBody>
                         {(
         rowsPerPage > 0
             ? (searchResults.length > 0 
@@ -650,133 +769,57 @@ const AttendanceReport = () => {
                                 </TableRow>
                             );
                         })}
-                    </TableBody>
+                    </TableBody> */}
+
+<TableBody>
+    {(
+        rowsPerPage > 0
+            ? (searchResults.length > 0 
+                ? searchResults 
+                : (filteredIconLabours.length > 0 
+                    ? filteredIconLabours 
+                    : [...labours]))
+            : []
+    )
+        .filter((labour) => labour.status === 'Approved')
+        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+        .map((labour, index) => {
+            const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
+
+            return (
+                <TableRow key={labour.LabourID}>
+                    <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                    <TableCell>{labour.LabourID}</TableCell>
+                    <TableCell>{labour.name || '-'}</TableCell>
+                    <TableCell>{labour.workingHours || '-'}</TableCell>
+                    <TableCell>{labourAttendance ? labourAttendance.totalDays : '-'}</TableCell>
+                    <TableCell>{labourAttendance ? labourAttendance.presentDays : '-'}</TableCell>
+                    <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell>
+                    <TableCell>
+                        <Button
+                            onClick={() => handleModalOpen(labour)}
+                            sx={{
+                                backgroundColor: 'rgb(229, 255, 225)',
+                                color: 'rgb(43, 217, 144)',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}
+                        >
+                            Edit
+                        </Button>
+                    </TableCell>
+                </TableRow>
+            );
+        })}
+</TableBody>
+
                 </Table>
             </TableContainer>
 
-            {/* Modal to view attendance for the selected month */}
-            {/* <Box className='modalAttendance' sx={{ maxWidth: '1200px' }}>
-                <Dialog open={modalOpen} onClose={handleModalClose} >
-                    <DialogTitle>Attendance for {selectedLabour?.name} and LabourID {selectedLabour?.LabourID}</DialogTitle>
-                    <DialogContent>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
-                            <Select
-                                value={selectedLabourId}
-                                onChange={(e) => setSelectedLabourId(e.target.value)}
-                                fullWidth
-                                label="Select Labour ID"
-                            >
-                                {labours.map((labour) => (
-                                    <MenuItem key={labour.LabourID} value={labour.LabourID}>
-                                        {labour.LabourID} - {labour.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                            <Select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                                fullWidth
-                                label="Select Month"
-                            >
-                                {months.map((month) => (
-                                    <MenuItem key={month.value} value={month.value}>{month.label}</MenuItem>
-                                ))}
-                            </Select>
-                            <Select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(e.target.value)}
-                                fullWidth
-                                label="Select Year"
-                            >
-                                {[selectedYear, selectedYear - 1].map((year) => (
-                                    <MenuItem key={year} value={year}>{year}</MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
-                        <Button onClick={fetchAttendanceForMonth} variant="contained" color="primary" sx={{ display: 'flex', float: 'right', marginTop: '12px' }}>Fetch Attendance</Button>
-
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Date</TableCell>
-                                    <TableCell>Status</TableCell>
-                                    <TableCell>Punch In</TableCell>
-                                    <TableCell>Punch Out</TableCell>
-                                    <TableCell>Total Hours</TableCell>
-                                    <TableCell>Overtime (Hours)</TableCell>
-                                    <TableCell>Shift</TableCell>
-                                    <TableCell>Holiday</TableCell>
-                                    <TableCell>Weekly Off</TableCell>
-                                    <TableCell>Punch In(Manually)</TableCell>
-                                    <TableCell>Punch Our(Manually)</TableCell>
-                                    <TableCell>Overtime (Manually)</TableCell>
-                                   
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {attendanceData.map((day, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell>{day.date}</TableCell>
-                                        <TableCell>{day.status}</TableCell>
-                                        <TableCell>{day.firstPunch}</TableCell>
-                                        <TableCell>{day.lastPunch}</TableCell>
-                                        <TableCell>{day.totalHours}</TableCell>
-                                        <TableCell>{day.overtime}</TableCell>
-                                        <TableCell>{day.shift}</TableCell>
-                                        <TableCell>{day.isHoliday ? 'Yes' : 'No'}</TableCell>
-                                        <TableCell>{day.isWeeklyOff ? 'Yes' : 'No'}</TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                value={day.firstPunch || ''}
-                                                onChange={(e) => {
-                                                    const newData = [...attendanceData];
-                                                    newData[index].firstPunch = e.target.value;
-                                                    setAttendanceData(newData);
-                                                }}
-                                                variant="outlined"
-                                                size="small"
-                                                placeholder="Punch In"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                value={day.lastPunch || ''}
-                                                onChange={(e) => {
-                                                    const newData = [...attendanceData];
-                                                    newData[index].lastPunch = e.target.value;
-                                                    setAttendanceData(newData);
-                                                }}
-                                                variant="outlined"
-                                                size="small"
-                                                placeholder="Punch Out"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                value={day.overtime || ''}
-                                                onChange={(e) => {
-                                                    const newData = [...attendanceData];
-                                                    newData[index].overtime = e.target.value;
-                                                    setAttendanceData(newData);
-                                                }}
-                                                variant="outlined"
-                                                size="small"
-                                                placeholder="Overtime (Hours)"
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleModalClose}>Close</Button>
-                    </DialogActions>
-                </Dialog>
-            </Box> */}
-
-             {/* Main Modal */}
-            <Dialog
+           
+            
+            {/* <Dialog
                 open={modalOpen}
                 onClose={handleModalClose}
                 fullWidth
@@ -787,7 +830,7 @@ const AttendanceReport = () => {
                 </DialogTitle>
                 <DialogContent
                     sx={{
-                        height: "500px", // Fixed height for dialog content
+                        height: "500px", 
                         display: "flex",
                         flexDirection: "column",
                     }}
@@ -845,7 +888,7 @@ const AttendanceReport = () => {
                         }}
                     >
                         {isLoading ? (
-                            <Loading /> // Display Loading component centered in the table area
+                            <Loading /> 
                         ) : (
                             <Table>
                                 <TableHead>
@@ -899,7 +942,6 @@ const AttendanceReport = () => {
                                             <TableCell>{day.firstPunch || "-"}</TableCell>
                                             <TableCell>{day.lastPunch || "-"}</TableCell>
                                             <TableCell>{day.totalHours || "0.00"}</TableCell>
-                                            {/* <TableCell>{day.overtime || "0.0"}</TableCell> */}
                                             <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell>
                                             <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell>
                                             <TableCell>{day.remark || "-"}</TableCell>
@@ -953,7 +995,196 @@ const AttendanceReport = () => {
                         Save
                     </Button>
                 </DialogActions>
-            </Dialog>
+            </Dialog> */}
+
+<Dialog
+    open={modalOpen}
+    onClose={handleModalClose}
+    fullWidth
+    maxWidth="lg"
+>
+    <DialogTitle>
+        Attendance for {selectedLabour?.name} (LabourID: {selectedLabour?.LabourID})
+    </DialogTitle>
+    <DialogContent
+        sx={{
+            height: "500px", 
+            display: "flex",
+            flexDirection: "column",
+        }}
+    >
+        <Box sx={{ display: "flex", gap: "30px", mb: 2 }}>
+            <Select
+                value={selectedMonth}
+                sx={{ width: "14%" }}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                displayEmpty
+            >
+                <MenuItem value="" disabled>
+                    Select Month
+                </MenuItem>
+                {months.map((month) => (
+                    <MenuItem key={month.value} value={month.value}>
+                        {month.label}
+                    </MenuItem>
+                ))}
+            </Select>
+            <Select
+                value={selectedYear}
+                sx={{ width: "14%" }}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                displayEmpty
+            >
+                <MenuItem value={selectedYear}>{selectedYear}</MenuItem>
+                <MenuItem value={selectedYear - 1}>{selectedYear - 1}</MenuItem>
+            </Select>
+            <Button
+                onClick={fetchAttendanceWithLoading}
+                sx={{
+                    backgroundColor: "rgb(229, 255, 225)",
+                    color: "rgb(43, 217, 144)",
+                    width: "10%",
+                    marginTop: "6px",
+                    "&:hover": {
+                        backgroundColor: "rgb(229, 255, 225)",
+                    },
+                }}
+            >
+                Fetch
+            </Button>
+            <StatusLegend />
+        </Box>
+        <Box
+            sx={{
+                flex: 1,
+                overflow: "auto",
+                display: "flex",
+                justifyContent: isLoading ? "center" : "flex-start",
+                alignItems: isLoading ? "center" : "stretch",
+                position: "relative",
+            }}
+        >
+            {isLoading ? (
+                <Loading /> 
+            ) : (
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Sr. No</TableCell>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Status</TableCell>
+                            <TableCell>Punch In</TableCell>
+                            <TableCell>Punch Out</TableCell>
+                            <TableCell>Total Hours</TableCell>
+                            <TableCell>Overtime</TableCell>
+                            <TableCell>Holiday</TableCell>
+                            <TableCell>Remark</TableCell>
+                            <TableCell>Actions</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {attendanceData.length > 0 ? (
+                            attendanceData.map((day, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>{day.date}</TableCell>
+                                    <TableCell>
+                                        <Box
+                                            sx={{
+                                                position: 'relative',
+                                                padding: '7px 16px',
+                                                borderRadius: '4px',
+                                                display: 'inline-block',
+                                                textAlign: 'center',
+                                                fontWeight: 'bold',
+                                                fontSize: '0.875rem',
+                                                ...(day.status === 'H' && {
+                                                    backgroundColor: '#EFE6F7',
+                                                    color: '#8236BC',
+                                                }),
+                                                ...(day.status === 'P' && {
+                                                    backgroundColor: '#E5FFE1',
+                                                    color: '#4CAF50',
+                                                }),
+                                                ...(day.status === 'HD' && {
+                                                    backgroundColor: 'rgba(255, 105, 97, 0.3)',
+                                                    color: '#F44336',
+                                                }),
+                                                ...(day.status === 'A' && {
+                                                    backgroundColor: 'rgba(255, 223, 186, 0.3)',
+                                                    color: '#FF6F00',
+                                                }),
+                                                ...(day.status === 'NA' && {
+                                                    backgroundColor: '#f0f0f0',
+                                                    color: '#b0b0b0',
+                                                }),
+                                            }}
+                                        >
+                                            {day.status}
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>{day.firstPunch || "-"}</TableCell>
+                                    <TableCell>{day.lastPunch || "-"}</TableCell>
+                                    <TableCell>{day.totalHours || "0.00"}</TableCell>
+                                    <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell>
+                                    <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell>
+                                    <TableCell>{day.remark || "-"}</TableCell>
+                                    <TableCell>
+                                        <Button
+                                            sx={{
+                                                backgroundColor: "rgb(229, 255, 225)",
+                                                color: "rgb(43, 217, 144)",
+                                                "&:hover": {
+                                                    backgroundColor: "rgb(229, 255, 225)",
+                                                },
+                                            }}
+                                            onClick={() => handleManualEditDialogOpen(day)}
+                                        >
+                                            Edit
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : null}
+                    </TableBody>
+                </Table>
+            )}
+        </Box>
+    </DialogContent>
+    <DialogActions>
+        <Button
+           onClick={() => {
+            handleModalClose();
+            // fetchAttendanceForMonthAll();
+        }}
+            sx={{
+                backgroundColor: "#fce4ec",
+                color: "rgb(255, 100, 100)",
+                width: "100px",
+                "&:hover": {
+                    backgroundColor: "#f8bbd0",
+                },
+            }}
+        >
+            Close
+        </Button>
+        <Button
+            variant="contained"
+            sx={{
+                backgroundColor: "rgb(229, 255, 225)",
+                color: "rgb(43, 217, 144)",
+                width: "100px",
+                "&:hover": {
+                    backgroundColor: "rgb(229, 255, 225)",
+                },
+            }}
+            onClick={saveFullMonthAttendance}
+        >
+            Save
+        </Button>
+    </DialogActions>
+</Dialog>
+
             
 
       {/* Manual Edit Dialog */}
@@ -963,7 +1194,7 @@ const AttendanceReport = () => {
                 fullWidth
                 maxWidth="sm"
             >
-                <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>Edit Attendance</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>Edit Attendance for {manualEditData.date}</DialogTitle>
                 <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
                     <TextField
                         label="Punch In (Manually)"

@@ -273,7 +273,14 @@ const ApproveLabours = () => {
             </select>
           </div>
         </div>
-        <Button type="submit" variant="contained" color="primary" className="submit-button"  sx={{ mt: isMobile ? 0 : 3 }}>
+        <Button type="submit" variant="contained"  sx={{
+                            backgroundColor: 'rgb(229, 255, 225)',
+                            color: 'rgb(43, 217, 144)',
+                            '&:hover': {
+                              backgroundColor: 'rgb(229, 255, 225)',
+                            },
+                            mt: isMobile ? 0 : 3
+                          }} className="submit-button" >
           Submit
         </Button>
       </form>
