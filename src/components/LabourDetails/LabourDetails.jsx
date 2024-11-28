@@ -2515,7 +2515,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           {/* Green Dot */}
           <CircleIcon
             sx={{
-              color: "#4CAF50", // Green color
+              color: "#ed4b4b", // Green color
               fontSize: "13px", // Size of the dot
               marginRight: "4px",
             }}
@@ -2746,7 +2746,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                           {/* Green Dot */}
                           <CircleIcon
                             sx={{
-                              color: '#4CAF50', // Green color
+                              color: '#ed4b4b', // Green color
                               fontSize: '12px', // Smaller size for the dot
                             }}
                           />
