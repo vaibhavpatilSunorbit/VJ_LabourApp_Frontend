@@ -36,6 +36,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { useUser } from '../../UserContext/UserContext';
 import dayjs from 'dayjs';
 // import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 // toast.configure();
@@ -73,7 +74,8 @@ const AttendanceReport = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [file, setFile] = useState(null);
-
+    const { user } = useUser();
+    const [isAttendanceFetched, setIsAttendanceFetched] = useState(false);
 
 
     const handleManualEditDialogOpen = (day) => {
@@ -92,51 +94,7 @@ const AttendanceReport = () => {
     const handleManualEditDialogClose = () => {
         setEditManualDialogOpen(false);
     };
-
-    // const handleSaveManualEdit = async () => {
-    //     try {
-    //         // Construct the payload
-    //         const payload = {
-    //             labourId: selectedDay.labourId, // Corrected from labour.LabourId
-    //             date: selectedDay.date,
-    //             firstPunchManually: manualEditData.punchIn,
-    //             lastPunchManually: manualEditData.punchOut,
-    //             overtimeManually: manualEditData.overtime,
-    //             overtimemanually: manualEditData.overtimemanually,
-    //             remarkManually: manualEditData.remark,
-    //         };
-
-    //         console.log('selectedDay.labourId:', selectedDay); // Debug log
-    //         console.log('Request payload:', payload); // Debug log
-
-    //         // Call the backend to upsert the data
-    //         await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
-
-    //         // Update attendanceData locally
-    //         const updatedAttendanceData = attendanceData.map((day) =>
-    //             day.date === selectedDay.date
-    //                 ? {
-    //                     ...day,
-    //                     firstPunch: manualEditData.punchIn,
-    //                     lastPunch: manualEditData.punchOut,
-    //                     overtime: manualEditData.overtime,
-    //                     overtimemanually: manualEditData.overtimemanually,
-    //                     remark: manualEditData.remark,
-    //                 }
-    //                 : day
-    //         );
-
-    //         setAttendanceData(updatedAttendanceData);
-
-    //         toast.success('Attendance updated successfully!');
-    //         handleManualEditDialogClose();
-    //     } catch (error) {
-    //         console.error('Error saving attendance:', error);
-    //         toast.error(
-    //             error.response?.data?.message || 'Error saving attendance. Please try again later.'
-    //         );
-    //     }
-    // };
+    
 
     const handleSaveManualEdit = async () => {
         try {
@@ -147,7 +105,28 @@ const AttendanceReport = () => {
             const formattedPunchOut = manualEditData.punchOut
                 ? manualEditData.punchOut.format('HH:mm:ss')
                 : null;
-    
+
+            // Get the OnboardName from the user context
+            let onboardName = null;
+            if (user.name) {
+                onboardName = user.name;
+            } else {
+                console.error('OnboardName is not available in user context');
+            }
+
+            // Directly get workingHours from manualEditData or selectedDay
+            const workingHours = manualEditData.workingHours || selectedDay.workingHours;
+            // Validation: Ensure mutual exclusivity between first/last punch and overtime
+            if (
+                (formattedPunchIn && formattedPunchOut && manualEditData.overtime) ||
+                (!formattedPunchIn && !formattedPunchOut && !manualEditData.overtime)
+            ) {
+                toast.error(
+                    'Either provide both First Punch and Last Punch or provide Overtime manually, not both or none.'
+                );
+                return;
+            }
+
             // Construct the payload
             const payload = {
                 labourId: selectedDay.labourId,
@@ -155,41 +134,95 @@ const AttendanceReport = () => {
                 firstPunchManually: formattedPunchIn, // Includes seconds
                 lastPunchManually: formattedPunchOut, // Includes seconds
                 overtimeManually: manualEditData.overtime,
-                overtimemanually: manualEditData.overtimemanually,
                 remarkManually: manualEditData.remark,
+                workingHours: workingHours, // Add workingHours
+                OnboardName: onboardName, // Add OnboardName
             };
-    
+
             console.log('Request payload with seconds:', payload); // Debug log
-    
+
             // Call the backend to upsert the data
             await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
-    
+
             // Update attendanceData locally
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
                     ? {
-                          ...day,
-                          firstPunch: formattedPunchIn,
-                          lastPunch: formattedPunchOut,
-                          overtime: manualEditData.overtime,
-                          overtimemanually: manualEditData.overtimemanually,
-                          remark: manualEditData.remark,
-                      }
+                        ...day,
+                        firstPunch: formattedPunchIn,
+                        lastPunch: formattedPunchOut,
+                        overtime: manualEditData.overtime,
+                        remark: manualEditData.remark,
+                        workingHours: workingHours, // Update locally
+                        OnboardName: onboardName, // Update locally
+                    }
                     : day
             );
-    
+
             setAttendanceData(updatedAttendanceData);
-    
+
             toast.success('Attendance updated successfully!');
             handleManualEditDialogClose();
         } catch (error) {
             console.error('Error saving attendance:', error);
             toast.error(
-                error.response?.data?.message || 'Error saving attendance. Please try again later.'
+                error.response?.data?.message || 'Please fill full Attendance Details.'
             );
         }
     };
-    
+
+    // const handleSaveManualEdit = async () => {
+    //     try {
+    //         // Format punchIn and punchOut as HH:mm:ss
+    //         const formattedPunchIn = manualEditData.punchIn
+    //             ? manualEditData.punchIn.format('HH:mm:ss')
+    //             : null;
+    //         const formattedPunchOut = manualEditData.punchOut
+    //             ? manualEditData.punchOut.format('HH:mm:ss')
+    //             : null;
+
+    //         // Construct the payload
+    //         const payload = {
+    //             labourId: selectedDay.labourId,
+    //             date: selectedDay.date,
+    //             firstPunchManually: formattedPunchIn, // Includes seconds
+    //             lastPunchManually: formattedPunchOut, // Includes seconds
+    //             overtimeManually: manualEditData.overtime,
+    //             overtimemanually: manualEditData.overtimemanually,
+    //             remarkManually: manualEditData.remark,
+    //         };
+
+    //         console.log('Request payload with seconds:', payload); // Debug log
+
+    //         // Call the backend to upsert the data
+    //         await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+
+    //         // Update attendanceData locally
+    //         const updatedAttendanceData = attendanceData.map((day) =>
+    //             day.date === selectedDay.date
+    //                 ? {
+    //                       ...day,
+    //                       firstPunch: formattedPunchIn,
+    //                       lastPunch: formattedPunchOut,
+    //                       overtime: manualEditData.overtime,
+    //                       overtimemanually: manualEditData.overtimemanually,
+    //                       remark: manualEditData.remark,
+    //                   }
+    //                 : day
+    //         );
+
+    //         setAttendanceData(updatedAttendanceData);
+
+    //         toast.success('Attendance updated successfully!');
+    //         handleManualEditDialogClose();
+    //     } catch (error) {
+    //         console.error('Error saving attendance:', error);
+    //         toast.error(
+    //             error.response?.data?.message || 'Please fill full Attendance Details.'
+    //         );
+    //     }
+    // };
+
 
     const months = [
         { value: 1, label: 'January' },
@@ -235,18 +268,30 @@ const AttendanceReport = () => {
         }
     };
 
+    // useEffect(() => {
+    //     fetchLabours();
+    //     if (modalOpen) {
+    //         fetchAttendanceForMonth();
+    //     }
+    // }, [modalOpen]);
     useEffect(() => {
-        fetchLabours();
-        fetchAttendanceForMonthAll();
-    }, []);
+        fetchLabours(); // Fetch labours when the component mounts or some other condition
+    }, []); // Empty dependency array ensures this runs only once
+    
+    // Fetch attendance for the month only when modal is opened
+    useEffect(() => {
+        if (modalOpen) {
+            fetchAttendanceForMonth();
+        }
+    }, [modalOpen]);
 
     const handleModalOpen = (labour) => {
         if (labour && labour.LabourID) {
             setSelectedLabour(labour);
             setSelectedLabourId(labour.LabourID);
+            setModalOpen(true);
             fetchAttendanceForMonth();
             // fetchAttendanceData(labour.LabourID, startDate, endDate);
-            setModalOpen(true);
         } else {
             console.error('LabourID is null or undefined for the selected labour.');
         }
@@ -458,7 +503,7 @@ const AttendanceReport = () => {
                 halfDays: labour.HalfDays,
                 absentDays: labour.AbsentDays,
                 misspunchDays: labour.MissPunchDays,
-                totalOvertimeHours: labour.TotalOvertimeHours,
+                totalOvertimeHours: parseFloat(labour.TotalOvertimeHours.toFixed(1)),
                 shift: labour.Shift,
             }));
 
@@ -606,7 +651,7 @@ const AttendanceReport = () => {
                 year: selectedYear,
                 attendance: attendanceData,
             };
-            await axios.post(`${API_BASE_URL}/labours/attendance/save`, payload);
+            await axios.post(`${API_BASE_URL}/labours/saveattendancemonthly`, payload);
             alert("Attendance saved successfully!");
             handleModalClose();
         } catch (error) {
@@ -677,7 +722,7 @@ const AttendanceReport = () => {
                     Present (P)
                 </Typography>
             </Box>
-    
+
             {/* Half Day */}
             <Box display="flex" alignItems="center" mb={1} mr={2}>
                 <CircleIcon
@@ -696,7 +741,7 @@ const AttendanceReport = () => {
                     Half Day (HD)
                 </Typography>
             </Box>
-    
+
             {/* Holiday */}
             <Box display="flex" alignItems="center" mb={1} mr={2}>
                 <CircleIcon
@@ -715,7 +760,7 @@ const AttendanceReport = () => {
                     Holiday (H)
                 </Typography>
             </Box>
-    
+
             {/* Absent */}
             <Box display="flex" alignItems="center">
                 <CircleIcon
@@ -755,61 +800,61 @@ const AttendanceReport = () => {
 
         </Box>
     );
-    
+
     const handleExport = async () => {
         try {
-          const response = await axios.get(`${API_BASE_URL}/labours/export`, {
-            params: { startDate, endDate },
-            responseType: 'blob',
-          });
-          const url = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', 'attendance.xlsx');
-          document.body.appendChild(link);
-          link.click();
+            const response = await axios.get(`${API_BASE_URL}/labours/export`, {
+                params: { startDate, endDate },
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'attendance.xlsx');
+            document.body.appendChild(link);
+            link.click();
         } catch (error) {
-          console.error('Error exporting data:', error);
+            console.error('Error exporting data:', error);
         }
-      };
-    
-      const handleImport = async () => {
+    };
+
+    const handleImport = async () => {
         if (!file) {
-          alert('Please select an Excel file');
-          return;
+            alert('Please select an Excel file');
+            return;
         }
-      
+
         const formData = new FormData();
         formData.append('file', file);
-      
+
         try {
-          const response = await axios.post(`${API_BASE_URL}/labours/import`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
-          alert(response.data.message);
+            const response = await axios.post(`${API_BASE_URL}/labours/import`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            alert(response.data.message);
         } catch (error) {
-          if (error.response && error.response.data) {
-            const { message, invalidRows } = error.response.data;
-      
-            if (invalidRows && invalidRows.length > 0) {
-              console.error('Invalid rows:', invalidRows);
-      
-              const errorMessage = invalidRows
-                .map((row) => `Row ${row.index + 1}: ${JSON.stringify(row.row)}`)
-                .join('\n');
-      
-              alert(`Error: ${message}\n\nInvalid Rows:\n${errorMessage}`);
+            if (error.response && error.response.data) {
+                const { message, invalidRows } = error.response.data;
+
+                if (invalidRows && invalidRows.length > 0) {
+                    console.error('Invalid rows:', invalidRows);
+
+                    const errorMessage = invalidRows
+                        .map((row) => `Row ${row.index + 1}: ${JSON.stringify(row.row)}`)
+                        .join('\n');
+
+                    alert(`Error: ${message}\n\nInvalid Rows:\n${errorMessage}`);
+                } else {
+                    alert(`Error: ${message}`);
+                }
             } else {
-              alert(`Error: ${message}`);
+                console.error('Unexpected error:', error);
+                alert('An unexpected error occurred.');
             }
-          } else {
-            console.error('Unexpected error:', error);
-            alert('An unexpected error occurred.');
-          }
         }
-      };
-      
-      const renderInput = (params) => <TextField {...params} fullWidth />;
+    };
+
+    const renderInput = (params) => <TextField {...params} fullWidth />;
 
     const displayLabours = labours;
     return (
@@ -870,57 +915,57 @@ const AttendanceReport = () => {
                     width: { xs: '100%', sm: '80%', md: '100%' }, // Full width for mobile, smaller for larger screens
                     justifyContent: { xs: 'flex-start', sm: 'flex-start' },
                 }}>
-                    <Box sx={{width:'50%', gap:'20px', display:'flex', alignItems:'flex-end'}}>
-                    {/* Month Selector */}
-                    <Select
-                        value={selectedMonth}
-                        sx={{ width: { xs: '100%', sm: '20%' }, }}
-                        onChange={(e) => setSelectedMonth(e.target.value)}
-                        displayEmpty
-                    >
-                        <MenuItem value="" disabled>Select Month</MenuItem>
-                        {months.map((month) => (
-                            <MenuItem key={month.value} value={month.value}>
-                                {month.label}
-                            </MenuItem>
-                        ))}
-                    </Select>
+                    <Box sx={{ width: '50%', gap: '20px', display: 'flex', alignItems: 'flex-end' }}>
+                        {/* Month Selector */}
+                        <Select
+                            value={selectedMonth}
+                            sx={{ width: { xs: '100%', sm: '20%' }, }}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled>Select Month</MenuItem>
+                            {months.map((month) => (
+                                <MenuItem key={month.value} value={month.value}>
+                                    {month.label}
+                                </MenuItem>
+                            ))}
+                        </Select>
 
-                    {/* Year Selector */}
-                    <Select
-                        value={selectedYear}
-                        sx={{ width: { xs: '100%', sm: '20%' }, }}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        displayEmpty
-                    >
-                        {[selectedYear, selectedYear - 1].map((year) => (
-                            <MenuItem key={year} value={year}>
-                                {year}
-                            </MenuItem>
-                        ))}
-                    </Select>
+                        {/* Year Selector */}
+                        <Select
+                            value={selectedYear}
+                            sx={{ width: { xs: '100%', sm: '20%' }, }}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                            displayEmpty
+                        >
+                            {[selectedYear, selectedYear - 1].map((year) => (
+                                <MenuItem key={year} value={year}>
+                                    {year}
+                                </MenuItem>
+                            ))}
+                        </Select>
 
-                    {/* Fetch Attendance Button */}
-                    <Button
-                        variant="contained"
-                        sx={{
-                            fontSize: { xs: '10px', sm: '13px', md: '15px' },
-                            height: { xs: '40px', sm: '38px', md: '38px', lg: '38px' },
-                            width: { xs: '100%', sm: 'auto' },
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
+                        {/* Fetch Attendance Button */}
+                        <Button
+                            variant="contained"
+                            sx={{
+                                fontSize: { xs: '10px', sm: '13px', md: '15px' },
+                                height: { xs: '40px', sm: '38px', md: '38px', lg: '38px' },
+                                width: { xs: '100%', sm: 'auto' },
                                 backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                        }}
-                        onClick={fetchAttendanceForMonthAll}
-                        disabled={loading}
-                    >
-                        Fetch Attendance
-                    </Button>
-                </Box>
+                                color: 'rgb(43, 217, 144)',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}
+                            onClick={fetchAttendanceForMonthAll}
+                            disabled={loading}
+                        >
+                            Fetch Attendance
+                        </Button>
+                    </Box>
 
-               
+
                     <Box display="flex" alignItems="flex-end" gap={2}>
                         <TextField
                             label="Start Date"
@@ -931,9 +976,9 @@ const AttendanceReport = () => {
                             sx={{
                                 padding: '4px 4px 1px 4px', // Adjust the top-bottom and left-right padding
                                 '& .MuiInputBase-input': {
-                                  padding: '8px 8px', // Padding inside the input field
+                                    padding: '8px 8px', // Padding inside the input field
                                 },
-                              }}
+                            }}
                         />
                         <TextField
                             label="End Date"
@@ -944,11 +989,11 @@ const AttendanceReport = () => {
                             sx={{
                                 padding: '4px 4px 1px 4px',// Adjust the top-bottom and left-right padding
                                 '& .MuiInputBase-input': {
-                                  padding: '8px 8px', // Padding inside the input field
+                                    padding: '8px 8px', // Padding inside the input field
                                 },
-                              }}
+                            }}
                         />
-                        <Button variant="contained" onClick={handleExport}   sx={{
+                        <Button variant="contained" onClick={handleExport} sx={{
                             fontSize: { xs: '10px', sm: '13px', md: '15px' },
                             height: { xs: '40px', sm: '38px', md: '38px', lg: '38px' },
                             width: { xs: '100%', sm: 'auto' },
@@ -961,10 +1006,10 @@ const AttendanceReport = () => {
                             Export to Excel
                         </Button>
                     </Box>
-                    </Box>
+                </Box>
 
 
-                    <Box sx={{
+                <Box sx={{
                     display: 'flex',
                     flexDirection: { xs: 'row', sm: 'row' }, // Column for mobile, row for tablet and larger
                     alignItems: { xs: 'stretch', sm: 'center' }, // Center alignment for larger screens
@@ -973,20 +1018,20 @@ const AttendanceReport = () => {
                     paddingRight: { xs: 2, sm: 5 }, // Adjust padding for small screens
                     width: { xs: '100%', sm: '80%', md: '100%' }, // Full width for mobile, smaller for larger screens
                     justifyContent: { xs: 'flex-start', sm: 'flex-start' },
-                }}> 
-                        <Box sx={{width:'50%', gap:'20px', display:'flex', alignItems:'flex-end'}}>
+                }}>
+                    <Box sx={{ width: '50%', gap: '20px', display: 'flex', alignItems: 'flex-end' }}>
                         <input
                             type="file"
                             onChange={(e) => setFile(e.target.files[0])}
                             style={{
                                 // marginRight: '10px',
-                                padding: '10px 4px', 
-                                border: '1px solid #ccc', 
-                                borderRadius: '4px', 
-                                cursor: 'pointer', 
-                              }}
+                                padding: '10px 4px',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                            }}
                         />
-                        <Button variant="contained" onClick={handleImport}   sx={{
+                        <Button variant="contained" onClick={handleImport} sx={{
                             fontSize: { xs: '10px', sm: '13px', md: '15px' },
                             height: { xs: '40px', sm: '38px', md: '38px', lg: '38px' },
                             width: { xs: '100%', sm: 'auto' },
@@ -999,17 +1044,17 @@ const AttendanceReport = () => {
                             Import from Excel
                         </Button>
                     </Box>
-                <Box sx={{display:'flex', justifyContent:'flex-end'}}>
-                <TablePagination
-                    className="custom-pagination"
-                    rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                    //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                />
-                </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <TablePagination
+                            className="custom-pagination"
+                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
+                            //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                        />
+                    </Box>
                 </Box>
             </Box>
 
@@ -1304,83 +1349,83 @@ const AttendanceReport = () => {
                 maxWidth="lg"
             >
                 <DialogTitle
-                 sx={{
-                    fontSize: { xs: "14px", sm: "16px", md: "18px" }, 
-                    paddingBottom: { xs: "0px", sm: "0px", md: "18px" }, 
-                }}
+                    sx={{
+                        fontSize: { xs: "14px", sm: "16px", md: "18px" },
+                        paddingBottom: { xs: "0px", sm: "0px", md: "18px" },
+                    }}
                 >
                     Attendance for {selectedLabour?.name} (LabourID: {selectedLabour?.LabourID})
                 </DialogTitle>
                 <DialogContent
-                  sx={{
-                    height: "500px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 3,
-                    fontSize: { xs: "14px", sm: "16px" }, // Adjust content font size for mobile
-                }}
+                    sx={{
+                        height: "500px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 3,
+                        fontSize: { xs: "14px", sm: "16px" }, // Adjust content font size for mobile
+                    }}
                 >
                     <Box sx={{
                         display: "flex",
                         flexWrap: { xs: "wrap", sm: "nowrap" }, // Wrap for mobile, single row for tablet and larger
                         gap: { xs: 0.5, sm: "10px" },
                     }}>
-                          <Box sx={{
-                        display: "flex",
-                        flexWrap: { xs: "nowrap", sm: "nowrap" }, // Wrap for mobile, single row for tablet and larger
-                        gap: { xs: 0.5, sm: "10px" },
-                    }}>
-                        <Select
-                            value={selectedMonth}
-                            sx={{
-                                width: { xs: "100%", sm: "54%" }, // Full width on mobile, fixed width on tablet and larger
-                            }}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            displayEmpty
-                        >
-                            <MenuItem value="" disabled>
-                                Select Month
-                            </MenuItem>
-                            {months.map((month) => (
-                                <MenuItem key={month.value} value={month.value}>
-                                    {month.label}
+                        <Box sx={{
+                            display: "flex",
+                            flexWrap: { xs: "nowrap", sm: "nowrap" }, // Wrap for mobile, single row for tablet and larger
+                            gap: { xs: 0.5, sm: "10px" },
+                        }}>
+                            <Select
+                                value={selectedMonth}
+                                sx={{
+                                    width: { xs: "100%", sm: "54%" }, // Full width on mobile, fixed width on tablet and larger
+                                }}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                displayEmpty
+                            >
+                                <MenuItem value="" disabled>
+                                    Select Month
                                 </MenuItem>
-                            ))}
-                        </Select>
-                        <Select
-                            value={selectedYear}
-                            sx={{
-                                width: { xs: "100%", sm: "54%" }, // Full width on mobile, fixed width on tablet and larger
-                            }}
-                            onChange={(e) => setSelectedYear(e.target.value)}
-                            displayEmpty
-                        >
-                            <MenuItem value={selectedYear}>{selectedYear}</MenuItem>
-                            <MenuItem value={selectedYear - 1}>{selectedYear - 1}</MenuItem>
-                        </Select>
-                        <Button
-                            onClick={fetchAttendanceWithLoading}
-                            sx={{
-                                backgroundColor: "rgb(229, 255, 225)",
-                                color: "rgb(43, 217, 144)",
-                                height: { xs: "88%", sm: "90%", lg:"90%" }, 
-                                width: { xs: "100%", sm: "80%", lg:"80%" }, // Full width on mobile, fixed width on tablet and larger
-                                marginTop: { xs: 0.8, sm: "6px" }, // No margin on mobile
-                                "&:hover": {
+                                {months.map((month) => (
+                                    <MenuItem key={month.value} value={month.value}>
+                                        {month.label}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            <Select
+                                value={selectedYear}
+                                sx={{
+                                    width: { xs: "100%", sm: "54%" }, // Full width on mobile, fixed width on tablet and larger
+                                }}
+                                onChange={(e) => setSelectedYear(e.target.value)}
+                                displayEmpty
+                            >
+                                <MenuItem value={selectedYear}>{selectedYear}</MenuItem>
+                                <MenuItem value={selectedYear - 1}>{selectedYear - 1}</MenuItem>
+                            </Select>
+                            <Button
+                                onClick={fetchAttendanceWithLoading}
+                                sx={{
                                     backgroundColor: "rgb(229, 255, 225)",
-                                },
-                            }}
-                        >
-                            Fetch
-                        </Button>
+                                    color: "rgb(43, 217, 144)",
+                                    height: { xs: "88%", sm: "90%", lg: "90%" },
+                                    width: { xs: "100%", sm: "80%", lg: "80%" }, // Full width on mobile, fixed width on tablet and larger
+                                    marginTop: { xs: 0.8, sm: "6px" }, // No margin on mobile
+                                    "&:hover": {
+                                        backgroundColor: "rgb(229, 255, 225)",
+                                    },
+                                }}
+                            >
+                                Fetch
+                            </Button>
                         </Box>
                         <Box
-                        sx={{
-                            width: { xs: "100%", sm: "auto" }, // Full width on mobile, auto for larger screens
-                            marginTop: { xs: 0, sm: 0 }, // Add margin on mobile to separate from button
-                        }}
+                            sx={{
+                                width: { xs: "100%", sm: "auto" }, // Full width on mobile, auto for larger screens
+                                marginTop: { xs: 0, sm: 0 }, // Add margin on mobile to separate from button
+                            }}
                         >
-                        <StatusLegend />
+                            <StatusLegend />
                         </Box>
                     </Box>
                     <Box
@@ -1537,99 +1582,113 @@ const AttendanceReport = () => {
                     >
                         {/* Punch In Field */}
                         <Box>
-  <TimePicker
-    label="Punch In (Manually)"
-    value={manualEditData.punchIn}
-    onChange={(newValue) =>
-      setManualEditData({ ...manualEditData, punchIn: newValue })
-    }
-    views={['hours', 'minutes', 'seconds']} // Enable hours, minutes, and seconds
-    ampm={false} // 24-hour format
-    inputFormat="HH:mm:ss" // Format displayed in the input field
-    renderInput={(params) => <TextField {...params} fullWidth />}
-  />
-</Box>
+                            <TimePicker
+                                label="Punch In (Manually)"
+                                // value={manualEditData.punchIn}
+                                value={
+                                    manualEditData?.punchIn
+                                        ? dayjs(manualEditData.punchIn, 'HH:mm:ss')
+                                        : selectedDay?.firstPunch
+                                            ? dayjs(selectedDay.firstPunch, 'HH:mm:ss')
+                                            : null
+                                }
+                                onChange={(newValue) =>
+                                    setManualEditData({ ...manualEditData, punchIn: newValue })
+                                }
+                                views={['hours', 'minutes', 'seconds']} // Enable hours, minutes, and seconds
+                                ampm={false} // 24-hour format
+                                inputFormat="HH:mm:ss" // Format displayed in the input field
+                                renderInput={(params) => <TextField {...params} fullWidth />}
+                            />
+                        </Box>
 
-<Box>
-  <TimePicker
-    label="Punch Out (Manually)"
-    value={manualEditData.punchOut}
-    onChange={(newValue) =>
-      setManualEditData({ ...manualEditData, punchOut: newValue })
-    }
-    views={['hours', 'minutes', 'seconds']} // Enable hours, minutes, and seconds
-    ampm={false} // 24-hour format
-    inputFormat="HH:mm:ss" // Format displayed in the input field
-    renderInput={(params) => <TextField {...params} fullWidth />}
-  />
-</Box>
-            {/* Overtime Field */}
-            <TextField
-              label="Overtime (Manually)"
-              type="number"
-              variant="outlined"
-              fullWidth
-              value={manualEditData.overtime}
-              onChange={(e) =>
-                setManualEditData({ ...manualEditData, overtime: e.target.value })
-              }
-            />
+                        <Box>
+                            <TimePicker
+                                label="Punch Out (Manually)"
+                                // value={manualEditData.punchOut}
+                                value={
+                                    manualEditData?.punchOut
+                                        ? dayjs(manualEditData.punchOut, 'HH:mm:ss')
+                                        : selectedDay?.lastPunch
+                                            ? dayjs(selectedDay.lastPunch, 'HH:mm:ss')
+                                            : null
+                                }
+                                onChange={(newValue) =>
+                                    setManualEditData({ ...manualEditData, punchOut: newValue })
+                                }
+                                views={['hours', 'minutes', 'seconds']} // Enable hours, minutes, and seconds
+                                ampm={false} // 24-hour format
+                                inputFormat="HH:mm:ss" // Format displayed in the input field
+                                renderInput={(params) => <TextField {...params} fullWidth />}
+                            />
+                        </Box>
+                        {/* Overtime Field */}
+                        <TextField
+                            label="Overtime (Manually)"
+                            type="number"
+                            variant="outlined"
+                            fullWidth
+                            value={manualEditData.overtime}
+                            onChange={(e) =>
+                                setManualEditData({ ...manualEditData, overtime: e.target.value })
+                            }
+                        />
 
-            {/* Remark Field */}
-            <TextField
-              label="Remark"
-              variant="outlined"
-              fullWidth
-              multiline
-              rows={3}
-              value={manualEditData.remark}
-              onChange={(e) =>
-                setManualEditData({ ...manualEditData, remark: e.target.value })
-              }
-            />
-          </DialogContent>
-          <DialogActions
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              mt: 2,
-              px: 2,
-              gap: 0,
-            }}
-          >
-            {/* Cancel Button */}
-            <Button
-              onClick={handleManualEditDialogClose}
-              sx={{
-                backgroundColor: '#fce4ec',
-                color: 'rgb(255, 100, 100)',
-                width: '100px',
-                '&:hover': {
-                  backgroundColor: '#f8bbd0',
-                },
-              }}
-            >
-              Cancel
-            </Button>
+                        {/* Remark Field */}
+                        <TextField
+                            label="Remark"
+                            variant="outlined"
+                            fullWidth
+                            multiline
+                            rows={3}
+                            value={manualEditData.remark}
+                            onChange={(e) =>
+                                setManualEditData({ ...manualEditData, remark: e.target.value })
+                            }
+                        />
+                    </DialogContent>
+                    <DialogActions
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            mt: 2,
+                            px: 2,
+                            gap: 0,
+                        }}
+                    >
+                        {/* Cancel Button */}
+                        <Button
+                            onClick={handleManualEditDialogClose}
+                            sx={{
+                                backgroundColor: '#fce4ec',
+                                color: 'rgb(255, 100, 100)',
+                                width: '100px',
+                                '&:hover': {
+                                    backgroundColor: '#f8bbd0',
+                                },
+                            }}
+                        >
+                            Cancel
+                        </Button>
 
-            {/* Save Button */}
-            <Button
-              variant="contained"
-              onClick={handleSaveManualEdit}
-              sx={{
-                backgroundColor: 'rgb(229, 255, 225)',
-                color: 'rgb(43, 217, 144)',
-                width: '100px',
-                '&:hover': {
-                  backgroundColor: 'rgb(229, 255, 225)',
-                },
-              }}
-            >
-              Save
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </LocalizationProvider>
+                        {/* Save Button */}
+                        <Button
+                            variant="contained"
+                            onClick={handleSaveManualEdit}
+                            sx={{
+                                backgroundColor: 'rgb(229, 255, 225)',
+                                color: 'rgb(43, 217, 144)',
+                                width: '100px',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}
+                        >
+                            Save
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </LocalizationProvider>
 
         </Box>
     );
