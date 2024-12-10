@@ -17,6 +17,8 @@ import AttendanceReport from './components/AttendanceReport/AttendanceReport';
 import WagesReport from './components/WagesReport/WagesReport';
 import PeopleReport from './components/PeopleReport/PeopleReport';
 import PeopleEditDetails from './components/PeopleEditDetails/PeopleEditDetails';
+import AdminApproval from './components/AdminApproval/AdminApproval';
+import AdminAttendanceApproval from './components/AdminApproval/AdminAttedanceApproval';
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -95,6 +97,8 @@ function App() {
                     <Route path="/wagesReport" element={<WagesReport onFormSubmit={handleFormSubmit} />} />
                     <Route path="/peopleReport" element={<PeopleReport onFormSubmit={handleFormSubmit} />} />
                     <Route path="/peopleEditDetails" element={<PeopleEditDetails onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/adminApproval" element={<AdminApproval onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/adminApproval/adminAttendanceApproval" element={<AdminAttendanceApproval onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }

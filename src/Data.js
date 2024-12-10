@@ -83,6 +83,12 @@ export const SidebarData = [
     heading: "People",
     path: "peopleReport",
     roles: ["admin"],
+  },
+  {
+    icon: UilFileAlt,
+    heading: "Admin Approval",
+    path: "adminApproval",
+    roles: ["admin"],
   }
 ];
 

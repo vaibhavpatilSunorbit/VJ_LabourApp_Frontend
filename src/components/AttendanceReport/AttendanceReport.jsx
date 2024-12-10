@@ -76,6 +76,10 @@ const AttendanceReport = () => {
     const [file, setFile] = useState(null);
     const { user } = useUser();
     const [isAttendanceFetched, setIsAttendanceFetched] = useState(false);
+    const [businessUnits, setBusinessUnits] = useState([]);
+const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+const [projectName, setProjectName] = useState('');
+
 
 
     const handleManualEditDialogOpen = (day) => {
@@ -96,81 +100,6 @@ const AttendanceReport = () => {
     };
     
 
-    const handleSaveManualEdit = async () => {
-        try {
-            // Format punchIn and punchOut as HH:mm:ss
-            const formattedPunchIn = manualEditData.punchIn
-                ? manualEditData.punchIn.format('HH:mm:ss')
-                : null;
-            const formattedPunchOut = manualEditData.punchOut
-                ? manualEditData.punchOut.format('HH:mm:ss')
-                : null;
-
-            // Get the OnboardName from the user context
-            let onboardName = null;
-            if (user.name) {
-                onboardName = user.name;
-            } else {
-                console.error('OnboardName is not available in user context');
-            }
-
-            // Directly get workingHours from manualEditData or selectedDay
-            const workingHours = manualEditData.workingHours || selectedDay.workingHours;
-            // Validation: Ensure mutual exclusivity between first/last punch and overtime
-            if (
-                (formattedPunchIn && formattedPunchOut && manualEditData.overtime) ||
-                (!formattedPunchIn && !formattedPunchOut && !manualEditData.overtime)
-            ) {
-                toast.error(
-                    'Either provide both First Punch and Last Punch or provide Overtime manually, not both or none.'
-                );
-                return;
-            }
-
-            // Construct the payload
-            const payload = {
-                labourId: selectedDay.labourId,
-                date: selectedDay.date,
-                firstPunchManually: formattedPunchIn, // Includes seconds
-                lastPunchManually: formattedPunchOut, // Includes seconds
-                overtimeManually: manualEditData.overtime,
-                remarkManually: manualEditData.remark,
-                workingHours: workingHours, // Add workingHours
-                OnboardName: onboardName, // Add OnboardName
-            };
-
-            console.log('Request payload with seconds:', payload); // Debug log
-
-            // Call the backend to upsert the data
-            await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
-
-            // Update attendanceData locally
-            const updatedAttendanceData = attendanceData.map((day) =>
-                day.date === selectedDay.date
-                    ? {
-                        ...day,
-                        firstPunch: formattedPunchIn,
-                        lastPunch: formattedPunchOut,
-                        overtime: manualEditData.overtime,
-                        remark: manualEditData.remark,
-                        workingHours: workingHours, // Update locally
-                        OnboardName: onboardName, // Update locally
-                    }
-                    : day
-            );
-
-            setAttendanceData(updatedAttendanceData);
-
-            toast.success('Attendance updated successfully!');
-            handleManualEditDialogClose();
-        } catch (error) {
-            console.error('Error saving attendance:', error);
-            toast.error(
-                error.response?.data?.message || 'Please fill full Attendance Details.'
-            );
-        }
-    };
-
     // const handleSaveManualEdit = async () => {
     //     try {
     //         // Format punchIn and punchOut as HH:mm:ss
@@ -181,6 +110,27 @@ const AttendanceReport = () => {
     //             ? manualEditData.punchOut.format('HH:mm:ss')
     //             : null;
 
+    //         // Get the OnboardName from the user context
+    //         let onboardName = null;
+    //         if (user.name) {
+    //             onboardName = user.name;
+    //         } else {
+    //             console.error('OnboardName is not available in user context');
+    //         }
+
+    //         // Directly get workingHours from manualEditData or selectedDay
+    //         const workingHours = manualEditData.workingHours || selectedDay.workingHours;
+    //         // Validation: Ensure mutual exclusivity between first/last punch and overtime
+    //         if (
+    //             (formattedPunchIn && formattedPunchOut && manualEditData.overtime) ||
+    //             (!formattedPunchIn && !formattedPunchOut && !manualEditData.overtime)
+    //         ) {
+    //             toast.error(
+    //                 'Either provide both First Punch and Last Punch or provide Overtime manually, not both or none.'
+    //             );
+    //             return;
+    //         }
+
     //         // Construct the payload
     //         const payload = {
     //             labourId: selectedDay.labourId,
@@ -188,8 +138,9 @@ const AttendanceReport = () => {
     //             firstPunchManually: formattedPunchIn, // Includes seconds
     //             lastPunchManually: formattedPunchOut, // Includes seconds
     //             overtimeManually: manualEditData.overtime,
-    //             overtimemanually: manualEditData.overtimemanually,
     //             remarkManually: manualEditData.remark,
+    //             workingHours: workingHours, // Add workingHours
+    //             OnboardName: onboardName, // Add OnboardName
     //         };
 
     //         console.log('Request payload with seconds:', payload); // Debug log
@@ -201,13 +152,14 @@ const AttendanceReport = () => {
     //         const updatedAttendanceData = attendanceData.map((day) =>
     //             day.date === selectedDay.date
     //                 ? {
-    //                       ...day,
-    //                       firstPunch: formattedPunchIn,
-    //                       lastPunch: formattedPunchOut,
-    //                       overtime: manualEditData.overtime,
-    //                       overtimemanually: manualEditData.overtimemanually,
-    //                       remark: manualEditData.remark,
-    //                   }
+    //                     ...day,
+    //                     firstPunch: formattedPunchIn,
+    //                     lastPunch: formattedPunchOut,
+    //                     overtime: manualEditData.overtime,
+    //                     remark: manualEditData.remark,
+    //                     workingHours: workingHours, // Update locally
+    //                     OnboardName: onboardName, // Update locally
+    //                 }
     //                 : day
     //         );
 
@@ -223,6 +175,81 @@ const AttendanceReport = () => {
     //     }
     // };
 
+    const handleSaveManualEdit = async () => {
+        try {
+            // Ensure punchIn and punchOut are dayjs objects, then format them as HH:mm:ss
+            const formattedPunchIn = manualEditData.punchIn && dayjs.isDayjs(manualEditData.punchIn)
+                ? manualEditData.punchIn.format('HH:mm:ss')
+                : null;
+    
+            const formattedPunchOut = manualEditData.punchOut && dayjs.isDayjs(manualEditData.punchOut)
+                ? manualEditData.punchOut.format('HH:mm:ss')
+                : null;
+    
+            // Ensure overtime is treated as a string for .trim() check, default to an empty string if it's undefined or null
+            const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
+    
+            // Validation rules:
+            const hasOvertime = overtime !== '';
+            const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
+    
+            if (!hasOvertime && !hasPunchInOrOut) {
+                toast.error('At least provide Overtime or Punch In/Out details to save.');
+                return;
+            }
+    
+            // Construct the payload
+            const onboardName = user.name || null;
+            const workingHours = manualEditData.workingHours || selectedDay.workingHours;
+    
+            const payload = {
+                labourId: selectedDay.labourId,
+                date: selectedDay.date,
+                ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
+                ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
+                ...(hasOvertime && { overtimeManually: manualEditData.overtime }),
+                ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
+                workingHours,
+                ...(onboardName && { onboardName }),
+            };
+    
+            console.log('Request payload:', payload); // Debug log
+    
+            // Call the backend
+            await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+    
+            // Update local attendanceData
+            const updatedAttendanceData = attendanceData.map((day) =>
+                day.date === selectedDay.date
+                    ? {
+                        ...day,
+                        ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
+                        ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
+                        ...(hasOvertime && { overtime: manualEditData.overtime }),
+                        ...(manualEditData.remark && { remark: manualEditData.remark }),
+                        workingHours,
+                    }
+                    : day
+            );
+    
+            setAttendanceData(updatedAttendanceData);
+    
+            toast.success('Attendance updated successfully!');
+            handleManualEditDialogClose();
+        } catch (error) {
+           // Simplify and log errors to the console
+        const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
+        console.error('Error saving attendance:', errorMessage);
+
+        // Show appropriate toast messages
+        if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
+            toast.info('The date is a holiday. You cannot modify punch times or overtime.');
+        } else {
+            toast.error(errorMessage);
+        }
+        }
+    };
+    
 
     const months = [
         { value: 1, label: 'January' },
@@ -802,21 +829,44 @@ const AttendanceReport = () => {
     );
 
     const handleExport = async () => {
+        if (!selectedBusinessUnit || !projectName || !startDate || !endDate) {
+            toast.error('Please select a Business Unit, Start Date, and End Date.');
+            return;
+        }
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/export`, {
-                params: { startDate, endDate },
+                params: { projectName, startDate, endDate },
                 responseType: 'blob',
             });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'attendance.xlsx');
-            document.body.appendChild(link);
-            link.click();
-        } catch (error) {
-            console.error('Error exporting data:', error);
+           
+        // Create a Blob URL for the file
+        const blob = new Blob([response.data], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+
+        const fileName = `Attendance_${selectedBusinessUnit}_${startDate}_${endDate}.xlsx`;
+
+        // Download the file
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up after download
+        link.parentNode.removeChild(link);
+
+        toast.success('Attendance exported successfully!');
+    } catch (error) {
+        console.error('Error exporting data:', error);
+
+        if (error.response && error.response.data && error.response.data.message) {
+            toast.error(`Export Error: ${error.response.data.message}`);
+        } else {
+            toast.error('Error exporting data. Please try again later.');
         }
-    };
+    }
+};
 
     const handleImport = async () => {
         if (!file) {
@@ -831,7 +881,7 @@ const AttendanceReport = () => {
             const response = await axios.post(`${API_BASE_URL}/labours/import`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            alert(response.data.message);
+            toast.message(response.data.message);
         } catch (error) {
             if (error.response && error.response.data) {
                 const { message, invalidRows } = error.response.data;
@@ -843,18 +893,56 @@ const AttendanceReport = () => {
                         .map((row) => `Row ${row.index + 1}: ${JSON.stringify(row.row)}`)
                         .join('\n');
 
-                    alert(`Error: ${message}\n\nInvalid Rows:\n${errorMessage}`);
+                    console.log(`Error: ${message}\n\nInvalid Rows:\n${errorMessage}`);
                 } else {
-                    alert(`Error: ${message}`);
+                    toast.message(`Error: ${message}`);
                 }
             } else {
                 console.error('Unexpected error:', error);
-                alert('An unexpected error occurred.');
+                // alert('An unexpected error occurred.');
             }
         }
     };
 
     const renderInput = (params) => <TextField {...params} fullWidth />;
+
+    const fetchBusinessUnits = async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
+            setBusinessUnits(response.data);
+        } catch (error) {
+            console.error('Error fetching business units:', error);
+            toast.error('Error fetching business units.');
+        }
+    };
+    
+    // Call this function in useEffect
+    useEffect(() => {
+        fetchBusinessUnits();
+    }, []);
+    
+    const handleBusinessUnitChange = async (event) => {
+        const selectedUnit = event.target.value;
+        setSelectedBusinessUnit(selectedUnit);
+    
+        const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
+        if (selectedProject) {
+            setProjectName(selectedProject.ProjectID);
+    
+            // Fetch labours by ProjectID
+            try {
+                const response = await axios.get(`${API_BASE_URL}/labours`, {
+                    params: { projectName: selectedProject.ProjectID },
+                });
+                setLabours(response.data);
+            } catch (error) {
+                console.error('Error fetching labours for project:', error);
+                toast.error('Error fetching labours for the selected project.');
+            }
+        }
+    };
+    
+
 
     const displayLabours = labours;
     return (
@@ -967,6 +1055,21 @@ const AttendanceReport = () => {
 
 
                     <Box display="flex" alignItems="flex-end" gap={2}>
+                    <Select
+        value={selectedBusinessUnit}
+        onChange={handleBusinessUnitChange}
+        displayEmpty
+        sx={{ width: '200px' }}
+    >
+        <MenuItem value="" disabled>
+            Select Business Unit
+        </MenuItem>
+        {businessUnits.map((unit) => (
+            <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
+                {unit.BusinessUnit}
+            </MenuItem>
+        ))}
+    </Select>
                         <TextField
                             label="Start Date"
                             type="date"
@@ -1003,7 +1106,7 @@ const AttendanceReport = () => {
                                 backgroundColor: 'rgb(229, 255, 225)',
                             },
                         }}>
-                            Export to Excel
+                            Export
                         </Button>
                     </Box>
                 </Box>
@@ -1041,7 +1144,7 @@ const AttendanceReport = () => {
                                 backgroundColor: 'rgb(229, 255, 225)',
                             },
                         }}>
-                            Import from Excel
+                            Import
                         </Button>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
