@@ -52,15 +52,18 @@ const AdminApproval = () => {
                 <Typography variant="h5" component="div" sx={{ color: '#10294c' }}>
                   Attendance Approval
                 </Typography>
-                <Typography
+                <Box
                   variant="body2"
                   sx={{
                     fontSize: { xs: '25px', md: '45px' },
                     color: '#10294c',
+                    fontWeight: "600"
                   }}
                 >
-                  562
-                </Typography>
+                  <Typography >Pending : 12</Typography>
+                  <Typography>Approved : 16</Typography>
+                  <Typography>Rejected : 4</Typography>
+                </Box>
               </CardContent>
             </Card>
           </Link>

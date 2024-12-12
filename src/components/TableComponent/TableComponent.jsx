@@ -1,30 +1,34 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import { DataGrid } from '@mui/x-data-grid';
-import { useDemoData } from '@mui/x-data-grid-generator';
 
-/**
- * DataGridDemo Component
- * Displays a free Material-UI data grid with demo data.
- */
-export default function DataGridDemo() {
-  // Fetch demo data for the DataGrid
-  const { data, loading } = useDemoData({
-    dataSet: 'Commodity', // Data set type ('Commodity', 'Employee', etc.)
-    rowLength: 1000, // Number of rows in the dataset
-    editable: true, // Makes the cells editable
-  });
-
+const TableComponent = ({ rows, columns, loading, onRowClick }) => {
   return (
-    <Box sx={{ height: 1000, width: '100%' }}>
-      <DataGrid
-        {...data} // Spread demo data props
-        loading={loading} // Shows a loading spinner while data is being fetched
-        rowHeight={38} // Sets the height of each row
-        checkboxSelection // Enables checkboxes for row selection
-        disableRowSelectionOnClick // Prevents row selection on click
-        pagination // Enables pagination for better performance
-      />
-    </Box>
+    <Box sx={{ height: 1000, width: '84vw' }}>
+    <DataGrid
+      rows={rows}
+      columns={columns}
+      onRowClick={onRowClick}
+      getRowId={(row) => row.id || row.LabourID} // Unique row identification
+      loading={loading}
+      rowHeight={60} // Correct dynamic row height
+      checkboxSelection
+      disableRowSelectionOnClick
+      pagination
+      pageSizeOptions={[10, 50, 100]}
+      sx={{
+        height: '630.5px',
+        boxShadow: 5,
+        fontWeight: '400',
+        cursor: 'pointer',
+        '& .MuiDataGrid-row:hover': {
+          background:
+            'linear-gradient(90deg, rgba(255, 237, 226, 0.5) 0%, #FFEDE2 100%)',
+        },
+      }}
+    />
+  </Box>
   );
-}
+};
+
+export default TableComponent;

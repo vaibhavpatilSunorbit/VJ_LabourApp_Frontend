@@ -885,8 +885,8 @@ if (!localError) {
     if (today < birthdayThisYear) {
       age--;
     }
-    if (age < 18) {
-      setErrorMessage('Age must be 18 or older.');
+    if (age < 18 || age > 60) {
+      setErrorMessage('Age must be between 18 and 60.');
     } else {
       setErrorMessage('');
     }
@@ -978,6 +978,22 @@ if (!localError) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const dateOfBirth = new Date(formData.dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dateOfBirth.getFullYear();
+    const birthdayThisYear = new Date(today.getFullYear(), dateOfBirth.getMonth(), dateOfBirth.getDate());
+    if (today < birthdayThisYear) {
+        age--;
+    }
+
+    if (age < 18 || age > 60) {
+        setErrorMessage('Age must be between 18 and 60.');
+        toast.error('Age must be between 18 and 60.');
+        return;
+    } else {
+        setErrorMessage('');
+    }
  
     if (!validateForm()) return;
     setLoading(true);
