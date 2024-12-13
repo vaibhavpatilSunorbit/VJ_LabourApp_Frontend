@@ -126,14 +126,14 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   };
 
   const handleApproveConfirmOpen = (labour) => {
-    setLabourToApprove(labour);
+    setLabourToApprove(labour); // Set selected labour
     setIsApproveConfirmOpen(true);
-  };
+};
 
-  const handleApproveConfirmClose = () => {
-    setLabourToApprove(null);
+const handleApproveConfirmClose = () => {
+    setLabourToApprove(null); // Clear selected labour
     setIsApproveConfirmOpen(false);
-  };
+};
 
 
 
@@ -141,28 +141,28 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
 
 
-  useEffect(() => {
-    fetchAttendanceLabours(); // Start fetching cached labours
-  }, []);
+//   useEffect(() => {
+//     fetchAttendanceLabours(); // Start fetching cached labours
+//   }, []);
 
-  const fetchAttendanceLabours = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`);
+//   const fetchAttendanceLabours = async () => {
+//     try {
+//       setLoading(true);
+//       const response = await axios.get(`${API_BASE_URL}/labours`);
 
-      if (response.data.labours.length > 0) {
-        setLabours(response.data.labours);  // Set labours directly from the cached result
-        console.log('response.data.labours........///......[[[[[', response.data.labours)
-      } else {
-        console.log('No new labours without attendance found.');
-        setHasMore(false);
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching labours:", error);
-      setLoading(false);
-    }
-  };
+//       if (response.data.labours.length > 0) {
+//         setLabours(response.data.labours);  // Set labours directly from the cached result
+//         console.log('response.data.labours Attendance admin Approval........///......[[[[[', response.data.labours)
+//       } else {
+//         console.log('Fetch labour Attendance Approval.');
+//         setHasMore(false);
+//       }
+//       setLoading(false);
+//     } catch (error) {
+//       console.error("Error fetching labours:", error);
+//       setLoading(false);
+//     }
+//   };
 
 
 
@@ -172,26 +172,54 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     }
   }, [hideResubmit, labourId]);
 
-  const handleReject = async (id) => {
+  const handleReject = async (id, rejectReason) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/reject/${id}`, { Reject_Reason: rejectReason });
+      const response = await axios.put(`${API_BASE_URL}/labours/attendance/reject/${id}`, { RejectAttendanceReason: rejectReason });
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
-            labour.id === id ? { ...labour, status: 'Rejected', isApproved: 2, Reject_Reason: rejectReason } : labour
+            labour.id === id ? { ...labour, status: 'Rejected', RejectAttendanceReason: rejectReason } : labour
           )
         );
-        toast.success('Labour rejected successfully.');
+        toast.success('Attendance rejected successfully.');
         setIsRejectPopupOpen(false);
       } else {
-        toast.error('Failed to reject labour. Please try again.');
+        toast.error('Failed to reject Attendance. Please try again.');
       }
     } catch (error) {
-      console.error('Error rejecting labour:', error);
-      toast.error('Error rejecting labour. Please try again.');
+      console.error('Error rejecting Attendance:', error);
+      toast.error('Error rejecting Attendance. Please try again.');
     }
   };
 
+
+  const approveLabour = async (id) => {
+    if (!id) {
+        toast.error('Attendance ID is missing.');
+        return;
+    }
+
+    try {
+        const response = await axios.put(`${API_BASE_URL}/labours/attendance/approve`, null, {
+            params: { id },
+        });
+
+        if (response.data.success) {
+            setLabours(prevLabours =>
+                prevLabours.map(labour =>
+                    labour.id === id ? { ...labour, ApprovalStatus: 'Approved' } : labour
+                )
+            );
+            toast.success('Attendance approved successfully.');
+            setIsApproveConfirmOpen(false);
+        } else {
+            toast.error('Failed to approve attendance. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error approving attendance:', error);
+        toast.error('Error approving attendance. Please try again.');
+    }
+};
 
 
 
@@ -270,7 +298,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours`);
+      const response = await axios.get(`${API_BASE_URL}/labours/LabourAttendanceApproval`);
       // console.log('API Response:', response.data);
       setLabours(response.data);
       setLoading(false);
@@ -594,43 +622,18 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                 }}
               >
                 <TableCell>Sr No</TableCell>
-                {tabValue !== 0 && tabValue !== 2 && <TableCell>Labour ID</TableCell>}
-                <TableCell>Name of Labour</TableCell>
-                {(tabValue === 0 || tabValue === 1 || tabValue === 1 || tabValue === 2) && <TableCell>Onboarded By</TableCell>}
+                <TableCell>Labour ID</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>First Punch</TableCell>
+                <TableCell>Last Punch</TableCell>
+                <TableCell>Overtime Manually</TableCell>
+                <TableCell>Remark</TableCell>
+                <TableCell>Attendance Edit By</TableCell>
                 <TableCell>Status</TableCell>
-                {tabValue === 1 && (
-                  <>
-                    <TableCell>Essl Status</TableCell>
-                    <TableCell>Employee Status</TableCell>
-                  </>
-                )}
-                {tabValue === 0 && (
-                  <>
-                    <TableCell>FormFill Date</TableCell>
-                  </>
-                )}
-                {tabValue === 1 && (
-                  <>
-                    <TableCell>Approve Date</TableCell>
-                    <TableCell>Edit Date</TableCell>
-                  </>
-                )}
-
-                {tabValue === 2 && (
-                  <>
-                    <TableCell>Reject Date</TableCell>
-                    <TableCell>Resubmit Date</TableCell>
-                  </>
-                )}
-                {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
-                {tabValue === 1 && <TableCell>labourID Card</TableCell>}
-                {tabValue === 1 && <TableCell>Edit Labour</TableCell>}
-                {((user.userType === 'admin') || (tabValue !== 0 && user.userType === 'user')) && <TableCell>Action</TableCell>}
-                <TableCell>Details</TableCell>
-                {(tabValue === 3 && user.userType === 'admin') && <TableCell>Transfer Site</TableCell>}
-                {(tabValue === 3 && user.userType === 'admin') && <TableCell>New Transfer Site</TableCell>}
-
-
+                <TableCell>Send Approval Date</TableCell>
+                <TableCell>Approve Date</TableCell>
+                <TableCell>Edit Date</TableCell>
+               
               </TableRow>
             </TableHead>
             <TableBody
@@ -646,29 +649,30 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
               {(rowsPerPage > 0
                 ? (searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours]))
                   .filter(labour => {
-                    if (tabValue === 0) return labour.status === 'Pending';
-                    if (tabValue === 1) return labour.status === 'Approved';
-                    if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
+                    if (tabValue === 0) return labour.ApprovalStatus === 'Pending';
+                    if (tabValue === 1) return labour.ApprovalStatus === 'Approved';
+                    if (tabValue === 2) return labour.ApprovalStatus === 'Rejected';
                     return true; // fallback if no condition matches
                   })
                   .sort((a, b) => b.labourID - a.labourID) // Sort in descending order by id
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours])
                   .filter(labour => {
-                    if (tabValue === 0) return labour.status === 'Pending';
-                    if (tabValue === 1) return labour.status === 'Approved';
-                    if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
+                    if (tabValue === 0) return labour.ApprovalStatus === 'Pending';
+                    if (tabValue === 1) return labour.ApprovalStatus === 'Approved';
+                    if (tabValue === 2) return labour.ApprovalStatus === 'Rejected';
                     return true; // fallback if no condition matches
                   })
                   .sort((a, b) => b.labourID - a.labourID)
               ).map((labour, index) => (
                 <TableRow key={labour.id}>
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                  {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.LabourID}</TableCell>}
-                  <TableCell>{labour.name}</TableCell>
-                  {(tabValue === 0 || tabValue === 1 || tabValue === 2) && (
-                    <TableCell>{labour.OnboardName}</TableCell>
-                  )}
+                  <TableCell>{labour.LabourId}</TableCell>
+                  <TableCell>{labour.Date ? new Date(labour.Date).toLocaleDateString('en-GB') : '-'}</TableCell>
+                  <TableCell>{labour.FirstPunchManually}</TableCell>
+                  <TableCell>{labour.LastPunchManually}</TableCell>
+                  <TableCell>{labour.OvertimeManually}</TableCell>
+                    <TableCell>{labour.RemarkManually}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
                   <TableCell sx={{ position: 'relative' }}>
                     <Box
@@ -680,32 +684,24 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                         textAlign: 'center',
                         fontWeight: 'bold',
                         fontSize: '0.875rem',
-                        ...(labour.status === 'Pending' && {
+                        ...(labour.ApprovalStatus === 'Pending' && {
                           backgroundColor: '#EFE6F7',
                           color: '#8236BC',
                         }),
-                        ...(labour.status === 'Approved' && {
+                        ...(labour.ApprovalStatus === 'Approved' && {
                           backgroundColor: '#E5FFE1',
                           color: '#54a36d',
                         }),
-                        ...(labour.status === 'Rejected' && {
+                        ...(labour.ApprovalStatus === 'Rejected' && {
                           backgroundColor: 'rgba(255, 105, 97, 0.3)',
                           color: '#F44336',
                         }),
-                        ...(labour.status === 'Resubmitted' && {
-                          backgroundColor: 'rgba(255, 223, 186, 0.3)',
-                          color: '#FF6F00',
-                        }),
-                        ...(labour.status === 'Disable' && {
-                          backgroundColor: 'rgb(245, 237, 237)',
-                          color: '#5e636e',
-                        }),
                       }}
                     >
-                      {labour.status}
+                      {labour.ApprovalStatus}
 
                       {/* Display the indicator based on conditions */}
-                      {labour.status === 'Pending' && labour.LabourID && (
+                      {labour.ApprovalStatus === 'Pending' && labour.LabourID && (
                         <Box
                           sx={{
                             position: 'absolute',
@@ -727,34 +723,20 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                       )}
                     </Box>
                   </TableCell>
-                  {tabValue === 1 && (
-                    <>
-                      <TableCell>
-                        {statuses[labour.LabourID]?.esslStatus || statuses[labour.id]?.esslStatus ? (<span style={{ color: 'green' }}>✔</span>
-                        ) : (<span style={{ color: 'red' }}>✘</span>)}
-                      </TableCell>
-                      <TableCell>
-                        {statuses[labour.LabourID]?.employeeMasterStatus || statuses[labour.id]?.employeeMasterStatus ? (<span style={{ color: 'green' }}>✔</span>
-                        ) : (<span style={{ color: 'red' }}>✘</span>)}
-                      </TableCell>
-                    </>
-                  )}
                   {tabValue === 0 && (
                     <>
-                      <TableCell>{labour.CreationDate ? new Date(labour.CreationDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                      <TableCell>{labour.LastUpdatedDate ? new Date(labour.LastUpdatedDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                     </>
                   )}
                   {tabValue === 1 && (
                     <>
-                      <TableCell>{labour.ApproveLabourDate ? new Date(labour.ApproveLabourDate).toLocaleDateString('en-GB') : '-'}</TableCell>
-                      <TableCell>{labour.EditLabourDate ? new Date(labour.EditLabourDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                      <TableCell>{labour.ApprovalDate ? new Date(labour.ApprovalDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                     </>
                   )}
 
                   {tabValue === 2 && (
                     <>
-                      <TableCell>{labour.RejectLabourDate ? new Date(labour.RejectLabourDate).toLocaleDateString('en-GB') : '-'}</TableCell>
-                      <TableCell>{labour.ResubmitLabourDate ? new Date(labour.ResubmitLabourDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                      <TableCell>{labour.LastUpdatedDate ? new Date(labour.LastUpdatedDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                     </>
                   )}
                   {tabValue === 2 && (
@@ -770,7 +752,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
                   {tabValue === 1 && (
                     <TableCell>
-                      {(user.userType === 'user' && labour.status === 'Approved' && !labour.address) && (
+                      {(user.userType === 'user' && labour.ApprovalStatus === 'Approved' && !labour.address) && (
                         <Button
                           variant="contained"
                           sx={{
@@ -785,7 +767,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                           Edit
                         </Button>
                       )}
-                      {(user.userType === 'admin' && labour.status === 'Approved' && !labour.address) && (
+                      {(user.userType === 'admin' && labour.ApprovalStatus === 'Approved' && !labour.address) && (
                         <Button
                           variant="contained"
                           sx={{
@@ -805,7 +787,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                   {user.userType === 'user' && (
                     <TableCell>
                      
-                      {labour.status === 'Approved' && (
+                      {labour.ApprovalStatus === 'Approved' && (
                         <Button
                           variant="contained"
                           sx={{
@@ -825,7 +807,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
                   {user.userType === 'admin' && (
                     <TableCell>
-                      {labour.status === 'Pending' && !approvedLabours.includes(labour.id) && !approvingLabours.includes(labour.id) && (
+                      {labour.ApprovalStatus === 'Pending' && !approvedLabours.includes(labour.id) && !approvingLabours.includes(labour.id) && (
                         <>
                           <Button
                             variant="contained"
@@ -862,7 +844,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                           </Button>
                         </>
                       )}
-                      {labour.status === 'Approved' && (
+                      {labour.ApprovalStatus === 'Approved' && (
                         <Button
                           variant="contained"
                           sx={{
@@ -1010,37 +992,51 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
 
       <Dialog
-        open={isApproveConfirmOpen}
-        onClose={handleApproveConfirmClose}
-        aria-labelledby="approve-confirm-dialog-title"
-        aria-describedby="approve-confirm-dialog-description"
-      >
-        <DialogTitle id="approve-confirm-dialog-title">
-          Approve Labour
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="approve-confirm-dialog-description">
-            Are you sure you want to approve this labour?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
+    open={isApproveConfirmOpen}
+    onClose={handleApproveConfirmClose}
+    aria-labelledby="approve-confirm-dialog-title"
+    aria-describedby="approve-confirm-dialog-description"
+>
+    <DialogTitle id="approve-confirm-dialog-title">
+        Approve Labour
+    </DialogTitle>
+    <DialogContent>
+        <DialogContentText id="approve-confirm-dialog-description">
+            Are you sure you want to approve attendance for this labour?
+        </DialogContentText>
+    </DialogContent>
+    <DialogActions>
+        <Button
+            onClick={handleApproveConfirmClose}
+            variant="outlined"
+            color="secondary"
+        >
             Cancel
-          </Button>
-          <Button onClick={() => handleApprove(labourToApprove.id)} sx={{
-            backgroundColor: 'rgb(229, 255, 225)',
-            color: 'rgb(43, 217, 144)',
-            width: '100px',
-            marginRight: '10px',
-            marginBottom: '3px',
-            '&:hover': {
-              backgroundColor: 'rgb(229, 255, 225)',
-            },
-          }} autoFocus>
+        </Button>
+        <Button
+            onClick={() => {
+                if (!labourToApprove || !labourToApprove.id) {
+                    toast.error('Labour data or ID is missing.');
+                    return;
+                }
+                approveLabour(labourToApprove.id);
+            }}
+            sx={{
+                backgroundColor: 'rgb(229, 255, 225)',
+                color: 'rgb(43, 217, 144)',
+                width: '100px',
+                marginRight: '10px',
+                marginBottom: '3px',
+                '&:hover': {
+                    backgroundColor: 'rgb(229, 255, 225)',
+                },
+            }}
+            autoFocus
+        >
             Approve
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Button>
+    </DialogActions>
+</Dialog>
 
       {saved && (
         <>
