@@ -172,28 +172,73 @@ const handleApproveConfirmClose = () => {
     }
   }, [hideResubmit, labourId]);
 
-  const handleReject = async (id, rejectReason) => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/labours/attendance/reject/${id}`, { RejectAttendanceReason: rejectReason });
-      if (response.data.success) {
-        setLabours(prevLabours =>
-          prevLabours.map(labour =>
-            labour.id === id ? { ...labour, status: 'Rejected', RejectAttendanceReason: rejectReason } : labour
-          )
-        );
-        toast.success('Attendance rejected successfully.');
-        setIsRejectPopupOpen(false);
-      } else {
-        toast.error('Failed to reject Attendance. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error rejecting Attendance:', error);
-      toast.error('Error rejecting Attendance. Please try again.');
+//   const handleReject = async (id, rejectReason) => {
+//     if (!id || !rejectReason) {
+//         toast.error('Labour ID and rejection reason are required.');
+//         return;
+//     }
+
+//     try {
+//         const response = await axios.put(
+//             `${API_BASE_URL}/labours/attendance/reject/${id}`,
+//             { rejectReason }, // Include rejectReason in the request body
+//             {
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                 },
+//             }
+//         );
+
+//         if (response.data.success) {
+//             setLabours(prevLabours =>
+//                 prevLabours.map(labour =>
+//                     labour.id === id
+//                         ? { ...labour, ApprovalStatus: 'Rejected', rejectReason }
+//                         : labour
+//                 )
+//             );
+//             toast.success('Attendance rejected successfully.');
+//             setIsRejectPopupOpen(false); // Close modal
+//         } else {
+//             toast.error('Failed to reject attendance. Please try again.');
+//         }
+//     } catch (error) {
+//         console.error('Error rejecting attendance:', error);
+//         toast.error('Error rejecting attendance. Please try again.');
+//     }
+// };
+
+  const handleReject = async (id) => {
+    if (!id) {
+        toast.error('Attendance ID is missing.');
+        return;
     }
-  };
+
+    try {
+        const response = await axios.put(`${API_BASE_URL}/labours/attendance/reject`, null, {
+            params: { id },
+        });
+
+        if (response.data.success) {
+            setLabours(prevLabours =>
+                prevLabours.map(labour =>
+                    labour.id === id ? { ...labour, ApprovalStatus: 'Rejected' } : labour
+                )
+            );
+            toast.success('Attendance Rejected successfully.');
+            setIsApproveConfirmOpen(false);
+        } else {
+            toast.error('Failed to Reject attendance. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error Rejected attendance:', error);
+        toast.error('Error Rejected attendance. Please try again.');
+    }
+};
 
 
-  const approveLabour = async (id) => {
+
+const approveLabour = async (id) => {
     if (!id) {
         toast.error('Attendance ID is missing.');
         return;
@@ -631,6 +676,7 @@ const handleApproveConfirmClose = () => {
                 <TableCell>Attendance Edit By</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Send Approval Date</TableCell>
+                <TableCell>Action</TableCell>
                 <TableCell>Approve Date</TableCell>
                 <TableCell>Edit Date</TableCell>
                
@@ -673,6 +719,7 @@ const handleApproveConfirmClose = () => {
                   <TableCell>{labour.LastPunchManually}</TableCell>
                   <TableCell>{labour.OvertimeManually}</TableCell>
                     <TableCell>{labour.RemarkManually}</TableCell>
+                    <TableCell>{labour.OnboardName}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
                   <TableCell sx={{ position: 'relative' }}>
                     <Box
@@ -916,55 +963,56 @@ const handleApproveConfirmClose = () => {
         </Fade>
       </Modal>
 
-
       <Modal
-        open={isRejectPopupOpen}
-        onClose={closeRejectPopup}
-        closeAfterTransition
-      >
-        <Fade in={isRejectPopupOpen}>
-          <div className="modal">
+    open={isRejectPopupOpen}
+    onClose={closeRejectPopup}
+    closeAfterTransition
+>
+    <Fade in={isRejectPopupOpen}>
+        <div className="modal">
             <Typography variant="h6" component="h2">
-              Reject Labour
+                Reject Labour
             </Typography>
             <TextField
-              label="Reason for rejection"
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              fullWidth
-              multiline
-              rows={4}
-              variant="outlined"
-              margin="normal"
+                label="Reason for rejection"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                fullWidth
+                multiline
+                rows={4}
+                variant="outlined"
+                margin="normal"
             />
             <Box mt={2} style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button variant="outlined" color="secondary" onClick={closeRejectPopup} >
-                Cancel
-              </Button>
-              {/* <Button variant="contained" color="primary" onClick={() => handleReject(selectedLabour.id)}> */}
-              <Button variant="contained" color="primary" onClick={() => {
-                if (!rejectReason.trim()) {
-                  toast.error("Please add a reason for rejection.");
-                } else {
-                  handleReject(selectedLabour.id);
-                }
-              }} sx={{
-                ml: 2,
-                backgroundColor: '#fce4ec',
-                color: 'rgb(255, 100, 100)',
-                width: '100px',
-                '&:hover': {
-                  backgroundColor: '#f8bbd0',
-                },
-              }}
-              >
-                Reject
-              </Button>
-
+                <Button variant="outlined" color="secondary" onClick={closeRejectPopup}>
+                    Cancel
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                        if (!rejectReason.trim()) {
+                            toast.error('Please add a reason for rejection.');
+                        } else {
+                            handleReject(selectedLabour.id, rejectReason);
+                        }
+                    }}
+                    sx={{
+                        ml: 2,
+                        backgroundColor: '#fce4ec',
+                        color: 'rgb(255, 100, 100)',
+                        width: '100px',
+                        '&:hover': {
+                            backgroundColor: '#f8bbd0',
+                        },
+                    }}
+                >
+                    Reject
+                </Button>
             </Box>
-          </div>
-        </Fade>
-      </Modal>
+        </div>
+    </Fade>
+</Modal>
 
       <Modal
         open={isRejectReasonPopupOpen}
@@ -978,7 +1026,7 @@ const handleApproveConfirmClose = () => {
             </Typography>
             {selectedLabour && (
               <Typography variant="body1" component="p">
-                {selectedLabour.Reject_Reason}
+                {selectedLabour.rejectReason}
               </Typography>
             )}
             <Box mt={2} sx={{ display: 'flex', justifyContent: 'flex-end' }}>

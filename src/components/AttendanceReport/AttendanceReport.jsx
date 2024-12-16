@@ -259,6 +259,7 @@ const [projectName, setProjectName] = useState('');
             });
 
             const attendanceList = response.data;
+            console.log('response.data for the labour 16-12-24',response.data)
 
             // Generate a full list of dates for the selected month
             const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
