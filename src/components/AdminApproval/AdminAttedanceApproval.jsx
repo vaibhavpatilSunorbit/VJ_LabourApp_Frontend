@@ -50,7 +50,6 @@ import { ClipLoader } from 'react-spinners';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import CircleIcon from '@mui/icons-material/Circle';
 
-
 const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlist }) => {
   const { user } = useUser();
   const [labours, setLabours] = useState([]);
@@ -227,6 +226,7 @@ const handleApproveConfirmClose = () => {
             );
             toast.success('Attendance Rejected successfully.');
             setIsApproveConfirmOpen(false);
+            handleApproveConfirmClose()
         } else {
             toast.error('Failed to Reject attendance. Please try again.');
         }
@@ -675,10 +675,13 @@ const approveLabour = async (id) => {
                 <TableCell>Remark</TableCell>
                 <TableCell>Attendance Edit By</TableCell>
                 <TableCell>Status</TableCell>
-                <TableCell>Send Approval Date</TableCell>
-                <TableCell>Action</TableCell>
-                <TableCell>Approve Date</TableCell>
-                <TableCell>Edit Date</TableCell>
+                {tabValue !== 2 &&<TableCell>Send Approval Date</TableCell>}
+                {tabValue !== 1 && tabValue !== 2 &&<TableCell>Edit</TableCell>}
+                {tabValue !== 1 && tabValue !== 2 &&<TableCell>Action</TableCell>}
+                {tabValue !== 1 && tabValue !== 2 &&<TableCell>Approve Date</TableCell>}
+                {tabValue !== 0 && tabValue !== 1 &&<TableCell>Rejected Date</TableCell>}
+                {tabValue !== 0 && tabValue !== 1 &&<TableCell>Reject Reason</TableCell>}
+                {tabValue !== 1 && tabValue !== 2 &&<TableCell>Edit Date</TableCell>}
                
               </TableRow>
             </TableHead>
@@ -797,37 +800,21 @@ const approveLabour = async (id) => {
                     </TableCell>
                   )}
 
-                  {tabValue === 1 && (
+                  {tabValue === 0 && (
                     <TableCell>
-                      {(user.userType === 'user' && labour.ApprovalStatus === 'Approved' && !labour.address) && (
-                        <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
-                              backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                          }}
-                        //   onClick={() => handleEditLabourOpen(labour)}
-                        >
-                          Edit
-                        </Button>
+                      {(user.userType === 'user' && labour.ApprovalStatus === 'Pending') && (
+                  <IconButton
+                  onClick={() => handleEditLabourOpen(labour)} // Add your function here
+                >
+                  <EditIcon />
+                </IconButton>
                       )}
-                      {(user.userType === 'admin' && labour.ApprovalStatus === 'Approved' && !labour.address) && (
-                        <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
-                              backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                          }}
-                        //   onClick={() => handleEditLabourOpen(labour)}
-                        >
-                          Edit
-                        </Button>
+                      {(user.userType === 'admin' && labour.ApprovalStatus === 'Pending') && (
+                  <IconButton
+                  onClick={() => handleEditLabourOpen(labour)} // Add your function here
+                >
+                  <EditIcon />
+                </IconButton>
                       )}
                     </TableCell>
                   )}
@@ -910,10 +897,10 @@ const approveLabour = async (id) => {
                       
                     </TableCell>
                   )}
-
+{/* 
                   <TableCell>
                     <RemoveRedEyeIcon onClick={() => openPopup(labour)} style={{ cursor: 'pointer' }} />
-                  </TableCell>
+                  </TableCell> */}
 
                   {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && tabValue !== 1 && <TableCell>
                     <Select

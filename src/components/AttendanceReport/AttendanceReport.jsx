@@ -21,7 +21,9 @@ import {
     Tabs,
     Tab,
     Typography,
-    InputAdornment
+    InputAdornment,
+    Modal,
+    Grid
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -38,6 +40,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { useUser } from '../../UserContext/UserContext';
 import dayjs from 'dayjs';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 // import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 // toast.configure();
 
@@ -62,6 +65,9 @@ const AttendanceReport = () => {
     const [selectedLabourId, setSelectedLabourId] = useState('');
     const [editManualDialogOpen, setEditManualDialogOpen] = useState(false);
     const [selectedDay, setSelectedDay] = useState(null);
+    const [open, setOpen] = useState(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
     const [manualEditData, setManualEditData] = useState({
         punchIn: "",
         punchOut: "",
@@ -85,6 +91,7 @@ const [projectName, setProjectName] = useState('');
     const handleManualEditDialogOpen = (day) => {
         setSelectedDay(day);
         setManualEditData({
+            AttendanceId: day.attendanceId || "",
             date: day.date,
             punchIn: day.firstPunch || "",
             punchOut: day.lastPunch || "",
@@ -130,6 +137,7 @@ const [projectName, setProjectName] = useState('');
             const payload = {
                 labourId: selectedDay.labourId,
                 date: selectedDay.date,
+                AttendanceId: manualEditData.AttendanceId || "", 
                 ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
                 ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
                 ...(hasOvertime && { overtimeManually: manualEditData.overtime }),
@@ -138,7 +146,7 @@ const [projectName, setProjectName] = useState('');
                 ...(onboardName && { onboardName }),
             };
     
-            console.log('Request payload:', payload); // Debug log
+            console.log('Request payload +++++:', payload); // Debug log
     
             // Call the backend
             await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
@@ -281,6 +289,7 @@ const [projectName, setProjectName] = useState('');
                     labourId: attendanceRecord?.LabourId || 'NA',
                     overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
                     remark: attendanceRecord?.RemarkManually || '-',
+                    attendanceId: attendanceRecord?.AttendanceId || '-',
                 };
             });
             console.log('attendanceRecord+++', fullMonthAttendance)
@@ -304,6 +313,60 @@ const [projectName, setProjectName] = useState('');
         }
     }, [selectedMonth, selectedYear]);
 
+
+    const fetchAttendance = async () => {
+        try {
+          const response = await axios.get(
+            `${API_BASE_URL}/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
+            { params: { month: selectedMonth, year: selectedYear } }
+          );
+    
+          const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+    
+          const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
+            const date = new Date(selectedYear, selectedMonth - 1, i + 1)
+              .toISOString()
+              .split('T')[0];
+            const record = response.data.find((att) => att.Date.split('T')[0] === date);
+            return {
+              date,
+              status: record ? record.Status : 'NA',
+            };
+          });
+    
+          setAttendanceData(fullMonthAttendance);
+        } catch (error) {
+          console.error('Error fetching attendance:', error);
+        }
+      };
+    
+      useEffect(() => {
+        if (open) fetchAttendance();
+      }, [open]);
+    
+      const renderStatusBox = (status) => {
+        const statusColors = {
+          P: '#4CAF50',
+          A: '#FF6F00',
+          HD: '#F44336',
+          H: '#8236BC',
+          MP: '#005cff',
+          NA: '#ccc',
+        };
+        return {
+          backgroundColor: statusColors[status],
+          color: '#fff',
+          width: 40,
+          height: 40,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderRadius: 4,
+          margin: 4,
+          fontSize: '12px',
+        };
+      };
+    
 
     const fetchCachedAttendance = async () => {
         setLoading(true);
@@ -941,6 +1004,7 @@ const [projectName, setProjectName] = useState('');
                     <TableHead>
                         <TableRow>
                             <TableCell>Sr No</TableCell>
+                            <TableCell>Details</TableCell>
                             <TableCell>Labour ID</TableCell>
                             <TableCell>Name of Labour</TableCell>
                             <TableCell>Labour Shift</TableCell>
@@ -972,6 +1036,7 @@ const [projectName, setProjectName] = useState('');
                                 return (
                                     <TableRow key={labour.LabourID}>
                                         <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                        <TableCell><CalendarTodayIcon onClick={handleOpen} style={{ cursor: 'pointer' }} /> </TableCell> 
                                         <TableCell>{labour.LabourID}</TableCell>
                                         <TableCell>{labour.name || '-'}</TableCell>
                                         <TableCell>{labour.workingHours || '-'}</TableCell>
@@ -1354,6 +1419,29 @@ const [projectName, setProjectName] = useState('');
                 </Dialog>
             </LocalizationProvider>
 
+            <Modal open={open} onClose={() => setOpen(false)}>
+        <Box sx={{ width: 450, margin: '50px auto', padding: 2, backgroundColor: '#fff', borderRadius: 2 }}>
+          <Typography variant="h6" textAlign="center" mb={2}>
+            Attendance for Labour ID: {selectedLabourId}
+          </Typography>
+          <Grid container justifyContent="center" flexWrap="wrap">
+            {attendanceData.map((day, index) => (
+              <Box key={index} sx={renderStatusBox(day.status)}>
+                {new Date(day.date).getDate()}
+              </Box>
+            ))}
+          </Grid>
+          <Box mt={2}>
+            <Typography variant="body2">Legend:</Typography>
+            <Typography variant="body2" color="#4CAF50">P - Present</Typography>
+            <Typography variant="body2" color="#FF6F00">A - Absent</Typography>
+            <Typography variant="body2" color="#F44336">HD - Half Day</Typography>
+            <Typography variant="body2" color="#8236BC">H - Holiday</Typography>
+            <Typography variant="body2" color="#005cff">MP - MissPunch</Typography>
+            <Typography variant="body2" color="#ccc">NA - No Data</Typography>
+          </Box>
+        </Box>
+      </Modal>
         </Box>
     );
 };
