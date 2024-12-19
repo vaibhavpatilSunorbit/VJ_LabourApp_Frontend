@@ -60,7 +60,7 @@ const AdminApproval = () => {
                     fontWeight: "600"
                   }}
                 >
-                  <Typography >Pending : 12</Typography>
+                  <Typography>Pending : 12</Typography>
                   <Typography>Approved : 16</Typography>
                   <Typography>Rejected : 4</Typography>
                 </Box>

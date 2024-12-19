@@ -27,7 +27,7 @@ import {
   InputLabel,
   IconButton,
   Menu,
-  MenuItem, Select
+  MenuItem, Select, Badge
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -107,6 +107,9 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const [statusesSite, setStatusesSite] = useState({});
   const [previousTabValue, setPreviousTabValue] = useState(tabValue);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+const [approvedCount, setApprovedCount] = useState(0);
+const [rejectedCount, setRejectedCount] = useState(0);
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -346,6 +349,14 @@ const approveLabour = async (id) => {
       const response = await axios.get(`${API_BASE_URL}/labours/LabourAttendanceApproval`);
       // console.log('API Response:', response.data);
       setLabours(response.data);
+      const pending = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
+      const approved = response.data.filter((labour) => labour.ApprovalStatus === "Approved").length;
+      const rejected = response.data.filter((labour) => labour.ApprovalStatus === "Rejected").length;
+  
+      // Update counts
+      setPendingCount(pending);
+      setApprovedCount(approved);
+      setRejectedCount(rejected);
       setLoading(false);
     } catch (error) {
       // console.error('Error fetching labours:', error);
@@ -557,7 +568,13 @@ const approveLabour = async (id) => {
           }}
         >
           <Tab
-            label="Pending"
+            label={`Pending (${pendingCount})`}
+        //    label={
+        //     <Box sx={{display:'flex'}}>
+        //    <Box sx={{alignContent:'center'}}>Pending</Box>
+        //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{pendingCount}</Box>
+        //    </Box>
+        //   }
             style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
             sx={{
               color: tabValue === 0 ? "white" : "black",
@@ -575,7 +592,13 @@ const approveLabour = async (id) => {
             }}
           />
           <Tab
-            label="Approved"
+            label={`Approved (${approvedCount})`}
+            //   label={
+            //     <Box sx={{display:'flex'}}>
+            //    <Box sx={{alignContent:'center'}}>Approved</Box>
+            //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{approvedCount}</Box>
+            //    </Box>
+            //   }
             style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
             sx={{
               color: tabValue === 1 ? "white" : "black",
@@ -593,7 +616,13 @@ const approveLabour = async (id) => {
             }}
           />
           <Tab
-            label="Rejected"
+          label={`Rejected (${rejectedCount})`}
+            //   label={
+            //     <Box sx={{display:'flex'}}>
+            //    <Box sx={{alignContent:'center'}}>Rejected</Box>
+            //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{rejectedCount}</Box>
+            //    </Box>
+            //   }
             style={{ color: tabValue === 2 ? "rgb(255, 100, 100)" : "black" }}
             sx={{
               color: tabValue === 2 ? "white" : "black",
@@ -603,7 +632,7 @@ const approveLabour = async (id) => {
               fontWeight: "bold",
               minHeight: "auto",
               minWidth: "auto",
-              // padding: "6px 12px",
+              // padding: "6px 12px",   
               "&:hover": {
                 bgcolor: tabValue === 2 ? "rgb(255, 229, 229)" : "rgb(255, 229, 229)",
               },
@@ -982,6 +1011,7 @@ const approveLabour = async (id) => {
                             toast.error('Please add a reason for rejection.');
                         } else {
                             handleReject(selectedLabour.id, rejectReason);
+                            closeRejectPopup();
                         }
                     }}
                     sx={{
