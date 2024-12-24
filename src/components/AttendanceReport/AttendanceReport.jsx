@@ -1099,7 +1099,7 @@ const AttendanceReport = () => {
                                                     },
                                                 }}
                                             >
-                                                Edit
+                                                View
                                             </Button>
                                         </TableCell>
                                     </TableRow>
