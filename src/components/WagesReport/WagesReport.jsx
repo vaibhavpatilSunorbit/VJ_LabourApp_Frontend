@@ -56,29 +56,18 @@ const AttendanceReport = () => {
     const [endDate, setEndDate] = useState('');
     const { user } = useUser();
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        if (searchQuery.trim() === '') {
-            setSearchResults([]);
-            return;
-        }
-        try {
-            const response = await axios.get(`/api/labours/search?q=${searchQuery}`);
-            setSearchResults(response.data);
-        } catch (error) {
-            console.error('Error searching:', error);
-        }
-    };
+
 
     const fetchLabours = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours`);
+            const response = await axios.get(`${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`);
             setLabours(response.data);
-            setLoading(false);
         } catch (error) {
-            setLoading(false);
             console.error('Error fetching labours:', error);
+            toast.error('Failed to fetch data');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -119,7 +108,7 @@ const AttendanceReport = () => {
     };
 
     const handleSubmit = async () => {
-        const formData = displayLabours.map(labour => ({
+        const formData = paginatedLabours.map(labour => ({
             labourId: labour.LabourID,
             payStructure: payStructure[labour.LabourID],
             dailyWages: dailyWages[labour.LabourID],
@@ -145,23 +134,10 @@ const AttendanceReport = () => {
         const today = new Date();
         return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
     };
-    // const handleEdit = (labour) => {
-    //     setSelectedLabour(labour);
-    //     setModalOpen(true);
-    //     // Reset fields for the selected labour
-    //     setPayStructure('');
-    //     setDailyWages('');
-    //     setOvertime('');
-    //     setWeeklyOff('');
-    //   };
-
-
-
     const handleCancel = () => {
         setModalOpen(false); // Close the modal without saving
     };
-
-    const displayLabours = searchResults.length > 0 ? searchResults : labours;
+    // const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
     const fetchBusinessUnits = async () => {
         try {
@@ -293,8 +269,6 @@ const AttendanceReport = () => {
             toast.error('Failed to save wages');
         }
     };
-
-
     // Handle modal edit
     const handleEdit = (labour) => {
         setSelectedLabour(labour);
@@ -314,6 +288,37 @@ const AttendanceReport = () => {
             toast.error(message);
         }
     };
+
+    const handleSearch = async (e) => {
+        e.preventDefault();
+        if (searchQuery.trim() === '') {
+            fetchLabours();
+            return;
+        }
+        setLoading(true);
+        try {
+            const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+            setLabours(response.data);
+        } catch (error) {
+            console.error('Error searching:', error);
+            toast.error('Search failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePageChange = (e, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleRowsPerPageChange = (e) => {
+        const newRowsPerPage = parseInt(e.target.value, 10);
+        setRowsPerPage(newRowsPerPage);
+        setPage(0); // Reset to the first page
+    };
+
+    // Data to display on the current page
+    const paginatedLabours = labours.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
@@ -344,7 +349,7 @@ const AttendanceReport = () => {
                 }}
             >
                 <ExportWagesReport />
-                <ImportWagesReport handleToast={handleToast} />
+                <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} />
 
                 {/* <Box display="flex" alignItems="flex-end" gap={2}>
                     <Select
@@ -408,45 +413,52 @@ const AttendanceReport = () => {
                     </Button>
                 </Box> */}
 
-                <TablePagination
+<TablePagination
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                    count={displayLabours.length}
+                    count={labours.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
-                    onPageChange={(e, newPage) => setPage(newPage)}
-                    onRowsPerPageChange={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
+                    onPageChange={handlePageChange}
+                    onRowsPerPageChange={handleRowsPerPageChange}
                 />
             </Box>
 
-            <TableContainer component={Paper} sx={{ mb: isMobile ? 6 : 0, overflowX: 'auto', overflowY: 'auto', borderRadius: 2, boxShadow: 3 }}>
+            <TableContainer component={Paper} sx={{ mb: isMobile ? 6 : 0, overflowX: 'auto', overflowY: 'auto', borderRadius: 2, boxShadow: 3, height: '66vh' }}>
                 <Table stickyHeader sx={{ minWidth: 800 }}>
                     <TableHead>
                         <TableRow>
-                            <TableCell>Sr No</TableCell>
+                        <TableCell>Sr No</TableCell>
                             <TableCell>Labour ID</TableCell>
-                            <TableCell>Name of Labour</TableCell>
-                            <TableCell>Project</TableCell>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Business Unit</TableCell>
                             <TableCell>Department</TableCell>
-                            <TableCell>Status</TableCell>
+                            <TableCell>From Date</TableCell>
+                            <TableCell>Pay Structure</TableCell>
+                            <TableCell>Daily Wages</TableCell>
+                            <TableCell>Fixed Monthly Wages</TableCell>
+                            <TableCell>Weekly Off</TableCell>
+                            <TableCell>Wages Edited By</TableCell>
+                            <TableCell>Created At</TableCell>
                             <TableCell>Action</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {(displayLabours.length > 0
-                            ? displayLabours
-                                .filter(labour => labour.status === 'Approved')
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            : []
-                        ).map((labour, index) => (
-                            <TableRow key={labour.LabourID}>
-                                <TableCell>{index + 1}</TableCell>
-                                <TableCell>{labour.LabourID}</TableCell>
-                                <TableCell>{labour.name}</TableCell>
-                                <TableCell>{labour.location}</TableCell>
-                                <TableCell>{labour.departmentName}</TableCell>
-                                <TableCell>{labour.status}</TableCell>
-                                <TableCell>
+                    {paginatedLabours.map((labour, index) => (
+                                <TableRow key={labour.LabourID}>
+                                    <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                    <TableCell>{labour.LabourID}</TableCell>
+                                    <TableCell>{labour.name || '-'}</TableCell>
+                                    <TableCell>{labour.businessUnit || '-'}</TableCell>
+                                    <TableCell>{labour.departmentName || '-'}</TableCell>
+                                    <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell>
+                                    <TableCell>{labour.PayStructure || '-'}</TableCell>
+                                    <TableCell>{labour.DailyWages || '-'}</TableCell>
+                                    <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
+                                    <TableCell>{labour.WeeklyOff || '-'}</TableCell>
+                                    <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
+                                    <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
+                                    <TableCell>
                                     <Button
                                         variant="contained"
                                         sx={{
@@ -529,7 +541,7 @@ const AttendanceReport = () => {
 
                             {/* Read-Only Fields */}
                             <TextField
-                                label="Per Day Wages"
+                                label="Per Hours Wages"
                                 type="number"
                                 fullWidth
                                 value={dailyWages / 8 || 0} // Assuming 8 hours in a workday

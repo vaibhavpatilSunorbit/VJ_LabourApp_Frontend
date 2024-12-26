@@ -14,7 +14,7 @@ import {
 // import 'react-toastify/dist/ReactToastify.css';
 import PropTypes from 'prop-types';
 
-const ImportWages = ({ handleToast = (type, message) => console[type]?.(message) }) => {
+const ImportWages = ({ handleToast = (type, message) => console[type]?.(message), onboardName  }) => {
     const [open, setOpen] = useState(false);
     const [file, setFile] = useState(null);
 
@@ -50,6 +50,7 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
     
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('wagesEditedBy', onboardName);
     
         try {
             const response = await axios.post(`${API_BASE_URL}/labours/importWagesExcel`, formData, {
@@ -102,6 +103,7 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
         }
         ImportWages.propTypes = {
             handleToast: PropTypes.func,
+            onboardName: PropTypes.string,
         };
     };
  
