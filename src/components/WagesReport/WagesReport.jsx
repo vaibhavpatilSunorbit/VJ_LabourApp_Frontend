@@ -24,6 +24,8 @@ import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../UserContext/UserContext';
+import ExportWagesReport from './ImportExportWages/ExportWages'
+import ImportWagesReport from './ImportExportWages/ImportWages'
 
 const AttendanceReport = () => {
     const theme = useTheme();
@@ -44,6 +46,7 @@ const AttendanceReport = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [weeklyOff, setWeeklyOff] = useState('');
+    const [fixedMonthlyWages, setFixedMonthlyWages] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedLabour, setSelectedLabour] = useState(null);
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
@@ -183,13 +186,13 @@ const AttendanceReport = () => {
     // mode: 'no-cors',
 
     //         });
-    
+
     //         console.log('Response:', response); // Log response to debug
-    
+
     //         if (!response.ok) {
     //             throw new Error(`HTTP error! status: ${response.status}, message: ${response.statusText}`);
     //         }
-    
+
     //         const data = await response.json();
     //         console.log('Business Units fetched:', data);
     //         setBusinessUnits(data);
@@ -203,8 +206,8 @@ const AttendanceReport = () => {
     // }, []);
 
 
-    
-    
+
+
     const handleBusinessUnitChange = async (event) => {
         const selectedUnit = event.target.value;
         setSelectedBusinessUnit(selectedUnit);
@@ -273,6 +276,7 @@ const AttendanceReport = () => {
                 yearlyWages,
                 overtime,
                 totalOvertimeWages,
+                fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages : null,
                 weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff : null,
                 wagesEditedBy: onboardName, // Replace with logged-in user
             };
@@ -281,7 +285,9 @@ const AttendanceReport = () => {
             fetchLabours();
             setModalOpen(false);
             setWeeklyOff(""); // Reset weeklyOff to initial state
-        setMonthlyWages(0); 
+            setFixedMonthlyWages(0)
+            setMonthlyWages(0);
+            setDailyWages(0);
         } catch (error) {
             console.error('Error saving wages:', error);
             toast.error('Failed to save wages');
@@ -299,6 +305,14 @@ const AttendanceReport = () => {
         setOvertime(0);
         setTotalOvertimeWages(0);
         setModalOpen(true);
+    };
+
+    const handleToast = (type, message) => {
+        if (type === 'success') {
+            toast.success(message);
+        } else if (type === 'error') {
+            toast.error(message);
+        }
     };
 
     return (
@@ -329,29 +343,31 @@ const AttendanceReport = () => {
                     flexWrap: "wrap",
                 }}
             >
+                <ExportWagesReport />
+                <ImportWagesReport handleToast={handleToast} />
 
-                <Box display="flex" alignItems="flex-end" gap={2}>
-                <Select
-            value={selectedBusinessUnit}
-            onChange={handleBusinessUnitChange}
-            displayEmpty
-            sx={{ width: '200px' }}
-        >
-            <MenuItem value="" disabled>
-                Select Business Unit
-            </MenuItem>
-            {businessUnits.length > 0 ? (
-                businessUnits.map((unit) => (
-                    <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
-                        {unit.BusinessUnit}
-                    </MenuItem>
-                ))
-            ) : (
-                <MenuItem value="" disabled>
-                    No Business Units Available
-                </MenuItem>
-            )}
-        </Select>
+                {/* <Box display="flex" alignItems="flex-end" gap={2}>
+                    <Select
+                        value={selectedBusinessUnit}
+                        onChange={handleBusinessUnitChange}
+                        displayEmpty
+                        sx={{ width: '200px' }}
+                    >
+                        <MenuItem value="" disabled>
+                            Select Business Unit
+                        </MenuItem>
+                        {businessUnits.length > 0 ? (
+                            businessUnits.map((unit) => (
+                                <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
+                                    {unit.BusinessUnit}
+                                </MenuItem>
+                            ))
+                        ) : (
+                            <MenuItem value="" disabled>
+                                No Business Units Available
+                            </MenuItem>
+                        )}
+                    </Select>
                     <TextField
                         label="Start Date"
                         type="date"
@@ -390,7 +406,7 @@ const AttendanceReport = () => {
                     }}>
                         Export
                     </Button>
-                </Box>
+                </Box> */}
 
                 <TablePagination
                     className="custom-pagination"
@@ -491,17 +507,22 @@ const AttendanceReport = () => {
                     {/* Dynamic Fields */}
                     {payStructure === 'Daily Wages' && (
                         <>
-                             {/* Daily Wages Input */}
+                            {/* Daily Wages Input */}
                             <TextField
                                 label="Daily Wages"
                                 type="number"
                                 fullWidth
-                                value={dailyWages}
+                                value={dailyWages || ""} // Display an empty string if the value is 0 or null
                                 onChange={(e) => {
-                                    const value = parseFloat(e.target.value);
+                                    const value = e.target.value === "" ? null : parseFloat(e.target.value); // Set null for empty input, otherwise parse the number
                                     setDailyWages(value);
-                                    setMonthlyWages(value * 30); // Assuming 30 days in a month
-                                    setYearlyWages(value * 30 * 12); // Assuming 12 months in a year
+                                    if (value !== null) {
+                                        setMonthlyWages(value * 30); // Assuming 30 days in a month
+                                        setYearlyWages(value * 30 * 12); // Assuming 12 months in a year
+                                    } else {
+                                        setMonthlyWages(null); // Reset Monthly Wages if Daily Wages is null
+                                        setYearlyWages(null); // Reset Yearly Wages if Daily Wages is null
+                                    }
                                 }}
                                 sx={{ mb: 2 }}
                             />
@@ -593,15 +614,27 @@ const AttendanceReport = () => {
                                 <MenuItem value="4">4</MenuItem>
                             </Select>
 
-                            {/* Total Wages */}
+                            {/* Fixed Monthly Wages TextField */}
                             <TextField
+                                label="Fixed Monthly Wages"
+                                type="number"
+                                fullWidth
+                                value={fixedMonthlyWages || ""} // Display an empty string if the value is 0 or null
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFixedMonthlyWages(value === "" ? null : parseFloat(value)); // Set null for empty input, otherwise parse the number
+                                }}
+                                sx={{ mb: 2 }}
+                            />
+                            {/* Total Wages */}
+                            {/* <TextField
                                 label="Total Wages (Without Overtime)"
                                 type="number"
                                 fullWidth
                                 value={monthlyWages || 0}
                                 InputProps={{ readOnly: true }}
                                 sx={{ mb: 2 }}
-                            />
+                            /> */}
                         </>
                     )}
 

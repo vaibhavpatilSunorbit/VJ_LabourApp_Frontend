@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    Table,TableBody,TableCell,TableContainer,TableHead,TableRow,Paper,Button,Box,TextField,TablePagination,Dialog, DialogTitle, DialogContent,DialogActions,Select, MenuItem,Tabs, Tab, Typography,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Tab, Typography,
     InputAdornment,
     Modal,
     Grid
@@ -24,6 +24,8 @@ import dayjs from 'dayjs';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 // import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 // toast.configure();
+import ImportAttendance from './ImportExportAttendance/ImportAttendance';
+import ExportAttendance from './ImportExportAttendance/ExportAttendance';
 
 const AttendanceReport = () => {
     const theme = useTheme();
@@ -125,7 +127,7 @@ const AttendanceReport = () => {
                 ...(onboardName && { onboardName }),
             };
 
-            console.log('Request payload +++++:', payload); 
+            console.log('Request payload +++++:', payload);
 
             await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
 
@@ -191,7 +193,7 @@ const AttendanceReport = () => {
         setLoading(true);
         try {
             const response = await axios.get(`${API_BASE_URL}/labours`);
-            const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID); 
+            const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID);
             setLabours(sortedLabours);
             setLoading(false);
         } catch (error) {
@@ -201,10 +203,10 @@ const AttendanceReport = () => {
         }
     };
 
- 
+
     useEffect(() => {
-        fetchLabours(); 
-    }, []); 
+        fetchLabours();
+    }, []);
 
     useEffect(() => {
         if (modalOpen) {
@@ -252,14 +254,14 @@ const AttendanceReport = () => {
 
             const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
             const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
-                const date = new Date(selectedYear, selectedMonth - 1, i + 1); 
+                const date = new Date(selectedYear, selectedMonth - 1, i + 1);
                 const attendanceRecord = attendanceList.find(
                     (record) => new Date(record.Date).toDateString() === date.toDateString()
                 );
 
                 return {
                     // date: date.toISOString().split('T')[0], // Format: yyyy-mm-dd
-                    date: attendanceRecord?.Date.split('T')[0] || date.toISOString().split('T')[0], 
+                    date: attendanceRecord?.Date.split('T')[0] || date.toISOString().split('T')[0],
                     status: attendanceRecord ? attendanceRecord.Status : 'NA',
                     firstPunch: attendanceRecord?.FirstPunch || '-',
                     lastPunch: attendanceRecord?.LastPunch || '-',
@@ -387,7 +389,7 @@ const AttendanceReport = () => {
             const processedAttendance = attendanceList.map((labour, index) => ({
                 srNo: index + 1,
                 labourId: labour.LabourId,
-                name: labour.Name, 
+                name: labour.Name,
                 totalDays: labour.TotalDays,
                 presentDays: labour.PresentDays,
                 halfDays: labour.HalfDays,
@@ -413,7 +415,7 @@ const AttendanceReport = () => {
 
 
     const renderAttendanceForMonth = () => {
-        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate(); 
+        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
         const result = [];
 
         for (let day = 1; day <= daysInMonth; day++) {
@@ -440,7 +442,7 @@ const AttendanceReport = () => {
                 } else {
                     result.push({
                         date: formattedDay,
-                        status: 'A', 
+                        status: 'A',
                         firstPunch: '-',
                         lastPunch: '-',
                         totalHours: '-',
@@ -451,7 +453,7 @@ const AttendanceReport = () => {
             }
         }
 
-        return result; 
+        return result;
     };
 
 
@@ -491,10 +493,10 @@ const AttendanceReport = () => {
     };
 
     const calculateTotalHours = (attendanceEntry) => {
-        const punchIn = new Date(`${attendanceEntry.punch_in}Z`);  
-        const punchOut = new Date(`${attendanceEntry.punch_out}Z`); 
-        const totalHours = (punchOut - punchIn) / (1000 * 60 * 60); 
-        return totalHours.toFixed(2);  
+        const punchIn = new Date(`${attendanceEntry.punch_in}Z`);
+        const punchOut = new Date(`${attendanceEntry.punch_out}Z`);
+        const totalHours = (punchOut - punchIn) / (1000 * 60 * 60);
+        return totalHours.toFixed(2);
     };
 
     const handleTabChange = (event, newValue) => {
@@ -572,13 +574,13 @@ const AttendanceReport = () => {
                 <CircleIcon
                     sx={{
                         color: "#4CAF50",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, 
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
                 <Typography
                     sx={{
-                        fontSize: { xs: "0.75rem", sm: "0.875rem", md: "0.9rem", lg: "1rem" }, 
+                        fontSize: { xs: "0.75rem", sm: "0.875rem", md: "0.9rem", lg: "1rem" },
                         color: "#5e636e",
                     }}
                 >
@@ -590,7 +592,7 @@ const AttendanceReport = () => {
                 <CircleIcon
                     sx={{
                         color: "#F44336",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, 
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
@@ -608,7 +610,7 @@ const AttendanceReport = () => {
                 <CircleIcon
                     sx={{
                         color: "#8236BC",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, 
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
@@ -626,7 +628,7 @@ const AttendanceReport = () => {
                 <CircleIcon
                     sx={{
                         color: "#FF6F00",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, 
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
@@ -644,7 +646,7 @@ const AttendanceReport = () => {
                 <CircleIcon
                     sx={{
                         color: "#005cff",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, 
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
@@ -789,18 +791,18 @@ const AttendanceReport = () => {
         </Box>
     );
     const statusColors = {
-        P: '#4CAF50', 
-        A: '#FF6F00', 
-        H: '#8236BC', 
+        P: '#4CAF50',
+        A: '#FF6F00',
+        H: '#8236BC',
         HD: '#F44336',
-        MP: '#005cff', 
-        NA: '#E0E0E0', 
+        MP: '#005cff',
+        NA: '#E0E0E0',
     };
 
     const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
     const generateCalendar = (attendanceData, year, month) => {
-        const daysInMonth = new Date(year, month, 0).getDate(); 
+        const daysInMonth = new Date(year, month, 0).getDate();
         const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
 
         const calendar = [];
@@ -879,15 +881,15 @@ const AttendanceReport = () => {
 
                 <Box sx={{
                     display: 'flex',
-                    flexDirection: { xs: 'row', sm: 'row' }, 
-                    alignItems: { xs: 'stretch', sm: 'center' }, 
+                    flexDirection: { xs: 'row', sm: 'row' },
+                    alignItems: { xs: 'stretch', sm: 'center' },
                     gap: 2,
                     height: { xs: '50px', sm: '50px', md: '50px' },
-                    paddingRight: { xs: 2, sm: 5 }, 
-                    width: { xs: '100%', sm: '80%', md: '100%' }, 
+                    // paddingRight: { xs: 2, sm: 5 },
+                    width: { xs: '100%', sm: '80%', md: '100%' },
                     justifyContent: { xs: 'flex-start', sm: 'flex-start' },
                 }}>
-                    <Box sx={{ width: '50%', gap: '20px', display: 'flex', alignItems: 'flex-end' }}>
+                    <Box sx={{ width: '40%', gap: '20px', display: 'flex', alignItems: 'flex-end' }}>
                         <Select
                             value={selectedMonth}
                             sx={{ width: { xs: '100%', sm: '20%' }, }}
@@ -933,9 +935,19 @@ const AttendanceReport = () => {
                             Fetch Attendance
                         </Button>
                     </Box>
-
-
-                    <Box display="flex" alignItems="flex-end" gap={2}>
+                    <Box sx={{ width: '80%', gap: '20px', display: 'flex', alignItems: 'flex-end',justifyContent:'space-evenly', alignItems:'center' }}>
+                        <ExportAttendance />
+                        <ImportAttendance />
+                            <TablePagination
+                                className="custom-pagination"
+                                rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
+                                //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
+                                rowsPerPage={rowsPerPage}
+                                page={page}
+                                onPageChange={handleChangePage}
+                                onRowsPerPageChange={handleChangeRowsPerPage}
+                            /> </Box>
+                    {/* <Box display="flex" alignItems="flex-end" gap={2}>
                         <Select
                             value={selectedBusinessUnit}
                             onChange={handleBusinessUnitChange}
@@ -989,56 +1001,10 @@ const AttendanceReport = () => {
                         }}>
                             Export
                         </Button>
-                    </Box>
+                    </Box> */}
                 </Box>
 
-
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: { xs: 'row', sm: 'row' }, 
-                    alignItems: { xs: 'stretch', sm: 'center' }, 
-                    gap: 2,
-                    height: { xs: '50px', sm: '50px', md: '50px' },
-                    paddingRight: { xs: 2, sm: 5 }, 
-                    width: { xs: '100%', sm: '80%', md: '100%' }, 
-                    justifyContent: { xs: 'flex-start', sm: 'flex-start' },
-                }}>
-                    <Box sx={{ width: '50%', gap: '20px', display: 'flex', alignItems: 'flex-end' }}>
-                        <input
-                            type="file"
-                            onChange={(e) => setFile(e.target.files[0])}
-                            style={{
-                                padding: '10px 4px',
-                                border: '1px solid #ccc',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                            }}
-                        />
-                        <Button variant="contained" onClick={handleImport} sx={{
-                            fontSize: { xs: '10px', sm: '13px', md: '15px' },
-                            height: { xs: '40px', sm: '38px', md: '38px', lg: '38px' },
-                            width: { xs: '100%', sm: 'auto' },
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
-                                backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                        }}>
-                            Import
-                        </Button>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <TablePagination
-                            className="custom-pagination"
-                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                            //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                        />
-                    </Box>
-                </Box>
+               
             </Box>
 
             <TableContainer component={Paper}>
@@ -1133,7 +1099,7 @@ const AttendanceReport = () => {
                         display: "flex",
                         flexDirection: "column",
                         gap: 3,
-                        fontSize: { xs: "14px", sm: "16px" }, 
+                        fontSize: { xs: "14px", sm: "16px" },
                     }}
                 >
                     <Box sx={{
@@ -1143,13 +1109,13 @@ const AttendanceReport = () => {
                     }}>
                         <Box sx={{
                             display: "flex",
-                            flexWrap: { xs: "nowrap", sm: "nowrap" }, 
+                            flexWrap: { xs: "nowrap", sm: "nowrap" },
                             gap: { xs: 0.5, sm: "10px" },
                         }}>
                             <Select
                                 value={selectedMonth}
                                 sx={{
-                                    width: { xs: "100%", sm: "54%" }, 
+                                    width: { xs: "100%", sm: "54%" },
                                 }}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
                                 displayEmpty
@@ -1180,8 +1146,8 @@ const AttendanceReport = () => {
                                     backgroundColor: "rgb(229, 255, 225)",
                                     color: "rgb(43, 217, 144)",
                                     height: { xs: "88%", sm: "90%", lg: "90%" },
-                                    width: { xs: "100%", sm: "80%", lg: "80%" }, 
-                                    marginTop: { xs: 0.8, sm: "6px" }, 
+                                    width: { xs: "100%", sm: "80%", lg: "80%" },
+                                    marginTop: { xs: 0.8, sm: "6px" },
                                     "&:hover": {
                                         backgroundColor: "rgb(229, 255, 225)",
                                     },
@@ -1192,8 +1158,8 @@ const AttendanceReport = () => {
                         </Box>
                         <Box
                             sx={{
-                                width: { xs: "100%", sm: "auto" }, 
-                                marginTop: { xs: 0, sm: 0 }, 
+                                width: { xs: "100%", sm: "auto" },
+                                marginTop: { xs: 0, sm: 0 },
                             }}
                         >
                             <StatusLegend />
