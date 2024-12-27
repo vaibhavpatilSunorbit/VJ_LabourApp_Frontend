@@ -26,6 +26,7 @@
     "jquery": "^3.7.1",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
+    "lottie-react": "^2.4.0",
     "mssql": "^11.0.1",
     "os-browserify": "^0.3.0",
     "process": "^0.11.10",

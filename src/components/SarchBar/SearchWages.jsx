@@ -1,10 +1,9 @@
 
-
 import React from 'react';
 import { TextField, Button } from '@mui/material';
 import './SearchBar.css';
 
-const SearchBar = ({
+const SearchWages = ({
   searchQuery,
   setSearchQuery,
   handleSearch,
@@ -23,7 +22,7 @@ const SearchBar = ({
       <form onSubmit={handleSubmit} className="search-form">
         <TextField
           className="search-input"
-          label="Search By Name, Labour ID, Aadhaar Number or Onboard By Name"
+          label="Search By Name, Labour ID, Department Name, Pay Structure or Wages Edit By"
           variant="outlined"
           value={searchQuery}
           onChange={(e) => {
@@ -45,7 +44,7 @@ const SearchBar = ({
           <ul>
             {searchResults.map((result) => (
               <li key={result.id}>
-                {result.LabourID} - {result.name} - {result.aadhaarNumber} - {result.OnboardName} - {result.workingHours} 
+                {result.LabourID} - {result.name} - {result.companyName} - {result.DailyWages} - {result.departmentName} - {result.WagesEditedBy} - {result.PayStructure}
                 <button onClick={() => handleSelectLabour(result)}>Select</button>
               </li>
             ))}
@@ -56,4 +55,4 @@ const SearchBar = ({
   );
 };
 
-export default SearchBar;
+export default SearchWages;

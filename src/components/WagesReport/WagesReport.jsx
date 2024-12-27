@@ -14,11 +14,11 @@ import {
     TextField,
     TablePagination,
     Select,
-    MenuItem, Modal
+    MenuItem, Modal, Typography, IconButton
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchBar';
+import SearchBar from '../SarchBar/SearchWages';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
@@ -26,6 +26,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../UserContext/UserContext';
 import ExportWagesReport from './ImportExportWages/ExportWages'
 import ImportWagesReport from './ImportExportWages/ImportWages'
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 const AttendanceReport = () => {
     const theme = useTheme();
@@ -55,8 +56,24 @@ const AttendanceReport = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const { user } = useUser();
+    const [openModal, setOpenModal] = useState(false);
+    const [selectedHistory, setSelectedHistory] = useState([]);
 
+    const convertToIndianTime = (isoString) => {
+        const options = {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+        };
 
+        const formatter = new Intl.DateTimeFormat('en-IN', options);
+        return formatter.format(new Date(isoString));
+    };
 
     const fetchLabours = async () => {
         setLoading(true);
@@ -297,7 +314,7 @@ const AttendanceReport = () => {
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromWages?q=${searchQuery}`);
             setLabours(response.data);
         } catch (error) {
             console.error('Error searching:', error);
@@ -316,18 +333,54 @@ const AttendanceReport = () => {
         setRowsPerPage(newRowsPerPage);
         setPage(0); // Reset to the first page
     };
+    const handleSelectLabour = (selectedLabour) => {
+        setSelectedLabour(selectedLabour);
+    };
 
     // Data to display on the current page
-    const paginatedLabours = labours.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+    // const paginatedLabours = labours.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+
+    // Filter data to only include the latest entry per LabourID
+    const getLatestLabourData = (labours) => {
+        const latestEntries = {};
+        labours.forEach((labour) => {
+            if (
+                !latestEntries[labour.LabourID] ||
+                new Date(labour.CreatedAt) > new Date(latestEntries[labour.LabourID].CreatedAt)
+            ) {
+                latestEntries[labour.LabourID] = labour;
+            }
+        });
+        return Object.values(latestEntries);
+    };
+
+    const handleViewHistory = (labourID) => {
+        const history = labours.filter((labour) => labour.LabourID === labourID);
+        setSelectedHistory(history);
+        setOpenModal(true);
+    };
+
+    const filteredLabours = getLatestLabourData(labours);
+    const paginatedLabours = filteredLabours.slice(
+        page * rowsPerPage,
+        (page + 1) * rowsPerPage
+    );
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
             <Box ml={-1.5}>
                 <SearchBar
-                    handleSubmit={handleSearch}
+                    handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
+                    handleSearch={handleSearch}
+                    // handleSearch={() => {}}
+                    searchResults={searchResults}
+                    setSearchResults={setSearchResults}
+                    handleSelectLabour={handleSelectLabour}
+                    showResults={false}
+                    className="search-bar"
                 />
             </Box>
             {loading && <Loading />}
@@ -413,7 +466,7 @@ const AttendanceReport = () => {
                     </Button>
                 </Box> */}
 
-<TablePagination
+                <TablePagination
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
                     count={labours.length}
@@ -428,7 +481,7 @@ const AttendanceReport = () => {
                 <Table stickyHeader sx={{ minWidth: 800 }}>
                     <TableHead>
                         <TableRow>
-                        <TableCell>Sr No</TableCell>
+                            <TableCell>Sr No</TableCell>
                             <TableCell>Labour ID</TableCell>
                             <TableCell>Name</TableCell>
                             <TableCell>Business Unit</TableCell>
@@ -440,25 +493,34 @@ const AttendanceReport = () => {
                             <TableCell>Weekly Off</TableCell>
                             <TableCell>Wages Edited By</TableCell>
                             <TableCell>Created At</TableCell>
+                            <TableCell>Wages History</TableCell>
                             <TableCell>Action</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                    {paginatedLabours.map((labour, index) => (
-                                <TableRow key={labour.LabourID}>
-                                    <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                    <TableCell>{labour.LabourID}</TableCell>
-                                    <TableCell>{labour.name || '-'}</TableCell>
-                                    <TableCell>{labour.businessUnit || '-'}</TableCell>
-                                    <TableCell>{labour.departmentName || '-'}</TableCell>
-                                    <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell>
-                                    <TableCell>{labour.PayStructure || '-'}</TableCell>
-                                    <TableCell>{labour.DailyWages || '-'}</TableCell>
-                                    <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
-                                    <TableCell>{labour.WeeklyOff || '-'}</TableCell>
-                                    <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
-                                    <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
-                                    <TableCell>
+                        {paginatedLabours.map((labour, index) => (
+                            <TableRow key={labour.LabourID}>
+                                <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                <TableCell>{labour.LabourID}</TableCell>
+                                <TableCell>{labour.name || '-'}</TableCell>
+                                <TableCell>{labour.businessUnit || '-'}</TableCell>
+                                <TableCell>{labour.departmentName || '-'}</TableCell>
+                                <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell>
+                                <TableCell>{labour.PayStructure || '-'}</TableCell>
+                                <TableCell>{labour.DailyWages || '-'}</TableCell>
+                                <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
+                                <TableCell>{labour.WeeklyOff || '-'}</TableCell>
+                                <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
+                                <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
+                                <TableCell>
+                                    <IconButton
+                                        color='rgb(239,230,247)'
+                                        onClick={() => handleViewHistory(labour.LabourID)}
+                                    >
+                                        <VisibilityIcon />
+                                    </IconButton>
+                                </TableCell>
+                                <TableCell>
                                     <Button
                                         variant="contained"
                                         sx={{
@@ -675,6 +737,69 @@ const AttendanceReport = () => {
                     </Box>
                 </Box>
             </Modal>
+
+            {/* Modal for Viewing History */}
+            <Modal open={openModal} onClose={() => setOpenModal(false)}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 600,
+                        bgcolor: 'background.paper',
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: 4,
+                    }}
+                >
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        Wage Update History for Labour ID: {selectedHistory[0]?.LabourID}
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {selectedHistory.map((record, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                    position: 'relative',
+                                }}
+                            >
+                                {/* Line for zig-zag */}
+                                {index > 0 && (
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            left: '50%',
+                                            width: 2,
+                                            height: 50,
+                                            //   bgcolor: 'green',
+                                            //   transform: `translateX(-50%) ${
+                                            //     index % 2 === 0 ? 'rotate(45deg)' : 'rotate(-45deg)'
+                                            //   }`,
+                                        }}
+                                    />
+                                )}
+                                <Box
+                                    sx={{
+                                        borderRadius: '50%',
+                                        width: 20,
+                                        height: 20,
+                                        bgcolor: 'green',
+                                    }}
+                                />
+                                <Typography>
+                                    {convertToIndianTime(record.CreatedAt)} -{' '}
+                                    {record.FixedMonthlyWages || 'No Wages Assigned'}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
+            </Modal>
+
         </Box>
     );
 };
