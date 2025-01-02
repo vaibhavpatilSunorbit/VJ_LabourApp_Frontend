@@ -211,6 +211,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           });
 
           const dynamicData = dynamicDataResponse.data;
+          console.log('dynamicData check 2025 ',dynamicData)
 
           // Construct employeeMasterPayload with dynamic labourID
           const employeeMasterPayload = {
@@ -613,7 +614,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                 id: 4
               },
               bank: {
-                id: 2
+                id: dynamicData.bankId
               },
               employee: {},
               bankAccountNo: labour.accountNumber,

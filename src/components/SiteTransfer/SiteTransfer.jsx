@@ -24,12 +24,12 @@ import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../UserContext/UserContext';
-import ExportWagesReport from './ImportExportWages/ExportWages'
-import ImportWagesReport from './ImportExportWages/ImportWages'
+import ExportWagesReport from '../WagesReport/ImportExportWages/ExportWages'
+import ImportWagesReport from '../WagesReport/ImportExportWages/ImportWages'
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
 
-const AttendanceReport = () => {
+const SiteTransfer = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -933,4 +933,4 @@ const AttendanceReport = () => {
     );
 };
 
-export default AttendanceReport;
+export default SiteTransfer;

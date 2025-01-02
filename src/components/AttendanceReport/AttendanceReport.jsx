@@ -892,7 +892,7 @@ const AttendanceReport = () => {
                     <Box sx={{ width: '40%', gap: '20px', display: 'flex', alignItems: 'flex-end' }}>
                         <Select
                             value={selectedMonth}
-                            sx={{ width: { xs: '100%', sm: '20%' }, }}
+                            sx={{ width: { xs: '100%', sm: '20%' } }}
                             onChange={(e) => setSelectedMonth(e.target.value)}
                             displayEmpty
                         >
@@ -906,11 +906,12 @@ const AttendanceReport = () => {
 
                         <Select
                             value={selectedYear}
-                            sx={{ width: { xs: '100%', sm: '20%' }, }}
+                            sx={{ width: { xs: '100%', sm: '20%' } }}
                             onChange={(e) => setSelectedYear(e.target.value)}
                             displayEmpty
                         >
-                            {[selectedYear, selectedYear - 1].map((year) => (
+                            <MenuItem value="" disabled>Select Year</MenuItem>
+                            {[2024, 2025].map((year) => (
                                 <MenuItem key={year} value={year}>
                                     {year}
                                 </MenuItem>
@@ -935,18 +936,18 @@ const AttendanceReport = () => {
                             Fetch Attendance
                         </Button>
                     </Box>
-                    <Box sx={{ width: '80%', gap: '20px', display: 'flex', alignItems: 'flex-end',justifyContent:'space-evenly', alignItems:'center' }}>
+                    <Box sx={{ width: '80%', gap: '20px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-evenly', alignItems: 'center' }}>
                         <ExportAttendance />
                         <ImportAttendance />
-                            <TablePagination
-                                className="custom-pagination"
-                                rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                                //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
-                                rowsPerPage={rowsPerPage}
-                                page={page}
-                                onPageChange={handleChangePage}
-                                onRowsPerPageChange={handleChangeRowsPerPage}
-                            /> </Box>
+                        <TablePagination
+                            className="custom-pagination"
+                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
+                            //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                        /> </Box>
                     {/* <Box display="flex" alignItems="flex-end" gap={2}>
                         <Select
                             value={selectedBusinessUnit}
@@ -1004,76 +1005,95 @@ const AttendanceReport = () => {
                     </Box> */}
                 </Box>
 
-               
+
             </Box>
 
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Sr No</TableCell>
-                            <TableCell>Details</TableCell>
-                            <TableCell>Labour ID</TableCell>
-                            <TableCell>Name of Labour</TableCell>
-                            <TableCell>Labour Shift</TableCell>
-                            <TableCell>Total Days</TableCell>
-                            <TableCell>Present Days</TableCell>
-                            <TableCell>Half Days</TableCell>
-                            <TableCell>Absent Days</TableCell>
-                            <TableCell>MissPunch Days</TableCell>
-                            <TableCell>Overtime (Hours)</TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
+            <TableContainer component={Paper} sx={{
+                mb: isMobile ? 6 : 0,
+                overflowX: 'auto',
+                overflowY: 'auto',
+                borderRadius: 2,
+                boxShadow: 3,
+                maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
+                '&::-webkit-scrollbar': {
+                    width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                    backgroundColor: '#f1f1f1',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: '#888',
+                    borderRadius: '4px',
+                },
+            }}>
+                <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                    <Table stickyHeader sx={{ minWidth: 800 }}>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Sr No</TableCell>
+                                <TableCell>Details</TableCell>
+                                <TableCell>Labour ID</TableCell>
+                                <TableCell>Name of Labour</TableCell>
+                                <TableCell>Labour Shift</TableCell>
+                                <TableCell>Total Days</TableCell>
+                                <TableCell>Present Days</TableCell>
+                                <TableCell>Half Days</TableCell>
+                                <TableCell>Absent Days</TableCell>
+                                <TableCell>MissPunch Days</TableCell>
+                                <TableCell>Overtime (Hours)</TableCell>
+                                <TableCell>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
 
-                    <TableBody>
-                        {(
-                            rowsPerPage > 0
-                                ? (searchResults.length > 0
-                                    ? searchResults
-                                    : (filteredIconLabours.length > 0
-                                        ? filteredIconLabours
-                                        : [...labours]))
-                                : []
-                        )
-                            .filter((labour) => labour.status === 'Approved')
-                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            .map((labour, index) => {
-                                const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
+                        <TableBody>
+                            {(
+                                rowsPerPage > 0
+                                    ? (searchResults.length > 0
+                                        ? searchResults
+                                        : (filteredIconLabours.length > 0
+                                            ? filteredIconLabours
+                                            : [...labours]))
+                                    : []
+                            )
+                                .filter((labour) => labour.status === 'Approved')
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((labour, index) => {
+                                    const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
 
-                                return (
-                                    <TableRow key={labour.LabourID}>
-                                        <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                        <TableCell><CalendarTodayIcon onClick={() => handleModalOpenCalenderAttendance(labour)} style={{ cursor: 'pointer' }} /> </TableCell>
-                                        <TableCell>{labour.LabourID}</TableCell>
-                                        <TableCell>{labour.name || '-'}</TableCell>
-                                        <TableCell>{labour.workingHours || '-'}</TableCell>
-                                        <TableCell>{labourAttendance ? labourAttendance.totalDays : '-'}</TableCell>
-                                        <TableCell>{labourAttendance ? labourAttendance.presentDays : '-'}</TableCell>
-                                        <TableCell>{labourAttendance ? labourAttendance.halfDays : '-'}</TableCell>
-                                        <TableCell>{labourAttendance ? labourAttendance.absentDays : '-'}</TableCell>
-                                        <TableCell>{labourAttendance ? labourAttendance.misspunchDays : '-'}</TableCell>
-                                        <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell>
-                                        <TableCell>
-                                            <Button
-                                                onClick={() => handleModalOpen(labour)}
-                                                sx={{
-                                                    backgroundColor: 'rgb(229, 255, 225)',
-                                                    color: 'rgb(43, 217, 144)',
-                                                    '&:hover': {
+                                    return (
+                                        <TableRow key={labour.LabourID}>
+                                            <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                            <TableCell><CalendarTodayIcon onClick={() => handleModalOpenCalenderAttendance(labour)} style={{ cursor: 'pointer' }} /> </TableCell>
+                                            <TableCell>{labour.LabourID}</TableCell>
+                                            <TableCell>{labour.name || '-'}</TableCell>
+                                            <TableCell>{labour.workingHours || '-'}</TableCell>
+                                            <TableCell>{labourAttendance ? labourAttendance.totalDays : '-'}</TableCell>
+                                            <TableCell>{labourAttendance ? labourAttendance.presentDays : '-'}</TableCell>
+                                            <TableCell>{labourAttendance ? labourAttendance.halfDays : '-'}</TableCell>
+                                            <TableCell>{labourAttendance ? labourAttendance.absentDays : '-'}</TableCell>
+                                            <TableCell>{labourAttendance ? labourAttendance.misspunchDays : '-'}</TableCell>
+                                            <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    onClick={() => handleModalOpen(labour)}
+                                                    sx={{
                                                         backgroundColor: 'rgb(229, 255, 225)',
-                                                    },
-                                                }}
-                                            >
-                                                View
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                    </TableBody>
+                                                        color: 'rgb(43, 217, 144)',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgb(229, 255, 225)',
+                                                        },
+                                                    }}
+                                                >
+                                                    View
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                        </TableBody>
 
-                </Table>
+                    </Table>
+                </Box>
             </TableContainer>
 
 

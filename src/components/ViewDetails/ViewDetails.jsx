@@ -616,7 +616,16 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton  }) => {
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent dividers className="modal-content">
+      <DialogContent dividers className="modal-content" sx={{   "&::-webkit-scrollbar": {
+            width: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "#f1f1f1",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#888",
+            borderRadius: "4px",
+          },}}>
         {selectedLabour ? (
           <>
             {selectedLabour.photoSrc && (

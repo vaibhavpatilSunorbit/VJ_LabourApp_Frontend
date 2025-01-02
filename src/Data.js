@@ -89,6 +89,12 @@ export const SidebarData = [
     heading: "Admin Approval",
     path: "adminApproval",
     roles: ["admin"],
+  },
+  {
+    icon: UilFileAlt,
+    heading: "Site Transfer",
+    path: "siteTransferLabour",
+    roles: ["admin"],
   }
 ];
 
