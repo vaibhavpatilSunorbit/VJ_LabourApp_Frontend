@@ -441,7 +441,7 @@ import { API_BASE_URL } from "../../Data";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const accessPages = ["Application", "Labour Details", "Add User", "Project Machine"];
+const accessPages = ["Application", "Labour Details", "Add User", "Project Machine", "Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer"];
 
 const AddUser = () => {
   const [showModal, setShowModal] = useState(false);
@@ -794,6 +794,7 @@ const AddUser = () => {
                 helperText={errors.userType}
                 sx={{ margin: '20px 0' }}
               >
+                <MenuItem value="superadmin">Super Admin</MenuItem>
                 <MenuItem value="admin">Admin</MenuItem>
                 <MenuItem value="user">User</MenuItem>
               </TextField>

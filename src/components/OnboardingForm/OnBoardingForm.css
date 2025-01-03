@@ -674,6 +674,19 @@ select option{
   background-color: #f0f0f0;
 }
 
+select {
+  -webkit-appearance: none; /* Removes the default arrow in some browsers */
+  -moz-appearance: none;    /* Removes the default arrow in Firefox */
+  appearance: none;
+  overflow: hidden;         /* Prevents scrollbar from appearing */
+  white-space: nowrap;      /* Prevents text wrapping */
+}
+
+select::-webkit-scrollbar {
+  display: none; /* Hides the scrollbar for webkit-based browsers */
+}
+
+
 /* ***************************************** Mobile view ***************** */
 /* Media Queries */
 @media (min-width: 51px) and (max-width: 500px) {

@@ -171,6 +171,21 @@
   }
 
   
+#sidebar {
+  overflow-y: scroll; 
+  -webkit-overflow-scrolling: touch; 
+}
+
+#sidebar::-webkit-scrollbar {
+  width: 0; 
+  display: none; 
+}
+
+#sidebar {
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+ 
 
   /* Medium <= 992px */
   

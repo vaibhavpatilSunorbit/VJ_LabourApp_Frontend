@@ -70,31 +70,31 @@ export const SidebarData = [
     icon: UilFileAlt,
     heading: "Attendance Report",
     path: "attendanceReport",
-    roles: ["admin"],
+    roles: ["superadmin"],
   },
   {
     icon: UilFileAlt,
     heading: "Wages Report",
     path: "wagesReport",
-    roles: ["admin"],
+    roles: ["superadmin"],
   },
   {
     icon: UilFileAlt,
     heading: "People",
     path: "peopleReport",
-    roles: ["admin"],
+    roles: ["superadmin"],
   },
   {
     icon: UilFileAlt,
     heading: "Admin Approval",
     path: "adminApproval",
-    roles: ["admin"],
+    roles: ["superadmin"],
   },
   {
     icon: UilFileAlt,
     heading: "Site Transfer",
     path: "siteTransferLabour",
-    roles: ["admin"],
+    roles: ["superadmin"],
   }
 ];
 

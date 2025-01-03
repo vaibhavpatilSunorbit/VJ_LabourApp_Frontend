@@ -1313,29 +1313,86 @@ if (!localError) {
 
 
 
+// const handleInputChange = (e) => {
+//   const { name, value } = e.target;
+//   // console.log(`Handling input change for ${name} with value: ${value}`);
+
+//   if (name === 'department') {
+//     const departmentId = parseInt(value, 10);
+//     // console.log(`Parsed departmentId: ${departmentId}`);
+
+//     const selectedDepartment = departments.find(dep => dep.Id === departmentId);
+//     // console.log(`Selected department: ${JSON.stringify(selectedDepartment)}`);
+
+//     if (selectedDepartment) {
+//       const departmentName = selectedDepartment.Description;
+//       // console.log(`Department name: ${departmentName}`);
+
+//       const workingHours = departmentWorkingHoursMapping[departmentName] || '';
+//       // console.log(`Working hours for ${departmentName}: ${workingHours}`);
+
+//       setFormData((prevFormData) => ({
+//         ...prevFormData,
+//         department: value,
+//         departmentId,
+//         workingHours
+//       }));
+//     } else {
+//       console.error(`Department with ID ${departmentId} not found.`);
+//       setFormData((prevFormData) => ({
+//         ...prevFormData,
+//         department: '',
+//         departmentId: '',
+//         workingHours: ''
+//       }));
+//     }
+//   } else {
+//     setFormData((prevFormData) => ({
+//       ...prevFormData,
+//       [name]: value
+//     }));
+//   }
+// };
+
+  
 const handleInputChange = (e) => {
   const { name, value } = e.target;
-  // console.log(`Handling input change for ${name} with value: ${value}`);
 
-  if (name === 'department') {
+  if (name === "projectName") {
+    const projectId = parseInt(value, 10); // Get the selected project's ID
+    const selectedProject = projectNames.find(project => project.id === projectId);
+
+    if (selectedProject) {
+      const companyName = selectedProject.Company_Name; // Get the corresponding company name
+
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        projectName: value, // Update projectName
+        projectId,          // Store the project ID
+        companyName,        // Automatically update companyName
+      }));
+    } else {
+      console.error(`Project with ID ${projectId} not found.`);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        projectName: '',
+        projectId: null,
+        companyName: '',
+      }));
+    }
+  } else if (name === "department") {
     const departmentId = parseInt(value, 10);
-    // console.log(`Parsed departmentId: ${departmentId}`);
-
     const selectedDepartment = departments.find(dep => dep.Id === departmentId);
-    // console.log(`Selected department: ${JSON.stringify(selectedDepartment)}`);
 
     if (selectedDepartment) {
       const departmentName = selectedDepartment.Description;
-      // console.log(`Department name: ${departmentName}`);
-
       const workingHours = departmentWorkingHoursMapping[departmentName] || '';
-      // console.log(`Working hours for ${departmentName}: ${workingHours}`);
 
       setFormData((prevFormData) => ({
         ...prevFormData,
         department: value,
         departmentId,
-        workingHours
+        workingHours,
       }));
     } else {
       console.error(`Department with ID ${departmentId} not found.`);
@@ -1343,18 +1400,16 @@ const handleInputChange = (e) => {
         ...prevFormData,
         department: '',
         departmentId: '',
-        workingHours: ''
+        workingHours: '',
       }));
     }
   } else {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: value
+      [name]: value,
     }));
   }
 };
-
-  
 
 
 const handleSelectChange = (e) => {

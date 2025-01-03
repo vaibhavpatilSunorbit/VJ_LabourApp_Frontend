@@ -70,7 +70,7 @@ input[type="submit"] {
 
 .grid-container {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 255px 1fr;
   grid-template-rows: auto 1fr;
   grid-template-areas:
   'sidebar header header header'
