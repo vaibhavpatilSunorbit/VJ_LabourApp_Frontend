@@ -60,26 +60,10 @@ const SiteTransfer = () => {
     const [openModal, setOpenModal] = useState(false);
     const [selectedHistory, setSelectedHistory] = useState([]);
 
-    const convertToIndianTime = (isoString) => {
-        const options = {
-            timeZone: 'Asia/Kolkata',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-        };
-
-        const formatter = new Intl.DateTimeFormat('en-IN', options);
-        return formatter.format(new Date(isoString));
-    };
-
     const fetchLabours = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`);
+            const response = await axios.get(`${API_BASE_URL}/labours`);
             setLabours(response.data);
         } catch (error) {
             console.error('Error fetching labours:', error);
@@ -92,38 +76,6 @@ const SiteTransfer = () => {
     useEffect(() => {
         fetchLabours();
     }, []);
-
-    const handleWageChange = (labourId, value) => {
-        const daysInMonth = getDaysInMonth(); // Check number of days in the current month
-        const hoursPerShift = 8; // Assuming 8 hours per shift
-
-        // Set daily wage
-        setDailyWages(prev => ({ ...prev, [labourId]: value }));
-        setPerDayWages(prev => ({ ...prev, [labourId]: value / hoursPerShift }));
-
-        // Calculate monthly and yearly wages based on days in the current month
-        const monthly = value * daysInMonth;
-        const yearly = monthly * 12;
-
-        setMonthlyWages(prev => ({ ...prev, [labourId]: monthly }));
-        setYearlyWages(prev => ({ ...prev, [labourId]: yearly }));
-    };
-
-    const handleOvertimeChange = (labourId, value) => {
-        const overtimeRate = perDayWages[labourId] || 0; // Calculate hourly overtime rate
-        const overtimeWages = overtimeRate * value; // Total overtime pay
-
-        setOvertime(prev => ({ ...prev, [labourId]: value }));
-        setTotalOvertimeWages(prev => ({ ...prev, [labourId]: overtimeWages }));
-    };
-
-    const handlePayStructureChange = (labourId, structure) => {
-        setPayStructure(prev => ({ ...prev, [labourId]: structure }));
-    };
-
-    const handleWeakelyOffChange = (labourId, value) => {
-        setWeakelyOff(prev => ({ ...prev, [labourId]: value }));
-    };
 
     const handleSubmit = async () => {
         const formData = paginatedLabours.map(labour => ({
@@ -147,11 +99,6 @@ const SiteTransfer = () => {
         }
     };
 
-    // Utility function to get the number of days in the current month
-    const getDaysInMonth = () => {
-        const today = new Date();
-        return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    };
     const handleCancel = () => {
         setModalOpen(false); // Close the modal without saving
     };
@@ -169,95 +116,6 @@ const SiteTransfer = () => {
     useEffect(() => {
         fetchBusinessUnits();
     }, []);
-
-    // const fetchBusinessUnits = async () => {
-    //     try {
-    //         const response = await fetch(`https://api.vjerp.com/api/businessUnit`, {
-    //             method: 'GET',
-    //             headers: {
-    //                 Authorization: `Bearer 20a763e266308b35fc75feca4b053d5ce8ea540dbdaa77ee13b1a5e7ce8aadcf`,
-    //             },
-    // mode: 'no-cors',
-
-    //         });
-
-    //         console.log('Response:', response); // Log response to debug
-
-    //         if (!response.ok) {
-    //             throw new Error(`HTTP error! status: ${response.status}, message: ${response.statusText}`);
-    //         }
-
-    //         const data = await response.json();
-    //         console.log('Business Units fetched:', data);
-    //         setBusinessUnits(data);
-    //     } catch (error) {
-    //         console.error('Error fetching business units:', error);
-    //         toast.error('Error fetching business units.');
-    //     }
-    // };
-    // useEffect(() => {
-    //     fetchBusinessUnits();
-    // }, []);
-
-
-
-
-    const handleBusinessUnitChange = async (event) => {
-        const selectedUnit = event.target.value;
-        setSelectedBusinessUnit(selectedUnit);
-
-        const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
-        if (selectedProject) {
-            setProjectName(selectedProject.ProjectID);
-
-            try {
-                const response = await axios.get(`${API_BASE_URL}/labours`, {
-                    params: { projectName: selectedProject.ProjectID },
-                });
-                setLabours(response.data);
-            } catch (error) {
-                console.error('Error fetching labours for project:', error);
-                toast.error('Error fetching labours for the selected project.');
-            }
-        }
-    };
-
-    const handleExport = async () => {
-        if (!startDate || !endDate) {
-            toast.error('Please select a Business Unit, Start Date, and End Date.');
-            return;
-        }
-        try {
-            const response = await axios.get(`${API_BASE_URL}/labours/exportWagesExcel`, {
-                params: { startDate, endDate },
-                responseType: 'blob',
-            });
-
-            const blob = new Blob([response.data], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            });
-
-            const fileName = `Attendance_${selectedBusinessUnit}_${startDate}_${endDate}.xlsx`;
-
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-
-            link.parentNode.removeChild(link);
-
-            toast.success('Attendance exported successfully!');
-        } catch (error) {
-            console.error('Error exporting data:', error);
-
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(`Export Error: ${error.response.data.message}`);
-            } else {
-                toast.error('Error exporting data. Please try again later.');
-            }
-        }
-    };
 
     const handleSave = async () => {
         try {
@@ -361,12 +219,16 @@ const SiteTransfer = () => {
         setOpenModal(true);
     };
 
-    const filteredLabours = getLatestLabourData(labours);
+    const filteredLabours = getLatestLabourData(labours).filter(
+        (labour) => labour.status === 'Approved'
+      );
     const paginatedLabours = filteredLabours.slice(
         page * rowsPerPage,
         (page + 1) * rowsPerPage
     );
-
+    console.log("Filtered Labours _+_+_+:", filteredLabours);
+    console.log("Paginated Labours:{{{{{", paginatedLabours);
+    
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
@@ -405,68 +267,7 @@ const SiteTransfer = () => {
                 <ExportWagesReport />
                 <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} />
 
-                {/* <Box display="flex" alignItems="flex-end" gap={2}>
-                    <Select
-                        value={selectedBusinessUnit}
-                        onChange={handleBusinessUnitChange}
-                        displayEmpty
-                        sx={{ width: '200px' }}
-                    >
-                        <MenuItem value="" disabled>
-                            Select Business Unit
-                        </MenuItem>
-                        {businessUnits.length > 0 ? (
-                            businessUnits.map((unit) => (
-                                <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
-                                    {unit.BusinessUnit}
-                                </MenuItem>
-                            ))
-                        ) : (
-                            <MenuItem value="" disabled>
-                                No Business Units Available
-                            </MenuItem>
-                        )}
-                    </Select>
-                    <TextField
-                        label="Start Date"
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{
-                            padding: '4px 4px 1px 4px',
-                            '& .MuiInputBase-input': {
-                                padding: '8px 8px',
-                            },
-                        }}
-                    />
-                    <TextField
-                        label="End Date"
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{
-                            padding: '4px 4px 1px 4px',
-                            '& .MuiInputBase-input': {
-                                padding: '8px 8px',
-                            },
-                        }}
-                    />
-                    <Button variant="contained" onClick={handleExport} sx={{
-                        fontSize: { xs: '10px', sm: '13px', md: '15px' },
-                        height: { xs: '40px', sm: '38px', md: '38px', lg: '38px' },
-                        width: { xs: '100%', sm: 'auto' },
-                        backgroundColor: 'rgb(229, 255, 225)',
-                        color: 'rgb(43, 217, 144)',
-                        '&:hover': {
-                            backgroundColor: 'rgb(229, 255, 225)',
-                        },
-                    }}>
-                        Export
-                    </Button>
-                </Box> */}
-
+               
                 <TablePagination
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
@@ -503,16 +304,12 @@ const SiteTransfer = () => {
                             <TableCell>Sr No</TableCell>
                             <TableCell>Labour ID</TableCell>
                             <TableCell>Name</TableCell>
-                            <TableCell>Business Unit</TableCell>
-                            <TableCell>Department</TableCell>
-                            <TableCell>From Date</TableCell>
-                            <TableCell>Pay Structure</TableCell>
-                            <TableCell>Daily Wages</TableCell>
-                            <TableCell>Fixed Monthly Wages</TableCell>
-                            <TableCell>Weekly Off</TableCell>
-                            <TableCell>Wages Edited By</TableCell>
+                            <TableCell>Project</TableCell>
+                            <TableCell>Previous Site</TableCell>
+                            <TableCell>New Site</TableCell>
+                            <TableCell>Transfer Date</TableCell>
                             <TableCell>Created At</TableCell>
-                            <TableCell>Wages History</TableCell>
+                            <TableCell>Site History</TableCell>
                             <TableCell>Action</TableCell>
                         </TableRow>
                     </TableHead>
@@ -523,12 +320,8 @@ const SiteTransfer = () => {
                                 <TableCell>{labour.LabourID}</TableCell>
                                 <TableCell>{labour.name || '-'}</TableCell>
                                 <TableCell>{labour.businessUnit || '-'}</TableCell>
-                                <TableCell>{labour.departmentName || '-'}</TableCell>
-                                <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell>
-                                <TableCell>{labour.PayStructure || '-'}</TableCell>
-                                <TableCell>{labour.DailyWages || '-'}</TableCell>
-                                <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
-                                <TableCell>{labour.WeeklyOff || '-'}</TableCell>
+                                <TableCell>{labour.businessUnit || '-'}</TableCell>
+                                <TableCell>{labour.businessUnit || '-'}</TableCell>
                                 <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
                                 <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
                                 <TableCell>
@@ -646,36 +439,6 @@ const SiteTransfer = () => {
                                 InputProps={{ readOnly: true }}
                                 sx={{ mb: 2 }}
                             />
-
-                            {/* Overtime (Hours) Input */}
-                            {/* <TextField
-                                label="Overtime (Hours)"
-                                type="number"
-                                fullWidth
-                                value={overtime}
-                                onChange={(e) => {
-                                    const value = parseFloat(e.target.value) || 0;
-                                    setOvertime(value);
-                                    setTotalOvertimeWages(value * (dailyWages / 8)); // Assuming 8 hours in a workday
-                                }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Overtime Pay"
-                                type="number"
-                                fullWidth
-                                value={totalOvertimeWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Total Wages (Including Overtime)"
-                                type="number"
-                                fullWidth
-                                value={+monthlyWages + +totalOvertimeWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            /> */}
                         </>
                     )}
 
@@ -720,15 +483,6 @@ const SiteTransfer = () => {
                                 }}
                                 sx={{ mb: 2 }}
                             />
-                            {/* Total Wages */}
-                            {/* <TextField
-                                label="Total Wages (Without Overtime)"
-                                type="number"
-                                fullWidth
-                                value={monthlyWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            /> */}
                         </>
                     )}
 
@@ -880,49 +634,6 @@ const SiteTransfer = () => {
                   {new Date(record.CreatedAt).toLocaleTimeString()}
                 </Typography>
               </Box>
-
-              {/* Right Side - Details */}
-              <Box
-                sx={{
-                  flex: 3,
-                  fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
-                }}
-              >
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  <strong>Name:</strong> {record.name || "N/A"}
-                </Typography>
-                <Typography variant="body2" >
-                  <strong>Edited By:</strong> {record.WagesEditedBy || "N/A"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>From Date:</strong>{" "}
-                  {record.From_Date
-                    ? new Date(record.From_Date).toLocaleDateString()
-                    : "N/A"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Pay Structure:</strong> {record.PayStructure || "N/A"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Daily Wages:</strong> ₹{record.DailyWages || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Per Hour Wages:</strong> ₹{record.PerHourWages || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Monthly Wages:</strong> ₹{record.MonthlyWages || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Yearly Wages:</strong> ₹{record.YearlyWages || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Weekly Off:</strong> {record.WeeklyOff || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Fixed Monthly Wages:</strong> ₹
-                  {record.FixedMonthlyWages || "0"}
-                </Typography>
-              </Box>
             </Box>
           ))}
         </Box>
@@ -934,3 +645,212 @@ const SiteTransfer = () => {
 };
 
 export default SiteTransfer;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import React, { useState, useEffect } from "react";
+// import axios from "axios";
+// import { Box, Button, Modal, Typography, IconButton } from "@mui/material";
+// import { DataGrid } from "@mui/x-data-grid";
+// import { ToastContainer, toast } from "react-toastify";
+// import "react-toastify/dist/ReactToastify.css";
+// import CloseIcon from "@mui/icons-material/Close";
+// import { API_BASE_URL } from "../../Data";
+// import { useUser } from "../../UserContext/UserContext";
+
+// const SiteTransfer = () => {
+//   const [labours, setLabours] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [modalOpen, setModalOpen] = useState(false);
+//   const [selectedHistory, setSelectedHistory] = useState([]);
+//   const { user } = useUser();
+
+//   // Fetch labours
+//   const fetchLabours = async () => {
+//     setLoading(true);
+//     try {
+//       const response = await axios.get(
+//         `${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`
+//       );
+//       setLabours(response.data);
+//     } catch (error) {
+//       console.error("Error fetching labours:", error);
+//       toast.error("Failed to fetch data");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchLabours();
+//   }, []);
+
+//   // View history handler
+//   const handleViewHistory = (labourID) => {
+//     if (!labourID) return;
+//     const history = labours.filter((labour) => labour.LabourID === labourID);
+//     setSelectedHistory(history);
+//     setModalOpen(true);
+//   };
+//   // DataGrid Columns
+//   const columns = [
+//     { field: "id", headerName: "Sr No", width: 90 },
+//     { field: "LabourID", headerName: "Labour ID", width: 150 },
+//     { field: "name", headerName: "Name", width: 150 },
+//     { field: "businessUnit", headerName: "Business Unit", width: 150 },
+//     { field: "departmentName", headerName: "Department", width: 150 },
+//     {
+//       field: "From_Date",
+//       headerName: "From Date",
+//       width: 150,
+//       valueGetter: (params) => {
+//         if (!params?.row) return "-"; // Check if params or params.row is null
+//         return params.row.From_Date
+//           ? new Date(params.row.From_Date).toLocaleDateString()
+//           : "-";
+//       },
+//     },
+//     { field: "PayStructure", headerName: "Pay Structure", width: 150 },
+//     { field: "DailyWages", headerName: "Daily Wages", width: 150 },
+//     { field: "FixedMonthlyWages", headerName: "Fixed Monthly Wages", width: 150 },
+//     { field: "WeeklyOff", headerName: "Weekly Off", width: 150 },
+//     { field: "WagesEditedBy", headerName: "Wages Edited By", width: 150 },
+//     {
+//       field: "CreatedAt",
+//       headerName: "Created At",
+//       width: 150,
+//       valueGetter: (params) => {
+//         if (!params?.row) return "-"; // Check if params or params.row is null
+//         return params.row.From_Date
+//           ? new Date(params.row.From_Date).toLocaleDateString()
+//           : "-";
+//       },
+//     },
+//     {
+//       field: "Action",
+//       headerName: "Action",
+//       width: 150,
+//       renderCell: (params) => {
+//         if (!params?.row) return "-"; // Check if params or params.row is null
+//         return (
+//           <Button
+//             variant="contained"
+//             sx={{
+//               backgroundColor: "rgb(239,230,247)",
+//               color: "rgb(130,54,188)",
+//               "&:hover": {
+//                 backgroundColor: "rgb(239,230,247)",
+//               },
+//             }}
+//             onClick={() => handleViewHistory(params.row.LabourID)}
+//           >
+//             View History
+//           </Button>
+//         );
+//       },
+//     },
+//   ];
+  
+
+//   const rows = labours.map((labour, index) => ({
+//     id: index + 1,
+//     LabourID: labour?.LabourID || "N/A",
+//     name: labour?.name || "N/A",
+//     businessUnit: labour?.businessUnit || "N/A",
+//     departmentName: labour?.departmentName || "N/A",
+//     From_Date: labour?.From_Date || null,
+//     PayStructure: labour?.PayStructure || "N/A",
+//     DailyWages: labour?.DailyWages || 0,
+//     FixedMonthlyWages: labour?.FixedMonthlyWages || 0,
+//     WeeklyOff: labour?.WeeklyOff || "N/A",
+//     WagesEditedBy: labour?.WagesEditedBy || "N/A",
+//     CreatedAt: labour?.CreatedAt || null,
+//   }));
+  
+  
+  
+  
+
+//   return (
+//     <Box mb={1} py={2} px={2}>
+//       <ToastContainer />
+//       <Box sx={{ height: "88vh", width: "82vw" }}>
+//       <DataGrid
+//   rows={rows}
+//   columns={columns}
+//   pageSize={10}
+//   rowsPerPageOptions={[10, 25, 50]}
+//   loading={loading}
+// />
+
+//       </Box>
+
+//       {/* Modal */}
+//       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+//         <Box
+//           sx={{
+//             position: "absolute",
+//             top: "50%",
+//             left: "50%",
+//             transform: "translate(-50%, -50%)",
+//             width: "80%",
+//             bgcolor: "background.paper",
+//             borderRadius: 2,
+//             boxShadow: 24,
+//             p: 4,
+//             maxHeight: "80vh",
+//             overflowY: "auto",
+//           }}
+//         >
+//           <IconButton
+//             onClick={() => setModalOpen(false)}
+//             sx={{
+//               position: "absolute",
+//               top: 8,
+//               right: 8,
+//               color: "gray",
+//             }}
+//           >
+//             <CloseIcon />
+//           </IconButton>
+//           <Typography variant="h6" mb={3}>
+//             Wages History for Labour ID:{" "}
+//             {selectedHistory[0]?.LabourID || "N/A"}
+//           </Typography>
+//           {selectedHistory.map((record, index) => (
+//             <Typography key={index} mb={2}>
+//               {new Date(record.CreatedAt).toLocaleString()} - Edited By:{" "}
+//               {record.WagesEditedBy || "N/A"}
+//             </Typography>
+//           ))}
+//         </Box>
+//       </Modal>
+//     </Box>
+//   );
+// };
+
+// export default SiteTransfer;

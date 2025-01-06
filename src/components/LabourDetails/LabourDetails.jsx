@@ -727,36 +727,78 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           //     'Authorization': 'apikey 8d1588e79eb31ed7cb57ff57325510572baa1008d575537615e295d3bbd7d558',
           //   }
           // });
-          const employeeMasterResponse = await axios.post(`${API_BASE_URL}/employeeMasterPayloadUpdatepost`, employeeMasterPayload, {
+
+          // -------------------------------------------------------------------------------------------------------------------------------------------
+          // const employeeMasterResponse = await axios.post(`${API_BASE_URL}/employeeMasterPayloadUpdatepost`, employeeMasterPayload, {
+          //   headers: {
+          //     'Content-Type': 'application/json',
+          //   },
+          // });
+
+          // if (employeeMasterResponse.data.status) {
+          //   console.log('Employee master details updated successfully.');
+
+          //   const empData = {
+          //     empId: employeeMasterResponse.data.outputList.id
+          //   };
+
+          //   const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${labour.id}`, empData);
+          //   console.log(employeeDetails.status);
+
+          //   // Fetch dynamic data for organizationMasterPayload
+          //   const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
+          //     params: {
+          //       employeeId: employeeMasterResponse.data.outputList.id,
+          //       monthdesc: labour.Period,
+          //       gradeId: labour.labourCategoryId,
+          //       salarybudescription: labour.SalaryBu,
+          //       workbudesc: labour.WorkingBu,
+          //       ledgerId: employeeMasterResponse.data.outputList.ledgerId,
+          //       departmentId: labour.departmentId,
+          //       designationId: labour.designationId
+          //     }
+          //   });
+          //   const dynamicData2 = dynamicDataResponse2.data;
+
+
+          const employeeMasterResponse = await axios.post(`${API_BASE_URL}/employeeMasterPayloadUpdatepost`,JSON.stringify(employeeMasterPayload), {
             headers: {
               'Content-Type': 'application/json',
             },
-          });
 
+          });
+          console.log('employeeMasterResponse 2025 ',employeeMasterResponse)
           if (employeeMasterResponse.data.status) {
             console.log('Employee master details updated successfully.');
-
-            const empData = {
-              empId: employeeMasterResponse.data.outputList.id
-            };
-
+          
+            const empId = employeeMasterResponse.data.outputList?.id;
+            const ledgerId = employeeMasterResponse.data.outputList?.ledgerId;
+          
+            if (!empId) {
+              console.error('Employee ID is missing in the response. Skipping further API calls.');
+              return; // Exit early if empId is missing
+            }
+          
+            const empData = { empId };
+          
+            // Update employee ID
             const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${labour.id}`, empData);
-            console.log(employeeDetails.status);
-
-            // Fetch dynamic data for organizationMasterPayload
-            const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
-              params: {
-                employeeId: employeeMasterResponse.data.outputList.id,
-                monthdesc: labour.Period,
-                gradeId: labour.labourCategoryId,
-                salarybudescription: labour.SalaryBu,
-                workbudesc: labour.WorkingBu,
-                ledgerId: employeeMasterResponse.data.outputList.ledgerId,
-                departmentId: labour.departmentId,
-                designationId: labour.designationId
-              }
-            });
-            const dynamicData2 = dynamicDataResponse2.data;
+            console.log('Employee Details Update Status:', employeeDetails.status);
+          
+              const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
+                params: {
+                  employeeId: empId,
+                  monthdesc: labour.Period,
+                  gradeId: labour.labourCategoryId,
+                  salarybudescription: labour.SalaryBu,
+                  workbudesc: labour.WorkingBu,
+                  ledgerId,
+                  departmentId: labour.departmentId,
+                  designationId: labour.designationId,
+                },
+              });
+              const dynamicData2 = dynamicDataResponse2.data;
+              console.log('Fetched Dynamic Data:', dynamicData2);
 
             // Construct organizationMasterPayload with dynamic labourID
             const organizationMasterPayload = {
@@ -1389,7 +1431,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             //     'Authorization': 'apikey 8d1588e79eb31ed7cb57ff57325510572baa1008d575537615e295d3bbd7d558',
             //   }
             // });
-            const orgMasterResponse = await axios.post(`${API_BASE_URL}/organizationMasterPayloadUpdatepost`, organizationMasterPayload, {
+            const orgMasterResponse = await axios.post(`${API_BASE_URL}/organizationMasterPayloadUpdatepost`, JSON.stringify(organizationMasterPayload), {
               headers: {
                 'Content-Type': 'application/json',
               },
@@ -2659,7 +2701,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                 {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
                 {tabValue === 1 && <TableCell>labourID Card</TableCell>}
                 {tabValue === 1 && <TableCell>Edit Labour</TableCell>}
-                {((user.userType === 'admin') || (tabValue !== 0 && user.userType === 'user')) && <TableCell>Action</TableCell>}
+                {((user.userType === 'admin' || user.userType === 'superadmin') || (tabValue !== 0 && user.userType === 'user')) && <TableCell>Action</TableCell>}
                 <TableCell>Details</TableCell>
                 {(tabValue === 3 && user.userType === 'admin') && <TableCell>Transfer Site</TableCell>}
                 {(tabValue === 3 && user.userType === 'admin') && <TableCell>New Transfer Site</TableCell>}
@@ -2828,7 +2870,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                           Edit
                         </Button>
                       )}
-                      {(user.userType === 'admin' && labour.status === 'Approved' && !labour.address) && (
+                      {(user.userType === 'admin' || user.userType === 'superadmin' && labour.status === 'Approved' && !labour.address) && (
                         <Button
                           variant="contained"
                           sx={{
@@ -2890,7 +2932,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                     </TableCell>
                   )}
 
-                  {user.userType === 'admin' && (
+                  {user.userType === 'admin' || user.userType === 'superadmin' && (
                     <TableCell>
                       {labour.status === 'Pending' && !approvedLabours.includes(labour.id) && !approvingLabours.includes(labour.id) && (
                         <>

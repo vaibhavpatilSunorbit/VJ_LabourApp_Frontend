@@ -100,7 +100,7 @@ function App() {
                     <Route path="/peopleEditDetails" element={<PeopleEditDetails onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval" element={<AdminApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/adminAttendanceApproval" element={<AdminAttendanceApproval onFormSubmit={handleFormSubmit} />} />
-                    <Route path="/SiteTransfer" element={<SiteTransfer onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/siteTransferLabour" element={<SiteTransfer onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }
