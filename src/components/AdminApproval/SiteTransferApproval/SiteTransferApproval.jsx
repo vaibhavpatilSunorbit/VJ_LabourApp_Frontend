@@ -32,25 +32,25 @@ import {
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate, useLocation } from 'react-router-dom';
-import SearchBar from '../SarchBar/SearchBar';
-import ViewDetails from '../ViewDetails/ViewDetails';
-import Loading from "../Loading/Loading";
+import SearchBar from '../../SarchBar/SearchBar';
+import ViewDetails from '../../ViewDetails/ViewDetails';
+import Loading from "../../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import EditIcon from '@mui/icons-material/Edit';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { API_BASE_URL } from "../../Data";
+import { API_BASE_URL } from "../../../Data";
 import InfoIcon from '@mui/icons-material/Info';
 import jsPDF from 'jspdf';
-import { useUser } from '../../UserContext/UserContext';
+import { useUser } from '../../../UserContext/UserContext';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { format } from 'date-fns';
 import { ClipLoader } from 'react-spinners';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import CircleIcon from '@mui/icons-material/Circle';
 
-const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, labourlist }) => {
+const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, labourlist }) => {
   const { user } = useUser();
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -218,13 +218,13 @@ const handleApproveConfirmClose = () => {
 
     try {
         const response = await axios.put(`${API_BASE_URL}/labours/attendance/reject`, null, {
-            params: { id, rejectReason },
+            params: { id },
         });
 
         if (response.data.success) {
             setLabours(prevLabours =>
                 prevLabours.map(labour =>
-                    labour.id === id ? { ...labour, ApprovalStatus: 'Rejected', rejectReason } : labour
+                    labour.id === id ? { ...labour, ApprovalStatus: 'Rejected' } : labour
                 )
             );
             toast.success('Attendance Rejected successfully.');
@@ -815,7 +815,7 @@ const approveLabour = async (id) => {
 
                   {tabValue === 2 && (
                     <>
-                      <TableCell>{labour.RejectedDate ? new Date(labour.RejectedDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                      <TableCell>{labour.LastUpdatedDate ? new Date(labour.LastUpdatedDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                     </>
                   )}
                   {tabValue === 2 && (
@@ -1043,7 +1043,7 @@ const approveLabour = async (id) => {
             </Typography>
             {selectedLabour && (
               <Typography variant="body1" component="p">
-                {selectedLabour.RejectAttendanceReason}
+                {selectedLabour.rejectReason}
               </Typography>
             )}
             <Box mt={2} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1237,4 +1237,4 @@ const approveLabour = async (id) => {
   );
 };
 
-export default AdminAttedanceApproval;
+export default SiteTransferApproval;

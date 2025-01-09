@@ -20,6 +20,8 @@ import PeopleEditDetails from './components/PeopleEditDetails/PeopleEditDetails'
 import AdminApproval from './components/AdminApproval/AdminApproval';
 import AdminAttendanceApproval from './components/AdminApproval/AdminAttedanceApproval';
 import SiteTransfer from './components/SiteTransfer/SiteTransfer';
+import SiteTransferApproval from './components/AdminApproval/SiteTransferApproval/SiteTransferApproval';
+import WagesApproval from './components/AdminApproval/WagesApproval/WagesApproval'
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -101,6 +103,8 @@ function App() {
                     <Route path="/adminApproval" element={<AdminApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/adminAttendanceApproval" element={<AdminAttendanceApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/siteTransferLabour" element={<SiteTransfer onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/adminApproval/siteTransferApproval" element={<SiteTransferApproval onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/adminApproval/wagesApproval" element={<WagesApproval onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }

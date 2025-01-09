@@ -24,6 +24,7 @@ import { API_BASE_URL } from "../../Data";
 import './projectMachine.css';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import CloseIcon from '@mui/icons-material/Close';
 
 const modalStyle = {
   position: 'absolute',
@@ -343,7 +344,19 @@ const ApproveLabours = () => {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={modalStyle}>
+        <Box sx={{ ...modalStyle, position: 'relative' }}>
+    {/* Close Button */}
+    <IconButton
+      aria-label="close"
+      onClick={handleCloseModal}
+      sx={{
+        position: 'absolute',
+        top: 8,
+        right: 8,
+      }}
+    >
+      <CloseIcon />
+    </IconButton>
           <form onSubmit={handleModalSubmit}>
             <InputLabel id="new-project-name-label" style={inputLabelStyle}>
               Project Name{renderRequiredAsterisk(true)}

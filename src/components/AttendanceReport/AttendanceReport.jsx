@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Tab, Typography,
+    Table, IconButton, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Tab, Typography,
     InputAdornment,
     Modal,
     Grid
@@ -26,6 +26,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 // toast.configure();
 import ImportAttendance from './ImportExportAttendance/ImportAttendance';
 import ExportAttendance from './ImportExportAttendance/ExportAttendance';
+import CloseIcon from '@mui/icons-material/Close'
 
 const AttendanceReport = () => {
     const theme = useTheme();
@@ -38,7 +39,9 @@ const AttendanceReport = () => {
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(25);
-    const [selectedMonth, setSelectedMonth] = useState('');
+    const currentDate = new Date();
+    const currentMonth = (currentDate.getMonth() + 1).toString();
+    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [searchResults, setSearchResults] = useState([]);
     const [totalDays, setTotalDays] = useState(0);
@@ -69,7 +72,7 @@ const AttendanceReport = () => {
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
     const [projectName, setProjectName] = useState('');
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-    const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+    // const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
 
 
 
@@ -1335,7 +1338,7 @@ const AttendanceReport = () => {
                         Edit Attendance for {manualEditData.date}
                     </DialogTitle>
                     <DialogContent
-                        sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}
+                        sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2, paddingTop: 1 }}
                     >
                         <Box>
                             <TimePicker
@@ -1450,8 +1453,27 @@ const AttendanceReport = () => {
                         borderRadius: '12px',
                         boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
                         textAlign: 'center',
+                        position: 'relative',
                     }}
                 >
+                    <IconButton
+                        aria-label="close"
+                        onClick={handleModalCloseCalender}
+                        sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            color: '#FFF', 
+                            backgroundColor: '#ff0000b5',
+                            borderRadius: '20%', 
+                            padding: '5px',
+                            '&:hover': {
+                              backgroundColor: '#ff0000de',
+                            },
+                          }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
                     <Typography variant="h6" mb={0} fontWeight="bold">
                         Attendance for Labour ID: {selectedLabourId}
                     </Typography>

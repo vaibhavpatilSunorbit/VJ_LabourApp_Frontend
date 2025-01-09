@@ -229,6 +229,127 @@ const SiteTransfer = () => {
     console.log("Filtered Labours _+_+_+:", filteredLabours);
     console.log("Paginated Labours:{{{{{", paginatedLabours);
     
+
+
+    // const handleSiteChange = (labour, siteId) => {
+    //     setSelectedLabour(labour);
+    //     setNewSite(siteId);
+    //     setOpenDialogSite(true); // Open the confirmation dialog
+    //   };
+    
+    //   const confirmTransfer = async () => {
+    //     setOpenDialogSite(false); // Close the dialog
+    
+    //     try {
+    //       console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
+    //       setSelectedSite((prev) => ({ ...prev, [selectedLabour.LabourID]: newSite }));
+    
+    //       // Fetch SerialNumber from selected site ID
+    //       const siteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
+    //       console.log('Fetched site details:', siteResponse.data);
+    //       // Check if SerialNumber exists in the response
+    //       const SerialNumber = siteResponse.data.serialNumber || 'Unknown'; // Access the correct key
+    //       console.log(`Using SerialNumber: ${SerialNumber}`);
+    
+    
+    //       const soapEnvelope = `
+    //         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    //           <soap:Body>
+    //             <AddEmployee xmlns="http://tempuri.org/">
+    //               <APIKey>11</APIKey>
+    //               <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
+    //               <EmployeeName>${selectedLabour.name}</EmployeeName>
+    //               <CardNumber>${selectedLabour.id}</CardNumber>
+    //               <SerialNumber>${SerialNumber}</SerialNumber>
+    //               <UserName>test</UserName>
+    //               <UserPassword>Test@123</UserPassword>
+    //               <CommandId>25</CommandId>
+    //             </AddEmployee>
+    //           </soap:Body>
+    //         </soap:Envelope>`;
+    
+    //       const soapResponse = await axios.post(
+    //         `${API_BASE_URL}/labours/essl/addEmployee`,
+    //         soapEnvelope,
+    //         { headers: { 'Content-Type': 'text/xml' } }
+    //       );
+    
+    //       if (soapResponse.status === 200) {
+    //         const commandId = soapResponse.data.CommandId;
+    
+    //         await axios.post(`${API_BASE_URL}/api/transfer`, {
+    //           userId: selectedLabour.id,
+    //           LabourID: selectedLabour.LabourID,
+    //           name: selectedLabour.name,
+    //           currentSite: selectedLabour.projectName,
+    //           currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit, // Send Business_Unit name
+    //           transferSite: newSite,
+    //           transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit, // Send new Business_Unit name
+    //           esslStatus: 'Transferred',
+    //           esslCommandId: commandId,
+    //           esslPayload: soapEnvelope,
+    //           esslApiResponse: JSON.stringify(soapResponse.data),
+    //         });
+    
+    //         setLabours((prevLabours) =>
+    //           prevLabours.map((labour) =>
+    //             labour.LabourID === selectedLabour.LabourID
+    //               ? { ...labour, projectName: projectNames.find((p) => p.id === newSite).Business_Unit }
+    //               : labour
+    //           )
+    //         );
+    //         toast.success(`Labour ${selectedLabour.name} Transferred Site Successfully.`);
+    //       }
+    //     } catch (error) {
+    //       console.error('Error during site transfer:', error);
+    //     }
+    //   };
+    
+    //   ///////////////////////////  Fetch Transfer labour from db Table  //////////////////////////////////////
+    
+    
+    //   const fetchTransferSiteNames = async (labourIds) => {
+    //     try {
+    //       const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
+    //       return response.data; // Assuming response.data contains [{ LabourID, transferSiteName }]
+    //     } catch (error) {
+    //       console.error('Error fetching transfer site names:', error);
+    //       return [];
+    //     }
+    //   };
+    
+    //   // Fetch and map transfer site names to labour data
+    //   useEffect(() => {
+    //     const fetchData = async () => {
+    //       setLoading(true);
+    
+    //       const labourList =
+    //         searchResults.length > 0 ? searchResults : filteredIconLabours.length > 0 ? filteredIconLabours : labours;
+    //       const labourIds = labourList.map((labour) => labour.LabourID || labour.id); // Collect all Labour IDs
+    
+    //       if (labourIds.length > 0) {
+    //         const statusesData = await fetchTransferSiteNames(labourIds);
+    
+    //         // Map transfer site names to the corresponding labour IDs
+    //         const updatedStatuses = statusesData.reduce((acc, status) => {
+    //           acc[status.LabourID] = status.transferSiteName || 'Not Transferred';
+    //           return acc;
+    //         }, {});
+    
+    //         setStatusesSite(updatedStatuses); // Update state with mapped data
+    //       }
+    
+    //       setLoading(false);
+    //     };
+    
+    //     if (previousTabValue !== tabValue) {
+    //       fetchData();
+    //       setPreviousTabValue(tabValue); // Update the previous tab value
+    //     }
+    //   }, [searchResults, filteredIconLabours, labours]); // Dependencies
+    
+
+
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />

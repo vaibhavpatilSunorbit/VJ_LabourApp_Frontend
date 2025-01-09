@@ -70,7 +70,7 @@ const AdminApproval = () => {
         </Grid>
   
         <Grid item xs={12} sm={6} md={4}>
-          <Link to={'/admin/signupCustomers'} style={{ textDecoration: 'none' }}>
+          <Link to={'/adminApproval/siteTransferApproval'} style={{ textDecoration: 'none' }}>
             <Card
               sx={{
                 backgroundColor: '#e6eefa',
@@ -104,7 +104,7 @@ const AdminApproval = () => {
         </Grid>
   
         <Grid item xs={12} sm={6} md={4}>
-          <Link to={'/admin/signupCustomers'} style={{ textDecoration: 'none' }}>
+          <Link to={'/adminApproval/wagesApproval'} style={{ textDecoration: 'none' }}>
             <Card
               sx={{
                 backgroundColor: '#e6eefa',

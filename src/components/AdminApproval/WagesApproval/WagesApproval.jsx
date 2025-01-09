@@ -32,25 +32,25 @@ import {
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate, useLocation } from 'react-router-dom';
-import SearchBar from '../SarchBar/SearchBar';
-import ViewDetails from '../ViewDetails/ViewDetails';
-import Loading from "../Loading/Loading";
+import SearchBar from '../../SarchBar/SearchBar';
+import ViewDetails from '../../ViewDetails/ViewDetails';
+import Loading from "../../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import EditIcon from '@mui/icons-material/Edit';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { API_BASE_URL } from "../../Data";
+import { API_BASE_URL } from "../../../Data";
 import InfoIcon from '@mui/icons-material/Info';
 import jsPDF from 'jspdf';
-import { useUser } from '../../UserContext/UserContext';
+import { useUser } from '../../../UserContext/UserContext';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { format } from 'date-fns';
 import { ClipLoader } from 'react-spinners';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import CircleIcon from '@mui/icons-material/Circle';
 
-const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, labourlist }) => {
+const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlist }) => {
   const { user } = useUser();
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,7 +63,7 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [tabValue, setTabValue] = useState(0);
-  const [rejectReason, setRejectReason] = useState('');
+  const [Remarks, setRejectReason] = useState('');
   const [isRejectPopupOpen, setIsRejectPopupOpen] = useState(false);
   const [isRejectReasonPopupOpen, setIsRejectReasonPopupOpen] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -210,21 +210,21 @@ const handleApproveConfirmClose = () => {
 //     }
 // };
 
-  const handleReject = async (id) => {
-    if (!id) {
+  const handleReject = async (ApprovalID) => {
+    if (!ApprovalID) {
         toast.error('Attendance ID is missing.');
         return;
     }
 
     try {
-        const response = await axios.put(`${API_BASE_URL}/labours/attendance/reject`, null, {
-            params: { id, rejectReason },
+        const response = await axios.put(`${API_BASE_URL}/labours/admin/rejectWages`, null, {
+            params: { ApprovalID, Remarks: Remarks },
         });
 
         if (response.data.success) {
             setLabours(prevLabours =>
                 prevLabours.map(labour =>
-                    labour.id === id ? { ...labour, ApprovalStatus: 'Rejected', rejectReason } : labour
+                    labour.ApprovalID === ApprovalID ? { ...labour, ApprovalStatus: 'Rejected', Remarks: Remarks } : labour
                 )
             );
             toast.success('Attendance Rejected successfully.');
@@ -241,21 +241,21 @@ const handleApproveConfirmClose = () => {
 
 
 
-const approveLabour = async (id) => {
-    if (!id) {
+const approveLabour = async (ApprovalID) => {
+    if (!ApprovalID) {
         toast.error('Attendance ID is missing.');
         return;
     }
 
     try {
-        const response = await axios.put(`${API_BASE_URL}/labours/attendance/approve`, null, {
-            params: { id },
+        const response = await axios.put(`${API_BASE_URL}/labours/admin/approveWages`, null, {
+            params: { ApprovalID },
         });
 
         if (response.data.success) {
             setLabours(prevLabours =>
                 prevLabours.map(labour =>
-                    labour.id === id ? { ...labour, ApprovalStatus: 'Approved' } : labour
+                    labour.ApprovalID === ApprovalID ? { ...labour, ApprovalStatus: 'Approved' } : labour
                 )
             );
             toast.success('Attendance approved successfully.');
@@ -346,7 +346,7 @@ const approveLabour = async (id) => {
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/LabourAttendanceApproval`);
+      const response = await axios.get(`${API_BASE_URL}/labours/wages/adminApprovals`);
       // console.log('API Response:', response.data);
       setLabours(response.data);
       const pending = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
@@ -697,14 +697,15 @@ const approveLabour = async (id) => {
               >
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>First Punch</TableCell>
-                <TableCell>Last Punch</TableCell>
-                <TableCell>Overtime Manually</TableCell>
-                <TableCell>Remark</TableCell>
+                <TableCell>Effective Date</TableCell>
+                <TableCell>PayStructure</TableCell>
+                <TableCell>DailyWages</TableCell>
+                <TableCell>MonthlyWages</TableCell>
+                <TableCell>FixedMonthlyWages</TableCell>
+                <TableCell>WeeklyOff</TableCell>
                 <TableCell>Attendance Edit By</TableCell>
                 <TableCell>Status</TableCell>
-                {tabValue !== 2 &&<TableCell>Send Approval Date</TableCell>}
+                {tabValue === 0 &&<TableCell>Send Approval Date</TableCell>}
                 {tabValue !== 1 && tabValue !== 2 &&<TableCell>Edit</TableCell>}
                 {tabValue !== 1 && tabValue !== 2 &&<TableCell>Action</TableCell>}
                 {tabValue === 1 &&<TableCell>Approve Date</TableCell>}
@@ -745,13 +746,14 @@ const approveLabour = async (id) => {
               ).map((labour, index) => (
                 <TableRow key={labour.id}>
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                  <TableCell>{labour.LabourId}</TableCell>
-                  <TableCell>{labour.Date ? new Date(labour.Date).toLocaleDateString('en-GB') : '-'}</TableCell>
-                  <TableCell>{labour.FirstPunchManually}</TableCell>
-                  <TableCell>{labour.LastPunchManually}</TableCell>
-                  <TableCell>{labour.OvertimeManually}</TableCell>
-                    <TableCell>{labour.RemarkManually}</TableCell>
-                    <TableCell>{labour.OnboardName}</TableCell>
+                  <TableCell>{labour.LabourID}</TableCell>
+                  <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                  <TableCell>{labour.PayStructure}</TableCell>
+                  <TableCell>{labour.DailyWages || '-'}</TableCell>
+                  <TableCell>{labour.MonthlyWages || '-'}</TableCell>
+                  <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
+                  <TableCell>{labour.WeeklyOff || '-'}</TableCell>
+                    <TableCell>{labour.WagesEditedBy  || '-'}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
                   <TableCell sx={{ position: 'relative' }}>
                     <Box
@@ -804,7 +806,7 @@ const approveLabour = async (id) => {
                   </TableCell>
                   {tabValue === 0 && (
                     <>
-                      <TableCell>{labour.LastUpdatedDate ? new Date(labour.LastUpdatedDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                      <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString('en-GB') : '-'}</TableCell>
                     </>
                   )}
                   {tabValue === 1 && (
@@ -815,7 +817,7 @@ const approveLabour = async (id) => {
 
                   {tabValue === 2 && (
                     <>
-                      <TableCell>{labour.RejectedDate ? new Date(labour.RejectedDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                      <TableCell>{labour.RejectionDate ? new Date(labour.RejectionDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                     </>
                   )}
                   {tabValue === 2 && (
@@ -991,7 +993,7 @@ const approveLabour = async (id) => {
             </Typography>
             <TextField
                 label="Reason for rejection"
-                value={rejectReason}
+                value={Remarks}
                 onChange={(e) => setRejectReason(e.target.value)}
                 fullWidth
                 multiline
@@ -1007,10 +1009,10 @@ const approveLabour = async (id) => {
                     variant="contained"
                     color="primary"
                     onClick={() => {
-                        if (!rejectReason.trim()) {
+                        if (!Remarks.trim()) {
                             toast.error('Please add a reason for rejection.');
                         } else {
-                            handleReject(selectedLabour.id, rejectReason);
+                            handleReject(selectedLabour.ApprovalID, Remarks);
                             closeRejectPopup();
                         }
                     }}
@@ -1043,7 +1045,7 @@ const approveLabour = async (id) => {
             </Typography>
             {selectedLabour && (
               <Typography variant="body1" component="p">
-                {selectedLabour.RejectAttendanceReason}
+                {selectedLabour.Remarks}
               </Typography>
             )}
             <Box mt={2} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1080,11 +1082,11 @@ const approveLabour = async (id) => {
         </Button>
         <Button
             onClick={() => {
-                if (!labourToApprove || !labourToApprove.id) {
+                if (!labourToApprove || !labourToApprove.ApprovalID) {
                     toast.error('Labour data or ID is missing.');
                     return;
                 }
-                approveLabour(labourToApprove.id);
+                approveLabour(labourToApprove.ApprovalID);
             }}
             sx={{
                 backgroundColor: 'rgb(229, 255, 225)',
@@ -1237,4 +1239,4 @@ const approveLabour = async (id) => {
   );
 };
 
-export default AdminAttedanceApproval;
+export default WagesApproval;

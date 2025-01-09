@@ -1568,71 +1568,71 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     setIsApproving(false);
   }
 
-  useEffect(() => {
-    const processLabourApprovals = async () => {
-      if (labourIds.length === 0 || isApproving) return; // Check if there are IDs to process and avoid duplicate executions
-
-      setIsApproving(true); // Mark as processing
-
-      const currentId = labourIds[0]; // Get the first labour ID in the queue
-
-      try {
-        // Fetch labour details
-        const { data: labour } = await axios.get(`${API_BASE_URL}/labours/${currentId}`); // Assuming `labour` is the response object
-        console.log('labour------====', labour)
-
-        if (labour.isResubmit && labour.LabourID) {
-          console.log(`Processing disabled labour: ${labour.name} with ID: ${labour.LabourID}`);
-          await disableApproveLabour(labour.id); // Call the disable-specific function
-        } else {
-          console.log(`Processing regular labour: ${labour.name}`);
-          await approveLabour(labour.id); // Call the regular approval function
-        }
-
-        // Remove the processed labour ID from the queue
-        setLabourIds((prev) => prev.slice(1));
-      } catch (error) {
-        console.error(`Error processing labour with ID ${currentId}:`, error);
-
-        // Remove the errored labour ID from the queue
-        setLabourIds((prev) => prev.slice(1));
-      } finally {
-        setIsApproving(false); // Mark as not processing
-      }
-    };
-
-    if (labourIds.length > 0 && !isApproving) {
-      processLabourApprovals();
-    }
-  }, [labourIds, isApproving]);
-
-
-
   // useEffect(() => {
   //   const processLabourApprovals = async () => {
-  //     if (labourIds.length === 0 || isApproving) return;
+  //     if (labourIds.length === 0 || isApproving) return; // Check if there are IDs to process and avoid duplicate executions
 
-  //     setIsApproving(true); 
+  //     setIsApproving(true); // Mark as processing
 
-  //     const currentId = labourIds[0]; 
+  //     const currentId = labourIds[0]; // Get the first labour ID in the queue
 
   //     try {
-  //       const success = await approveLabour(currentId);
-  //       if (success) {
-  //         setLabourIds((prev) => prev.slice(1)); // Remove the first element after success
-  //       }
-  //     } catch (error) {
-  //       console.log(`Skipping labour ${currentId} due to error.`);
-  //       setLabourIds((prev) => prev.slice(1)); 
-  //     }
+  //       // Fetch labour details
+  //       const { data: labour } = await axios.get(`${API_BASE_URL}/labours/${currentId}`); // Assuming `labour` is the response object
+  //       console.log('labour------====', labour)
 
-  //     setIsApproving(false);
+  //       if (labour.isResubmit && labour.LabourID) {
+  //         console.log(`Processing disabled labour: ${labour.name} with ID: ${labour.LabourID}`);
+  //         await disableApproveLabour(labour.id); // Call the disable-specific function
+  //       } else {
+  //         console.log(`Processing regular labour: ${labour.name}`);
+  //         await approveLabour(labour.id); // Call the regular approval function
+  //       }
+
+  //       // Remove the processed labour ID from the queue
+  //       setLabourIds((prev) => prev.slice(1));
+  //     } catch (error) {
+  //       console.error(`Error processing labour with ID ${currentId}:`, error);
+
+  //       // Remove the errored labour ID from the queue
+  //       setLabourIds((prev) => prev.slice(1));
+  //     } finally {
+  //       setIsApproving(false); // Mark as not processing
+  //     }
   //   };
 
-  //   if (labourIds.length > 0) {
+  //   if (labourIds.length > 0 && !isApproving) {
   //     processLabourApprovals();
   //   }
-  // }, [labourIds, isApproving]); 
+  // }, [labourIds, isApproving]);
+
+
+
+  useEffect(() => {
+    const processLabourApprovals = async () => {
+      if (labourIds.length === 0 || isApproving) return;
+
+      setIsApproving(true); 
+
+      const currentId = labourIds[0]; 
+
+      try {
+        const success = await approveLabour(currentId);
+        if (success) {
+          setLabourIds((prev) => prev.slice(1)); // Remove the first element after success
+        }
+      } catch (error) {
+        console.log(`Skipping labour ${currentId} due to error.`);
+        setLabourIds((prev) => prev.slice(1)); 
+      }
+
+      setIsApproving(false);
+    };
+
+    if (labourIds.length > 0) {
+      processLabourApprovals();
+    }
+  }, [labourIds, isApproving]); 
 
 
   const handleApprove = async (id) => {
@@ -2932,7 +2932,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                     </TableCell>
                   )}
 
-                  {user.userType === 'admin' || user.userType === 'superadmin' && (
+                  {(user.userType === 'admin' || user.userType === 'superadmin') && (
                     <TableCell>
                       {labour.status === 'Pending' && !approvedLabours.includes(labour.id) && !approvingLabours.includes(labour.id) && (
                         <>

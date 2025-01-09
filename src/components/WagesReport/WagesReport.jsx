@@ -59,6 +59,7 @@ const AttendanceReport = () => {
     const { user } = useUser();
     const [openModal, setOpenModal] = useState(false);
     const [selectedHistory, setSelectedHistory] = useState([]);
+    const [effectiveDate, setEffectiveDate] = useState("");
 
     const convertToIndianTime = (isoString) => {
         const options = {
@@ -259,12 +260,51 @@ const AttendanceReport = () => {
         }
     };
 
+    // const handleSave = async () => {
+    //     try {
+    //         const onboardName = user.name || null;
+    //         const wageData = {
+    //             labourId: selectedLabour.LabourID,
+    //             payStructure,
+    // effectiveDate,
+    //             dailyWages,
+    //             monthlyWages,
+    //             yearlyWages,
+    //             overtime,
+    //             totalOvertimeWages,
+    //             fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages : null,
+    //             weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff : null,
+    //             wagesEditedBy: onboardName, // Replace with logged-in user
+    //         };
+    //         await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
+    //         toast.success('Wages updated successfully');
+    //         fetchLabours();
+    //         setModalOpen(false);
+    //         setWeeklyOff(""); // Reset weeklyOff to initial state
+    // setEffectiveDate("");
+    //         setFixedMonthlyWages(0)
+    //         setMonthlyWages(0);
+    //         setDailyWages(0);
+    //     } catch (error) {
+    //         console.error('Error saving wages:', error);
+    //         toast.error('Failed to save wages');
+    //     }
+    // };
+
+    
+    // Handle modal edit
+   
     const handleSave = async () => {
         try {
             const onboardName = user.name || null;
+            if (!payStructure || !effectiveDate) {
+                toast.error("Please fill in all required fields.");
+                return;
+            }
             const wageData = {
                 labourId: selectedLabour.LabourID,
                 payStructure,
+                effectiveDate,
                 dailyWages,
                 monthlyWages,
                 yearlyWages,
@@ -272,22 +312,45 @@ const AttendanceReport = () => {
                 totalOvertimeWages,
                 fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages : null,
                 weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff : null,
-                wagesEditedBy: onboardName, // Replace with logged-in user
+                wagesEditedBy: onboardName, 
             };
+    
+        const { data: existingWagesResponse } = await axios.get(`${API_BASE_URL}/labours/checkExistingWages`, {
+            params: { labourId: selectedLabour.LabourID },
+        });
+
+        const { exists, approved, data } = existingWagesResponse;
+
+        if (!exists) {
             await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-            toast.success('Wages updated successfully');
-            fetchLabours();
-            setModalOpen(false);
-            setWeeklyOff(""); // Reset weeklyOff to initial state
-            setFixedMonthlyWages(0)
-            setMonthlyWages(0);
-            setDailyWages(0);
-        } catch (error) {
-            console.error('Error saving wages:', error);
-            toast.error('Failed to save wages');
+            toast.success("Wages added successfully.");
+        } else if (exists && !approved) {
+            wageData.wageId = data.WageID; 
+            console.log('wageData.wageId .. ',wageData.wageId)
+            console.log('wageId payload .. ',wageData)
+            await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+            toast.info("Wages sent for admin approval.");
+        } else if (exists && approved) {
+            wageData.wageId = data.WageID; 
+            await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+            toast.info("Wages changes sent for admin approval.");
         }
-    };
-    // Handle modal edit
+
+        fetchLabours(); 
+        setModalOpen(false); 
+        setWeeklyOff(""); 
+        setEffectiveDate("");
+        setFixedMonthlyWages(0);
+        setMonthlyWages(0);
+        setDailyWages(0);
+    } catch (error) {
+        console.error("Error saving wages:", error);
+        toast.error("Failed to save wages.");
+    }
+};
+   
+   
+   
     const handleEdit = (labour) => {
         setSelectedLabour(labour);
         setPayStructure('');
@@ -598,6 +661,20 @@ const AttendanceReport = () => {
                         <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
                     </Select>
 
+                    {/* Effective Date Picker */}
+                    <TextField
+                        label="Effective Date"
+                        type="date"
+                        fullWidth
+                        value={effectiveDate}
+                        onChange={(e) => setEffectiveDate(e.target.value)}
+                        InputLabelProps={{
+                            shrink: true,
+                        }}
+                        sx={{ mb: 2 }}
+                        required
+                    />
+
                     {/* Dynamic Fields */}
                     {payStructure === 'Daily Wages' && (
                         <>
@@ -751,7 +828,7 @@ const AttendanceReport = () => {
                             "&:hover": {
                                 backgroundColor: "rgb(229, 255, 225)",
                             },
-                        }} onClick={handleSave}>
+                        }} onClick={handleSave} disabled={!payStructure || !effectiveDate}>
                             Save
                         </Button>
                     </Box>
