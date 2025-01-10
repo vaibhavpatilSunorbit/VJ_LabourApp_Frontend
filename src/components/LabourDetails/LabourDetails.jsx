@@ -144,11 +144,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
       const labourResponse = await axios.get(`${API_BASE_URL}/labours/${id}`);
       const labour = labourResponse.data;
-
-      console.log("Generated unique labourID for approval:", labourID);
-      console.log("labourResponse.data.data......", labourResponse.data)
-      console.log("labourID********", labourID)
-
       const response = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${labour.projectName}`);
       const serialNumber = response.data.serialNumber;
 
@@ -767,9 +762,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             },
 
           });
-          console.log('employeeMasterResponse 2025 ',employeeMasterResponse)
           if (employeeMasterResponse.data.status) {
-            console.log('Employee master details updated successfully.');
           
             const empId = employeeMasterResponse.data.outputList?.id;
             const ledgerId = employeeMasterResponse.data.outputList?.ledgerId;
@@ -783,7 +776,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           
             // Update employee ID
             const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${labour.id}`, empData);
-            console.log('Employee Details Update Status:', employeeDetails.status);
           
               const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
                 params: {
@@ -798,7 +790,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                 },
               });
               const dynamicData2 = dynamicDataResponse2.data;
-              console.log('Fetched Dynamic Data:', dynamicData2);
 
             // Construct organizationMasterPayload with dynamic labourID
             const organizationMasterPayload = {
@@ -1437,7 +1428,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
               },
             });
             if (orgMasterResponse.data.status) {
-              console.log('Org master details updated successfully.');
             }
 
             // API call to save employeeMasterPayload and organizationMasterPayload
@@ -1460,7 +1450,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
               organizationMasterFullResponse: orgMasterResponse.data,
             });
 
-            // console.log('Employee and Org master details updated and saved successfully.');
             await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID });
             // setApprovingLabours((prev) => prev.filter((labourId) => labourId !== id)); // Remove from processing list
             setApprovedLabours((prev) => [...new Set([...prev, id])]);
@@ -1483,16 +1472,12 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   };
 
   const disableApproveLabour = async (id) => {
-    console.log('id---===---', id);
     try {
       const { data: labourResponse } = await axios.get(`${API_BASE_URL}/labours/${id}`);
       const labour = labourResponse;
-      // console.log('labour---===---', JSON.stringify(labour));
 
       if (labour.status === 'Pending') {
-        console.log(`Labour ${labour.name} has status Pending. Executing special approval process.`);
-        const labourID = labourResponse.LabourID; // Assume labour ID comes from API
-        console.log("Generated unique labourID for approval:", labourID);
+        const labourID = labourResponse.LabourID; 
 
         const { data: projectResponse } = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${labour.projectName}`);
         const serialNumber = projectResponse.serialNumber;
@@ -1513,7 +1498,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           </soap:Body>
         </soap:Envelope>`;
 
-        console.log('SOAP Envelope:', soapEnvelope);
 
         const soapResponse = await axios.post(
           `${API_BASE_URL}/labours/essl/addEmployee`,
@@ -1522,7 +1506,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
         );
 
         if (soapResponse.status === 200) {
-          console.log('SOAP API Response:', soapResponse.data);
 
           // Approve the labour and update state
           await axios.put(`${API_BASE_URL}/labours/approveDisableLabour/${id}`, { labourID });
@@ -1561,7 +1544,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           break;
         }
       } catch (error) {
-        console.log(`Skipping labour ${currentId} due to error.`);
         setLabourIds((prev) => prev.slice(1));
       }
     }
@@ -1708,9 +1690,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
       if (response.data.labours.length > 0) {
         setLabours(response.data.labours);  // Set labours directly from the cached result
-        console.log('response.data.labours........///......[[[[[', response.data.labours)
       } else {
-        console.log('No new labours without attendance found.');
         setHasMore(false);
       }
       setLoading(false);
@@ -1792,7 +1772,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       } else {
         toast.error('Failed to Edit labour. Please try again.');
       }
-      console.log('labourIdResponse', response)
     } catch (error) {
       console.error('Error Edit labour:', error);
       toast.error('Error Edit labour. Please try again.');
@@ -1901,7 +1880,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     setLoading(true);
     try {
       const response = await axios.get(`${API_BASE_URL}/labours`);
-      // console.log('API Response:', response.data);
       setLabours(response.data);
       setLoading(false);
     } catch (error) {
@@ -1916,7 +1894,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       await fetchLabours();
       setLabours((prevLabours) => {
         const sorted = [...prevLabours].sort((a, b) => b.id - a.id);
-        // console.log('Sorted Labours:', sorted);
         return sorted;
       });
     };
@@ -2145,21 +2122,17 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const getProjectDescription = (projectId) => {
 
     if (!projectNames || projectNames.length === 0) {
-      // console.log('Projects array is empty or undefined');
       return 'Unknown';
     }
 
     if (projectId === undefined || projectId === null) {
-      // console.log('Project ID is undefined or null');
       return 'Unknown';
     }
 
     const project = projectNames.find(proj => {
-      // console.log(`Checking project: ${proj.id} === ${Number(projectId)} (Type: ${typeof proj.id})`);
       return proj.id === Number(projectId);
     });
 
-    // console.log('Found Project:', project);
     return project ? project.Business_Unit : 'Unknown';
   };
 
@@ -2273,7 +2246,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       setFilteredIconLabours(filtered); // Update the filtered labours state
       setLabours(labours); // Update the full labours state
       setPage(0);
-      console.log(`Filtered ${filterType} Labours:`, filtered);
       setLoading(false);
     } catch (error) {
       setError("Error fetching labours. Please try again.");
@@ -2321,15 +2293,12 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     setOpenDialogSite(false); // Close the dialog
 
     try {
-      console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
       setSelectedSite((prev) => ({ ...prev, [selectedLabour.LabourID]: newSite }));
 
       // Fetch SerialNumber from selected site ID
       const siteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
-      console.log('Fetched site details:', siteResponse.data);
       // Check if SerialNumber exists in the response
-      const SerialNumber = siteResponse.data.serialNumber || 'Unknown'; // Access the correct key
-      console.log(`Using SerialNumber: ${SerialNumber}`);
+      const SerialNumber = siteResponse.data.serialNumber || 'Unknown'; 
 
 
       const soapEnvelope = `

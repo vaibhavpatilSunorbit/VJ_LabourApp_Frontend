@@ -102,7 +102,7 @@ function App() {
                     <Route path="/peopleEditDetails" element={<PeopleEditDetails onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval" element={<AdminApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/adminAttendanceApproval" element={<AdminAttendanceApproval onFormSubmit={handleFormSubmit} />} />
-                    <Route path="/siteTransferLabour" element={<SiteTransfer onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/siteTransferLabour" element={<SiteTransfer departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} onApprove={handleApprove}/>} />
                     <Route path="/adminApproval/siteTransferApproval" element={<SiteTransferApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/wagesApproval" element={<WagesApproval onFormSubmit={handleFormSubmit} />} />
                   </Routes>

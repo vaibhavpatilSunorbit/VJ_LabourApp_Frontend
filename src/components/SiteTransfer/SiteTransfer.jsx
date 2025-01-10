@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
     Table,
@@ -28,11 +28,12 @@ import ExportWagesReport from '../WagesReport/ImportExportWages/ExportWages'
 import ImportWagesReport from '../WagesReport/ImportExportWages/ImportWages'
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
+import { parse } from "fast-xml-parser";
 
-const SiteTransfer = () => {
+const SiteTransfer = ({ departments, projectNames = [], labour }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-
+    const [filteredIconLabours, setFilteredIconLabours] = useState([]);
     const [labours, setLabours] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -42,6 +43,7 @@ const SiteTransfer = () => {
     const [monthlyWages, setMonthlyWages] = useState({});
     const [yearlyWages, setYearlyWages] = useState({});
     const [overtime, setOvertime] = useState({});
+    const [tabValue, setTabValue] = useState(0);
     const [totalOvertimeWages, setTotalOvertimeWages] = useState({});
     const [payStructure, setPayStructure] = useState({});
     const [weakelyOff, setWeakelyOff] = useState({});
@@ -59,6 +61,11 @@ const SiteTransfer = () => {
     const { user } = useUser();
     const [openModal, setOpenModal] = useState(false);
     const [selectedHistory, setSelectedHistory] = useState([]);
+    const [newSite, setNewSite] = useState(null);
+    const [openDialogSite, setOpenDialogSite] = useState(false);
+    const [selectedSite, setSelectedSite] = useState({});
+    const [statusesSite, setStatusesSite] = useState({});
+    const [previousTabValue, setPreviousTabValue] = useState(tabValue);
 
     const fetchLabours = async () => {
         setLoading(true);
@@ -117,34 +124,29 @@ const SiteTransfer = () => {
         fetchBusinessUnits();
     }, []);
 
-    const handleSave = async () => {
+    const handleTransfer = async () => {
+        if (!newSite) {
+            toast.error('Please select a new site.');
+            return;
+        }
+        setLoading(true);
         try {
-            const onboardName = user.name || null;
-            const wageData = {
-                labourId: selectedLabour.LabourID,
-                payStructure,
-                dailyWages,
-                monthlyWages,
-                yearlyWages,
-                overtime,
-                totalOvertimeWages,
-                fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages : null,
-                weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff : null,
-                wagesEditedBy: onboardName, // Replace with logged-in user
-            };
-            await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-            toast.success('Wages updated successfully');
-            fetchLabours();
+            await axios.post(`${API_BASE_URL}/api/transfer`, {
+                labourId: selectedLabour.id,
+                newSite,
+            });
+            toast.success('Labour transferred successfully!');
             setModalOpen(false);
-            setWeeklyOff(""); // Reset weeklyOff to initial state
-            setFixedMonthlyWages(0)
-            setMonthlyWages(0);
-            setDailyWages(0);
+            fetchLabours();
         } catch (error) {
-            console.error('Error saving wages:', error);
-            toast.error('Failed to save wages');
+            console.error('Error transferring labour:', error);
+            toast.error('Failed to transfer labour.');
+        } finally {
+            setLoading(false);
         }
     };
+
+
     // Handle modal edit
     const handleEdit = (labour) => {
         setSelectedLabour(labour);
@@ -221,38 +223,57 @@ const SiteTransfer = () => {
 
     const filteredLabours = getLatestLabourData(labours).filter(
         (labour) => labour.status === 'Approved'
-      );
+    );
     const paginatedLabours = filteredLabours.slice(
         page * rowsPerPage,
         (page + 1) * rowsPerPage
     );
     console.log("Filtered Labours _+_+_+:", filteredLabours);
     console.log("Paginated Labours:{{{{{", paginatedLabours);
-    
 
 
-    // const handleSiteChange = (labour, siteId) => {
-    //     setSelectedLabour(labour);
-    //     setNewSite(siteId);
-    //     setOpenDialogSite(true); // Open the confirmation dialog
-    //   };
-    
-    //   const confirmTransfer = async () => {
+    const getProjectDescription = (projectId) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) {
+            console.error('Projects array is empty or invalid:', projectNames);
+            return 'Unknown';
+        }
+
+        if (projectId === undefined || projectId === null) {
+            console.error('Project ID is undefined or null:', projectId);
+            return 'Unknown';
+        }
+
+        const project = projectNames.find(
+            (proj) => proj.id === Number(projectId)
+        );
+
+        return project ? project.Business_Unit : 'Unknown';
+    };
+
+
+
+    const handleSiteChange = (labour, siteId) => {
+        setSelectedLabour(labour);
+        setNewSite(siteId);
+        setOpenDialogSite(true); // Open the confirmation dialog
+    };
+
+    // const confirmTransfer = async () => {
     //     setOpenDialogSite(false); // Close the dialog
-    
+
     //     try {
-    //       console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
-    //       setSelectedSite((prev) => ({ ...prev, [selectedLabour.LabourID]: newSite }));
-    
-    //       // Fetch SerialNumber from selected site ID
-    //       const siteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
-    //       console.log('Fetched site details:', siteResponse.data);
-    //       // Check if SerialNumber exists in the response
-    //       const SerialNumber = siteResponse.data.serialNumber || 'Unknown'; // Access the correct key
-    //       console.log(`Using SerialNumber: ${SerialNumber}`);
-    
-    
-    //       const soapEnvelope = `
+    //         console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
+    //         setSelectedSite((prev) => ({ ...prev, [selectedLabour.LabourID]: newSite }));
+
+    //         // Fetch SerialNumber from selected site ID
+    //         const siteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
+    //         console.log('Fetched site details:', siteResponse.data);
+    //         // Check if SerialNumber exists in the response
+    //         const SerialNumber = siteResponse.data.serialNumber || 'Unknown'; // Access the correct key
+    //         console.log(`Using SerialNumber: ${SerialNumber}`);
+
+
+    //         const soapEnvelope = `
     //         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     //           <soap:Body>
     //             <AddEmployee xmlns="http://tempuri.org/">
@@ -267,87 +288,226 @@ const SiteTransfer = () => {
     //             </AddEmployee>
     //           </soap:Body>
     //         </soap:Envelope>`;
-    
-    //       const soapResponse = await axios.post(
-    //         `${API_BASE_URL}/labours/essl/addEmployee`,
-    //         soapEnvelope,
-    //         { headers: { 'Content-Type': 'text/xml' } }
-    //       );
-    
-    //       if (soapResponse.status === 200) {
-    //         const commandId = soapResponse.data.CommandId;
-    
-    //         await axios.post(`${API_BASE_URL}/api/transfer`, {
-    //           userId: selectedLabour.id,
-    //           LabourID: selectedLabour.LabourID,
-    //           name: selectedLabour.name,
-    //           currentSite: selectedLabour.projectName,
-    //           currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit, // Send Business_Unit name
-    //           transferSite: newSite,
-    //           transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit, // Send new Business_Unit name
-    //           esslStatus: 'Transferred',
-    //           esslCommandId: commandId,
-    //           esslPayload: soapEnvelope,
-    //           esslApiResponse: JSON.stringify(soapResponse.data),
-    //         });
-    
-    //         setLabours((prevLabours) =>
-    //           prevLabours.map((labour) =>
-    //             labour.LabourID === selectedLabour.LabourID
-    //               ? { ...labour, projectName: projectNames.find((p) => p.id === newSite).Business_Unit }
-    //               : labour
-    //           )
+
+    //         const soapResponse = await axios.post(
+    //             `${API_BASE_URL}/labours/essl/addEmployee`,
+    //             soapEnvelope,
+    //             { headers: { 'Content-Type': 'text/xml' } }
     //         );
-    //         toast.success(`Labour ${selectedLabour.name} Transferred Site Successfully.`);
-    //       }
+
+    //         if (soapResponse.status === 200) {
+    //             const commandId = soapResponse.data.CommandId;
+
+    //             await axios.post(`${API_BASE_URL}/api/transfer`, {
+    //                 userId: selectedLabour.id,
+    //                 LabourID: selectedLabour.LabourID,
+    //                 name: selectedLabour.name,
+    //                 currentSite: selectedLabour.projectName,
+    //                 currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit, // Send Business_Unit name
+    //                 transferSite: newSite,
+    //                 transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit, // Send new Business_Unit name
+    //                 esslStatus: 'Transferred',
+    //                 esslCommandId: commandId,
+    //                 esslPayload: soapEnvelope,
+    //                 esslApiResponse: JSON.stringify(soapResponse.data),
+    //             });
+
+    //             setLabours((prevLabours) =>
+    //                 prevLabours.map((labour) =>
+    //                     labour.LabourID === selectedLabour.LabourID
+    //                         ? { ...labour, projectName: projectNames.find((p) => p.id === newSite).Business_Unit }
+    //                         : labour
+    //                 )
+    //             );
+    //             toast.success(`Labour ${selectedLabour.name} Transferred Site Successfully.`);
+    //         }
     //     } catch (error) {
-    //       console.error('Error during site transfer:', error);
+    //         console.error('Error during site transfer:', error);
     //     }
-    //   };
+    // };
+
+
+
+    ///////////////////////////  Fetch Transfer labour from db Table  //////////////////////////////////////
+
+
     
-    //   ///////////////////////////  Fetch Transfer labour from db Table  //////////////////////////////////////
-    
-    
-    //   const fetchTransferSiteNames = async (labourIds) => {
-    //     try {
-    //       const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
-    //       return response.data; // Assuming response.data contains [{ LabourID, transferSiteName }]
-    //     } catch (error) {
-    //       console.error('Error fetching transfer site names:', error);
-    //       return [];
-    //     }
-    //   };
-    
-    //   // Fetch and map transfer site names to labour data
-    //   useEffect(() => {
-    //     const fetchData = async () => {
-    //       setLoading(true);
-    
-    //       const labourList =
-    //         searchResults.length > 0 ? searchResults : filteredIconLabours.length > 0 ? filteredIconLabours : labours;
-    //       const labourIds = labourList.map((labour) => labour.LabourID || labour.id); // Collect all Labour IDs
-    
-    //       if (labourIds.length > 0) {
-    //         const statusesData = await fetchTransferSiteNames(labourIds);
-    
-    //         // Map transfer site names to the corresponding labour IDs
-    //         const updatedStatuses = statusesData.reduce((acc, status) => {
-    //           acc[status.LabourID] = status.transferSiteName || 'Not Transferred';
-    //           return acc;
-    //         }, {});
-    
-    //         setStatusesSite(updatedStatuses); // Update state with mapped data
-    //       }
-    
-    //       setLoading(false);
-    //     };
-    
-    //     if (previousTabValue !== tabValue) {
-    //       fetchData();
-    //       setPreviousTabValue(tabValue); // Update the previous tab value
-    //     }
-    //   }, [searchResults, filteredIconLabours, labours]); // Dependencies
-    
+    const confirmTransfer = async () => {
+        setOpenDialogSite(false); // Close the dialog
+
+        try {
+          console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
+      
+          // Fetch SerialNumber for current and new site
+          const currentSiteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${selectedLabour.projectName}`);
+          const currentSerialNumber = currentSiteResponse.data?.serialNumber || "Unknown";
+      
+          const newSiteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
+          const newSerialNumber = newSiteResponse.data?.serialNumber || "Unknown";
+      
+          console.log(`Current SerialNumber: ${currentSerialNumber}, New SerialNumber: ${newSerialNumber}`);
+      
+          // 1. Delete User from Current Site
+          const deleteUserEnvelope = `
+            <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+              <soap:Body>
+                <DeleteUser xmlns="http://tempuri.org/">
+                  <APIKey>11</APIKey>
+                  <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
+                  <SerialNumber>${currentSerialNumber}</SerialNumber>
+                  <UserName>test</UserName>
+                  <UserPassword>Test@123</UserPassword>
+                  <CommandId>25</CommandId>
+                </DeleteUser>
+              </soap:Body>
+            </soap:Envelope>`;
+      
+          console.log(`Sending DeleteUser request for LabourID: ${selectedLabour.LabourID}`);
+          const deleteResponse = await axios.post(
+            "https://essl.vjerp.com:8530/iclock/WebAPIService.asmx?op=DeleteUser",
+            deleteUserEnvelope,
+            {
+              headers: {
+                "Content-Type": "text/xml; charset=utf-8",
+                SOAPAction: "http://tempuri.org/DeleteUser",
+              },
+            }
+          );
+      
+          const deleteResponseParsed = parse(deleteResponse.data);
+          const deleteStatus =
+            deleteResponseParsed["soap:Envelope"]["soap:Body"]["DeleteUserResponse"]["DeleteUserResult"] === "success"
+              ? "success"
+              : "failure";
+      
+          console.log(`DeleteUser response for LabourID: ${selectedLabour.LabourID}`, deleteResponseParsed);
+      
+          if (deleteStatus !== "success") {
+            toast.error(`Failed to delete user from current site: ${selectedLabour.projectName}`);
+            return;
+          }
+      
+          // 2. Add User to New Site
+          const addUserEnvelope = `
+            <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+              <soap:Body>
+                <AddEmployee xmlns="http://tempuri.org/">
+                  <APIKey>11</APIKey>
+                  <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
+                  <EmployeeName>${selectedLabour.name}</EmployeeName>
+                  <CardNumber>${selectedLabour.id}</CardNumber>
+                  <SerialNumber>${newSerialNumber}</SerialNumber>
+                  <UserName>test</UserName>
+                  <UserPassword>Test@123</UserPassword>
+                  <CommandId>25</CommandId>
+                </AddEmployee>
+              </soap:Body>
+            </soap:Envelope>`;
+      
+          console.log(`Sending AddEmployee request for LabourID: ${selectedLabour.LabourID}`);
+          const addResponse = await axios.post(
+            "https://essl.vjerp.com:8530/iclock/WebAPIService.asmx?op=AddEmployee",
+            addUserEnvelope,
+            {
+              headers: {
+                "Content-Type": "text/xml; charset=utf-8",
+                SOAPAction: "http://tempuri.org/AddEmployee",
+              },
+            }
+          );
+      
+          const addResponseParsed = parse(addResponse.data);
+          const addStatus =
+            addResponseParsed["soap:Envelope"]["soap:Body"]["AddEmployeeResponse"]["AddEmployeeResult"] === "success"
+              ? "success"
+              : "failure";
+      
+          console.log(`AddEmployee response for LabourID: ${selectedLabour.LabourID}`, addResponseParsed);
+      
+          if (addStatus !== "success") {
+            toast.error(`Failed to add user to new site: ${newSite}`);
+            return;
+          }
+      
+          // 3. Save Transfer Record in Backend
+          const transferDataPayload = {
+            userId: selectedLabour.id,
+            LabourID: selectedLabour.LabourID,
+            name: selectedLabour.name,
+            currentSite: selectedLabour.projectName,
+            currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit,
+            transferSite: newSite,
+            transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit,
+            esslStatus: "Transferred",
+            esslCommandId: 25,
+            esslPayload: addUserEnvelope,
+            esslApiResponse: JSON.stringify(addResponseParsed),
+            deleteEsslPayload: deleteUserEnvelope,
+            deleteEsslResponse: JSON.stringify(deleteResponseParsed),
+          };
+      
+          await axios.post(`${API_BASE_URL}/api/transfer`, transferDataPayload);
+      
+          // Update UI
+          setLabours((prevLabours) =>
+            prevLabours.map((labour) =>
+              labour.LabourID === selectedLabour.LabourID
+                ? { ...labour, projectName: projectNames.find((p) => p.id === newSite).Business_Unit }
+                : labour
+            )
+          );
+      
+          toast.success(`Labour ${selectedLabour.name} transferred successfully!`);
+        } catch (error) {
+          console.error("Error during site transfer:", error);
+          toast.error("Failed to transfer labour.");
+        }
+      };
+      
+
+
+    const fetchTransferSiteNames = async (labourIds) => {
+        try {
+          const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
+          console.log('API Response:', response.data); // Debug response
+          return response.data.map((item) => ({
+            LabourID: item.LabourID,
+            transferSiteName: item.transferSiteName,
+            currentSiteName: item.currentSiteName,
+            createdAt: item.createdAt,
+          }));
+        } catch (error) {
+          console.error('Error fetching transfer site names:', error);
+          return [];
+        }
+      };
+      
+
+    // Fetch and map transfer site names
+    useEffect(() => {
+        const fetchStatuses = async () => {
+          setLoading(true);
+      
+          const labourIds = labours.map((labour) => labour.LabourID);
+          if (labourIds.length > 0) {
+            const statusesData = await fetchTransferSiteNames(labourIds);
+            const mappedStatuses = statusesData.reduce((acc, status) => {
+              acc[status.LabourID] = {
+                transferSiteName: status.transferSiteName || '-',
+                currentSiteName: status.currentSiteName || '-',
+                createdAt: status.createdAt || '-',
+              };
+              return acc;
+            }, {});
+            setStatusesSite(mappedStatuses);
+            console.log('Mapped Statuses with Dates:', mappedStatuses); // Debug statuses
+          }
+      
+          setLoading(false);
+        };
+      
+        if (labours.length > 0) fetchStatuses();
+      }, [labours]);      
 
 
     return (
@@ -388,7 +548,7 @@ const SiteTransfer = () => {
                 <ExportWagesReport />
                 <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} />
 
-               
+
                 <TablePagination
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
@@ -419,66 +579,93 @@ const SiteTransfer = () => {
                 },
             }}>
                 <Box sx={{ width: '100%', overflowX: 'auto' }}>
-                <Table stickyHeader sx={{ minWidth: 800 }}>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Sr No</TableCell>
-                            <TableCell>Labour ID</TableCell>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Project</TableCell>
-                            <TableCell>Previous Site</TableCell>
-                            <TableCell>New Site</TableCell>
-                            <TableCell>Transfer Date</TableCell>
-                            <TableCell>Created At</TableCell>
-                            <TableCell>Site History</TableCell>
-                            <TableCell>Action</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {paginatedLabours.map((labour, index) => (
-                            <TableRow key={labour.LabourID}>
-                                <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                <TableCell>{labour.LabourID}</TableCell>
-                                <TableCell>{labour.name || '-'}</TableCell>
-                                <TableCell>{labour.businessUnit || '-'}</TableCell>
-                                <TableCell>{labour.businessUnit || '-'}</TableCell>
-                                <TableCell>{labour.businessUnit || '-'}</TableCell>
-                                <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
-                                <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
-                                <TableCell>
-                                    <IconButton
-                                        color='rgb(239,230,247)'
-                                        onClick={() => handleViewHistory(labour.LabourID)}
-                                    >
-                                        <VisibilityIcon />
-                                    </IconButton>
-                                </TableCell>
-                                <TableCell>
-                                    <Button
-                                        variant="contained"
-                                        sx={{
-                                            backgroundColor: 'rgb(239,230,247)',
-                                            color: 'rgb(130,54,188)',
-                                            '&:hover': {
-                                                backgroundColor: 'rgb(239,230,247)',
-                                            },
-                                        }}
-                                        onClick={() => handleEdit(labour)}
-                                    >
-                                        Edit
-                                    </Button>
-                                </TableCell>
+                    <Table stickyHeader sx={{ minWidth: 800 }}>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Sr No</TableCell>
+                                <TableCell>Labour ID</TableCell>
+                                <TableCell>Name</TableCell>
+                                <TableCell>Project</TableCell>
+                                <TableCell>Previous Site</TableCell>
+                                <TableCell>New Site</TableCell>
+                                <TableCell>Transfer Date</TableCell>
+                                <TableCell>Created At</TableCell>
+                                <TableCell>Site History</TableCell>
+                                <TableCell>Action</TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHead>
+                        <TableBody
+                            sx={{
+                                '& td': {
+                                    padding: '16px 9px', // Applying padding to all td elements
+                                    '@media (max-width: 600px)': {
+                                        padding: '14px 8px', // Adjust padding for smaller screens if needed
+                                    },
+                                },
+                            }}
+                        >
+                            {(rowsPerPage > 0
+                                ? paginatedLabours // Use the paginatedLabours directly for pagination
+                                : filteredLabours // Fallback to filteredLabours if no pagination is applied
+                            ).map((labour, index) => (
+                                <TableRow key={labour.LabourID}>
+                                    <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                    <TableCell>{labour.LabourID}</TableCell>
+                                    <TableCell>{labour.name || '-'}</TableCell>
+                                    <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
+                                    <TableCell>
+                                        {(() => {
+                                            return statusesSite[labour.LabourID]?.currentSiteName || '-';
+                                        })()}
+                                    </TableCell>
+                                    <TableCell>
+                                        {(() => {
+                                            return statusesSite[labour.LabourID]?.transferSiteName || '-';
+                                        })()}
+                                    </TableCell>
+                                    <TableCell>
+                                        {statusesSite[labour.LabourID]?.createdAt
+                                            ? new Date(statusesSite[labour.LabourID].createdAt).toLocaleDateString('en-GB')
+                                            : '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                        {labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString('en-GB') : '-'}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        <IconButton
+                                            color='rgb(239,230,247)'
+                                            onClick={() => handleViewHistory(labour.LabourID)}
+                                        >
+                                            <VisibilityIcon />
+                                        </IconButton>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button
+                                            variant="contained"
+                                            sx={{
+                                                backgroundColor: 'rgb(239,230,247)',
+                                                color: 'rgb(130,54,188)',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgb(239,230,247)',
+                                                },
+                                            }}
+                                            onClick={() => handleEdit(labour)}
+                                        >
+                                            Edit
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </Box>
             </TableContainer>
 
-            {/* Modal */}
+            {/* Modal for Site Transfer */}
             <Modal
                 open={modalOpen}
-                onClose={handleCancel}
+                onClose={() => setModalOpen(false)}
                 aria-labelledby="modal-title"
                 aria-describedby="modal-description"
             >
@@ -488,146 +675,56 @@ const SiteTransfer = () => {
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        width: 500,
+                        width: 400,
                         bgcolor: 'background.paper',
                         boxShadow: 24,
                         p: 4,
                         borderRadius: 2,
                     }}
                 >
-                    <h2 id="modal-title">Edit Pay Structure</h2>
-
-                    {/* Pay Structure Dropdown */}
+                    <Typography id="modal-title" variant="h6" gutterBottom>
+                        Transfer Labour
+                    </Typography>
+                    <Typography id="modal-description" gutterBottom>
+                        Selected Labour: {selectedLabour?.name}
+                    </Typography>
                     <Select
                         fullWidth
-                        value={payStructure}
-                        onChange={(e) => setPayStructure(e.target.value)}
+                        value={newSite}
+                        onChange={(e) => setNewSite(e.target.value)}
                         displayEmpty
                         sx={{ mb: 2 }}
                     >
                         <MenuItem value="" disabled>
-                            Select Pay Structure
+                            Select New Site
                         </MenuItem>
-                        <MenuItem value="Daily Wages">Daily Wages</MenuItem>
-                        <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
-                    </Select>
-
-                    {/* Dynamic Fields */}
-                    {payStructure === 'Daily Wages' && (
-                        <>
-                            {/* Daily Wages Input */}
-                            <TextField
-                                label="Daily Wages"
-                                type="number"
-                                fullWidth
-                                value={dailyWages || ""} // Display an empty string if the value is 0 or null
-                                onChange={(e) => {
-                                    const value = e.target.value === "" ? null : parseFloat(e.target.value); // Set null for empty input, otherwise parse the number
-                                    setDailyWages(value);
-                                    if (value !== null) {
-                                        setMonthlyWages(value * 30); // Assuming 30 days in a month
-                                        setYearlyWages(value * 30 * 12); // Assuming 12 months in a year
-                                    } else {
-                                        setMonthlyWages(null); // Reset Monthly Wages if Daily Wages is null
-                                        setYearlyWages(null); // Reset Yearly Wages if Daily Wages is null
-                                    }
-                                }}
-                                sx={{ mb: 2 }}
-                            />
-
-                            {/* Read-Only Fields */}
-                            <TextField
-                                label="Per Hours Wages"
-                                type="number"
-                                fullWidth
-                                value={dailyWages / 8 || 0} // Assuming 8 hours in a workday
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Monthly Wages"
-                                type="number"
-                                fullWidth
-                                value={monthlyWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Yearly Wages"
-                                type="number"
-                                fullWidth
-                                value={yearlyWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                        </>
-                    )}
-
-                    {payStructure === 'Fixed Monthly Wages' && (
-                        <>
-                            {/* Weekly Off Dropdown */}
-                            <Select
-                                label="Weekly Off"
-                                fullWidth
-                                value={weeklyOff || ""}
-                                onChange={(e) => {
-                                    const selectedValue = e.target.value;
-                                    if (selectedValue === "") {
-                                        // Reset related state if needed
-                                        setWeeklyOff("");
-                                        setMonthlyWages(0); // Reset monthly wages or other dependent fields if required
-                                    } else {
-                                        setWeeklyOff(selectedValue);
-                                    }
-                                }}
-                                displayEmpty
-                                sx={{ mb: 2 }}
-                            >
-                                <MenuItem value="" disabled>
-                                    Select Weekly Off
+                        {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                            projectNames.map((project) => (
+                                <MenuItem key={project.id} value={project.id}>
+                                    {project.Business_Unit}
                                 </MenuItem>
-                                <MenuItem value="1">1</MenuItem>
-                                <MenuItem value="2">2</MenuItem>
-                                <MenuItem value="3">3</MenuItem>
-                                <MenuItem value="4">4</MenuItem>
-                            </Select>
-
-                            {/* Fixed Monthly Wages TextField */}
-                            <TextField
-                                label="Fixed Monthly Wages"
-                                type="number"
-                                fullWidth
-                                value={fixedMonthlyWages || ""} // Display an empty string if the value is 0 or null
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setFixedMonthlyWages(value === "" ? null : parseFloat(value)); // Set null for empty input, otherwise parse the number
-                                }}
-                                sx={{ mb: 2 }}
-                            />
-                        </>
-                    )}
-
-                    {/* Save and Cancel Buttons */}
-                    <Box display="flex" justifyContent="space-between" mt={2}>
-                        <Button variant="contained" sx={{
-                            backgroundColor: "#fce4ec",
-                            color: "rgb(255, 100, 100)",
-                            width: "100px",
-                            "&:hover": {
-                                backgroundColor: "#f8bbd0",
-                            },
-                        }} onClick={handleCancel}>
-                            Close
+                            ))
+                        ) : (
+                            <MenuItem value="Unknown" disabled>
+                                No Projects Available
+                            </MenuItem>
+                        )}
+                    </Select>
+                    <Box display="flex" justifyContent="space-between">
+                        <Button
+                            variant="outlined"
+                            onClick={() => setModalOpen(false)}
+                            sx={{ width: '45%' }}
+                        >
+                            Cancel
                         </Button>
-                        <Button variant="contained" sx={{
-                            backgroundColor: "rgb(229, 255, 225)",
-                            color: "rgb(43, 217, 144)",
-                            width: "100px",
-                            "&:hover": {
-                                backgroundColor: "rgb(229, 255, 225)",
-                            },
-                        }} onClick={handleSave}>
-                            Save
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={confirmTransfer}
+                            sx={{ width: '45%' }}
+                        >
+                            Transfer
                         </Button>
                     </Box>
                 </Box>
@@ -635,131 +732,131 @@ const SiteTransfer = () => {
 
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: {
-            xs: "90%", // Mobile screens
-            sm: "80%", // Tablet screens
-            md: "70%", // Laptop screens
-            lg: "60%", // Large screens
-          },
-          bgcolor: "background.paper",
-          borderRadius: 2,
-          boxShadow: 24,
-          p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
-          maxHeight: "85vh",
-          overflowY: "auto",
-          "&::-webkit-scrollbar": {
-            width: "8px",
-          },
-          "&::-webkit-scrollbar-track": {
-            backgroundColor: "#f1f1f1",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "#888",
-            borderRadius: "4px",
-          },
-        }}
-      >
-        {/* Close Icon */}
-        <IconButton
-          onClick={() => setOpenModal(false)}
-          sx={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            color: "gray",
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: {
+                            xs: "90%", // Mobile screens
+                            sm: "80%", // Tablet screens
+                            md: "70%", // Laptop screens
+                            lg: "60%", // Large screens
+                        },
+                        bgcolor: "background.paper",
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
+                        maxHeight: "85vh",
+                        overflowY: "auto",
+                        "&::-webkit-scrollbar": {
+                            width: "8px",
+                        },
+                        "&::-webkit-scrollbar-track": {
+                            backgroundColor: "#f1f1f1",
+                        },
+                        "&::-webkit-scrollbar-thumb": {
+                            backgroundColor: "#888",
+                            borderRadius: "4px",
+                        },
+                    }}
+                >
+                    {/* Close Icon */}
+                    <IconButton
+                        onClick={() => setOpenModal(false)}
+                        sx={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            color: "gray",
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
 
-        {/* Modal Header */}
-        <Typography
-          variant="h6"
-          sx={{
-            mb: 4,
-            textAlign: "center",
-            fontSize: { xs: "1rem", sm: "1.25rem" },
-          }}
-        >
-          Wages History Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
-        </Typography>
+                    {/* Modal Header */}
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            mb: 4,
+                            textAlign: "center",
+                            fontSize: { xs: "1rem", sm: "1.25rem" },
+                        }}
+                    >
+                        Wages History Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
+                    </Typography>
 
-        {/* Modal Content */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
-            position: "relative",
-            alignItems: "center",
-          }}
-        >
-          {selectedHistory.map((record, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 4,
-                position: "relative",
-                width: { xs: "100%", md: "70%" }, // Adjust width for responsiveness
-              }}
-            >
-              {/* Vertical Line */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  left: { xs: "27%", md: "27.5%" }, // Adjust line position
-                  top: 0,
-                  bottom: index !== selectedHistory.length - 0 ? 0 : "auto",
-                  width: 4,
-                  bgcolor: "green",
-                  zIndex: -1,
-                }}
-              />
+                    {/* Modal Content */}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 4,
+                            position: "relative",
+                            alignItems: "center",
+                        }}
+                    >
+                        {selectedHistory.map((record, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    gap: 4,
+                                    position: "relative",
+                                    width: { xs: "100%", md: "70%" }, // Adjust width for responsiveness
+                                }}
+                            >
+                                {/* Vertical Line */}
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        left: { xs: "27%", md: "27.5%" }, // Adjust line position
+                                        top: 0,
+                                        bottom: index !== selectedHistory.length - 0 ? 0 : "auto",
+                                        width: 4,
+                                        bgcolor: "green",
+                                        zIndex: -1,
+                                    }}
+                                />
 
-              {/* Dot for Edited On */}
-              <Box
-                sx={{
-                  width: 16,
-                  height: 16,
-                  bgcolor: "darkgreen",
-                  borderRadius: "50%",
-                  position: "absolute",
-                  left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, // Adjust dot position
-                }}
-              ></Box>
+                                {/* Dot for Edited On */}
+                                <Box
+                                    sx={{
+                                        width: 16,
+                                        height: 16,
+                                        bgcolor: "darkgreen",
+                                        borderRadius: "50%",
+                                        position: "absolute",
+                                        left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, // Adjust dot position
+                                    }}
+                                ></Box>
 
-              {/* Left Side - Edited On */}
-              <Box
-                sx={{
-                  flex: 1,
-                  textAlign: "right",
-                  pr: 2,
-                  fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
-                }}
-              >
-                <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                  Edited On:
-                </Typography>
-                <Typography variant="body2">
-                  {new Date(record.CreatedAt).toLocaleDateString()}
-                </Typography>
-                <Typography variant="body2">
-                  {new Date(record.CreatedAt).toLocaleTimeString()}
-                </Typography>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-      </Box>
-    </Modal>
+                                {/* Left Side - Edited On */}
+                                <Box
+                                    sx={{
+                                        flex: 1,
+                                        textAlign: "right",
+                                        pr: 2,
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
+                                    }}
+                                >
+                                    <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                                        Edited On:
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        {new Date(record.CreatedAt).toLocaleDateString()}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        {new Date(record.CreatedAt).toLocaleTimeString()}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
+            </Modal>
 
         </Box>
     );
