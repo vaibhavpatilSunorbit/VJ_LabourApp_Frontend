@@ -2839,7 +2839,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                           Edit
                         </Button>
                       )}
-                      {(user.userType === 'admin' || user.userType === 'superadmin' && labour.status === 'Approved' && !labour.address) && (
+                     {((user.userType === 'admin' || user.userType === 'superadmin') && labour.status === 'Approved' && !labour.address) && (
                         <Button
                           variant="contained"
                           sx={{

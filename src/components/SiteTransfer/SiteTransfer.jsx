@@ -332,138 +332,183 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
 
 
     
+    // const confirmTransfer = async () => {
+    //     setOpenDialogSite(false); // Close the dialog
+
+    //     try {
+    //       console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
+      
+    //       // Fetch SerialNumber for current and new site
+    //       const currentSiteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${selectedLabour.projectName}`);
+    //       const currentSerialNumber = currentSiteResponse.data?.serialNumber || "Unknown";
+      
+    //       const newSiteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
+    //       const newSerialNumber = newSiteResponse.data?.serialNumber || "Unknown";
+      
+    //       console.log(`Current SerialNumber: ${currentSerialNumber}, New SerialNumber: ${newSerialNumber}`);
+      
+    //       // 1. Delete User from Current Site
+    //       const deleteUserEnvelope = `
+    //         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    //           <soap:Body>
+    //             <DeleteUser xmlns="http://tempuri.org/">
+    //               <APIKey>11</APIKey>
+    //               <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
+    //               <SerialNumber>${currentSerialNumber}</SerialNumber>
+    //               <UserName>test</UserName>
+    //               <UserPassword>Test@123</UserPassword>
+    //               <CommandId>25</CommandId>
+    //             </DeleteUser>
+    //           </soap:Body>
+    //         </soap:Envelope>`;
+      
+    //       console.log(`Sending DeleteUser request for LabourID: ${selectedLabour.LabourID}`);
+    //       const deleteResponse = await axios.post(
+    //         "https://essl.vjerp.com:8530/iclock/WebAPIService.asmx?op=DeleteUser",
+    //         deleteUserEnvelope,
+    //         {
+    //           headers: {
+    //             "Content-Type": "text/xml; charset=utf-8",
+    //             SOAPAction: "http://tempuri.org/DeleteUser",
+    //           },
+    //         }
+    //       );
+      
+    //       const deleteResponseParsed = parse(deleteResponse.data);
+    //       const deleteStatus =
+    //         deleteResponseParsed["soap:Envelope"]["soap:Body"]["DeleteUserResponse"]["DeleteUserResult"] === "success"
+    //           ? "success"
+    //           : "failure";
+      
+    //       console.log(`DeleteUser response for LabourID: ${selectedLabour.LabourID}`, deleteResponseParsed);
+      
+    //       if (deleteStatus !== "success") {
+    //         toast.error(`Failed to delete user from current site: ${selectedLabour.projectName}`);
+    //         return;
+    //       }
+      
+    //       // 2. Add User to New Site
+    //       const addUserEnvelope = `
+    //         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    //           <soap:Body>
+    //             <AddEmployee xmlns="http://tempuri.org/">
+    //               <APIKey>11</APIKey>
+    //               <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
+    //               <EmployeeName>${selectedLabour.name}</EmployeeName>
+    //               <CardNumber>${selectedLabour.id}</CardNumber>
+    //               <SerialNumber>${newSerialNumber}</SerialNumber>
+    //               <UserName>test</UserName>
+    //               <UserPassword>Test@123</UserPassword>
+    //               <CommandId>25</CommandId>
+    //             </AddEmployee>
+    //           </soap:Body>
+    //         </soap:Envelope>`;
+      
+    //       console.log(`Sending AddEmployee request for LabourID: ${selectedLabour.LabourID}`);
+    //       const addResponse = await axios.post(
+    //         "https://essl.vjerp.com:8530/iclock/WebAPIService.asmx?op=AddEmployee",
+    //         addUserEnvelope,
+    //         {
+    //           headers: {
+    //             "Content-Type": "text/xml; charset=utf-8",
+    //             SOAPAction: "http://tempuri.org/AddEmployee",
+    //           },
+    //         }
+    //       );
+      
+    //       const addResponseParsed = parse(addResponse.data);
+    //       const addStatus =
+    //         addResponseParsed["soap:Envelope"]["soap:Body"]["AddEmployeeResponse"]["AddEmployeeResult"] === "success"
+    //           ? "success"
+    //           : "failure";
+      
+    //       console.log(`AddEmployee response for LabourID: ${selectedLabour.LabourID}`, addResponseParsed);
+      
+    //       if (addStatus !== "success") {
+    //         toast.error(`Failed to add user to new site: ${newSite}`);
+    //         return;
+    //       }
+      
+    //       // 3. Save Transfer Record in Backend
+    //       const transferDataPayload = {
+    //         userId: selectedLabour.id,
+    //         LabourID: selectedLabour.LabourID,
+    //         name: selectedLabour.name,
+    //         currentSite: selectedLabour.projectName,
+    //         currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit,
+    //         transferSite: newSite,
+    //         transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit,
+    //         esslStatus: "Transferred",
+    //         esslCommandId: 25,
+    //         esslPayload: addUserEnvelope,
+    //         esslApiResponse: JSON.stringify(addResponseParsed),
+    //         deleteEsslPayload: deleteUserEnvelope,
+    //         deleteEsslResponse: JSON.stringify(deleteResponseParsed),
+    //       };
+      
+    //       await axios.post(`${API_BASE_URL}/api/transfer`, transferDataPayload);
+      
+    //       // Update UI
+    //       setLabours((prevLabours) =>
+    //         prevLabours.map((labour) =>
+    //           labour.LabourID === selectedLabour.LabourID
+    //             ? { ...labour, projectName: projectNames.find((p) => p.id === newSite).Business_Unit }
+    //             : labour
+    //         )
+    //       );
+      
+    //       toast.success(`Labour ${selectedLabour.name} transferred successfully!`);
+    //     } catch (error) {
+    //       console.error("Error during site transfer:", error);
+    //       toast.error("Failed to transfer labour.");
+    //     }
+    //   };
+
+
     const confirmTransfer = async () => {
         setOpenDialogSite(false); // Close the dialog
-
+      
         try {
           console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
       
-          // Fetch SerialNumber for current and new site
-          const currentSiteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${selectedLabour.projectName}`);
-          const currentSerialNumber = currentSiteResponse.data?.serialNumber || "Unknown";
+          // Fetch current and new site names for transfer
+          const currentSiteName = projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit || "Unknown";
+          const transferSiteName = projectNames.find((p) => p.id === newSite)?.Business_Unit || "Unknown";
       
-          const newSiteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
-          const newSerialNumber = newSiteResponse.data?.serialNumber || "Unknown";
+          console.log(`Current Site Name: ${currentSiteName}, Transfer Site Name: ${transferSiteName}`);
       
-          console.log(`Current SerialNumber: ${currentSerialNumber}, New SerialNumber: ${newSerialNumber}`);
-      
-          // 1. Delete User from Current Site
-          const deleteUserEnvelope = `
-            <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-              <soap:Body>
-                <DeleteUser xmlns="http://tempuri.org/">
-                  <APIKey>11</APIKey>
-                  <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
-                  <SerialNumber>${currentSerialNumber}</SerialNumber>
-                  <UserName>test</UserName>
-                  <UserPassword>Test@123</UserPassword>
-                  <CommandId>25</CommandId>
-                </DeleteUser>
-              </soap:Body>
-            </soap:Envelope>`;
-      
-          console.log(`Sending DeleteUser request for LabourID: ${selectedLabour.LabourID}`);
-          const deleteResponse = await axios.post(
-            "https://essl.vjerp.com:8530/iclock/WebAPIService.asmx?op=DeleteUser",
-            deleteUserEnvelope,
-            {
-              headers: {
-                "Content-Type": "text/xml; charset=utf-8",
-                SOAPAction: "http://tempuri.org/DeleteUser",
-              },
-            }
-          );
-      
-          const deleteResponseParsed = parse(deleteResponse.data);
-          const deleteStatus =
-            deleteResponseParsed["soap:Envelope"]["soap:Body"]["DeleteUserResponse"]["DeleteUserResult"] === "success"
-              ? "success"
-              : "failure";
-      
-          console.log(`DeleteUser response for LabourID: ${selectedLabour.LabourID}`, deleteResponseParsed);
-      
-          if (deleteStatus !== "success") {
-            toast.error(`Failed to delete user from current site: ${selectedLabour.projectName}`);
-            return;
-          }
-      
-          // 2. Add User to New Site
-          const addUserEnvelope = `
-            <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-              <soap:Body>
-                <AddEmployee xmlns="http://tempuri.org/">
-                  <APIKey>11</APIKey>
-                  <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
-                  <EmployeeName>${selectedLabour.name}</EmployeeName>
-                  <CardNumber>${selectedLabour.id}</CardNumber>
-                  <SerialNumber>${newSerialNumber}</SerialNumber>
-                  <UserName>test</UserName>
-                  <UserPassword>Test@123</UserPassword>
-                  <CommandId>25</CommandId>
-                </AddEmployee>
-              </soap:Body>
-            </soap:Envelope>`;
-      
-          console.log(`Sending AddEmployee request for LabourID: ${selectedLabour.LabourID}`);
-          const addResponse = await axios.post(
-            "https://essl.vjerp.com:8530/iclock/WebAPIService.asmx?op=AddEmployee",
-            addUserEnvelope,
-            {
-              headers: {
-                "Content-Type": "text/xml; charset=utf-8",
-                SOAPAction: "http://tempuri.org/AddEmployee",
-              },
-            }
-          );
-      
-          const addResponseParsed = parse(addResponse.data);
-          const addStatus =
-            addResponseParsed["soap:Envelope"]["soap:Body"]["AddEmployeeResponse"]["AddEmployeeResult"] === "success"
-              ? "success"
-              : "failure";
-      
-          console.log(`AddEmployee response for LabourID: ${selectedLabour.LabourID}`, addResponseParsed);
-      
-          if (addStatus !== "success") {
-            toast.error(`Failed to add user to new site: ${newSite}`);
-            return;
-          }
-      
-          // 3. Save Transfer Record in Backend
+          // Send data to the backend to handle DeleteUser, AddEmployee, and save transfer data
           const transferDataPayload = {
             userId: selectedLabour.id,
             LabourID: selectedLabour.LabourID,
             name: selectedLabour.name,
             currentSite: selectedLabour.projectName,
-            currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit,
             transferSite: newSite,
-            transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit,
-            esslStatus: "Transferred",
-            esslCommandId: 25,
-            esslPayload: addUserEnvelope,
-            esslApiResponse: JSON.stringify(addResponseParsed),
-            deleteEsslPayload: deleteUserEnvelope,
-            deleteEsslResponse: JSON.stringify(deleteResponseParsed),
+            currentSiteName,
+            transferSiteName,
           };
       
-          await axios.post(`${API_BASE_URL}/api/transfer`, transferDataPayload);
+          const response = await axios.post(`${API_BASE_URL}/api/transfer`, transferDataPayload);
       
-          // Update UI
-          setLabours((prevLabours) =>
-            prevLabours.map((labour) =>
-              labour.LabourID === selectedLabour.LabourID
-                ? { ...labour, projectName: projectNames.find((p) => p.id === newSite).Business_Unit }
-                : labour
-            )
-          );
+          if (response.status === 201) {
+            // Update UI
+            setLabours((prevLabours) =>
+              prevLabours.map((labour) =>
+                labour.LabourID === selectedLabour.LabourID
+                  ? { ...labour, projectName: newSite, Business_Unit: transferSiteName }
+                  : labour
+              )
+            );
       
-          toast.success(`Labour ${selectedLabour.name} transferred successfully!`);
+            toast.success(`Labour ${selectedLabour.name} transferred successfully!`);
+          } else {
+            toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
+          }
         } catch (error) {
           console.error("Error during site transfer:", error);
           toast.error("Failed to transfer labour.");
         }
       };
-      
 
 
     const fetchTransferSiteNames = async (labourIds) => {
