@@ -14,7 +14,11 @@ import {
     TextField,
     TablePagination,
     Select,
-    MenuItem, Modal, Typography, IconButton
+    MenuItem, Modal, Typography, IconButton,Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -66,6 +70,7 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
     const [selectedSite, setSelectedSite] = useState({});
     const [statusesSite, setStatusesSite] = useState({});
     const [previousTabValue, setPreviousTabValue] = useState(tabValue);
+    const [transferDate, setTransferDate] = useState("");
 
     const fetchLabours = async () => {
         setLoading(true);
@@ -258,211 +263,21 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
         setOpenDialogSite(true); // Open the confirmation dialog
     };
 
-    // const confirmTransfer = async () => {
-    //     setOpenDialogSite(false); // Close the dialog
-
-    //     try {
-    //         console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
-    //         setSelectedSite((prev) => ({ ...prev, [selectedLabour.LabourID]: newSite }));
-
-    //         // Fetch SerialNumber from selected site ID
-    //         const siteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
-    //         console.log('Fetched site details:', siteResponse.data);
-    //         // Check if SerialNumber exists in the response
-    //         const SerialNumber = siteResponse.data.serialNumber || 'Unknown'; // Access the correct key
-    //         console.log(`Using SerialNumber: ${SerialNumber}`);
-
-
-    //         const soapEnvelope = `
-    //         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-    //           <soap:Body>
-    //             <AddEmployee xmlns="http://tempuri.org/">
-    //               <APIKey>11</APIKey>
-    //               <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
-    //               <EmployeeName>${selectedLabour.name}</EmployeeName>
-    //               <CardNumber>${selectedLabour.id}</CardNumber>
-    //               <SerialNumber>${SerialNumber}</SerialNumber>
-    //               <UserName>test</UserName>
-    //               <UserPassword>Test@123</UserPassword>
-    //               <CommandId>25</CommandId>
-    //             </AddEmployee>
-    //           </soap:Body>
-    //         </soap:Envelope>`;
-
-    //         const soapResponse = await axios.post(
-    //             `${API_BASE_URL}/labours/essl/addEmployee`,
-    //             soapEnvelope,
-    //             { headers: { 'Content-Type': 'text/xml' } }
-    //         );
-
-    //         if (soapResponse.status === 200) {
-    //             const commandId = soapResponse.data.CommandId;
-
-    //             await axios.post(`${API_BASE_URL}/api/transfer`, {
-    //                 userId: selectedLabour.id,
-    //                 LabourID: selectedLabour.LabourID,
-    //                 name: selectedLabour.name,
-    //                 currentSite: selectedLabour.projectName,
-    //                 currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit, // Send Business_Unit name
-    //                 transferSite: newSite,
-    //                 transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit, // Send new Business_Unit name
-    //                 esslStatus: 'Transferred',
-    //                 esslCommandId: commandId,
-    //                 esslPayload: soapEnvelope,
-    //                 esslApiResponse: JSON.stringify(soapResponse.data),
-    //             });
-
-    //             setLabours((prevLabours) =>
-    //                 prevLabours.map((labour) =>
-    //                     labour.LabourID === selectedLabour.LabourID
-    //                         ? { ...labour, projectName: projectNames.find((p) => p.id === newSite).Business_Unit }
-    //                         : labour
-    //                 )
-    //             );
-    //             toast.success(`Labour ${selectedLabour.name} Transferred Site Successfully.`);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error during site transfer:', error);
-    //     }
-    // };
-
-
-
-    ///////////////////////////  Fetch Transfer labour from db Table  //////////////////////////////////////
-
-
     
-    // const confirmTransfer = async () => {
-    //     setOpenDialogSite(false); // Close the dialog
-
-    //     try {
-    //       console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
-      
-    //       // Fetch SerialNumber for current and new site
-    //       const currentSiteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${selectedLabour.projectName}`);
-    //       const currentSerialNumber = currentSiteResponse.data?.serialNumber || "Unknown";
-      
-    //       const newSiteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
-    //       const newSerialNumber = newSiteResponse.data?.serialNumber || "Unknown";
-      
-    //       console.log(`Current SerialNumber: ${currentSerialNumber}, New SerialNumber: ${newSerialNumber}`);
-      
-    //       // 1. Delete User from Current Site
-    //       const deleteUserEnvelope = `
-    //         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-    //           <soap:Body>
-    //             <DeleteUser xmlns="http://tempuri.org/">
-    //               <APIKey>11</APIKey>
-    //               <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
-    //               <SerialNumber>${currentSerialNumber}</SerialNumber>
-    //               <UserName>test</UserName>
-    //               <UserPassword>Test@123</UserPassword>
-    //               <CommandId>25</CommandId>
-    //             </DeleteUser>
-    //           </soap:Body>
-    //         </soap:Envelope>`;
-      
-    //       console.log(`Sending DeleteUser request for LabourID: ${selectedLabour.LabourID}`);
-    //       const deleteResponse = await axios.post(
-    //         "https://essl.vjerp.com:8530/iclock/WebAPIService.asmx?op=DeleteUser",
-    //         deleteUserEnvelope,
-    //         {
-    //           headers: {
-    //             "Content-Type": "text/xml; charset=utf-8",
-    //             SOAPAction: "http://tempuri.org/DeleteUser",
-    //           },
-    //         }
-    //       );
-      
-    //       const deleteResponseParsed = parse(deleteResponse.data);
-    //       const deleteStatus =
-    //         deleteResponseParsed["soap:Envelope"]["soap:Body"]["DeleteUserResponse"]["DeleteUserResult"] === "success"
-    //           ? "success"
-    //           : "failure";
-      
-    //       console.log(`DeleteUser response for LabourID: ${selectedLabour.LabourID}`, deleteResponseParsed);
-      
-    //       if (deleteStatus !== "success") {
-    //         toast.error(`Failed to delete user from current site: ${selectedLabour.projectName}`);
-    //         return;
-    //       }
-      
-    //       // 2. Add User to New Site
-    //       const addUserEnvelope = `
-    //         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-    //           <soap:Body>
-    //             <AddEmployee xmlns="http://tempuri.org/">
-    //               <APIKey>11</APIKey>
-    //               <EmployeeCode>${selectedLabour.LabourID}</EmployeeCode>
-    //               <EmployeeName>${selectedLabour.name}</EmployeeName>
-    //               <CardNumber>${selectedLabour.id}</CardNumber>
-    //               <SerialNumber>${newSerialNumber}</SerialNumber>
-    //               <UserName>test</UserName>
-    //               <UserPassword>Test@123</UserPassword>
-    //               <CommandId>25</CommandId>
-    //             </AddEmployee>
-    //           </soap:Body>
-    //         </soap:Envelope>`;
-      
-    //       console.log(`Sending AddEmployee request for LabourID: ${selectedLabour.LabourID}`);
-    //       const addResponse = await axios.post(
-    //         "https://essl.vjerp.com:8530/iclock/WebAPIService.asmx?op=AddEmployee",
-    //         addUserEnvelope,
-    //         {
-    //           headers: {
-    //             "Content-Type": "text/xml; charset=utf-8",
-    //             SOAPAction: "http://tempuri.org/AddEmployee",
-    //           },
-    //         }
-    //       );
-      
-    //       const addResponseParsed = parse(addResponse.data);
-    //       const addStatus =
-    //         addResponseParsed["soap:Envelope"]["soap:Body"]["AddEmployeeResponse"]["AddEmployeeResult"] === "success"
-    //           ? "success"
-    //           : "failure";
-      
-    //       console.log(`AddEmployee response for LabourID: ${selectedLabour.LabourID}`, addResponseParsed);
-      
-    //       if (addStatus !== "success") {
-    //         toast.error(`Failed to add user to new site: ${newSite}`);
-    //         return;
-    //       }
-      
-    //       // 3. Save Transfer Record in Backend
-    //       const transferDataPayload = {
-    //         userId: selectedLabour.id,
-    //         LabourID: selectedLabour.LabourID,
-    //         name: selectedLabour.name,
-    //         currentSite: selectedLabour.projectName,
-    //         currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit,
-    //         transferSite: newSite,
-    //         transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit,
-    //         esslStatus: "Transferred",
-    //         esslCommandId: 25,
-    //         esslPayload: addUserEnvelope,
-    //         esslApiResponse: JSON.stringify(addResponseParsed),
-    //         deleteEsslPayload: deleteUserEnvelope,
-    //         deleteEsslResponse: JSON.stringify(deleteResponseParsed),
-    //       };
-      
-    //       await axios.post(`${API_BASE_URL}/api/transfer`, transferDataPayload);
-      
-    //       // Update UI
-    //       setLabours((prevLabours) =>
-    //         prevLabours.map((labour) =>
-    //           labour.LabourID === selectedLabour.LabourID
-    //             ? { ...labour, projectName: projectNames.find((p) => p.id === newSite).Business_Unit }
-    //             : labour
-    //         )
-    //       );
-      
-    //       toast.success(`Labour ${selectedLabour.name} transferred successfully!`);
-    //     } catch (error) {
-    //       console.error("Error during site transfer:", error);
-    //       toast.error("Failed to transfer labour.");
-    //     }
-    //   };
+    const openTransferModal = (labour) => {
+        setSelectedLabour(labour);
+        setModalOpen(true);
+      };
+    
+      // Handle transfer within the modal
+      const handleModalTransfer = () => {
+        if (!newSite) {
+          toast.error("Please select a new transfer site.");
+          return;
+        }
+        setModalOpen(false); // Close the modal
+        setOpenDialogSite(true); // Open the confirmation dialog
+      };
 
 
     const confirmTransfer = async () => {
@@ -476,7 +291,7 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
           const transferSiteName = projectNames.find((p) => p.id === newSite)?.Business_Unit || "Unknown";
       
           console.log(`Current Site Name: ${currentSiteName}, Transfer Site Name: ${transferSiteName}`);
-      
+          const onboardName = user.name || null;
           // Send data to the backend to handle DeleteUser, AddEmployee, and save transfer data
           const transferDataPayload = {
             userId: selectedLabour.id,
@@ -486,9 +301,11 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
             transferSite: newSite,
             currentSiteName,
             transferSiteName,
+            transferDate: transferDate,
+            siteTransferBy : onboardName,
           };
       
-          const response = await axios.post(`${API_BASE_URL}/api/transfer`, transferDataPayload);
+          const response = await axios.post(`${API_BASE_URL}/api/admin/sitetransfertoadmin`, transferDataPayload);
       
           if (response.status === 201) {
             // Update UI
@@ -500,7 +317,7 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
               )
             );
       
-            toast.success(`Labour ${selectedLabour.name} transferred successfully!`);
+            toast.success(`Labour ${selectedLabour.name} Site Transfer Send Admin Approval successfully!`);
           } else {
             toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
           }
@@ -707,73 +524,122 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
                 </Box>
             </TableContainer>
 
-            {/* Modal for Site Transfer */}
-            <Modal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-                aria-labelledby="modal-title"
-                aria-describedby="modal-description"
+           {/* Modal for Site Transfer */}
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography id="modal-title" variant="h6" gutterBottom>
+            Transfer Labour
+          </Typography>
+          <Typography id="modal-description" gutterBottom>
+            Selected Labour: {selectedLabour?.name}
+          </Typography>
+          <Select
+            fullWidth
+            value={newSite}
+            onChange={(e) => setNewSite(e.target.value)}
+            displayEmpty
+            sx={{ mb: 2 }}
+          >
+            <MenuItem value="" disabled>
+              Select New Site
+            </MenuItem>
+            {Array.isArray(projectNames) && projectNames.length > 0 ? (
+              projectNames.map((project) => (
+                <MenuItem key={project.id} value={project.id}>
+                  {project.Business_Unit}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem value="Unknown" disabled>
+                No Projects Available
+              </MenuItem>
+            )}
+          </Select>
+          <TextField
+            fullWidth
+            type="date"
+            value={transferDate}
+            onChange={(e) => setTransferDate(e.target.value)}
+            label="Transfer Date"
+            InputLabelProps={{ shrink: true }}
+            sx={{ mb: 2 }}
+          />
+
+          <Box display="flex" justifyContent="space-between">
+            <Button
+              variant="outlined"
+              onClick={() => setModalOpen(false)}
+              sx={{ width: "45%" }}
             >
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 400,
-                        bgcolor: 'background.paper',
-                        boxShadow: 24,
-                        p: 4,
-                        borderRadius: 2,
-                    }}
-                >
-                    <Typography id="modal-title" variant="h6" gutterBottom>
-                        Transfer Labour
-                    </Typography>
-                    <Typography id="modal-description" gutterBottom>
-                        Selected Labour: {selectedLabour?.name}
-                    </Typography>
-                    <Select
-                        fullWidth
-                        value={newSite}
-                        onChange={(e) => setNewSite(e.target.value)}
-                        displayEmpty
-                        sx={{ mb: 2 }}
-                    >
-                        <MenuItem value="" disabled>
-                            Select New Site
-                        </MenuItem>
-                        {Array.isArray(projectNames) && projectNames.length > 0 ? (
-                            projectNames.map((project) => (
-                                <MenuItem key={project.id} value={project.id}>
-                                    {project.Business_Unit}
-                                </MenuItem>
-                            ))
-                        ) : (
-                            <MenuItem value="Unknown" disabled>
-                                No Projects Available
-                            </MenuItem>
-                        )}
-                    </Select>
-                    <Box display="flex" justifyContent="space-between">
-                        <Button
-                            variant="outlined"
-                            onClick={() => setModalOpen(false)}
-                            sx={{ width: '45%' }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={confirmTransfer}
-                            sx={{ width: '45%' }}
-                        >
-                            Transfer
-                        </Button>
-                    </Box>
-                </Box>
-            </Modal>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleModalTransfer}
+              sx={{ width: "45%" }}
+            >
+              Transfer
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      {/* Dialog for Confirmation */}
+      <Dialog open={openDialogSite} onClose={() => setOpenDialogSite(false)}>
+        <DialogTitle>Confirm Transfer</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="EditLabour-dialog-description">
+            Are you sure you want to transfer Labour{" "}
+            <span style={{ fontWeight: "bold" }}>{selectedLabour?.name} </span>
+            with JCcode{" "}
+            <span style={{ fontWeight: "bold" }}>{selectedLabour?.LabourID} </span>
+            to the new site?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setOpenDialogSite(false)}
+            variant="outlined"
+            color="secondary"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmTransfer}
+            sx={{
+              backgroundColor: "rgb(229, 255, 225)",
+              color: "rgb(43, 217, 144)",
+              width: "100px",
+              marginRight: "10px",
+              marginBottom: "3px",
+              "&:hover": {
+                backgroundColor: "rgb(229, 255, 225)",
+              },
+            }}
+            autoFocus
+          >
+            Confirm Transfer
+          </Button>
+        </DialogActions>
+      </Dialog>
 
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>

@@ -349,14 +349,17 @@ const approveLabour = async (ApprovalID) => {
       const response = await axios.get(`${API_BASE_URL}/labours/wages/adminApprovals`);
       // console.log('API Response:', response.data);
       setLabours(response.data);
-      const pending = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
-      const approved = response.data.filter((labour) => labour.ApprovalStatus === "Approved").length;
-      const rejected = response.data.filter((labour) => labour.ApprovalStatus === "Rejected").length;
+      const pendingWagesCount = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
+      const approvedWagesCount = response.data.filter((labour) => labour.ApprovalStatus === "Approved").length;
+      const rejectedWagesCount = response.data.filter((labour) => labour.ApprovalStatus === "Rejected").length;
   
       // Update counts
-      setPendingCount(pending);
-      setApprovedCount(approved);
-      setRejectedCount(rejected);
+      setPendingCount(pendingWagesCount);
+      setApprovedCount(approvedWagesCount);
+      setRejectedCount(rejectedWagesCount);
+      localStorage.setItem('pendingWagesCount', pendingWagesCount);
+      localStorage.setItem('approvedWagesCount', approvedWagesCount);
+      localStorage.setItem('rejectedWagesCount', rejectedWagesCount);
       setLoading(false);
     } catch (error) {
       // console.error('Error fetching labours:', error);

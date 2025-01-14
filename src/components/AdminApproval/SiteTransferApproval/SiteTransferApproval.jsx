@@ -174,41 +174,6 @@ const handleApproveConfirmClose = () => {
     }
   }, [hideResubmit, labourId]);
 
-//   const handleReject = async (id, rejectReason) => {
-//     if (!id || !rejectReason) {
-//         toast.error('Labour ID and rejection reason are required.');
-//         return;
-//     }
-
-//     try {
-//         const response = await axios.put(
-//             `${API_BASE_URL}/labours/attendance/reject/${id}`,
-//             { rejectReason }, // Include rejectReason in the request body
-//             {
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                 },
-//             }
-//         );
-
-//         if (response.data.success) {
-//             setLabours(prevLabours =>
-//                 prevLabours.map(labour =>
-//                     labour.id === id
-//                         ? { ...labour, ApprovalStatus: 'Rejected', rejectReason }
-//                         : labour
-//                 )
-//             );
-//             toast.success('Attendance rejected successfully.');
-//             setIsRejectPopupOpen(false); // Close modal
-//         } else {
-//             toast.error('Failed to reject attendance. Please try again.');
-//         }
-//     } catch (error) {
-//         console.error('Error rejecting attendance:', error);
-//         toast.error('Error rejecting attendance. Please try again.');
-//     }
-// };
 
   const handleReject = async (id) => {
     if (!id) {
@@ -217,59 +182,76 @@ const handleApproveConfirmClose = () => {
     }
 
     try {
-        const response = await axios.put(`${API_BASE_URL}/labours/attendance/reject`, null, {
-            params: { id },
-        });
+        const response = await axios.put(`${API_BASE_URL}/api/admin/rejectSiteTransferadmin`, { id, rejectReason });
 
         if (response.data.success) {
             setLabours(prevLabours =>
                 prevLabours.map(labour =>
-                    labour.id === id ? { ...labour, ApprovalStatus: 'Rejected' } : labour
+                    labour.id === id ? { ...labour, adminStatus: 'Rejected' } : labour
                 )
             );
-            toast.success('Attendance Rejected successfully.');
+            toast.success(response.data.message || 'Attendance rejected successfully.');
             setIsApproveConfirmOpen(false);
-            handleApproveConfirmClose()
+            handleApproveConfirmClose();
         } else {
-            toast.error('Failed to Reject attendance. Please try again.');
+            toast.success(response.data.message || 'Failed to reject attendance. Please try again.');
         }
     } catch (error) {
-        console.error('Error Rejected attendance:', error);
-        toast.error('Error Rejected attendance. Please try again.');
+        console.error('Error rejecting attendance:', error);
+        toast.error('Error rejecting attendance. Please try again.');
     }
 };
 
 
 
 const approveLabour = async (id) => {
-    if (!id) {
-        toast.error('Attendance ID is missing.');
-        return;
-    }
+  if (!id) {
+      toast.error('Attendance ID is missing.');
+      return;
+  }
 
-    try {
-        const response = await axios.put(`${API_BASE_URL}/labours/attendance/approve`, null, {
-            params: { id },
-        });
+  try {
+      const response = await axios.put(`${API_BASE_URL}/api/admin/approveSiteTransferadmin`, null, {
+          params: { id },
+      });
 
-        if (response.data.success) {
-            setLabours(prevLabours =>
-                prevLabours.map(labour =>
-                    labour.id === id ? { ...labour, ApprovalStatus: 'Approved' } : labour
-                )
-            );
-            toast.success('Attendance approved successfully.');
-            setIsApproveConfirmOpen(false);
-        } else {
-            toast.error('Failed to approve attendance. Please try again.');
-        }
-    } catch (error) {
-        console.error('Error approving attendance:', error);
-        toast.error('Error approving attendance. Please try again.');
-    }
+      if (response.data.success) {
+          setLabours(prevLabours =>
+              prevLabours.map(labour =>
+                  labour.id === id ? { ...labour, adminStatus: 'Approved' } : labour
+              )
+          );
+          toast.success(response.data.message || 'Attendance approved successfully.');
+          setIsApproveConfirmOpen(false);
+          handleApproveConfirmClose();
+      } else {
+          toast.success(response.data.message || 'Failed to approve attendance. Please try again.');
+      }
+  } catch (error) {
+      console.error('Error approving attendance:', error);
+      toast.error('Error approving attendance. Please try again.');
+  }
 };
 
 
+const handleEditLabour = async (labour) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/api/admin/editSiteTransferadmin/${labour.id}`);
+    if (response.data.success) {
+      setLabours(prevLabours =>
+        prevLabours.map(l =>
+          l.id === labour.id ? { ...l, uploadAadhaarFront: null, contactNumber: null, isApproved: 1 } : l
+        )
+      );
+      navigate('/kyc', { state: { labourId: labour.id } });
+    } else {
+      toast.error('Failed to Edit labour. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error Edit labour:', error);
+    toast.error('Error Edit labour. Please try again.');
+  }
+};
 
   const handleEditLabourOpen = (labour) => {
     setSelectedLabour(labour);
@@ -346,17 +328,21 @@ const approveLabour = async (id) => {
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/LabourAttendanceApproval`);
+      const response = await axios.get(`${API_BASE_URL}/api/getAdminSiteTransferApproval`);
       // console.log('API Response:', response.data);
       setLabours(response.data);
-      const pending = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
-      const approved = response.data.filter((labour) => labour.ApprovalStatus === "Approved").length;
-      const rejected = response.data.filter((labour) => labour.ApprovalStatus === "Rejected").length;
+      const pendingSiteTransfer = response.data.filter((labour) => labour.adminStatus === "Pending").length;
+      const approvedSiteTransfer = response.data.filter((labour) => labour.adminStatus === "Approved").length;
+      const rejectedSiteTransfer = response.data.filter((labour) => labour.adminStatus === "Rejected").length;
   
       // Update counts
-      setPendingCount(pending);
-      setApprovedCount(approved);
-      setRejectedCount(rejected);
+      setPendingCount(pendingSiteTransfer);
+      setApprovedCount(approvedSiteTransfer);
+      setRejectedCount(rejectedSiteTransfer);
+      console.log('Counts before navigating:', { pendingSiteTransfer, approvedSiteTransfer, rejectedSiteTransfer });
+      localStorage.setItem('pendingSiteTransfer', pendingSiteTransfer);
+      localStorage.setItem('approvedSiteTransfer', approvedSiteTransfer);
+      localStorage.setItem('rejectedSiteTransfer', rejectedSiteTransfer);
       setLoading(false);
     } catch (error) {
       // console.error('Error fetching labours:', error);
@@ -698,11 +684,11 @@ const approveLabour = async (id) => {
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
                 <TableCell>Date</TableCell>
-                <TableCell>First Punch</TableCell>
-                <TableCell>Last Punch</TableCell>
-                <TableCell>Overtime Manually</TableCell>
-                <TableCell>Remark</TableCell>
-                <TableCell>Attendance Edit By</TableCell>
+                <TableCell>Current Site</TableCell>
+                <TableCell>Transfer Site</TableCell>
+                <TableCell>Transfer Date</TableCell>
+                {tabValue === 2 &&<TableCell>Remark</TableCell>}
+                <TableCell>Site Transfer By</TableCell>
                 <TableCell>Status</TableCell>
                 {tabValue !== 2 &&<TableCell>Send Approval Date</TableCell>}
                 {tabValue !== 1 && tabValue !== 2 &&<TableCell>Edit</TableCell>}
@@ -727,31 +713,31 @@ const approveLabour = async (id) => {
               {(rowsPerPage > 0
                 ? (searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours]))
                   .filter(labour => {
-                    if (tabValue === 0) return labour.ApprovalStatus === 'Pending';
-                    if (tabValue === 1) return labour.ApprovalStatus === 'Approved';
-                    if (tabValue === 2) return labour.ApprovalStatus === 'Rejected';
+                    if (tabValue === 0) return labour.adminStatus === 'Pending';
+                    if (tabValue === 1) return labour.adminStatus === 'Approved';
+                    if (tabValue === 2) return labour.adminStatus === 'Rejected';
                     return true; // fallback if no condition matches
                   })
                   .sort((a, b) => b.labourID - a.labourID) // Sort in descending order by id
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours])
                   .filter(labour => {
-                    if (tabValue === 0) return labour.ApprovalStatus === 'Pending';
-                    if (tabValue === 1) return labour.ApprovalStatus === 'Approved';
-                    if (tabValue === 2) return labour.ApprovalStatus === 'Rejected';
+                    if (tabValue === 0) return labour.adminStatus === 'Pending';
+                    if (tabValue === 1) return labour.adminStatus === 'Approved';
+                    if (tabValue === 2) return labour.adminStatus === 'Rejected';
                     return true; // fallback if no condition matches
                   })
                   .sort((a, b) => b.labourID - a.labourID)
               ).map((labour, index) => (
                 <TableRow key={labour.id}>
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                  <TableCell>{labour.LabourId}</TableCell>
-                  <TableCell>{labour.Date ? new Date(labour.Date).toLocaleDateString('en-GB') : '-'}</TableCell>
-                  <TableCell>{labour.FirstPunchManually}</TableCell>
-                  <TableCell>{labour.LastPunchManually}</TableCell>
-                  <TableCell>{labour.OvertimeManually}</TableCell>
-                    <TableCell>{labour.RemarkManually}</TableCell>
-                    <TableCell>{labour.OnboardName}</TableCell>
+                  <TableCell>{labour.LabourID}</TableCell>
+                  <TableCell>{labour.createdAt ? new Date(labour.createdAt).toLocaleDateString('en-GB') : '-'}</TableCell>
+                  <TableCell>{labour.currentSiteName}</TableCell>
+                  <TableCell>{labour.transferSiteName}</TableCell>
+                  <TableCell>{labour.transferDate ? new Date(labour.transferDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                  {tabValue === 2 &&<TableCell>{labour.rejectionReason}</TableCell>}
+                    <TableCell>{labour.siteTransferBy}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
                   <TableCell sx={{ position: 'relative' }}>
                     <Box
@@ -763,24 +749,24 @@ const approveLabour = async (id) => {
                         textAlign: 'center',
                         fontWeight: 'bold',
                         fontSize: '0.875rem',
-                        ...(labour.ApprovalStatus === 'Pending' && {
+                        ...(labour.adminStatus === 'Pending' && {
                           backgroundColor: '#EFE6F7',
                           color: '#8236BC',
                         }),
-                        ...(labour.ApprovalStatus === 'Approved' && {
+                        ...(labour.adminStatus === 'Approved' && {
                           backgroundColor: '#E5FFE1',
                           color: '#54a36d',
                         }),
-                        ...(labour.ApprovalStatus === 'Rejected' && {
+                        ...(labour.adminStatus === 'Rejected' && {
                           backgroundColor: 'rgba(255, 105, 97, 0.3)',
                           color: '#F44336',
                         }),
                       }}
                     >
-                      {labour.ApprovalStatus}
+                      {labour.adminStatus}
 
                       {/* Display the indicator based on conditions */}
-                      {labour.ApprovalStatus === 'Pending' && labour.LabourID && (
+                      {labour.adminStatus === 'Pending' && labour.LabourID && (
                         <Box
                           sx={{
                             position: 'absolute',
@@ -804,7 +790,7 @@ const approveLabour = async (id) => {
                   </TableCell>
                   {tabValue === 0 && (
                     <>
-                      <TableCell>{labour.LastUpdatedDate ? new Date(labour.LastUpdatedDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                      <TableCell>{labour.createdAt ? new Date(labour.createdAt).toLocaleDateString('en-GB') : '-'}</TableCell>
                     </>
                   )}
                   {tabValue === 1 && (
@@ -831,14 +817,14 @@ const approveLabour = async (id) => {
 
                   {tabValue === 0 && (
                     <TableCell>
-                      {(user.userType === 'user' && labour.ApprovalStatus === 'Pending') && (
+                      {(user.userType === 'user' && labour.adminStatus === 'Pending') && (
                   <IconButton
                   onClick={() => handleEditLabourOpen(labour)} // Add your function here
                 >
                   <EditIcon />
                 </IconButton>
                       )}
-                      {(user.userType === 'admin' || user.userType === 'superadmin' && labour.ApprovalStatus === 'Pending') && (
+                      {(user.userType === 'admin' || user.userType === 'superadmin' && labour.adminStatus === 'Pending') && (
                   <IconButton
                   onClick={() => handleEditLabourOpen(labour)} // Add your function here
                 >
@@ -847,30 +833,10 @@ const approveLabour = async (id) => {
                       )}
                     </TableCell>
                   )}
-                  {/* {user.userType === 'user' && (
-                    <TableCell>
-                     
-                      {labour.ApprovalStatus === 'Approved' && (
-                        <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
-                              backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                          }}
-                          onClick={() => handleEdit(labour)}
-                        >
-                          Update
-                        </Button>
-                      )}
-                    </TableCell>
-                  )} */}
 
                   {user.userType === 'admin' || user.userType === 'superadmin' && (
                     <TableCell>
-                      {labour.ApprovalStatus === 'Pending' && !approvedLabours.includes(labour.id) && !approvingLabours.includes(labour.id) && (
+                      {labour.adminStatus === 'Pending' && !approvedLabours.includes(labour.id) && !approvingLabours.includes(labour.id) && (
                         <>
                           <Button
                             variant="contained"
@@ -907,7 +873,7 @@ const approveLabour = async (id) => {
                           </Button>
                         </>
                       )}
-                      {/* {labour.ApprovalStatus === 'Approved' && (
+                      {labour.adminStatus === 'Approved' && (
                         <Button
                           variant="contained"
                           sx={{
@@ -919,9 +885,9 @@ const approveLabour = async (id) => {
                           }}
                           onClick={() => handleEdit(labour)}
                         >
-                          Update
+                          Edit
                         </Button>
-                      )} */}
+                      )}
 
                       
                     </TableCell>
@@ -1117,7 +1083,7 @@ const approveLabour = async (id) => {
           </div>
         </>
       )}
-
+{/* 
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Edit Labour Details</DialogTitle>
         <DialogContent >
@@ -1194,7 +1160,7 @@ const approveLabour = async (id) => {
             },
           }}>Update</Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
 
       <Dialog
@@ -1204,18 +1170,18 @@ const approveLabour = async (id) => {
         aria-describedby="EditLabour-description"
       >
         <DialogTitle id="EditLabour-title">
-          Edit Labour
+          Edit Labour site transfer
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="EditLabour-dialog-description">
-            Are you sure you want to Edit this labour?
+            Are you sure you want to Edit this labour site transfer?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleEditLabourClose} variant="outlined" color="secondary">
             Cancel
           </Button>
-          <Button onClick={handleEditLabourConfirm} sx={{
+          <Button onClick={handleEditLabour} sx={{
             backgroundColor: 'rgb(229, 255, 225)',
             color: 'rgb(43, 217, 144)',
             width: '100px',

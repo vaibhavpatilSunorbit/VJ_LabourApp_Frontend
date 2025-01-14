@@ -9,6 +9,7 @@ import {
     Grid,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import SearchBar from '../SarchBar/SearchBar';
@@ -26,9 +27,39 @@ import dayjs from 'dayjs';
 // import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 // toast.configure();
 
-const AdminApproval = () => {
+const AdminApproval = ({onFormSubmit}) => {
+  const location = useLocation();
+  const [pendingSiteTransfer, setPendingSiteTransfer] = useState(0);
+  const [approvedSiteTransfer, setApprovedSiteTransfer] = useState(0);
+  const [rejectedSiteTransfer, setRejectedSiteTransfer] = useState(0);
 
+  const [pendingWagesCount, setPendingWagesCount] = useState(0);
+  const [approvedWagesCount, setApprovedWagesCount] = useState(0);
+  const [rejectedWagesCount, setRejectedWagesCount] = useState(0);
 
+  useEffect(() => {
+    // Get counts from localStorage
+    const pending = localStorage.getItem('pendingSiteTransfer');
+    const approved = localStorage.getItem('approvedSiteTransfer');
+    const rejected = localStorage.getItem('rejectedSiteTransfer');
+
+    // Update state with the retrieved values
+    setPendingSiteTransfer(pending || 0);
+    setApprovedSiteTransfer(approved || 0);
+    setRejectedSiteTransfer(rejected || 0);
+  }, []);
+
+  useEffect(() => {
+    // Get counts from localStorage
+    const pending = localStorage.getItem('pendingWagesCount');
+    const approved = localStorage.getItem('approvedWagesCount');
+    const rejected = localStorage.getItem('rejectedWagesCount');
+
+    // Update state with the retrieved values
+    setPendingWagesCount(pending || 0);
+    setApprovedWagesCount(approved || 0);
+    setRejectedWagesCount(rejected || 0);
+  }, []);
 
     return (
         <Grid container spacing={11} sx={{ mt: 0, px: 8}}>
@@ -60,9 +91,9 @@ const AdminApproval = () => {
                     fontWeight: "600"
                   }}
                 >
-                  <Typography>Pending : 12</Typography>
-                  <Typography>Approved : 16</Typography>
-                  <Typography>Rejected : 4</Typography>
+                  <Typography>Pending: {pendingWagesCount}</Typography>
+      <Typography>Approved: {approvedWagesCount}</Typography>
+      <Typography>Rejected: {rejectedWagesCount}</Typography>
                 </Box>
               </CardContent>
             </Card>
@@ -89,15 +120,18 @@ const AdminApproval = () => {
                 <Typography variant="h5" component="div" sx={{ color: '#10294c' }}>
                   Site Transfer Approval
                 </Typography>
-                <Typography
+                <Box
                   variant="body2"
                   sx={{
                     fontSize: { xs: '25px', md: '45px' },
                     color: '#10294c',
+                    fontWeight: "600"
                   }}
                 >
-                  562
-                </Typography>
+                    <Typography>Pending: {pendingSiteTransfer}</Typography>
+      <Typography>Approved: {approvedSiteTransfer}</Typography>
+      <Typography>Rejected: {rejectedSiteTransfer}</Typography>
+                </Box>
               </CardContent>
             </Card>
           </Link>
