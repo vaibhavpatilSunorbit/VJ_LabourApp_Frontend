@@ -180,7 +180,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
   }, [openSidebarToggle]);
 
   const isSuperAdminOnly = (item) => {
-    const superAdminPages = ["Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer"];
+    const superAdminPages = ["Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer", "Variable Input"];
     return superAdminPages.includes(item.heading) && user?.userType !== 'superadmin';
   };
 
@@ -226,7 +226,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
           {SidebarData.filter(item => (
             (!user?.accessPages || user?.accessPages.includes(item.heading)) &&
             item.heading !== "Application" &&
-            !isSuperAdminOnly(item)
+            (!isSuperAdminOnly(item) || item.heading === "Variable Input")
           )).map((item, index) => (
             <div
               key={index}
@@ -242,6 +242,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
                 item.heading === "People" ? profileIcon6 :
                 item.heading === "Admin Approval" ? profileIcon6 :
                 item.heading === "Site Transfer" ? profileIcon6 :
+                item.heading === "Variable Input" ? profileIcon6 :
                 profileIcon6
               } alt="Profile Icon" className="img-white-fill" style={{ height: "30px" }} />
               <Link

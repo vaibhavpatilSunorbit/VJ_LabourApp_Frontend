@@ -95,6 +95,12 @@ export const SidebarData = [
     heading: "Site Transfer",
     path: "siteTransferLabour",
     roles: ["superadmin"],
+  },
+  {
+    icon: UilFileAlt,
+    heading: "Variable Input",
+    path: "variableInput",
+    roles: ["superadmin"],
   }
 ];
 

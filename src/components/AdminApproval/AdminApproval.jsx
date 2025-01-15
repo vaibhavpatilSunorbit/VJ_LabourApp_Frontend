@@ -51,14 +51,14 @@ const AdminApproval = ({onFormSubmit}) => {
 
   useEffect(() => {
     // Get counts from localStorage
-    const pending = localStorage.getItem('pendingWagesCount');
-    const approved = localStorage.getItem('approvedWagesCount');
-    const rejected = localStorage.getItem('rejectedWagesCount');
+    const pendingWages = localStorage.getItem('pendingWagesCount');
+    const approvedWages = localStorage.getItem('approvedWagesCount');
+    const rejectedWages = localStorage.getItem('rejectedWagesCount');
 
     // Update state with the retrieved values
-    setPendingWagesCount(pending || 0);
-    setApprovedWagesCount(approved || 0);
-    setRejectedWagesCount(rejected || 0);
+    setPendingWagesCount(pendingWages || 0);
+    setApprovedWagesCount(approvedWages || 0);
+    setRejectedWagesCount(rejectedWages || 0);
   }, []);
 
     return (
@@ -175,13 +175,3 @@ const AdminApproval = ({onFormSubmit}) => {
 };
 
 export default AdminApproval;
-
-
-
-
-
-
-
-
-
-

@@ -307,7 +307,7 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
       
           const response = await axios.post(`${API_BASE_URL}/api/admin/sitetransfertoadmin`, transferDataPayload);
       
-          if (response.status === 201) {
+          if (response.status === 200) {
             // Update UI
             setLabours((prevLabours) =>
               prevLabours.map((labour) =>

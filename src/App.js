@@ -22,6 +22,7 @@ import AdminAttendanceApproval from './components/AdminApproval/AdminAttedanceAp
 import SiteTransfer from './components/SiteTransfer/SiteTransfer';
 import SiteTransferApproval from './components/AdminApproval/SiteTransferApproval/SiteTransferApproval';
 import WagesApproval from './components/AdminApproval/WagesApproval/WagesApproval'
+import VariableInput from './components/VariableInputs/VariableInput'
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -105,6 +106,7 @@ function App() {
                     <Route path="/siteTransferLabour" element={<SiteTransfer departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} onApprove={handleApprove}/>} />
                     <Route path="/adminApproval/siteTransferApproval" element={<SiteTransferApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/wagesApproval" element={<WagesApproval onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/variableInput" element={<VariableInput departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }
