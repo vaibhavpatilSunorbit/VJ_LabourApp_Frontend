@@ -503,8 +503,8 @@ const PeopleEditDetails = () => {
                         src={labourDetails?.photoSrc || ""}
                         alt={labourDetails?.name || "Employee Photo"}
                         sx={{
-                            width: 180,
-                            height: 180,
+                            width: 200,
+                            height: 200,
                             borderRadius: 2, // Square avatar
                             "& img": {
                                 objectFit: "unset !important", // Remove 'object-fit: cover'

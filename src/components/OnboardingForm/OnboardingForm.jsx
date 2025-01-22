@@ -85,6 +85,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const [contactError, setContactError] = useState('');
   const [emergencyError, setEmergencyError] = useState('');
   const [aadhaarFront, setAadhaarFront] = useState(null);
+  const [isAadhaarValid, setIsAadhaarValid] = useState(false);
   const [aadhaarBack, setAadhaarBack] = useState(null);
   const { labourId, onFormSubmitSuccess } = location.state || {};
   const [aadhaarFrontData, setAadhaarFrontData] = useState({});
@@ -490,10 +491,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   
     // Update form data with the Aadhaar number
     setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value }));
-  
+    setNewError('');
     // Validate Aadhaar number format
-    if (value.length === 12 && /^\d{12}$/.test(value)) {
-      try {
+    if (value.length === 12) {
+      // Validate Aadhaar number format
+      if (/^\d{12}$/.test(value)) {
+        try {
         // Step 1: Aadhaar Validation API
         const validationResponse = await axios.post(
           'https://kyc-api.aadhaarkyc.io/api/v1/aadhaar-validation/aadhaar-validation',
@@ -506,18 +509,17 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
           }
         );
   
-        // If Aadhaar Validation API fails
-        if (!validationResponse.data.success) {
+         // If Aadhaar Validation API fails
+         if (!validationResponse.data.success) {
           toast.error('Aadhaar validation failed. Please check the Aadhaar number and try again.');
-          setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear invalid Aadhaar number
+          setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));// Clear invalid Aadhaar number
           return;
         }
-        // toast.success('Aadhaar validated successfully. Checking backend for existing records...');
-  
+
         // Step 2: Backend Check API
         const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: value });
         const { exists, skipCheck } = response.data;
-  
+
         if (skipCheck) {
           // If Aadhaar resubmission is detected
           setMessageType('success');
@@ -546,7 +548,13 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       toast.error('Invalid Aadhaar number. It must be a 12-digit numeric value.');
       setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear invalid Aadhaar number
     }
-  };
+  }
+  // Optionally, you can handle cases where the input exceeds 12 digits
+  else if (value.length > 12) {
+    toast.error('Aadhaar number cannot exceed 12 digits.');
+    setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value.slice(0, 12) }));
+  }
+};
   
 
   // const handleAadhaarNumberChange = async (e) => {
@@ -1811,6 +1819,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                               value={formData.aadhaarNumber || ''}
                               onChange={handleAadhaarNumberChange}
                               style={getInputStyle('aadhaarNumber')}
+                              maxLength={12}
                               required
                             />
                             {newError && <div style={{ color: 'red' }}>{newError}</div>}

@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchVariblePay';
+import SearchBar from '../SarchBar/SearchRegister';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
@@ -34,7 +34,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
 import { parse } from "fast-xml-parser";
 
-const VariableInput = ({ departments, projectNames = [], labour }) => {
+const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
@@ -391,7 +391,10 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
-            <Box ml={-1.5}>
+            <Box ml={-1.5} >
+            <Typography variant="h4" align="center" mt={4}>
+        Reports | Salary Register
+      </Typography>
                 <SearchBar
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
@@ -899,4 +902,4 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
     );
 };
 
-export default VariableInput;   
+export default SalaryRegister;   

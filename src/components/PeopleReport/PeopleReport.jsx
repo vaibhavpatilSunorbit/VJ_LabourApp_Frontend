@@ -775,6 +775,7 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
                                 <TableCell>Name of Labour</TableCell>
                                 <TableCell>Status</TableCell>
                                 {((user.userType === 'admin') || (tabValue !== 6 && user.userType === 'user')) && <TableCell>Action</TableCell>}
+                                <TableCell>Action</TableCell>
                                 <TableCell>Details</TableCell>
                             </TableRow>
                         </TableHead>
@@ -792,8 +793,8 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
                                 ? (searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours]))
                                     .filter(labour => {
                                         if (tabValue === 0) return labour.status === 'Approved';
-                                        if (tabValue === 1) return labour.status === 'Approved';
-                                        if (tabValue === 2) return labour.status === 'Approved';
+                                        if (tabValue === 1) return labour.status === 'Approved' && labour.labourOwnership === 'VJ';
+                                        if (tabValue === 2) return labour.status === 'Approved' && labour.labourOwnership === 'CONTRACTOR';
                                         if (tabValue === 3) return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
                                         return true; // fallback if no condition matches
                                     })
@@ -802,8 +803,8 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
                                 : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours])
                                     .filter(labour => {
                                         if (tabValue === 0) return labour.status === 'Approved';
-                                        if (tabValue === 1) return labour.status === 'Approved';
-                                        if (tabValue === 2) return labour.status === 'Approved';
+                                        if (tabValue === 1) return labour.status === 'Approved' && labour.labourOwnership === 'VJ';
+                                        if (tabValue === 2) return labour.status === 'Approved' && labour.labourOwnership === 'CONTRACTOR';
                                         if (tabValue === 3) return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
                                         return true; // fallback if no condition matches
                                     })
@@ -848,6 +849,22 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
                     </Table>
                 </Box>
             </TableContainer>
+
+            <Modal
+        open={isPopupOpen}
+        onClose={closePopup}
+        closeAfterTransition
+      // BackdropComponent={Backdrop}
+      // BackdropProps={{ timeout: 500 }}
+      >
+        <Fade in={isPopupOpen}>
+          <div className="modal">
+            {selectedLabour && (
+              <ViewDetails selectedLabour={selectedLabour} onClose={closePopup} />
+            )}
+          </div>
+        </Fade>
+      </Modal>
         </Box>
 
     );

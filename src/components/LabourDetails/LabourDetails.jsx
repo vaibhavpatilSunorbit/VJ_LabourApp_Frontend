@@ -2541,8 +2541,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             }}
           />
           <Typography sx={{ fontSize: "0.875rem", color: "#5e636e" }}>
-            Disable
-          </Typography>
+Rejoin          </Typography>
         </Box>
 
         {/* Filter Icon */}

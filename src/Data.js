@@ -8,17 +8,6 @@ export const API_BASE_URL = "http://localhost:4000";
 // export const API_BASE_URL = "https://vjlabour.vjerp.com";
 
 
-export const accessPages = [
-  "Bank Balance",
-  "Add User",
-  "Statement",
-  "Transaction",
-  "Hold/Release",
-  "Release Approval",
-];
-
-
-
 // Data.js
 export const SidebarData = [
   {
@@ -101,12 +90,26 @@ export const SidebarData = [
     heading: "Variable Input",
     path: "variableInput",
     roles: ["superadmin"],
-  }
+  },
+  {
+    icon: UilFileAlt,
+    heading: "Salary Register",
+    path: "/admin/SalaryRejester/SalaryRejesterAdmin",
+    roles: ["superadmin"],
+  } 
 ];
 
 
 
 
+export const accessPages = [
+  "Bank Balance",
+  "Add User",
+  "Statement",
+  "Transaction",
+  "Hold/Release",
+  "Release Approval",
+];
 
 
 

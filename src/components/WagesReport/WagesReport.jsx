@@ -327,7 +327,7 @@ const AttendanceReport = () => {
         } else if (exists && !approved) {
             wageData.wageId = data.WageID; 
             console.log('wageData.wageId .. ',wageData.wageId)
-            console.log('wageId payload .. ',wageData)
+            console.log('wageData.wageId .. ',wageData)
             await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
             toast.info("Wages sent for admin approval.");
         } else if (exists && approved) {

@@ -690,13 +690,13 @@ const handleEditLabour = async (labour) => {
                 {tabValue === 2 &&<TableCell>Remark</TableCell>}
                 <TableCell>Site Transfer By</TableCell>
                 <TableCell>Status</TableCell>
-                {tabValue !== 2 &&<TableCell>Send Approval Date</TableCell>}
+                {tabValue === 0 &&<TableCell>Send Approval Date</TableCell>}
                 {tabValue !== 1 && tabValue !== 2 &&<TableCell>Edit</TableCell>}
                 {tabValue !== 1 && tabValue !== 2 &&<TableCell>Action</TableCell>}
                 {tabValue === 1 &&<TableCell>Approve Date</TableCell>}
                 {tabValue !== 0 && tabValue !== 1 &&<TableCell>Rejected Date</TableCell>}
                 {tabValue !== 0 && tabValue !== 1 &&<TableCell>Reject Reason</TableCell>}
-                {tabValue === 1 &&<TableCell>Edit Date</TableCell>}
+                {tabValue !== 0 && tabValue !== 1 && tabValue !== 2 &&<TableCell>Edit Date</TableCell>}
                
               </TableRow>
             </TableHead>
@@ -765,27 +765,6 @@ const handleEditLabour = async (labour) => {
                     >
                       {labour.adminStatus}
 
-                      {/* Display the indicator based on conditions */}
-                      {labour.adminStatus === 'Pending' && labour.LabourID && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: '-8px', // Positioning the indicator above and to the right
-                            right: '-8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          {/* Green Dot */}
-                          <CircleIcon
-                            sx={{
-                              color: '#ed4b4b', // Green color
-                              fontSize: '12px', // Smaller size for the dot
-                            }}
-                          />
-                        </Box>
-                      )}
                     </Box>
                   </TableCell>
                   {tabValue === 0 && (
@@ -795,13 +774,13 @@ const handleEditLabour = async (labour) => {
                   )}
                   {tabValue === 1 && (
                     <>
-                      <TableCell>{labour.ApprovalDate ? new Date(labour.ApprovalDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                      <TableCell>{labour.siteTransferApproveDate ? new Date(labour.siteTransferApproveDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                     </>
                   )}
 
                   {tabValue === 2 && (
                     <>
-                      <TableCell>{labour.LastUpdatedDate ? new Date(labour.LastUpdatedDate).toLocaleDateString('en-GB') : '-'}</TableCell>
+                      <TableCell>{labour.siteTransferRejectDate ? new Date(labour.siteTransferRejectDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                     </>
                   )}
                   {tabValue === 2 && (
@@ -873,7 +852,7 @@ const handleEditLabour = async (labour) => {
                           </Button>
                         </>
                       )}
-                      {labour.adminStatus === 'Approved' && (
+                      {/* {labour.adminStatus === 'Approved' && (
                         <Button
                           variant="contained"
                           sx={{
@@ -887,7 +866,7 @@ const handleEditLabour = async (labour) => {
                         >
                           Edit
                         </Button>
-                      )}
+                      )} */}
 
                       
                     </TableCell>
@@ -1009,7 +988,7 @@ const handleEditLabour = async (labour) => {
             </Typography>
             {selectedLabour && (
               <Typography variant="body1" component="p">
-                {selectedLabour.rejectReason}
+                {selectedLabour.rejectionReason}
               </Typography>
             )}
             <Box mt={2} sx={{ display: 'flex', justifyContent: 'flex-end' }}>

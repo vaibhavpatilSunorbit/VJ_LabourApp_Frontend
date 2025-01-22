@@ -18,7 +18,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions,
+    DialogActions, FormControl, InputLabel
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -371,6 +371,7 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
         if (labours.length > 0) fetchStatuses();
       }, [labours]);      
 
+      const today = new Date().toISOString().split('T')[0];
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
@@ -491,7 +492,9 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
                                             : '-'}
                                     </TableCell>
                                     <TableCell>
-                                        {labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString('en-GB') : '-'}
+                                    {statusesSite[labour.LabourID]?.createdAt
+                                            ? new Date(statusesSite[labour.LabourID].createdAt).toLocaleDateString('en-GB')
+                                            : '-'}
                                     </TableCell>
 
                                     <TableCell>
@@ -550,37 +553,43 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
           <Typography id="modal-description" gutterBottom>
             Selected Labour: {selectedLabour?.name}
           </Typography>
-          <Select
-            fullWidth
-            value={newSite}
-            onChange={(e) => setNewSite(e.target.value)}
-            displayEmpty
-            sx={{ mb: 2 }}
-          >
-            <MenuItem value="" disabled>
-              Select New Site
-            </MenuItem>
-            {Array.isArray(projectNames) && projectNames.length > 0 ? (
-              projectNames.map((project) => (
-                <MenuItem key={project.id} value={project.id}>
-                  {project.Business_Unit}
+          <FormControl fullWidth variant="standard" sx={{ mb: 2 }}>
+            <InputLabel id="new-site-select-label">Select New Site</InputLabel>
+            <Select
+                labelId="new-site-select-label"
+                value={newSite}
+                onChange={(e) => setNewSite(e.target.value)}
+                displayEmpty
+            >
+                <MenuItem value="" disabled>
+                    Select New Site
                 </MenuItem>
-              ))
-            ) : (
-              <MenuItem value="Unknown" disabled>
-                No Projects Available
-              </MenuItem>
-            )}
-          </Select>
-          <TextField
+                {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                    projectNames.map((project) => (
+                        <MenuItem key={project.id} value={project.id}>
+                            {project.Business_Unit}
+                        </MenuItem>
+                    ))
+                ) : (
+                    <MenuItem value="Unknown" disabled>
+                        No Projects Available
+                    </MenuItem>
+                )}
+            </Select>
+        </FormControl>
+        <TextField
             fullWidth
             type="date"
             value={transferDate}
             onChange={(e) => setTransferDate(e.target.value)}
             label="Transfer Date"
             InputLabelProps={{ shrink: true }}
+            // variant="standard"  
+            inputProps={{
+                min: today  
+            }}
             sx={{ mb: 2 }}
-          />
+        />
 
           <Box display="flex" justifyContent="space-between">
             <Button
@@ -776,210 +785,3 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
 export default SiteTransfer;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useState, useEffect } from "react";
-// import axios from "axios";
-// import { Box, Button, Modal, Typography, IconButton } from "@mui/material";
-// import { DataGrid } from "@mui/x-data-grid";
-// import { ToastContainer, toast } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
-// import CloseIcon from "@mui/icons-material/Close";
-// import { API_BASE_URL } from "../../Data";
-// import { useUser } from "../../UserContext/UserContext";
-
-// const SiteTransfer = () => {
-//   const [labours, setLabours] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [modalOpen, setModalOpen] = useState(false);
-//   const [selectedHistory, setSelectedHistory] = useState([]);
-//   const { user } = useUser();
-
-//   // Fetch labours
-//   const fetchLabours = async () => {
-//     setLoading(true);
-//     try {
-//       const response = await axios.get(
-//         `${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`
-//       );
-//       setLabours(response.data);
-//     } catch (error) {
-//       console.error("Error fetching labours:", error);
-//       toast.error("Failed to fetch data");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchLabours();
-//   }, []);
-
-//   // View history handler
-//   const handleViewHistory = (labourID) => {
-//     if (!labourID) return;
-//     const history = labours.filter((labour) => labour.LabourID === labourID);
-//     setSelectedHistory(history);
-//     setModalOpen(true);
-//   };
-//   // DataGrid Columns
-//   const columns = [
-//     { field: "id", headerName: "Sr No", width: 90 },
-//     { field: "LabourID", headerName: "Labour ID", width: 150 },
-//     { field: "name", headerName: "Name", width: 150 },
-//     { field: "businessUnit", headerName: "Business Unit", width: 150 },
-//     { field: "departmentName", headerName: "Department", width: 150 },
-//     {
-//       field: "From_Date",
-//       headerName: "From Date",
-//       width: 150,
-//       valueGetter: (params) => {
-//         if (!params?.row) return "-"; // Check if params or params.row is null
-//         return params.row.From_Date
-//           ? new Date(params.row.From_Date).toLocaleDateString()
-//           : "-";
-//       },
-//     },
-//     { field: "PayStructure", headerName: "Pay Structure", width: 150 },
-//     { field: "DailyWages", headerName: "Daily Wages", width: 150 },
-//     { field: "FixedMonthlyWages", headerName: "Fixed Monthly Wages", width: 150 },
-//     { field: "WeeklyOff", headerName: "Weekly Off", width: 150 },
-//     { field: "WagesEditedBy", headerName: "Wages Edited By", width: 150 },
-//     {
-//       field: "CreatedAt",
-//       headerName: "Created At",
-//       width: 150,
-//       valueGetter: (params) => {
-//         if (!params?.row) return "-"; // Check if params or params.row is null
-//         return params.row.From_Date
-//           ? new Date(params.row.From_Date).toLocaleDateString()
-//           : "-";
-//       },
-//     },
-//     {
-//       field: "Action",
-//       headerName: "Action",
-//       width: 150,
-//       renderCell: (params) => {
-//         if (!params?.row) return "-"; // Check if params or params.row is null
-//         return (
-//           <Button
-//             variant="contained"
-//             sx={{
-//               backgroundColor: "rgb(239,230,247)",
-//               color: "rgb(130,54,188)",
-//               "&:hover": {
-//                 backgroundColor: "rgb(239,230,247)",
-//               },
-//             }}
-//             onClick={() => handleViewHistory(params.row.LabourID)}
-//           >
-//             View History
-//           </Button>
-//         );
-//       },
-//     },
-//   ];
-  
-
-//   const rows = labours.map((labour, index) => ({
-//     id: index + 1,
-//     LabourID: labour?.LabourID || "N/A",
-//     name: labour?.name || "N/A",
-//     businessUnit: labour?.businessUnit || "N/A",
-//     departmentName: labour?.departmentName || "N/A",
-//     From_Date: labour?.From_Date || null,
-//     PayStructure: labour?.PayStructure || "N/A",
-//     DailyWages: labour?.DailyWages || 0,
-//     FixedMonthlyWages: labour?.FixedMonthlyWages || 0,
-//     WeeklyOff: labour?.WeeklyOff || "N/A",
-//     WagesEditedBy: labour?.WagesEditedBy || "N/A",
-//     CreatedAt: labour?.CreatedAt || null,
-//   }));
-  
-  
-  
-  
-
-//   return (
-//     <Box mb={1} py={2} px={2}>
-//       <ToastContainer />
-//       <Box sx={{ height: "88vh", width: "82vw" }}>
-//       <DataGrid
-//   rows={rows}
-//   columns={columns}
-//   pageSize={10}
-//   rowsPerPageOptions={[10, 25, 50]}
-//   loading={loading}
-// />
-
-//       </Box>
-
-//       {/* Modal */}
-//       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-//         <Box
-//           sx={{
-//             position: "absolute",
-//             top: "50%",
-//             left: "50%",
-//             transform: "translate(-50%, -50%)",
-//             width: "80%",
-//             bgcolor: "background.paper",
-//             borderRadius: 2,
-//             boxShadow: 24,
-//             p: 4,
-//             maxHeight: "80vh",
-//             overflowY: "auto",
-//           }}
-//         >
-//           <IconButton
-//             onClick={() => setModalOpen(false)}
-//             sx={{
-//               position: "absolute",
-//               top: 8,
-//               right: 8,
-//               color: "gray",
-//             }}
-//           >
-//             <CloseIcon />
-//           </IconButton>
-//           <Typography variant="h6" mb={3}>
-//             Wages History for Labour ID:{" "}
-//             {selectedHistory[0]?.LabourID || "N/A"}
-//           </Typography>
-//           {selectedHistory.map((record, index) => (
-//             <Typography key={index} mb={2}>
-//               {new Date(record.CreatedAt).toLocaleString()} - Edited By:{" "}
-//               {record.WagesEditedBy || "N/A"}
-//             </Typography>
-//           ))}
-//         </Box>
-//       </Modal>
-//     </Box>
-//   );
-// };
-
-// export default SiteTransfer;

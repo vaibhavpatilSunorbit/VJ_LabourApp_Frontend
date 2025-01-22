@@ -21,8 +21,10 @@ import AdminApproval from './components/AdminApproval/AdminApproval';
 import AdminAttendanceApproval from './components/AdminApproval/AdminAttedanceApproval';
 import SiteTransfer from './components/SiteTransfer/SiteTransfer';
 import SiteTransferApproval from './components/AdminApproval/SiteTransferApproval/SiteTransferApproval';
-import WagesApproval from './components/AdminApproval/WagesApproval/WagesApproval'
-import VariableInput from './components/VariableInputs/VariableInput'
+import WagesApproval from './components/AdminApproval/WagesApproval/WagesApproval';
+import VariableInput from './components/VariableInputs/VariableInput';
+import VariableInputApproval from './components/AdminApproval/VariableInputApproval/VariableInputApproval';
+import SalaryRegister from './components/AdminSalary/SalaryRegister';
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -107,6 +109,8 @@ function App() {
                     <Route path="/adminApproval/siteTransferApproval" element={<SiteTransferApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/wagesApproval" element={<WagesApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/variableInput" element={<VariableInput departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/adminApproval/variableInputApproval" element={<VariableInputApproval onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/admin/SalaryRejester" element={<SalaryRegister onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }

@@ -296,6 +296,9 @@ const trimUrl = (url) => {
   const baseUrl = "http://localhost:4000/uploads/";
   // const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
   // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
+
+
+
   // return url ? url.replace(baseUrl, '') : '';
   return typeof url === 'string' ? url.replace(baseUrl, '') : '';
 };

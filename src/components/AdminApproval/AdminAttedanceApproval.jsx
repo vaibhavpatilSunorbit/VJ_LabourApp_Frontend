@@ -349,14 +349,18 @@ const approveLabour = async (id) => {
       const response = await axios.get(`${API_BASE_URL}/labours/LabourAttendanceApproval`);
       // console.log('API Response:', response.data);
       setLabours(response.data);
-      const pending = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
-      const approved = response.data.filter((labour) => labour.ApprovalStatus === "Approved").length;
-      const rejected = response.data.filter((labour) => labour.ApprovalStatus === "Rejected").length;
+      const pendingAttendance = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
+      const approvedAttendance = response.data.filter((labour) => labour.ApprovalStatus === "Approved").length;
+      const rejectedAttendance = response.data.filter((labour) => labour.ApprovalStatus === "Rejected").length;
   
       // Update counts
-      setPendingCount(pending);
-      setApprovedCount(approved);
-      setRejectedCount(rejected);
+      setPendingCount(pendingAttendance);
+      setApprovedCount(approvedAttendance);
+      setRejectedCount(rejectedAttendance);
+      console.log('Counts before navigating:', { pendingAttendance, approvedAttendance, rejectedAttendance });
+      localStorage.setItem('pendingAttendance', pendingAttendance);
+      localStorage.setItem('approvedAttendance', approvedAttendance);
+      localStorage.setItem('rejectedAttendance', rejectedAttendance);
       setLoading(false);
     } catch (error) {
       // console.error('Error fetching labours:', error);
@@ -779,27 +783,6 @@ const approveLabour = async (id) => {
                     >
                       {labour.ApprovalStatus}
 
-                      {/* Display the indicator based on conditions */}
-                      {labour.ApprovalStatus === 'Pending' && labour.LabourID && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: '-8px', // Positioning the indicator above and to the right
-                            right: '-8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          {/* Green Dot */}
-                          <CircleIcon
-                            sx={{
-                              color: '#ed4b4b', // Green color
-                              fontSize: '12px', // Smaller size for the dot
-                            }}
-                          />
-                        </Box>
-                      )}
                     </Box>
                   </TableCell>
                   {tabValue === 0 && (
