@@ -291,9 +291,9 @@ const AttendanceReport = () => {
     //     }
     // };
 
-    
+
     // Handle modal edit
-   
+
     const handleSave = async () => {
         try {
             const onboardName = user.name || null;
@@ -312,45 +312,45 @@ const AttendanceReport = () => {
                 totalOvertimeWages,
                 fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages : null,
                 weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff : null,
-                wagesEditedBy: onboardName, 
+                wagesEditedBy: onboardName,
             };
-    
-        const { data: existingWagesResponse } = await axios.get(`${API_BASE_URL}/labours/checkExistingWages`, {
-            params: { labourId: selectedLabour.LabourID },
-        });
 
-        const { exists, approved, data } = existingWagesResponse;
+            const { data: existingWagesResponse } = await axios.get(`${API_BASE_URL}/labours/checkExistingWages`, {
+                params: { labourId: selectedLabour.LabourID },
+            });
 
-        if (!exists) {
-            await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-            toast.success("Wages added successfully.");
-        } else if (exists && !approved) {
-            wageData.wageId = data.WageID; 
-            console.log('wageData.wageId .. ',wageData.wageId)
-            console.log('wageData.wageId .. ',wageData)
-            await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-            toast.info("Wages sent for admin approval.");
-        } else if (exists && approved) {
-            wageData.wageId = data.WageID; 
-            await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-            toast.info("Wages changes sent for admin approval.");
+            const { exists, approved, data } = existingWagesResponse;
+
+            if (!exists) {
+                await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
+                toast.success("Wages added successfully.");
+            } else if (exists && !approved) {
+                wageData.wageId = data.WageID;
+                console.log('wageData.wageId .. ', wageData.wageId)
+                console.log('wageData.wageId .. ', wageData)
+                await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+                toast.info("Wages sent for admin approval.");
+            } else if (exists && approved) {
+                wageData.wageId = data.WageID;
+                await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+                toast.info("Wages changes sent for admin approval.");
+            }
+
+            fetchLabours();
+            setModalOpen(false);
+            setWeeklyOff("");
+            setEffectiveDate("");
+            setFixedMonthlyWages(0);
+            setMonthlyWages(0);
+            setDailyWages(0);
+        } catch (error) {
+            console.error("Error saving wages:", error);
+            toast.error("Failed to save wages.");
         }
+    };
 
-        fetchLabours(); 
-        setModalOpen(false); 
-        setWeeklyOff(""); 
-        setEffectiveDate("");
-        setFixedMonthlyWages(0);
-        setMonthlyWages(0);
-        setDailyWages(0);
-    } catch (error) {
-        console.error("Error saving wages:", error);
-        toast.error("Failed to save wages.");
-    }
-};
-   
-   
-   
+
+
     const handleEdit = (labour) => {
         setSelectedLabour(labour);
         setPayStructure('');
@@ -544,7 +544,6 @@ const AttendanceReport = () => {
             <TableContainer component={Paper} sx={{
                 mb: isMobile ? 6 : 0,
                 overflowX: 'auto',
-                overflowY: 'auto',
                 borderRadius: 2,
                 boxShadow: 3,
                 maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -559,68 +558,87 @@ const AttendanceReport = () => {
                     borderRadius: '4px',
                 },
             }}>
-                <Box sx={{ width: '100%', overflowX: 'auto' }}>
-                <Table stickyHeader sx={{ minWidth: 800 }}>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Sr No</TableCell>
-                            <TableCell>Labour ID</TableCell>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Business Unit</TableCell>
-                            <TableCell>Department</TableCell>
-                            <TableCell>From Date</TableCell>
-                            <TableCell>Pay Structure</TableCell>
-                            <TableCell>Daily Wages</TableCell>
-                            <TableCell>Fixed Monthly Wages</TableCell>
-                            <TableCell>Weekly Off</TableCell>
-                            <TableCell>Wages Edited By</TableCell>
-                            <TableCell>Created At</TableCell>
-                            <TableCell>Wages History</TableCell>
-                            <TableCell>Action</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {paginatedLabours.map((labour, index) => (
-                            <TableRow key={labour.LabourID}>
-                                <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                <TableCell>{labour.LabourID}</TableCell>
-                                <TableCell>{labour.name || '-'}</TableCell>
-                                <TableCell>{labour.businessUnit || '-'}</TableCell>
-                                <TableCell>{labour.departmentName || '-'}</TableCell>
-                                <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell>
-                                <TableCell>{labour.PayStructure || '-'}</TableCell>
-                                <TableCell>{labour.DailyWages || '-'}</TableCell>
-                                <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
-                                <TableCell>{labour.WeeklyOff || '-'}</TableCell>
-                                <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
-                                <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
-                                <TableCell>
-                                    <IconButton
-                                        color='rgb(239,230,247)'
-                                        onClick={() => handleViewHistory(labour.LabourID)}
-                                    >
-                                        <VisibilityIcon />
-                                    </IconButton>
-                                </TableCell>
-                                <TableCell>
-                                    <Button
-                                        variant="contained"
-                                        sx={{
-                                            backgroundColor: 'rgb(239,230,247)',
-                                            color: 'rgb(130,54,188)',
-                                            '&:hover': {
-                                                backgroundColor: 'rgb(239,230,247)',
-                                            },
-                                        }}
-                                        onClick={() => handleEdit(labour)}
-                                    >
-                                        Edit
-                                    </Button>
-                                </TableCell>
+                <Box sx={{ width: '100%' }}>
+                    <Table stickyHeader sx={{ minWidth: 800 }}>
+                        <TableHead>
+                            <TableRow
+                                sx={{
+                                    '& th': {
+                                        padding: '12px',
+                                        '@media (max-width: 600px)': {
+                                            padding: '10px',
+                                        },
+                                        backgroundColor: 'white', // Ensure the background color is set
+                                        position: 'sticky',
+                                        top: 0,
+                                        zIndex: 1,
+                                    },
+                                    '& td': {
+                                        padding: '16px 9px', // Applying padding to all td elements
+                                        '@media (max-width: 600px)': {
+                                            padding: '14px 8px', // Adjust padding for smaller screens if needed
+                                        },
+                                    },
+                                }}
+                            >
+                                <TableCell>Sr No</TableCell>
+                                <TableCell>Labour ID</TableCell>
+                                <TableCell>Name</TableCell>
+                                <TableCell>Business Unit</TableCell>
+                                <TableCell>Department</TableCell>
+                                <TableCell>From Date</TableCell>
+                                <TableCell>Pay Structure</TableCell>
+                                <TableCell>Daily Wages</TableCell>
+                                <TableCell>Fixed Monthly Wages</TableCell>
+                                <TableCell>Weekly Off</TableCell>
+                                <TableCell>Wages Edited By</TableCell>
+                                <TableCell>Created At</TableCell>
+                                <TableCell>Wages History</TableCell>
+                                <TableCell>Action</TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHead>
+                        <TableBody>
+                            {paginatedLabours.map((labour, index) => (
+                                <TableRow key={labour.LabourID}>
+                                    <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                    <TableCell>{labour.LabourID}</TableCell>
+                                    <TableCell>{labour.name || '-'}</TableCell>
+                                    <TableCell>{labour.businessUnit || '-'}</TableCell>
+                                    <TableCell>{labour.departmentName || '-'}</TableCell>
+                                    <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell>
+                                    <TableCell>{labour.PayStructure || '-'}</TableCell>
+                                    <TableCell>{labour.DailyWages || '-'}</TableCell>
+                                    <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
+                                    <TableCell>{labour.WeeklyOff || '-'}</TableCell>
+                                    <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
+                                    <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
+                                    <TableCell>
+                                        <IconButton
+                                            color='rgb(239,230,247)'
+                                            onClick={() => handleViewHistory(labour.LabourID)}
+                                        >
+                                            <VisibilityIcon />
+                                        </IconButton>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button
+                                            variant="contained"
+                                            sx={{
+                                                backgroundColor: 'rgb(239,230,247)',
+                                                color: 'rgb(130,54,188)',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgb(239,230,247)',
+                                                },
+                                            }}
+                                            onClick={() => handleEdit(labour)}
+                                        >
+                                            Edit
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </Box>
             </TableContainer>
 
@@ -837,174 +855,174 @@ const AttendanceReport = () => {
 
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: {
-            xs: "90%", // Mobile screens
-            sm: "80%", // Tablet screens
-            md: "70%", // Laptop screens
-            lg: "60%", // Large screens
-          },
-          bgcolor: "background.paper",
-          borderRadius: 2,
-          boxShadow: 24,
-          p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
-          maxHeight: "85vh",
-          overflowY: "auto",
-          "&::-webkit-scrollbar": {
-            width: "8px",
-          },
-          "&::-webkit-scrollbar-track": {
-            backgroundColor: "#f1f1f1",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "#888",
-            borderRadius: "4px",
-          },
-        }}
-      >
-        {/* Close Icon */}
-        <IconButton
-          onClick={() => setOpenModal(false)}
-          sx={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            color: "gray",
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: {
+                            xs: "90%", // Mobile screens
+                            sm: "80%", // Tablet screens
+                            md: "70%", // Laptop screens
+                            lg: "60%", // Large screens
+                        },
+                        bgcolor: "background.paper",
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
+                        maxHeight: "85vh",
+                        overflowY: "auto",
+                        "&::-webkit-scrollbar": {
+                            width: "8px",
+                        },
+                        "&::-webkit-scrollbar-track": {
+                            backgroundColor: "#f1f1f1",
+                        },
+                        "&::-webkit-scrollbar-thumb": {
+                            backgroundColor: "#888",
+                            borderRadius: "4px",
+                        },
+                    }}
+                >
+                    {/* Close Icon */}
+                    <IconButton
+                        onClick={() => setOpenModal(false)}
+                        sx={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            color: "gray",
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
 
-        {/* Modal Header */}
-        <Typography
-          variant="h6"
-          sx={{
-            mb: 4,
-            textAlign: "center",
-            fontSize: { xs: "1rem", sm: "1.25rem" },
-          }}
-        >
-          Wages History Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
-        </Typography>
+                    {/* Modal Header */}
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            mb: 4,
+                            textAlign: "center",
+                            fontSize: { xs: "1rem", sm: "1.25rem" },
+                        }}
+                    >
+                        Wages History Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
+                    </Typography>
 
-        {/* Modal Content */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
-            position: "relative",
-            alignItems: "center",
-          }}
-        >
-          {selectedHistory.map((record, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 4,
-                position: "relative",
-                width: { xs: "100%", md: "70%" }, // Adjust width for responsiveness
-              }}
-            >
-              {/* Vertical Line */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  left: { xs: "27%", md: "27.5%" }, // Adjust line position
-                  top: 0,
-                  bottom: index !== selectedHistory.length - 0 ? 0 : "auto",
-                  width: 4,
-                  bgcolor: "green",
-                  zIndex: -1,
-                }}
-              />
+                    {/* Modal Content */}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 4,
+                            position: "relative",
+                            alignItems: "center",
+                        }}
+                    >
+                        {selectedHistory.map((record, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    gap: 4,
+                                    position: "relative",
+                                    width: { xs: "100%", md: "70%" }, // Adjust width for responsiveness
+                                }}
+                            >
+                                {/* Vertical Line */}
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        left: { xs: "27%", md: "27.5%" }, // Adjust line position
+                                        top: 0,
+                                        bottom: index !== selectedHistory.length - 0 ? 0 : "auto",
+                                        width: 4,
+                                        bgcolor: "green",
+                                        zIndex: -1,
+                                    }}
+                                />
 
-              {/* Dot for Edited On */}
-              <Box
-                sx={{
-                  width: 16,
-                  height: 16,
-                  bgcolor: "darkgreen",
-                  borderRadius: "50%",
-                  position: "absolute",
-                  left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, // Adjust dot position
-                }}
-              ></Box>
+                                {/* Dot for Edited On */}
+                                <Box
+                                    sx={{
+                                        width: 16,
+                                        height: 16,
+                                        bgcolor: "darkgreen",
+                                        borderRadius: "50%",
+                                        position: "absolute",
+                                        left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, // Adjust dot position
+                                    }}
+                                ></Box>
 
-              {/* Left Side - Edited On */}
-              <Box
-                sx={{
-                  flex: 1,
-                  textAlign: "right",
-                  pr: 2,
-                  fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
-                }}
-              >
-                <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                  Edited On:
-                </Typography>
-                <Typography variant="body2">
-                  {new Date(record.CreatedAt).toLocaleDateString()}
-                </Typography>
-                <Typography variant="body2">
-                  {new Date(record.CreatedAt).toLocaleTimeString()}
-                </Typography>
-              </Box>
+                                {/* Left Side - Edited On */}
+                                <Box
+                                    sx={{
+                                        flex: 1,
+                                        textAlign: "right",
+                                        pr: 2,
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
+                                    }}
+                                >
+                                    <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                                        Edited On:
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        {new Date(record.CreatedAt).toLocaleDateString()}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        {new Date(record.CreatedAt).toLocaleTimeString()}
+                                    </Typography>
+                                </Box>
 
-              {/* Right Side - Details */}
-              <Box
-                sx={{
-                  flex: 3,
-                  fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
-                }}
-              >
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  <strong>Name:</strong> {record.name || "N/A"}
-                </Typography>
-                <Typography variant="body2" >
-                  <strong>Edited By:</strong> {record.WagesEditedBy || "N/A"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>From Date:</strong>{" "}
-                  {record.From_Date
-                    ? new Date(record.From_Date).toLocaleDateString()
-                    : "N/A"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Pay Structure:</strong> {record.PayStructure || "N/A"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Daily Wages:</strong> ₹{record.DailyWages || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Per Hour Wages:</strong> ₹{record.PerHourWages || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Monthly Wages:</strong> ₹{record.MonthlyWages || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Yearly Wages:</strong> ₹{record.YearlyWages || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Weekly Off:</strong> {record.WeeklyOff || "0"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Fixed Monthly Wages:</strong> ₹
-                  {record.FixedMonthlyWages || "0"}
-                </Typography>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-      </Box>
-    </Modal>
+                                {/* Right Side - Details */}
+                                <Box
+                                    sx={{
+                                        flex: 3,
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
+                                    }}
+                                >
+                                    <Typography variant="body2" sx={{ mb: 1 }}>
+                                        <strong>Name:</strong> {record.name || "N/A"}
+                                    </Typography>
+                                    <Typography variant="body2" >
+                                        <strong>Edited By:</strong> {record.WagesEditedBy || "N/A"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>From Date:</strong>{" "}
+                                        {record.From_Date
+                                            ? new Date(record.From_Date).toLocaleDateString()
+                                            : "N/A"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Pay Structure:</strong> {record.PayStructure || "N/A"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Daily Wages:</strong> ₹{record.DailyWages || "0"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Per Hour Wages:</strong> ₹{record.PerHourWages || "0"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Monthly Wages:</strong> ₹{record.MonthlyWages || "0"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Yearly Wages:</strong> ₹{record.YearlyWages || "0"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Weekly Off:</strong> {record.WeeklyOff || "0"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Fixed Monthly Wages:</strong> ₹
+                                        {record.FixedMonthlyWages || "0"}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
+            </Modal>
 
         </Box>
     );

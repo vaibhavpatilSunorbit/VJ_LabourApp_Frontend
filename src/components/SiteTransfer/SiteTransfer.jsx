@@ -14,7 +14,7 @@ import {
     TextField,
     TablePagination,
     Select,
-    MenuItem, Modal, Typography, IconButton,Dialog,
+    MenuItem, Modal, Typography, IconButton, Dialog,
     DialogTitle,
     DialogContent,
     DialogContentText,
@@ -263,115 +263,115 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
         setOpenDialogSite(true); // Open the confirmation dialog
     };
 
-    
+
     const openTransferModal = (labour) => {
         setSelectedLabour(labour);
         setModalOpen(true);
-      };
-    
-      // Handle transfer within the modal
-      const handleModalTransfer = () => {
+    };
+
+    // Handle transfer within the modal
+    const handleModalTransfer = () => {
         if (!newSite) {
-          toast.error("Please select a new transfer site.");
-          return;
+            toast.error("Please select a new transfer site.");
+            return;
         }
         setModalOpen(false); // Close the modal
         setOpenDialogSite(true); // Open the confirmation dialog
-      };
+    };
 
 
     const confirmTransfer = async () => {
         setOpenDialogSite(false); // Close the dialog
-      
+
         try {
-          console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
-      
-          // Fetch current and new site names for transfer
-          const currentSiteName = projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit || "Unknown";
-          const transferSiteName = projectNames.find((p) => p.id === newSite)?.Business_Unit || "Unknown";
-      
-          console.log(`Current Site Name: ${currentSiteName}, Transfer Site Name: ${transferSiteName}`);
-          const onboardName = user.name || null;
-          // Send data to the backend to handle DeleteUser, AddEmployee, and save transfer data
-          const transferDataPayload = {
-            userId: selectedLabour.id,
-            LabourID: selectedLabour.LabourID,
-            name: selectedLabour.name,
-            currentSite: selectedLabour.projectName,
-            transferSite: newSite,
-            currentSiteName,
-            transferSiteName,
-            transferDate: transferDate,
-            siteTransferBy : onboardName,
-          };
-      
-          const response = await axios.post(`${API_BASE_URL}/api/admin/sitetransfertoadmin`, transferDataPayload);
-      
-          if (response.status === 200) {
-            // Update UI
-            setLabours((prevLabours) =>
-              prevLabours.map((labour) =>
-                labour.LabourID === selectedLabour.LabourID
-                  ? { ...labour, projectName: newSite, Business_Unit: transferSiteName }
-                  : labour
-              )
-            );
-      
-            toast.success(`Labour ${selectedLabour.name} Site Transfer Send Admin Approval successfully!`);
-          } else {
-            toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
-          }
+            console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
+
+            // Fetch current and new site names for transfer
+            const currentSiteName = projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit || "Unknown";
+            const transferSiteName = projectNames.find((p) => p.id === newSite)?.Business_Unit || "Unknown";
+
+            console.log(`Current Site Name: ${currentSiteName}, Transfer Site Name: ${transferSiteName}`);
+            const onboardName = user.name || null;
+            // Send data to the backend to handle DeleteUser, AddEmployee, and save transfer data
+            const transferDataPayload = {
+                userId: selectedLabour.id,
+                LabourID: selectedLabour.LabourID,
+                name: selectedLabour.name,
+                currentSite: selectedLabour.projectName,
+                transferSite: newSite,
+                currentSiteName,
+                transferSiteName,
+                transferDate: transferDate,
+                siteTransferBy: onboardName,
+            };
+
+            const response = await axios.post(`${API_BASE_URL}/api/admin/sitetransfertoadmin`, transferDataPayload);
+
+            if (response.status === 200) {
+                // Update UI
+                setLabours((prevLabours) =>
+                    prevLabours.map((labour) =>
+                        labour.LabourID === selectedLabour.LabourID
+                            ? { ...labour, projectName: newSite, Business_Unit: transferSiteName }
+                            : labour
+                    )
+                );
+
+                toast.success(`Labour ${selectedLabour.name} Site Transfer Send Admin Approval successfully!`);
+            } else {
+                toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
+            }
         } catch (error) {
-          console.error("Error during site transfer:", error);
-          toast.error("Failed to transfer labour.");
+            console.error("Error during site transfer:", error);
+            toast.error("Failed to transfer labour.");
         }
-      };
+    };
 
 
     const fetchTransferSiteNames = async (labourIds) => {
         try {
-          const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
-          console.log('API Response:', response.data); // Debug response
-          return response.data.map((item) => ({
-            LabourID: item.LabourID,
-            transferSiteName: item.transferSiteName,
-            currentSiteName: item.currentSiteName,
-            createdAt: item.createdAt,
-          }));
+            const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
+            console.log('API Response:', response.data); // Debug response
+            return response.data.map((item) => ({
+                LabourID: item.LabourID,
+                transferSiteName: item.transferSiteName,
+                currentSiteName: item.currentSiteName,
+                createdAt: item.createdAt,
+            }));
         } catch (error) {
-          console.error('Error fetching transfer site names:', error);
-          return [];
+            console.error('Error fetching transfer site names:', error);
+            return [];
         }
-      };
-      
+    };
+
 
     // Fetch and map transfer site names
     useEffect(() => {
         const fetchStatuses = async () => {
-          setLoading(true);
-      
-          const labourIds = labours.map((labour) => labour.LabourID);
-          if (labourIds.length > 0) {
-            const statusesData = await fetchTransferSiteNames(labourIds);
-            const mappedStatuses = statusesData.reduce((acc, status) => {
-              acc[status.LabourID] = {
-                transferSiteName: status.transferSiteName || '-',
-                currentSiteName: status.currentSiteName || '-',
-                createdAt: status.createdAt || '-',
-              };
-              return acc;
-            }, {});
-            setStatusesSite(mappedStatuses);
-            console.log('Mapped Statuses with Dates:', mappedStatuses); // Debug statuses
-          }
-      
-          setLoading(false);
-        };
-      
-        if (labours.length > 0) fetchStatuses();
-      }, [labours]);      
+            setLoading(true);
 
-      const today = new Date().toISOString().split('T')[0];
+            const labourIds = labours.map((labour) => labour.LabourID);
+            if (labourIds.length > 0) {
+                const statusesData = await fetchTransferSiteNames(labourIds);
+                const mappedStatuses = statusesData.reduce((acc, status) => {
+                    acc[status.LabourID] = {
+                        transferSiteName: status.transferSiteName || '-',
+                        currentSiteName: status.currentSiteName || '-',
+                        createdAt: status.createdAt || '-',
+                    };
+                    return acc;
+                }, {});
+                setStatusesSite(mappedStatuses);
+                console.log('Mapped Statuses with Dates:', mappedStatuses); // Debug statuses
+            }
+
+            setLoading(false);
+        };
+
+        if (labours.length > 0) fetchStatuses();
+    }, [labours]);
+
+    const today = new Date().toISOString().split('T')[0];
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
@@ -426,7 +426,6 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
             <TableContainer component={Paper} sx={{
                 mb: isMobile ? 6 : 0,
                 overflowX: 'auto',
-                overflowY: 'auto',
                 borderRadius: 2,
                 boxShadow: 3,
                 maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -441,10 +440,29 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
                     borderRadius: '4px',
                 },
             }}>
-                <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                <Box sx={{ width: '100%' }}>
                     <Table stickyHeader sx={{ minWidth: 800 }}>
                         <TableHead>
-                            <TableRow>
+                            <TableRow
+                                sx={{
+                                    '& th': {
+                                        padding: '12px',
+                                        '@media (max-width: 600px)': {
+                                            padding: '10px',
+                                        },
+                                        backgroundColor: 'white', // Ensure the background color is set
+                                        position: 'sticky',
+                                        top: 0,
+                                        zIndex: 1,
+                                    },
+                                    '& td': {
+                                        padding: '16px 9px', // Applying padding to all td elements
+                                        '@media (max-width: 600px)': {
+                                            padding: '14px 8px', // Adjust padding for smaller screens if needed
+                                        },
+                                    },
+                                }}
+                            >
                                 <TableCell>Sr No</TableCell>
                                 <TableCell>Labour ID</TableCell>
                                 <TableCell>Name</TableCell>
@@ -492,7 +510,7 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
                                             : '-'}
                                     </TableCell>
                                     <TableCell>
-                                    {statusesSite[labour.LabourID]?.createdAt
+                                        {statusesSite[labour.LabourID]?.createdAt
                                             ? new Date(statusesSite[labour.LabourID].createdAt).toLocaleDateString('en-GB')
                                             : '-'}
                                     </TableCell>
@@ -527,128 +545,128 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
                 </Box>
             </TableContainer>
 
-           {/* Modal for Site Transfer */}
-      <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-      >
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 400,
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-            borderRadius: 2,
-          }}
-        >
-          <Typography id="modal-title" variant="h6" gutterBottom>
-            Transfer Labour
-          </Typography>
-          <Typography id="modal-description" gutterBottom>
-            Selected Labour: {selectedLabour?.name}
-          </Typography>
-          <FormControl fullWidth variant="standard" sx={{ mb: 2 }}>
-            <InputLabel id="new-site-select-label">Select New Site</InputLabel>
-            <Select
-                labelId="new-site-select-label"
-                value={newSite}
-                onChange={(e) => setNewSite(e.target.value)}
-                displayEmpty
+            {/* Modal for Site Transfer */}
+            <Modal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                aria-labelledby="modal-title"
+                aria-describedby="modal-description"
             >
-                <MenuItem value="" disabled>
-                    Select New Site
-                </MenuItem>
-                {Array.isArray(projectNames) && projectNames.length > 0 ? (
-                    projectNames.map((project) => (
-                        <MenuItem key={project.id} value={project.id}>
-                            {project.Business_Unit}
-                        </MenuItem>
-                    ))
-                ) : (
-                    <MenuItem value="Unknown" disabled>
-                        No Projects Available
-                    </MenuItem>
-                )}
-            </Select>
-        </FormControl>
-        <TextField
-            fullWidth
-            type="date"
-            value={transferDate}
-            onChange={(e) => setTransferDate(e.target.value)}
-            label="Transfer Date"
-            InputLabelProps={{ shrink: true }}
-            // variant="standard"  
-            inputProps={{
-                min: today  
-            }}
-            sx={{ mb: 2 }}
-        />
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: 400,
+                        bgcolor: "background.paper",
+                        boxShadow: 24,
+                        p: 4,
+                        borderRadius: 2,
+                    }}
+                >
+                    <Typography id="modal-title" variant="h6" gutterBottom>
+                        Transfer Labour
+                    </Typography>
+                    <Typography id="modal-description" gutterBottom>
+                        Selected Labour: {selectedLabour?.name}
+                    </Typography>
+                    <FormControl fullWidth variant="standard" sx={{ mb: 2 }}>
+                        <InputLabel id="new-site-select-label">Select New Site</InputLabel>
+                        <Select
+                            labelId="new-site-select-label"
+                            value={newSite}
+                            onChange={(e) => setNewSite(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled>
+                                Select New Site
+                            </MenuItem>
+                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                projectNames.map((project) => (
+                                    <MenuItem key={project.id} value={project.id}>
+                                        {project.Business_Unit}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Projects Available
+                                </MenuItem>
+                            )}
+                        </Select>
+                    </FormControl>
+                    <TextField
+                        fullWidth
+                        type="date"
+                        value={transferDate}
+                        onChange={(e) => setTransferDate(e.target.value)}
+                        label="Transfer Date"
+                        InputLabelProps={{ shrink: true }}
+                        // variant="standard"  
+                        inputProps={{
+                            min: today
+                        }}
+                        sx={{ mb: 2 }}
+                    />
 
-          <Box display="flex" justifyContent="space-between">
-            <Button
-              variant="outlined"
-              onClick={() => setModalOpen(false)}
-              sx={{ width: "45%" }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleModalTransfer}
-              sx={{ width: "45%" }}
-            >
-              Transfer
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
+                    <Box display="flex" justifyContent="space-between">
+                        <Button
+                            variant="outlined"
+                            onClick={() => setModalOpen(false)}
+                            sx={{ width: "45%" }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleModalTransfer}
+                            sx={{ width: "45%" }}
+                        >
+                            Transfer
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
 
-      {/* Dialog for Confirmation */}
-      <Dialog open={openDialogSite} onClose={() => setOpenDialogSite(false)}>
-        <DialogTitle>Confirm Transfer</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="EditLabour-dialog-description">
-            Are you sure you want to transfer Labour{" "}
-            <span style={{ fontWeight: "bold" }}>{selectedLabour?.name} </span>
-            with JCcode{" "}
-            <span style={{ fontWeight: "bold" }}>{selectedLabour?.LabourID} </span>
-            to the new site?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setOpenDialogSite(false)}
-            variant="outlined"
-            color="secondary"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmTransfer}
-            sx={{
-              backgroundColor: "rgb(229, 255, 225)",
-              color: "rgb(43, 217, 144)",
-              width: "100px",
-              marginRight: "10px",
-              marginBottom: "3px",
-              "&:hover": {
-                backgroundColor: "rgb(229, 255, 225)",
-              },
-            }}
-            autoFocus
-          >
-            Confirm Transfer
-          </Button>
-        </DialogActions>
-      </Dialog>
+            {/* Dialog for Confirmation */}
+            <Dialog open={openDialogSite} onClose={() => setOpenDialogSite(false)}>
+                <DialogTitle>Confirm Transfer</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="EditLabour-dialog-description">
+                        Are you sure you want to transfer Labour{" "}
+                        <span style={{ fontWeight: "bold" }}>{selectedLabour?.name} </span>
+                        with JCcode{" "}
+                        <span style={{ fontWeight: "bold" }}>{selectedLabour?.LabourID} </span>
+                        to the new site?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => setOpenDialogSite(false)}
+                        variant="outlined"
+                        color="secondary"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmTransfer}
+                        sx={{
+                            backgroundColor: "rgb(229, 255, 225)",
+                            color: "rgb(43, 217, 144)",
+                            width: "100px",
+                            marginRight: "10px",
+                            marginBottom: "3px",
+                            "&:hover": {
+                                backgroundColor: "rgb(229, 255, 225)",
+                            },
+                        }}
+                        autoFocus
+                    >
+                        Confirm Transfer
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>

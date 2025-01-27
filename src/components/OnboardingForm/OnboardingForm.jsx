@@ -227,7 +227,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const uploadAadhaarImageToSurepass = async (file, formStatus, isApproved) => {
     const formData = new FormData();
     formData.append('file', file);
-  
+
     try {
       // Step 1: OCR API to extract Aadhaar number
       const ocrResponse = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
@@ -236,22 +236,22 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
           'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A',
         },
       });
-  
+
       const { data: ocrData } = ocrResponse;
       if (!ocrData.success || !ocrData.data.ocr_fields || ocrData.data.ocr_fields.length === 0) {
         toast.error('Failed to extract Aadhaar details from the uploaded image. Please try again.');
         return;
       }
-  
+
       const ocrFields = ocrData.data.ocr_fields[0];
       const aadhaarNumber = ocrFields.aadhaar_number.value;
-  
+
       if (!aadhaarNumber) {
         toast.error('Aadhaar number not found in the uploaded image. Please upload a valid Aadhaar card image.');
         return;
       }
       // toast.success('Aadhaar details extracted successfully. Validating Aadhaar number...');
-  
+
       // Step 2: Aadhaar Validation API
       const validationResponse = await axios.post(
         'https://kyc-api.aadhaarkyc.io/api/v1/aadhaar-validation/aadhaar-validation',
@@ -263,31 +263,31 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
           },
         }
       );
-  
+
       if (!validationResponse.data.success) {
         toast.error('Aadhaar number not valide. Please check the Aadhaar number and try again.');
         return;
       }
-  
+
       toast.success('Aadhaar number validated successfully. Proceeding to backend checks...');
-  
+
       // Step 3: Backend Aadhaar Check
       const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber });
-  
+
       // Skip Aadhaar check if LabourID is present
       if (checkAadhaarResponse.data.LabourID) {
         toast.success('Labour ID found. Proceeding without duplicate checks.');
         processAadhaarData(ocrFields);
         return; // Exit the function to avoid further checks
       }
-  
+
       // Skip Aadhaar check if formStatus is 'Resubmitted' and isApproved === 3
       if (formStatus === 'Resubmitted' && isApproved === 3) {
         toast.success('Resubmitted form detected. Processing Aadhaar details...');
         processAadhaarData(ocrFields);
         return; // Exit the function to avoid further checks
       }
-  
+
       // Proceed with Aadhaar check if the above conditions are not met
       if (checkAadhaarResponse.data.exists) {
         toast.error('This Aadhaar number is already in use. User has already filled the form.');
@@ -303,8 +303,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       toast.error('Aadhaar Number Verification Failed. Aadhaar upload Not successfully.');
     }
   };
-  
-  
+
+
 
   // const uploadAadhaarImageToSurepass = async (file, formStatus, isApproved) => {
   //   const formData = new FormData();
@@ -488,7 +488,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
   const handleAadhaarNumberChange = async (e) => {
     const { value } = e.target;
-  
+
     // Update form data with the Aadhaar number
     setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value }));
     setNewError('');
@@ -497,65 +497,65 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       // Validate Aadhaar number format
       if (/^\d{12}$/.test(value)) {
         try {
-        // Step 1: Aadhaar Validation API
-        const validationResponse = await axios.post(
-          'https://kyc-api.aadhaarkyc.io/api/v1/aadhaar-validation/aadhaar-validation',
-          { id_number: value },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A',
-            },
+          // Step 1: Aadhaar Validation API
+          const validationResponse = await axios.post(
+            'https://kyc-api.aadhaarkyc.io/api/v1/aadhaar-validation/aadhaar-validation',
+            { id_number: value },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A',
+              },
+            }
+          );
+
+          // If Aadhaar Validation API fails
+          if (!validationResponse.data.success) {
+            toast.error('Aadhaar validation failed. Please check the Aadhaar number and try again.');
+            setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));// Clear invalid Aadhaar number
+            return;
           }
-        );
-  
-         // If Aadhaar Validation API fails
-         if (!validationResponse.data.success) {
-          toast.error('Aadhaar validation failed. Please check the Aadhaar number and try again.');
-          setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));// Clear invalid Aadhaar number
-          return;
-        }
 
-        // Step 2: Backend Check API
-        const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: value });
-        const { exists, skipCheck } = response.data;
+          // Step 2: Backend Check API
+          const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: value });
+          const { exists, skipCheck } = response.data;
 
-        if (skipCheck) {
-          // If Aadhaar resubmission is detected
-          setMessageType('success');
-          setMessage('Congratulations! Aadhaar resubmission detected, proceeding with the form.');
-          toast.success('Aadhaar resubmission detected, proceeding with the form.');
-        } else {
-          if (exists) {
-            // If Aadhaar already exists in the backend
-            setMessageType('error');
-            toast.error('User has already filled the form with this Aadhaar number.');
-            setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear the field
-          } else {
-            // If Aadhaar is unique
+          if (skipCheck) {
+            // If Aadhaar resubmission is detected
             setMessageType('success');
-            setMessage('Congratulations! New Aadhaar number registered.');
-            toast.success('New Aadhaar number registered successfully!');
+            setMessage('Congratulations! Aadhaar resubmission detected, proceeding with the form.');
+            toast.success('Aadhaar resubmission detected, proceeding with the form.');
+          } else {
+            if (exists) {
+              // If Aadhaar already exists in the backend
+              setMessageType('error');
+              toast.error('User has already filled the form with this Aadhaar number.');
+              setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear the field
+            } else {
+              // If Aadhaar is unique
+              setMessageType('success');
+              setMessage('Congratulations! New Aadhaar number registered.');
+              toast.success('New Aadhaar number registered successfully!');
+            }
           }
+        } catch (error) {
+          console.error('Error checking Aadhaar number:', error);
+          setMessageType('error');
+          toast.error('Error checking Aadhaar number. Please try again.');
         }
-      } catch (error) {
-        console.error('Error checking Aadhaar number:', error);
-        setMessageType('error');
-        toast.error('Error checking Aadhaar number. Please try again.');
+      } else {
+        // Invalid Aadhaar format
+        toast.error('Invalid Aadhaar number. It must be a 12-digit numeric value.');
+        setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear invalid Aadhaar number
       }
-    } else {
-      // Invalid Aadhaar format
-      toast.error('Invalid Aadhaar number. It must be a 12-digit numeric value.');
-      setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear invalid Aadhaar number
     }
-  }
-  // Optionally, you can handle cases where the input exceeds 12 digits
-  else if (value.length > 12) {
-    toast.error('Aadhaar number cannot exceed 12 digits.');
-    setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value.slice(0, 12) }));
-  }
-};
-  
+    // Optionally, you can handle cases where the input exceeds 12 digits
+    else if (value.length > 12) {
+      toast.error('Aadhaar number cannot exceed 12 digits.');
+      setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value.slice(0, 12) }));
+    }
+  };
+
 
   // const handleAadhaarNumberChange = async (e) => {
   //   const { value } = e.target;

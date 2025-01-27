@@ -108,8 +108,8 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
   const [previousTabValue, setPreviousTabValue] = useState(tabValue);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
-const [approvedCount, setApprovedCount] = useState(0);
-const [rejectedCount, setRejectedCount] = useState(0);
+  const [approvedCount, setApprovedCount] = useState(0);
+  const [rejectedCount, setRejectedCount] = useState(0);
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -130,12 +130,12 @@ const [rejectedCount, setRejectedCount] = useState(0);
   const handleApproveConfirmOpen = (labour) => {
     setLabourToApprove(labour); // Set selected labour
     setIsApproveConfirmOpen(true);
-};
+  };
 
-const handleApproveConfirmClose = () => {
+  const handleApproveConfirmClose = () => {
     setLabourToApprove(null); // Clear selected labour
     setIsApproveConfirmOpen(false);
-};
+  };
 
 
 
@@ -143,28 +143,28 @@ const handleApproveConfirmClose = () => {
 
 
 
-//   useEffect(() => {
-//     fetchAttendanceLabours(); // Start fetching cached labours
-//   }, []);
+  //   useEffect(() => {
+  //     fetchAttendanceLabours(); // Start fetching cached labours
+  //   }, []);
 
-//   const fetchAttendanceLabours = async () => {
-//     try {
-//       setLoading(true);
-//       const response = await axios.get(`${API_BASE_URL}/labours`);
+  //   const fetchAttendanceLabours = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const response = await axios.get(`${API_BASE_URL}/labours`);
 
-//       if (response.data.labours.length > 0) {
-//         setLabours(response.data.labours);  // Set labours directly from the cached result
-//         console.log('response.data.labours Attendance admin Approval........///......[[[[[', response.data.labours)
-//       } else {
-//         console.log('Fetch labour Attendance Approval.');
-//         setHasMore(false);
-//       }
-//       setLoading(false);
-//     } catch (error) {
-//       console.error("Error fetching labours:", error);
-//       setLoading(false);
-//     }
-//   };
+  //       if (response.data.labours.length > 0) {
+  //         setLabours(response.data.labours);  // Set labours directly from the cached result
+  //         console.log('response.data.labours Attendance admin Approval........///......[[[[[', response.data.labours)
+  //       } else {
+  //         console.log('Fetch labour Attendance Approval.');
+  //         setHasMore(false);
+  //       }
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Error fetching labours:", error);
+  //       setLoading(false);
+  //     }
+  //   };
 
 
 
@@ -174,100 +174,100 @@ const handleApproveConfirmClose = () => {
     }
   }, [hideResubmit, labourId]);
 
-//   const handleReject = async (id, rejectReason) => {
-//     if (!id || !rejectReason) {
-//         toast.error('Labour ID and rejection reason are required.');
-//         return;
-//     }
+  //   const handleReject = async (id, rejectReason) => {
+  //     if (!id || !rejectReason) {
+  //         toast.error('Labour ID and rejection reason are required.');
+  //         return;
+  //     }
 
-//     try {
-//         const response = await axios.put(
-//             `${API_BASE_URL}/labours/attendance/reject/${id}`,
-//             { rejectReason }, // Include rejectReason in the request body
-//             {
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                 },
-//             }
-//         );
+  //     try {
+  //         const response = await axios.put(
+  //             `${API_BASE_URL}/labours/attendance/reject/${id}`,
+  //             { rejectReason }, // Include rejectReason in the request body
+  //             {
+  //                 headers: {
+  //                     'Content-Type': 'application/json',
+  //                 },
+  //             }
+  //         );
 
-//         if (response.data.success) {
-//             setLabours(prevLabours =>
-//                 prevLabours.map(labour =>
-//                     labour.id === id
-//                         ? { ...labour, ApprovalStatus: 'Rejected', rejectReason }
-//                         : labour
-//                 )
-//             );
-//             toast.success('Attendance rejected successfully.');
-//             setIsRejectPopupOpen(false); // Close modal
-//         } else {
-//             toast.error('Failed to reject attendance. Please try again.');
-//         }
-//     } catch (error) {
-//         console.error('Error rejecting attendance:', error);
-//         toast.error('Error rejecting attendance. Please try again.');
-//     }
-// };
+  //         if (response.data.success) {
+  //             setLabours(prevLabours =>
+  //                 prevLabours.map(labour =>
+  //                     labour.id === id
+  //                         ? { ...labour, ApprovalStatus: 'Rejected', rejectReason }
+  //                         : labour
+  //                 )
+  //             );
+  //             toast.success('Attendance rejected successfully.');
+  //             setIsRejectPopupOpen(false); // Close modal
+  //         } else {
+  //             toast.error('Failed to reject attendance. Please try again.');
+  //         }
+  //     } catch (error) {
+  //         console.error('Error rejecting attendance:', error);
+  //         toast.error('Error rejecting attendance. Please try again.');
+  //     }
+  // };
 
   const handleReject = async (ApprovalID) => {
     if (!ApprovalID) {
-        toast.error('Attendance ID is missing.');
-        return;
+      toast.error('Attendance ID is missing.');
+      return;
     }
 
     try {
-        const response = await axios.put(`${API_BASE_URL}/labours/admin/rejectWages`, null, {
-            params: { ApprovalID, Remarks: Remarks },
-        });
+      const response = await axios.put(`${API_BASE_URL}/labours/admin/rejectWages`, null, {
+        params: { ApprovalID, Remarks: Remarks },
+      });
 
-        if (response.data.success) {
-            setLabours(prevLabours =>
-                prevLabours.map(labour =>
-                    labour.ApprovalID === ApprovalID ? { ...labour, ApprovalStatus: 'Rejected', Remarks: Remarks } : labour
-                )
-            );
-            toast.success('Attendance Rejected successfully.');
-            setIsApproveConfirmOpen(false);
-            handleApproveConfirmClose()
-        } else {
-            toast.error('Failed to Reject attendance. Please try again.');
-        }
+      if (response.data.success) {
+        setLabours(prevLabours =>
+          prevLabours.map(labour =>
+            labour.ApprovalID === ApprovalID ? { ...labour, ApprovalStatus: 'Rejected', Remarks: Remarks } : labour
+          )
+        );
+        toast.success('Attendance Rejected successfully.');
+        setIsApproveConfirmOpen(false);
+        handleApproveConfirmClose()
+      } else {
+        toast.error('Failed to Reject attendance. Please try again.');
+      }
     } catch (error) {
-        console.error('Error Rejected attendance:', error);
-        toast.error('Error Rejected attendance. Please try again.');
+      console.error('Error Rejected attendance:', error);
+      toast.error('Error Rejected attendance. Please try again.');
     }
-};
+  };
 
 
 
-const approveLabour = async (ApprovalID) => {
+  const approveLabour = async (ApprovalID) => {
     if (!ApprovalID) {
-        toast.error('Attendance ID is missing.');
-        return;
+      toast.error('Attendance ID is missing.');
+      return;
     }
 
     try {
-        const response = await axios.put(`${API_BASE_URL}/labours/admin/approveWages`, null, {
-            params: { ApprovalID },
-        });
+      const response = await axios.put(`${API_BASE_URL}/labours/admin/approveWages`, null, {
+        params: { ApprovalID },
+      });
 
-        if (response.data.success) {
-            setLabours(prevLabours =>
-                prevLabours.map(labour =>
-                    labour.ApprovalID === ApprovalID ? { ...labour, ApprovalStatus: 'Approved' } : labour
-                )
-            );
-            toast.success('Attendance approved successfully.');
-            setIsApproveConfirmOpen(false);
-        } else {
-            toast.error('Failed to approve attendance. Please try again.');
-        }
+      if (response.data.success) {
+        setLabours(prevLabours =>
+          prevLabours.map(labour =>
+            labour.ApprovalID === ApprovalID ? { ...labour, ApprovalStatus: 'Approved' } : labour
+          )
+        );
+        toast.success('Attendance approved successfully.');
+        setIsApproveConfirmOpen(false);
+      } else {
+        toast.error('Failed to approve attendance. Please try again.');
+      }
     } catch (error) {
-        console.error('Error approving attendance:', error);
-        toast.error('Error approving attendance. Please try again.');
+      console.error('Error approving attendance:', error);
+      toast.error('Error approving attendance. Please try again.');
     }
-};
+  };
 
 
 
@@ -283,7 +283,7 @@ const approveLabour = async (ApprovalID) => {
 
   const handleEditLabourConfirm = async () => {
     if (selectedLabour) {
-    //   await handleEditLabour(selectedLabour);
+      //   await handleEditLabour(selectedLabour);
       handleEditLabourClose();
     }
   };
@@ -352,7 +352,7 @@ const approveLabour = async (ApprovalID) => {
       const pendingWagesCount = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
       const approvedWagesCount = response.data.filter((labour) => labour.ApprovalStatus === "Approved").length;
       const rejectedWagesCount = response.data.filter((labour) => labour.ApprovalStatus === "Rejected").length;
-  
+
       // Update counts
       setPendingCount(pendingWagesCount);
       setApprovedCount(approvedWagesCount);
@@ -520,7 +520,7 @@ const approveLabour = async (ApprovalID) => {
     // await approveLabourQueue(id);
   };
 
-  
+
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
       {/* <Typography variant="h5" >
@@ -573,12 +573,12 @@ const approveLabour = async (ApprovalID) => {
         >
           <Tab
             label={`Pending (${pendingCount})`}
-        //    label={
-        //     <Box sx={{display:'flex'}}>
-        //    <Box sx={{alignContent:'center'}}>Pending</Box>
-        //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{pendingCount}</Box>
-        //    </Box>
-        //   }
+            //    label={
+            //     <Box sx={{display:'flex'}}>
+            //    <Box sx={{alignContent:'center'}}>Pending</Box>
+            //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{pendingCount}</Box>
+            //    </Box>
+            //   }
             style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
             sx={{
               color: tabValue === 0 ? "white" : "black",
@@ -620,7 +620,7 @@ const approveLabour = async (ApprovalID) => {
             }}
           />
           <Tab
-          label={`Rejected (${rejectedCount})`}
+            label={`Rejected (${rejectedCount})`}
             //   label={
             //     <Box sx={{display:'flex'}}>
             //    <Box sx={{alignContent:'center'}}>Rejected</Box>
@@ -647,7 +647,7 @@ const approveLabour = async (ApprovalID) => {
         <TablePagination
           className="custom-pagination"
           rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-        //   count={getFilteredLaboursForTab().length}
+          //   count={getFilteredLaboursForTab().length}
           //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
           rowsPerPage={rowsPerPage}
           page={page}
@@ -661,7 +661,6 @@ const approveLabour = async (ApprovalID) => {
       <TableContainer component={Paper} sx={{
         mb: isMobile ? 6 : 0,
         overflowX: 'auto',
-        overflowY: 'auto',
         borderRadius: 2,
         boxShadow: 3,
         maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -676,7 +675,7 @@ const approveLabour = async (ApprovalID) => {
           borderRadius: '4px',
         },
       }}>
-        <Box sx={{ width: '100%', overflowX: 'auto' }}>
+        <Box sx={{ width: '100%' }}>
           <Table stickyHeader sx={{ minWidth: 800 }}>
             <TableHead>
               <TableRow
@@ -709,14 +708,14 @@ const approveLabour = async (ApprovalID) => {
                 <TableCell>WeeklyOff</TableCell>
                 <TableCell>Attendance Edit By</TableCell>
                 <TableCell>Status</TableCell>
-                {tabValue === 0 &&<TableCell>Send Approval Date</TableCell>}
-                {tabValue !== 1 && tabValue !== 2 &&<TableCell>Edit</TableCell>}
-                {tabValue !== 1 && tabValue !== 2 &&<TableCell>Action</TableCell>}
-                {tabValue === 1 &&<TableCell>Approve Date</TableCell>}
-                {tabValue !== 0 && tabValue !== 1 &&<TableCell>Rejected Date</TableCell>}
-                {tabValue !== 0 && tabValue !== 1 &&<TableCell>Reject Reason</TableCell>}
-                {tabValue !== 0 && tabValue !== 1 && tabValue !== 2 &&<TableCell>Edit Date</TableCell>}
-               
+                {tabValue === 0 && <TableCell>Send Approval Date</TableCell>}
+                {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>}
+                {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
+                {tabValue === 1 && <TableCell>Approve Date</TableCell>}
+                {tabValue !== 0 && tabValue !== 1 && <TableCell>Rejected Date</TableCell>}
+                {tabValue !== 0 && tabValue !== 1 && <TableCell>Reject Reason</TableCell>}
+                {tabValue !== 0 && tabValue !== 1 && tabValue !== 2 && <TableCell>Edit Date</TableCell>}
+
               </TableRow>
             </TableHead>
             <TableBody
@@ -757,7 +756,7 @@ const approveLabour = async (ApprovalID) => {
                   <TableCell>{labour.MonthlyWages || '-'}</TableCell>
                   <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
                   <TableCell>{labour.WeeklyOff || '-'}</TableCell>
-                    <TableCell>{labour.WagesEditedBy  || '-'}</TableCell>
+                  <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
                   <TableCell sx={{ position: 'relative' }}>
                     <Box
@@ -817,18 +816,18 @@ const approveLabour = async (ApprovalID) => {
                   {tabValue === 0 && (
                     <TableCell>
                       {(user.userType === 'user' && labour.ApprovalStatus === 'Pending') && (
-                  <IconButton
-                  onClick={() => handleEditLabourOpen(labour)} // Add your function here
-                >
-                  <EditIcon />
-                </IconButton>
+                        <IconButton
+                          onClick={() => handleEditLabourOpen(labour)} // Add your function here
+                        >
+                          <EditIcon />
+                        </IconButton>
                       )}
                       {(user.userType === 'admin' || user.userType === 'superadmin' && labour.ApprovalStatus === 'Pending') && (
-                  <IconButton
-                  onClick={() => handleEditLabourOpen(labour)} // Add your function here
-                >
-                  <EditIcon />
-                </IconButton>
+                        <IconButton
+                          onClick={() => handleEditLabourOpen(labour)} // Add your function here
+                        >
+                          <EditIcon />
+                        </IconButton>
                       )}
                     </TableCell>
                   )}
@@ -908,10 +907,10 @@ const approveLabour = async (ApprovalID) => {
                         </Button>
                       )} */}
 
-                      
+
                     </TableCell>
                   )}
-{/* 
+                  {/* 
                   <TableCell>
                     <RemoveRedEyeIcon onClick={() => openPopup(labour)} style={{ cursor: 'pointer' }} />
                   </TableCell> */}
@@ -965,56 +964,56 @@ const approveLabour = async (ApprovalID) => {
       </Modal>
 
       <Modal
-    open={isRejectPopupOpen}
-    onClose={closeRejectPopup}
-    closeAfterTransition
->
-    <Fade in={isRejectPopupOpen}>
-        <div className="modal">
+        open={isRejectPopupOpen}
+        onClose={closeRejectPopup}
+        closeAfterTransition
+      >
+        <Fade in={isRejectPopupOpen}>
+          <div className="modal">
             <Typography variant="h6" component="h2">
-                Reject Labour
+              Reject Labour
             </Typography>
             <TextField
-                label="Reason for rejection"
-                value={Remarks}
-                onChange={(e) => setRejectReason(e.target.value)}
-                fullWidth
-                multiline
-                rows={4}
-                variant="outlined"
-                margin="normal"
+              label="Reason for rejection"
+              value={Remarks}
+              onChange={(e) => setRejectReason(e.target.value)}
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              margin="normal"
             />
             <Box mt={2} style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button variant="outlined" color="secondary" onClick={closeRejectPopup}>
-                    Cancel
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => {
-                        if (!Remarks.trim()) {
-                            toast.error('Please add a reason for rejection.');
-                        } else {
-                            handleReject(selectedLabour.ApprovalID, Remarks);
-                            closeRejectPopup();
-                        }
-                    }}
-                    sx={{
-                        ml: 2,
-                        backgroundColor: '#fce4ec',
-                        color: 'rgb(255, 100, 100)',
-                        width: '100px',
-                        '&:hover': {
-                            backgroundColor: '#f8bbd0',
-                        },
-                    }}
-                >
-                    Reject
-                </Button>
+              <Button variant="outlined" color="secondary" onClick={closeRejectPopup}>
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => {
+                  if (!Remarks.trim()) {
+                    toast.error('Please add a reason for rejection.');
+                  } else {
+                    handleReject(selectedLabour.ApprovalID, Remarks);
+                    closeRejectPopup();
+                  }
+                }}
+                sx={{
+                  ml: 2,
+                  backgroundColor: '#fce4ec',
+                  color: 'rgb(255, 100, 100)',
+                  width: '100px',
+                  '&:hover': {
+                    backgroundColor: '#f8bbd0',
+                  },
+                }}
+              >
+                Reject
+              </Button>
             </Box>
-        </div>
-    </Fade>
-</Modal>
+          </div>
+        </Fade>
+      </Modal>
 
       <Modal
         open={isRejectReasonPopupOpen}
@@ -1042,51 +1041,51 @@ const approveLabour = async (ApprovalID) => {
 
 
       <Dialog
-    open={isApproveConfirmOpen}
-    onClose={handleApproveConfirmClose}
-    aria-labelledby="approve-confirm-dialog-title"
-    aria-describedby="approve-confirm-dialog-description"
->
-    <DialogTitle id="approve-confirm-dialog-title">
-        Approve Labour
-    </DialogTitle>
-    <DialogContent>
-        <DialogContentText id="approve-confirm-dialog-description">
+        open={isApproveConfirmOpen}
+        onClose={handleApproveConfirmClose}
+        aria-labelledby="approve-confirm-dialog-title"
+        aria-describedby="approve-confirm-dialog-description"
+      >
+        <DialogTitle id="approve-confirm-dialog-title">
+          Approve Labour
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="approve-confirm-dialog-description">
             Are you sure you want to approve attendance for this labour?
-        </DialogContentText>
-    </DialogContent>
-    <DialogActions>
-        <Button
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
             onClick={handleApproveConfirmClose}
             variant="outlined"
             color="secondary"
-        >
+          >
             Cancel
-        </Button>
-        <Button
+          </Button>
+          <Button
             onClick={() => {
-                if (!labourToApprove || !labourToApprove.ApprovalID) {
-                    toast.error('Labour data or ID is missing.');
-                    return;
-                }
-                approveLabour(labourToApprove.ApprovalID);
+              if (!labourToApprove || !labourToApprove.ApprovalID) {
+                toast.error('Labour data or ID is missing.');
+                return;
+              }
+              approveLabour(labourToApprove.ApprovalID);
             }}
             sx={{
+              backgroundColor: 'rgb(229, 255, 225)',
+              color: 'rgb(43, 217, 144)',
+              width: '100px',
+              marginRight: '10px',
+              marginBottom: '3px',
+              '&:hover': {
                 backgroundColor: 'rgb(229, 255, 225)',
-                color: 'rgb(43, 217, 144)',
-                width: '100px',
-                marginRight: '10px',
-                marginBottom: '3px',
-                '&:hover': {
-                    backgroundColor: 'rgb(229, 255, 225)',
-                },
+              },
             }}
             autoFocus
-        >
+          >
             Approve
-        </Button>
-    </DialogActions>
-</Dialog>
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {saved && (
         <>

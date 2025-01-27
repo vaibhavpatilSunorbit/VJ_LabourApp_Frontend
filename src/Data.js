@@ -94,7 +94,7 @@ export const SidebarData = [
   {
     icon: UilFileAlt,
     heading: "Salary Register",
-    path: "/admin/SalaryRejester/SalaryRejesterAdmin",
+    path: "SalaryRejester",
     roles: ["superadmin"],
   } 
 ];

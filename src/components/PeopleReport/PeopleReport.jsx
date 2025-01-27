@@ -732,7 +732,6 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
             <TableContainer component={Paper} sx={{
                 mb: isMobile ? 6 : 0,
                 overflowX: 'auto',
-                overflowY: 'auto',
                 borderRadius: 2,
                 boxShadow: 3,
                 maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -747,7 +746,7 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
                     borderRadius: '4px',
                 },
             }}>
-                <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                <Box sx={{ width: '100%' }}>
                     <Table stickyHeader sx={{ minWidth: 800 }}>
                         <TableHead>
                             <TableRow
@@ -851,20 +850,20 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
             </TableContainer>
 
             <Modal
-        open={isPopupOpen}
-        onClose={closePopup}
-        closeAfterTransition
-      // BackdropComponent={Backdrop}
-      // BackdropProps={{ timeout: 500 }}
-      >
-        <Fade in={isPopupOpen}>
-          <div className="modal">
-            {selectedLabour && (
-              <ViewDetails selectedLabour={selectedLabour} onClose={closePopup} />
-            )}
-          </div>
-        </Fade>
-      </Modal>
+                open={isPopupOpen}
+                onClose={closePopup}
+                closeAfterTransition
+            // BackdropComponent={Backdrop}
+            // BackdropProps={{ timeout: 500 }}
+            >
+                <Fade in={isPopupOpen}>
+                    <div className="modal">
+                        {selectedLabour && (
+                            <ViewDetails selectedLabour={selectedLabour} onClose={closePopup} />
+                        )}
+                    </div>
+                </Fade>
+            </Modal>
         </Box>
 
     );

@@ -389,18 +389,22 @@ const AttendanceReport = () => {
 
             const attendanceList = response.data;
 
-            const processedAttendance = attendanceList.map((labour, index) => ({
-                srNo: index + 1,
-                labourId: labour.LabourId,
-                name: labour.Name,
-                totalDays: labour.TotalDays,
-                presentDays: labour.PresentDays,
-                halfDays: labour.HalfDays,
-                absentDays: labour.AbsentDays,
-                misspunchDays: labour.MissPunchDays,
-                totalOvertimeHours: parseFloat(labour.TotalOvertimeHours.toFixed(1)),
-                shift: labour.Shift,
-            }));
+            const processedAttendance = attendanceList.map((labour, index) => {
+                const totalOvertime = labour.TotalOvertimeHours ?? 0;  
+    
+                return {
+                    srNo: index + 1,
+                    labourId: labour.LabourId,
+                    name: labour.Name,
+                    totalDays: labour.TotalDays,
+                    presentDays: labour.PresentDays,
+                    halfDays: labour.HalfDays,
+                    absentDays: labour.AbsentDays,
+                    misspunchDays: labour.MissPunchDays,
+                    totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
+                    shift: labour.Shift,
+                };
+            });
 
             setAttendanceData(processedAttendance);
         } catch (error) {
@@ -853,121 +857,122 @@ const AttendanceReport = () => {
             {loading && <Loading />}
 
             <Box
-  sx={{
-    width: "auto",
-    height: "auto",
-    bgcolor: "white",
-    marginBottom: "15px",
-    p: 1,
-    borderRadius: 2,
-    boxShadow: 3,
-    alignSelf: "flex-start",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: { xs: "wrap", sm: "nowrap" }, // Allows items to wrap on extra small devices
-  }}
->
-  <Tabs
-    value={tabValue}
-    onChange={handleTabChange}
-    aria-label="tabs example"
-    sx={{
-      ".MuiTabs-indicator": {
-        display: "none",
-      },
-      minHeight: "auto",
-    }}
-  >
-  </Tabs>
+                sx={{
+                    width: "auto",
+                    height: "auto",
+                    bgcolor: "white",
+                    marginBottom: "15px",
+                    p: 1,
+                    borderRadius: 2,
+                    boxShadow: 3,
+                    alignSelf: "flex-start",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: { xs: "wrap", sm: "nowrap" }, // Allows items to wrap on extra small devices
+                }}
+            >
+                <Tabs
+                    value={tabValue}
+                    onChange={handleTabChange}
+                    aria-label="tabs example"
+                    sx={{
+                        ".MuiTabs-indicator": {
+                            display: "none",
+                        },
+                        minHeight: "auto",
+                    }}
+                >
+                </Tabs>
 
-  <Box sx={{
-    display: 'flex',
-    flexDirection: { xs: 'column', sm: 'row' }, // Stacks items vertically on small screens
-    alignItems: { xs: 'stretch', sm: 'center' },
-    gap: 2,
-    height: 'auto',
-    width: '100%',
-    justifyContent: { xs: 'flex-start', sm: 'space-between' },
-  }}>
-    <Box sx={{
-      width: { xs: '100%', sm: '40%' },
-      gap: '20px',
-      display: 'flex',
-      flexDirection: 'row', // Stack selectors vertically on all sizes
-      alignItems: 'flex-start',
-    }}>
-      <Select
-        value={selectedMonth}
-        sx={{ width: '100%' }}
-        onChange={(e) => setSelectedMonth(e.target.value)}
-        displayEmpty
-      >
-        <MenuItem value="" disabled>Select Month</MenuItem>
-        {months.map((month) => (
-          <MenuItem key={month.value} value={month.value}>
-            {month.label}
-          </MenuItem>
-        ))}
-      </Select>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' }, // Stacks items vertically on small screens
+                    alignItems: { xs: 'stretch', sm: 'center' },
+                    gap: 2,
+                    height: 'auto',
+                    width: '100%',
+                    justifyContent: { xs: 'flex-start', sm: 'space-between' },
+                }}>
+                    <Box sx={{
+                        width: { xs: '100%', sm: '40%' },
+                        gap: '20px',
+                        display: 'flex',
+                        flexDirection: 'row', // Stack selectors vertically on all sizes
+                        alignItems: 'flex-start',
+                    }}>
+                        <Select
+                            value={selectedMonth}
+                            sx={{ width: '100%' }}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled>Select Month</MenuItem>
+                            {months.map((month) => (
+                                <MenuItem key={month.value} value={month.value}>
+                                    {month.label}
+                                </MenuItem>
+                            ))}
+                        </Select>
 
-      <Select
-        value={selectedYear}
-        sx={{ width: '100%' }}
-        onChange={(e) => setSelectedYear(e.target.value)}
-        displayEmpty
-      >
-        <MenuItem value="" disabled>Select Year</MenuItem>
-        {[2024, 2025].map((year) => (
-          <MenuItem key={year} value={year}>
-            {year}
-          </MenuItem>
-        ))}
-      </Select>
+                        <Select
+                            value={selectedYear}
+                            sx={{ width: '100%' }}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled>Select Year</MenuItem>
+                            {[2024, 2025].map((year) => (
+                                <MenuItem key={year} value={year}>
+                                    {year}
+                                </MenuItem>
+                            ))}
+                        </Select>
 
-      <Button
-        variant="contained"
-        sx={{
-        //   fontSize: '13px',
-          fontSize:  { xs: '10px', sm: '13px' },
-          height: '40px',
-          width: '100%',
-          backgroundColor: 'rgb(229, 255, 225)',
-          color: 'rgb(43, 217, 144)',
-          '&:hover': {
-            backgroundColor: 'rgb(229, 255, 225)',
-          },
-        }}
-        onClick={fetchAttendanceForMonthAll}
-        disabled={loading}
-      >
-        Fetch Attendance
-      </Button>
-    </Box>
-<Box sx={{
-      display: 'flex',
-      marginRight: '20px',
-      flexDirection: { xs: 'row', sm: 'row' }}}>
-    <Box sx={{
-      width: { xs: '100%', sm: 'auto' },
-      display: 'flex',
-      flexDirection: { xs: 'row', sm: 'row' },
-      gap: '20px',
-      alignItems: 'center',
-      justifyContent: 'space-evenly',
-    }}>
-      <ExportAttendance />
-      <ImportAttendance /></Box>
-      <TablePagination
-        className="custom-pagination"
-        rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-        // count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
-    </Box>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                //   fontSize: '13px',
+                                fontSize: { xs: '10px', sm: '13px' },
+                                height: '40px',
+                                width: '100%',
+                                backgroundColor: 'rgb(229, 255, 225)',
+                                color: 'rgb(43, 217, 144)',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}
+                            onClick={fetchAttendanceForMonthAll}
+                            disabled={loading}
+                        >
+                            Fetch Attendance
+                        </Button>
+                    </Box>
+                    <Box sx={{
+                        display: 'flex',
+                        marginRight: '20px',
+                        flexDirection: { xs: 'row', sm: 'row' }
+                    }}>
+                        <Box sx={{
+                            width: { xs: '100%', sm: 'auto' },
+                            display: 'flex',
+                            flexDirection: { xs: 'row', sm: 'row' },
+                            gap: '20px',
+                            alignItems: 'center',
+                            justifyContent: 'space-evenly',
+                        }}>
+                            <ExportAttendance />
+                            <ImportAttendance /></Box>
+                        <TablePagination
+                            className="custom-pagination"
+                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
+                            // count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                        />
+                    </Box>
                     {/* <Box display="flex" alignItems="flex-end" gap={2}>
                         <Select
                             value={selectedBusinessUnit}
@@ -1031,7 +1036,7 @@ const AttendanceReport = () => {
             <TableContainer component={Paper} sx={{
                 mb: isMobile ? 6 : 0,
                 overflowX: 'auto',
-                overflowY: 'auto',
+                // overflowY: 'auto',
                 borderRadius: 2,
                 boxShadow: 3,
                 maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -1046,10 +1051,29 @@ const AttendanceReport = () => {
                     borderRadius: '4px',
                 },
             }}>
-                <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                <Box sx={{ width: '100%' }}>
                     <Table stickyHeader sx={{ minWidth: 800 }}>
                         <TableHead>
-                            <TableRow>
+                            <TableRow
+                                sx={{
+                                    '& th': {
+                                        padding: '12px',
+                                        '@media (max-width: 600px)': {
+                                            padding: '10px',
+                                        },
+                                        backgroundColor: 'white', // Ensure the background color is set
+                                        position: 'sticky',
+                                        top: 0,
+                                        zIndex: 1,
+                                    },
+                                    '& td': {
+                                        padding: '16px 9px', // Applying padding to all td elements
+                                        '@media (max-width: 600px)': {
+                                            padding: '14px 8px', // Adjust padding for smaller screens if needed
+                                        },
+                                    },
+                                }}
+                            >
                                 <TableCell>Sr No</TableCell>
                                 <TableCell>Details</TableCell>
                                 <TableCell>Labour ID</TableCell>
@@ -1480,14 +1504,14 @@ const AttendanceReport = () => {
                             position: 'absolute',
                             top: 8,
                             right: 8,
-                            color: '#FFF', 
+                            color: '#FFF',
                             backgroundColor: '#ff0000b5',
-                            borderRadius: '20%', 
+                            borderRadius: '20%',
                             padding: '5px',
                             '&:hover': {
-                              backgroundColor: '#ff0000de',
+                                backgroundColor: '#ff0000de',
                             },
-                          }}
+                        }}
                     >
                         <CloseIcon />
                     </IconButton>

@@ -234,25 +234,6 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                 payAddedBy: onboardName,
             };
 
-            // const { data: existingVariablePayResponse } = await axios.get(`${API_BASE_URL}/insentive/checkExistingVariablePay`, {
-            //     params: { LabourID: selectedLabour.LabourID },
-            // });
-
-            // const { exists, approved, data } = existingVariablePayResponse;
-
-            // if (!exists) {
-            //     await axios.post(`${API_BASE_URL}/insentive/upsertVariablePay`, transferDataPayload);
-            //     toast.success("Variable Pay added successfully.");
-            // } else if (exists && !approved) {
-            //     transferDataPayload.payId = data.VariablePayId;
-            //     await axios.post(`${API_BASE_URL}/insentive/sendVariablePayForApproval`, transferDataPayload);
-            //     toast.info("Variable Pay sent for admin approval.");
-            // } else if (exists && approved) {
-            //     transferDataPayload.payId = data.VariablePayId;
-            //     await axios.post(`${API_BASE_URL}/insentive/sendVariablePayForApproval`, transferDataPayload);
-            //     toast.info("Variable Pay changes sent for admin approval.");
-            // }
-
 
             const response = await axios.post(`${API_BASE_URL}/insentive/upsertVariablePay`, transferDataPayload);
 
@@ -391,10 +372,10 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
-            <Box ml={-1.5} >
-            <Typography variant="h4" align="center" mt={4}>
-        Reports | Salary Register
-      </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    Reports | Salary Register
+                </Typography>
                 <SearchBar
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
@@ -445,7 +426,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                 sx={{
                     mb: isMobile ? 6 : 0,
                     overflowX: 'auto',
-                    overflowY: 'auto',
+                    // overflowY: 'auto',
                     borderRadius: 2,
                     boxShadow: 3,
                     maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -454,10 +435,29 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                     '&::-webkit-scrollbar-thumb': { backgroundColor: '#888', borderRadius: '4px' },
                 }}
             >
-                <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                <Box sx={{ width: '100%' }}>
                     <Table stickyHeader sx={{ minWidth: 800 }}>
                         <TableHead>
-                            <TableRow>
+                            <TableRow
+                                sx={{
+                                    '& th': {
+                                        padding: '12px',
+                                        '@media (max-width: 600px)': {
+                                            padding: '10px',
+                                        },
+                                        backgroundColor: 'white', // Ensure the background color is set
+                                        position: 'sticky',
+                                        top: 0,
+                                        zIndex: 1,
+                                    },
+                                    '& td': {
+                                        padding: '16px 9px', // Applying padding to all td elements
+                                        '@media (max-width: 600px)': {
+                                            padding: '14px 8px', // Adjust padding for smaller screens if needed
+                                        },
+                                    },
+                                }}
+                            >
                                 <TableCell>Sr No</TableCell>
                                 <TableCell>Labour ID</TableCell>
                                 <TableCell>Name</TableCell>

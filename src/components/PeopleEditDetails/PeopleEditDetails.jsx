@@ -129,7 +129,7 @@ const PeopleEditDetails = () => {
                             Edit
                         </Button>
                     </Box>
-                    <Divider/>
+                    <Divider />
                     <Box>
                         {[
                             { label: "Type", value: labourDetails?.labourOwnership || "N/A" },
@@ -192,7 +192,7 @@ const PeopleEditDetails = () => {
                             Edit
                         </Button>
                     </Box>
-                    <Divider/>
+                    <Divider />
                     <Box>
                         {[
                             { label: "Annual Salary", value: `₹${labourDetails?.advance || "0"}` },
@@ -243,7 +243,7 @@ const PeopleEditDetails = () => {
                             Edit
                         </Button>
                     </Box>
-                    <Divider/>
+                    <Divider />
                     <Box>
                         {[
                             { label: "Current Advance Salary", value: `₹${labourDetails?.advance || "0"}` },
@@ -351,7 +351,7 @@ const PeopleEditDetails = () => {
                             Edit
                         </Button>
                     </Box>
-                    <Divider/>
+                    <Divider />
                     <Box>
                         {[
                             { label: "PAN", value: labourDetails?.PAN || "N/A" },
@@ -405,7 +405,7 @@ const PeopleEditDetails = () => {
                             Edit
                         </Button>
                     </Box>
-                    <Divider/>
+                    <Divider />
                     <Box>
                         {[
                             { label: "Phone Number", value: labourDetails?.contactNumber || "N/A" },

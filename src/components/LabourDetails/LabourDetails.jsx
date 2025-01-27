@@ -756,40 +756,40 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           //   const dynamicData2 = dynamicDataResponse2.data;
 
 
-          const employeeMasterResponse = await axios.post(`${API_BASE_URL}/employeeMasterPayloadUpdatepost`,JSON.stringify(employeeMasterPayload), {
+          const employeeMasterResponse = await axios.post(`${API_BASE_URL}/employeeMasterPayloadUpdatepost`, JSON.stringify(employeeMasterPayload), {
             headers: {
               'Content-Type': 'application/json',
             },
 
           });
           if (employeeMasterResponse.data.status) {
-          
+
             const empId = employeeMasterResponse.data.outputList?.id;
             const ledgerId = employeeMasterResponse.data.outputList?.ledgerId;
-          
+
             if (!empId) {
               console.error('Employee ID is missing in the response. Skipping further API calls.');
               return; // Exit early if empId is missing
             }
-          
+
             const empData = { empId };
-          
+
             // Update employee ID
             const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${labour.id}`, empData);
-          
-              const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
-                params: {
-                  employeeId: empId,
-                  monthdesc: labour.Period,
-                  gradeId: labour.labourCategoryId,
-                  salarybudescription: labour.SalaryBu,
-                  workbudesc: labour.WorkingBu,
-                  ledgerId,
-                  departmentId: labour.departmentId,
-                  designationId: labour.designationId,
-                },
-              });
-              const dynamicData2 = dynamicDataResponse2.data;
+
+            const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
+              params: {
+                employeeId: empId,
+                monthdesc: labour.Period,
+                gradeId: labour.labourCategoryId,
+                salarybudescription: labour.SalaryBu,
+                workbudesc: labour.WorkingBu,
+                ledgerId,
+                departmentId: labour.departmentId,
+                designationId: labour.designationId,
+              },
+            });
+            const dynamicData2 = dynamicDataResponse2.data;
 
             // Construct organizationMasterPayload with dynamic labourID
             const organizationMasterPayload = {
@@ -1477,7 +1477,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       const labour = labourResponse;
 
       if (labour.status === 'Pending') {
-        const labourID = labourResponse.LabourID; 
+        const labourID = labourResponse.LabourID;
 
         const { data: projectResponse } = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${labour.projectName}`);
         const serialNumber = projectResponse.serialNumber;
@@ -1594,9 +1594,9 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     const processLabourApprovals = async () => {
       if (labourIds.length === 0 || isApproving) return;
 
-      setIsApproving(true); 
+      setIsApproving(true);
 
-      const currentId = labourIds[0]; 
+      const currentId = labourIds[0];
 
       try {
         const success = await approveLabour(currentId);
@@ -1605,7 +1605,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
         }
       } catch (error) {
         console.log(`Skipping labour ${currentId} due to error.`);
-        setLabourIds((prev) => prev.slice(1)); 
+        setLabourIds((prev) => prev.slice(1));
       }
 
       setIsApproving(false);
@@ -1614,7 +1614,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     if (labourIds.length > 0) {
       processLabourApprovals();
     }
-  }, [labourIds, isApproving]); 
+  }, [labourIds, isApproving]);
 
 
   const handleApprove = async (id) => {
@@ -2298,7 +2298,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       // Fetch SerialNumber from selected site ID
       const siteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
       // Check if SerialNumber exists in the response
-      const SerialNumber = siteResponse.data.serialNumber || 'Unknown'; 
+      const SerialNumber = siteResponse.data.serialNumber || 'Unknown';
 
 
       const soapEnvelope = `
@@ -2541,7 +2541,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             }}
           />
           <Typography sx={{ fontSize: "0.875rem", color: "#5e636e" }}>
-Rejoin          </Typography>
+            Rejoin          </Typography>
         </Box>
 
         {/* Filter Icon */}
@@ -2597,7 +2597,6 @@ Rejoin          </Typography>
       <TableContainer component={Paper} sx={{
         mb: isMobile ? 6 : 0,
         overflowX: 'auto',
-        overflowY: 'auto',
         borderRadius: 2,
         boxShadow: 3,
         maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -2612,7 +2611,7 @@ Rejoin          </Typography>
           borderRadius: '4px',
         },
       }}>
-        <Box sx={{ width: '100%', overflowX: 'auto' }}>
+        <Box sx={{ width: '100%' }}>
           <Table stickyHeader sx={{ minWidth: 800 }}>
             <TableHead>
               <TableRow
@@ -2838,7 +2837,7 @@ Rejoin          </Typography>
                           Edit
                         </Button>
                       )}
-                     {((user.userType === 'admin' || user.userType === 'superadmin') && labour.status === 'Approved' && !labour.address) && (
+                      {((user.userType === 'admin' || user.userType === 'superadmin') && labour.status === 'Approved' && !labour.address) && (
                         <Button
                           variant="contained"
                           sx={{

@@ -442,7 +442,6 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
                 sx={{
                     mb: isMobile ? 6 : 0,
                     overflowX: 'auto',
-                    overflowY: 'auto',
                     borderRadius: 2,
                     boxShadow: 3,
                     maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -451,10 +450,29 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
                     '&::-webkit-scrollbar-thumb': { backgroundColor: '#888', borderRadius: '4px' },
                 }}
             >
-                <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                <Box sx={{ width: '100%' }}>
                     <Table stickyHeader sx={{ minWidth: 800 }}>
                         <TableHead>
-                            <TableRow>
+                            <TableRow
+                                sx={{
+                                    '& th': {
+                                        padding: '12px',
+                                        '@media (max-width: 600px)': {
+                                            padding: '10px',
+                                        },
+                                        backgroundColor: 'white', // Ensure the background color is set
+                                        position: 'sticky',
+                                        top: 0,
+                                        zIndex: 1,
+                                    },
+                                    '& td': {
+                                        padding: '16px 9px', // Applying padding to all td elements
+                                        '@media (max-width: 600px)': {
+                                            padding: '14px 8px', // Adjust padding for smaller screens if needed
+                                        },
+                                    },
+                                }}
+                            >
                                 <TableCell>Sr No</TableCell>
                                 <TableCell>Labour ID</TableCell>
                                 <TableCell>Name</TableCell>

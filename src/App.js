@@ -110,7 +110,7 @@ function App() {
                     <Route path="/adminApproval/wagesApproval" element={<WagesApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/variableInput" element={<VariableInput departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/variableInputApproval" element={<VariableInputApproval onFormSubmit={handleFormSubmit} />} />
-                    <Route path="/admin/SalaryRejester" element={<SalaryRegister onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/SalaryRejester" element={<SalaryRegister onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }

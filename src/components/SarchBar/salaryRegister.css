@@ -1,62 +1,135 @@
-/* SearchBar.css */
-
-.search-bar {
+/* Scoped Vars within .search-register */
+.search-register {
+    --rad: 0.7rem;
+    --dur: 0.3s;
+    --color-dark: #ffffff;
+    --color-light: #ffffff;
+    --color-brand: #13315C;
+    --font-fam: 'Lato', sans-serif;
+    --height: 3.2rem;
+    margin: 9px 0px;
+    width: 32vw;
+    --btn-width: 6rem;
+    --bez: cubic-bezier(0, 0, 0.43, 1.49);
+  }
+  
+  /* .search-register {
+ 
+  } */
+  
+  .search-register__form {
+    position: relative;
     width: 100%;
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 10px;
+    max-width: 30rem;
+    /* background: var(--color-brand); */
+    border-radius: var(--rad);
+    /* padding: 1rem; */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: #ffffff;
-    border-radius: 8px;
+    margin: 0 auto; /* Center the form */
   }
   
-  .search-form {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .search-register__label {
+    position: absolute;
+    clip: rect(1px, 1px, 1px, 1px);
+    padding: 0;
+    border: 0;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
   }
   
-  .search-input {
-    flex: 1;
+  .search-register__input,
+  .search-register__button {
+    height: var(--height);
+    /* font-family: var(--font-fam); */
+    border: 0;
+    color: var(--color-dark);
+    font-size: 16px;
   }
   
-  .search-button {
-    height: 56px; /* Match the TextField height */
-    padding: 0 20px;
-    white-space: nowrap;
+  .search-register__input[type="search"] {
+    outline: 0; /* Consider removing for better accessibility */
+    width: 100%;
+    background: var(--color-light);
+    padding: 0 1.6rem;
+    border-radius: var(--rad);
+    appearance: none; /* For iOS input[type="search"] roundedness issue */
+    transition: all var(--dur) var(--bez);
+    transition-property: width, border-radius;
+    z-index: 1;
+    position: relative;
   }
   
-  .search-results {
-    margin-top: 20px;
-    max-height: 400px;
+  .search-register__button {
+    display: none; /* Prevent being able to tab to it */
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: var(--btn-width);
+    font-weight: bold;
+    background: var(--color-brand);
+    border-radius: 0 var(--rad) var(--rad) 0;
+    cursor: pointer;
+    transition: background var(--dur) var(--bez);
+  }
+  
+  .search-register__input:not(:placeholder-shown) {
+    border-radius: var(--rad) 0 0 var(--rad);
+    width: calc(100% - var(--btn-width));
+  }
+  
+  .search-register__input:not(:placeholder-shown) + .search-register__button {
+    display: block;
+  }
+  
+  .search-register__button:hover {
+    background: #13315cab; /* Slightly darker shade of #57bd84 */
+  }
+  
+  /* Search Results */
+  .search-register__results {
+    background: var(--color-light);
+    border-radius: var(--rad);
+    margin-top: 1rem;
+    padding: 1rem;
+    max-height: 300px;
     overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
   
-  .search-results ul {
+  .search-register__results-list {
     list-style: none;
     padding: 0;
     margin: 0;
   }
   
-  .search-result-item {
+  .search-register__result-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #ddd;
   }
   
-  .search-result-item:hover {
-    background-color: #f9f9f9;
+  .search-register__result-item:last-child {
+    border-bottom: none;
   }
   
-  .result-details {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  .search-register__result-info {
+    flex: 1;
+    margin-right: 1rem;
   }
   
-  .select-button {
-    white-space: nowrap;
+  .search-register__select-button {
+    background: var(--color-brand);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--rad);
+    color: var(--color-light);
+    cursor: pointer;
+    transition: background var(--dur) var(--bez);
   }
   
+  .search-register__select-button:hover {
+    background: #13315C; /* Slightly darker shade of #57bd84 */
+  }
