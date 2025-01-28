@@ -132,7 +132,7 @@ const AttendanceReport = () => {
 
             console.log('Request payload +++++:', payload);
 
-            await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+            const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
@@ -149,7 +149,7 @@ const AttendanceReport = () => {
 
             setAttendanceData(updatedAttendanceData);
 
-            toast.success('Attendance updated successfully!');
+            toast.success(response.data.message || 'Attendance updated successfully!');
             handleManualEditDialogClose();
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
@@ -1349,7 +1349,7 @@ const AttendanceReport = () => {
                     >
                         Close
                     </Button>
-                    <Button
+                    {/* <Button
                         variant="contained"
                         sx={{
                             backgroundColor: "rgb(229, 255, 225)",
@@ -1362,7 +1362,7 @@ const AttendanceReport = () => {
                         onClick={saveFullMonthAttendance}
                     >
                         Save
-                    </Button>
+                    </Button> */}
                 </DialogActions>
             </Dialog>
 

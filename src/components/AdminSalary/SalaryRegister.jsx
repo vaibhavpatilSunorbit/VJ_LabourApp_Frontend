@@ -18,7 +18,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions, FormControl, InputLabel
+    DialogActions, FormControl, InputLabel, Tabs
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -41,25 +41,23 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [dailyWages, setDailyWages] = useState({});
-    const [perDayWages, setPerDayWages] = useState({});
-    const [monthlyWages, setMonthlyWages] = useState({});
-    const [yearlyWages, setYearlyWages] = useState({});
-    const [overtime, setOvertime] = useState({});
     const [variablePay, setvariablePay] = useState({});
     const [payStructure, setPayStructure] = useState({});
-    const [weakelyOff, setWeakelyOff] = useState({});
+    const [tabValue, setTabValue] = useState(0);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedLabour, setSelectedLabour] = useState(null);
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
     const [businessUnits, setBusinessUnits] = useState([]);
-    const [projectName, setProjectName] = useState('');
+    const [attendanceData, setAttendanceData] = useState([]);
     const { user } = useUser();
     const [openModal, setOpenModal] = useState(false);
     const [selectedHistory, setSelectedHistory] = useState([]);
-    const [newSite, setNewSite] = useState(null);
+    const currentDate = new Date();
+    const currentMonth = (currentDate.getMonth() + 1).toString();
+    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [openDialogSite, setOpenDialogSite] = useState(false);
     const [statusesSite, setStatusesSite] = useState({});
     const [effectiveDate, setEffectiveDate] = useState("");
@@ -67,7 +65,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     const fetchLabours = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/getVariablePayAndLabourOnboardingJoin`);
+            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`);
             setLabours(response.data);
             console.log("response.data .", response.data)
         } catch (error) {
@@ -81,6 +79,120 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     useEffect(() => {
         fetchLabours();
     }, []);
+
+    const months = [
+        { value: 1, label: 'January' },
+        { value: 2, label: 'February' },
+        { value: 3, label: 'March' },
+        { value: 4, label: 'April' },
+        { value: 5, label: 'May' },
+        { value: 6, label: 'June' },
+        { value: 7, label: 'July' },
+        { value: 8, label: 'August' },
+        { value: 9, label: 'September' },
+        { value: 10, label: 'October' },
+        { value: 11, label: 'November' },
+        { value: 12, label: 'December' }
+    ];
+
+
+    // const fetchAttendanceForMonthAll = async () => {
+    //     if (!selectedMonth || !selectedYear) {
+    //         toast.warning('Please select a valid month and year.');
+    //         return;
+    //     }
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`, {
+    //             params: { month: selectedMonth, year: selectedYear },
+    //         });
+
+    //         const attendanceList = response.data;
+
+    //         const processedAttendance = attendanceList.map((labour, index) => {
+    //             const totalOvertime = labour.TotalOvertimeHours ?? 0;  
+    
+    //             return {
+    //                 srNo: index + 1,
+    //                 labourId: labour.LabourId,
+    //                 name: labour.Name,
+    //                 attendanceCount: labour.attendanceCount,
+    //                 presentDays: labour.PresentDays,
+    //                 halfDays: labour.HalfDays,
+    //                 absentDays: labour.AbsentDays,
+    //                 misspunchDays: labour.MissPunchDays,
+    //                 totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
+    //                 shift: labour.Shift,
+    //             };
+    //         });
+
+    //         setAttendanceData(processedAttendance);
+    //     } catch (error) {
+    //         console.error('Error fetching attendance data:', error);
+    //         toast.error(error.response?.data?.message || 'Error fetching attendance data. Please try again later.');
+    //     }
+    //     setLoading(false);
+    // };
+
+    // useEffect(() => {
+    //     if (selectedMonth && selectedYear) {
+    //         fetchAttendanceForMonthAll();
+    //     }
+    // }, [selectedMonth, selectedYear]);
+
+
+
+    const fetchSalaryGenerationForDateMonthAll = async () => {
+        if (!selectedMonth || !selectedYear) {
+            toast.warning('Please select a valid month and year.');
+            return;
+        }
+        setLoading(true);
+    
+        try {
+            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationData`, {
+                params: { month: selectedMonth, year: selectedYear },
+            });
+    
+            const salaryData = response.data;
+    
+            const ShowSalaryGeneration = salaryData.map((labour, index) => {
+                const { attendance, wages, variablePay, totalOvertime } = labour;
+    
+                return {
+                    srNo: index + 1,
+                    labourId: labour.labourId,
+                    name: labour.name,
+                    project: labour.project,
+                    department: labour.department,
+                    attendanceCount: attendance.presentDays + attendance.halfDays + attendance.missPunchDays,
+                    presentDays: attendance.presentDays,
+                    halfDays: attendance.halfDays,
+                    absentDays: attendance.absentDays,
+                    missPunchDays: attendance.missPunchDays,
+                    totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
+                    wagesAmount: wages ? wages.calculatedWages.dailyWages : 0,
+                    advancePay: variablePay ? variablePay.advance : 0,
+                    incentivePay: variablePay ? variablePay.incentive : 0,
+                };
+            });
+    
+            setAttendanceData(ShowSalaryGeneration);
+        } catch (error) {
+            console.error('Error fetching salary generation data:', error);
+            toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
+        }
+        setLoading(false);
+    };
+    
+    
+    useEffect(() => {
+        if (selectedMonth && selectedYear) {
+            fetchSalaryGenerationForDateMonthAll();
+        }
+    }, [selectedMonth, selectedYear]);
+    
+
 
     const handleCancel = () => {
         setModalOpen(false); // Close the modal without saving
@@ -133,6 +245,11 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+        setPage(0);
     };
 
     const handlePageChange = (e, newPage) => {
@@ -391,35 +508,142 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
             {loading && <Loading />}
 
             <Box
-                sx={{
-                    width: "auto",
-                    height: "auto",
-                    bgcolor: "white",
-                    marginBottom: "15px",
-                    p: 1,
-                    borderRadius: 2,
-                    boxShadow: 3,
-                    alignSelf: "flex-start",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                }}
-            >
-                <ExportVariablePay />
-                <ImportVariablePay handleToast={handleToast} onboardName={user?.name || null} />
+  sx={{
+    width: "auto",
+    height: "auto",
+    bgcolor: "white",
+    marginBottom: "15px",
+    p: 1,
+    borderRadius: 2,
+    boxShadow: 3,
+    alignSelf: "flex-start",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: { xs: "wrap", sm: "nowrap" }, // Allows items to wrap on extra small devices
+  }}
+>
+  <Tabs
+    value={tabValue}
+    onChange={handleTabChange}
+    aria-label="tabs example"
+    sx={{
+      ".MuiTabs-indicator": {
+        display: "none",
+      },
+      minHeight: "auto",
+    }}
+  >
+    {/* Add Tab components here if needed */}
+  </Tabs>
 
+  <Box
+    sx={{
+      display: "flex",
+      flexDirection: { xs: "column", sm: "row" }, // Stacks items vertically on small screens
+      alignItems: { xs: "stretch", sm: "center" },
+      gap: 2,
+      height: "auto",
+      width: "100%",
+      justifyContent: { xs: "flex-start", sm: "space-between" },
+    }}
+  >
+    <Box
+      sx={{
+        width: { xs: "100%", sm: "40%" },
+        gap: "20px",
+        display: "flex",
+        flexDirection: "row", // Stack selectors vertically on all sizes
+        alignItems: "flex-start",
+      }}
+    >
+      <Select
+        value={selectedMonth}
+        sx={{ width: "100%" }}
+        onChange={(e) => setSelectedMonth(e.target.value)}
+        displayEmpty
+      >
+        <MenuItem value="" disabled>
+          Select Month
+        </MenuItem>
+        {months.map((month) => (
+          <MenuItem key={month.value} value={month.value}>
+            {month.label}
+          </MenuItem>
+        ))}
+      </Select>
 
-                <TablePagination
-                    className="custom-pagination"
-                    rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                    count={labours.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handlePageChange}
-                    onRowsPerPageChange={handleRowsPerPageChange}
-                />
-            </Box>
+      <Select
+        value={selectedYear}
+        sx={{ width: "100%" }}
+        onChange={(e) => setSelectedYear(e.target.value)}
+        displayEmpty
+      >
+        <MenuItem value="" disabled>
+          Select Year
+        </MenuItem>
+        {[2024, 2025].map((year) => (
+          <MenuItem key={year} value={year}>
+            {year}
+          </MenuItem>
+        ))}
+      </Select>
+
+      <Button
+        variant="contained"
+        sx={{
+          fontSize: { xs: "10px", sm: "13px" },
+          height: "40px",
+          width: "100%",
+          backgroundColor: "rgb(229, 255, 225)",
+          color: "rgb(43, 217, 144)",
+          "&:hover": {
+            backgroundColor: "rgb(229, 255, 225)",
+          },
+        }}
+        onClick={fetchSalaryGenerationForDateMonthAll}
+        disabled={loading}
+      >
+        Fetch Attendance
+      </Button>
+    </Box>
+    <Box
+      sx={{
+        display: "flex",
+        marginRight: "20px",
+        flexDirection: { xs: "row", sm: "row" },
+      }}
+    >
+      <Box
+        sx={{
+          width: { xs: "100%", sm: "auto" },
+          display: "flex",
+          flexDirection: { xs: "row", sm: "row" },
+          gap: "20px",
+          alignItems: "center",
+          justifyContent: "space-evenly",
+        }}
+      >
+        <ExportVariablePay />
+        <ImportVariablePay
+          handleToast={handleToast}
+          onboardName={user?.name || null}
+        />
+
+        <TablePagination
+          className="custom-pagination"
+          rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
+          count={labours.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+        />
+      </Box>
+    </Box>
+  </Box>
+</Box>
+
 
             <TableContainer
                 component={Paper}
@@ -463,12 +687,14 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                 <TableCell>Name</TableCell>
                                 <TableCell>Project</TableCell>
                                 <TableCell>Department</TableCell>
-                                <TableCell>Select Variable</TableCell>
-                                <TableCell>Select Remark</TableCell>
-                                <TableCell>Add Amount</TableCell>
-                                <TableCell>Date</TableCell>
-                                <TableCell>History</TableCell>
+                                <TableCell>Attendance Count</TableCell>
+                                <TableCell>Present Days</TableCell>
+                                <TableCell>Total OT Hours</TableCell>
+                                <TableCell>Wages Amount</TableCell>
+                                <TableCell>Advance Pay</TableCell>
+                                <TableCell>Incentive Pay</TableCell>
                                 <TableCell>Action</TableCell>
+                                <TableCell>History</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody
