@@ -96,51 +96,6 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     ];
 
 
-    // const fetchAttendanceForMonthAll = async () => {
-    //     if (!selectedMonth || !selectedYear) {
-    //         toast.warning('Please select a valid month and year.');
-    //         return;
-    //     }
-    //     setLoading(true);
-    //     try {
-    //         const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`, {
-    //             params: { month: selectedMonth, year: selectedYear },
-    //         });
-
-    //         const attendanceList = response.data;
-
-    //         const processedAttendance = attendanceList.map((labour, index) => {
-    //             const totalOvertime = labour.TotalOvertimeHours ?? 0;  
-    
-    //             return {
-    //                 srNo: index + 1,
-    //                 labourId: labour.LabourId,
-    //                 name: labour.Name,
-    //                 attendanceCount: labour.attendanceCount,
-    //                 presentDays: labour.PresentDays,
-    //                 halfDays: labour.HalfDays,
-    //                 absentDays: labour.AbsentDays,
-    //                 misspunchDays: labour.MissPunchDays,
-    //                 totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
-    //                 shift: labour.Shift,
-    //             };
-    //         });
-
-    //         setAttendanceData(processedAttendance);
-    //     } catch (error) {
-    //         console.error('Error fetching attendance data:', error);
-    //         toast.error(error.response?.data?.message || 'Error fetching attendance data. Please try again later.');
-    //     }
-    //     setLoading(false);
-    // };
-
-    // useEffect(() => {
-    //     if (selectedMonth && selectedYear) {
-    //         fetchAttendanceForMonthAll();
-    //     }
-    // }, [selectedMonth, selectedYear]);
-
-
 
     const fetchSalaryGenerationForDateMonthAll = async () => {
         if (!selectedMonth || !selectedYear) {
@@ -148,35 +103,42 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
             return;
         }
         setLoading(true);
-    
+
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationData`, {
+            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationDataAllLabours`, {
                 params: { month: selectedMonth, year: selectedYear },
             });
-    
+
             const salaryData = response.data;
-    
+
             const ShowSalaryGeneration = salaryData.map((labour, index) => {
-                const { attendance, wages, variablePay, totalOvertime } = labour;
-    
                 return {
                     srNo: index + 1,
-                    labourId: labour.labourId,
-                    name: labour.name,
-                    project: labour.project,
-                    department: labour.department,
-                    attendanceCount: attendance.presentDays + attendance.halfDays + attendance.missPunchDays,
-                    presentDays: attendance.presentDays,
-                    halfDays: attendance.halfDays,
-                    absentDays: attendance.absentDays,
-                    missPunchDays: attendance.missPunchDays,
-                    totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
-                    wagesAmount: wages ? wages.calculatedWages.dailyWages : 0,
-                    advancePay: variablePay ? variablePay.advance : 0,
-                    incentivePay: variablePay ? variablePay.incentive : 0,
+                    LabourID: labour.labourId,
+                    name: labour.name || "-",
+                    projectName: labour.businessUnit || "-",
+                    department: labour.departmentName || "-",
+                    attendanceCount: labour.attendanceCount || 0,
+                    presentDays: labour.presentDays || 0,
+                    absentDays: labour.absentDays || 0,
+                    halfDays: labour.halfDays || 0,
+                    totalOvertimeHours: labour.cappedOvertime || 0,
+                    basicSalary: labour.basicSalary || 0,
+                    overtimePay: labour.overtimePay || 0,
+                    weeklyOffPay: labour.weeklyOffPay || 0,
+                    bonuses: labour.bonuses || 0,
+                    totalDeductions: labour.totalDeductions || 0,
+                    grossPay: labour.grossPay || 0,
+                    netPay: labour.netPay || 0,
+                    advancePay: labour.advance || 0,
+                    advanceRemarks: labour.advanceRemarks || "-",
+                    debit: labour.debit || 0,
+                    debitRemarks: labour.debitRemarks || "-",
+                    incentivePay: labour.incentive || 0,
+                    incentiveRemarks: labour.incentiveRemarks || "-",
                 };
             });
-    
+
             setAttendanceData(ShowSalaryGeneration);
         } catch (error) {
             console.error('Error fetching salary generation data:', error);
@@ -184,14 +146,71 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
         }
         setLoading(false);
     };
-    
-    
+
     useEffect(() => {
         if (selectedMonth && selectedYear) {
             fetchSalaryGenerationForDateMonthAll();
         }
     }, [selectedMonth, selectedYear]);
-    
+
+    // const fetchSalaryGenerationForDateMonthAll = async () => {
+    //     if (!selectedMonth || !selectedYear) {
+    //         toast.warning('Please select a valid month and year.');
+    //         return;
+    //     }
+    //     setLoading(true);
+
+    //     try {
+    //         const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationDataAllLabours`, {
+    //             params: { month: selectedMonth, year: selectedYear },
+    //         });
+
+    //         const salaryData = response.data;
+
+    //         const ShowSalaryGeneration = salaryData.map((labour, index) => {
+    //             const { attendance = {}, wages = null, variablePay = {}, totalOvertime = 0 } = labour;
+
+    //             return {
+    //                 srNo: index + 1,
+    //                 LabourID: labour.labourId,
+    //                 name: labour.name || "-",
+    //                 project: labour.project || "-",
+    //                 department: labour.department || "-",
+    //                 attendanceCount: (attendance.presentDays || 0) + (attendance.halfDays || 0) + (attendance.missPunchDays || 0),
+    //                 presentDays: attendance.presentDays || 0,
+    //                 halfDays: attendance.halfDays || 0,
+    //                 absentDays: attendance.absentDays || 0,
+    //                 missPunchDays: attendance.missPunchDays || 0,
+    //                 totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
+    //                 wagesAmount: wages ? wages.calculatedWages?.dailyWages || wages.calculatedWages?.monthlyWages || 0 : 0,
+    //                 advancePay: variablePay?.advance || 0,
+    //                 incentivePay: variablePay?.incentive || 0,
+    //             };
+    //         });
+
+    //         setAttendanceData(ShowSalaryGeneration);
+    //     } catch (error) {
+    //         console.error('Error fetching salary generation data:', error);
+    //         toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
+    //     }
+    //     setLoading(false);
+    // };
+
+    // useEffect(() => {
+    //     if (selectedMonth && selectedYear) {
+    //         fetchSalaryGenerationForDateMonthAll();
+    //     }
+    // }, [selectedMonth, selectedYear]);
+
+    const handleOpenModal = (labour) => {
+        setSelectedLabour(labour);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedLabour(null);
+        setModalOpen(false);
+    };
 
 
     const handleCancel = () => {
@@ -285,7 +304,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
         setOpenModal(true);
     };
 
-    const filteredLabours = getLatestLabourData(labours);
+    const filteredLabours = getLatestLabourData(attendanceData);
     const paginatedLabours = filteredLabours.slice(
         page * rowsPerPage,
         (page + 1) * rowsPerPage
@@ -364,7 +383,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                     )
                 );
 
-                toast.success(`Labour ${selectedLabour.name} Variable Pay sent for Admin Approval`);
+                toast.info(`Labour ${selectedLabour.name} Variable Pay sent for Admin Approval`);
             } else {
                 toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
             }
@@ -474,15 +493,18 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     };
 
 
-    const handleEffectiveDateChange = (e, labourID) => {
-        const updatedLabours = labours.map(labour => {
-            if (labour.LabourID === labourID) {
-                return { ...labour, effectiveDate: e.target.value };
-            }
-            return labour;
-        });
-        setLabours(updatedLabours);
-    };
+    // const [selectedLabour, setSelectedLabour] = useState(null);
+    // const [isModalOpen, setModalOpen] = useState(false);
+
+    // const handleOpenModal = (labour) => {
+    //     setSelectedLabour(labour);
+    //     setModalOpen(true);
+    // };
+
+    // const handleCloseModal = () => {
+    //     setSelectedLabour(null);
+    //     setModalOpen(false);
+    // };
 
 
 
@@ -508,141 +530,141 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
             {loading && <Loading />}
 
             <Box
-  sx={{
-    width: "auto",
-    height: "auto",
-    bgcolor: "white",
-    marginBottom: "15px",
-    p: 1,
-    borderRadius: 2,
-    boxShadow: 3,
-    alignSelf: "flex-start",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: { xs: "wrap", sm: "nowrap" }, // Allows items to wrap on extra small devices
-  }}
->
-  <Tabs
-    value={tabValue}
-    onChange={handleTabChange}
-    aria-label="tabs example"
-    sx={{
-      ".MuiTabs-indicator": {
-        display: "none",
-      },
-      minHeight: "auto",
-    }}
-  >
-    {/* Add Tab components here if needed */}
-  </Tabs>
+                sx={{
+                    width: "auto",
+                    height: "auto",
+                    bgcolor: "white",
+                    marginBottom: "15px",
+                    p: 1,
+                    borderRadius: 2,
+                    boxShadow: 3,
+                    alignSelf: "flex-start",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: { xs: "wrap", sm: "nowrap" }, // Allows items to wrap on extra small devices
+                }}
+            >
+                <Tabs
+                    value={tabValue}
+                    onChange={handleTabChange}
+                    aria-label="tabs example"
+                    sx={{
+                        ".MuiTabs-indicator": {
+                            display: "none",
+                        },
+                        minHeight: "auto",
+                    }}
+                >
+                    {/* Add Tab components here if needed */}
+                </Tabs>
 
-  <Box
-    sx={{
-      display: "flex",
-      flexDirection: { xs: "column", sm: "row" }, // Stacks items vertically on small screens
-      alignItems: { xs: "stretch", sm: "center" },
-      gap: 2,
-      height: "auto",
-      width: "100%",
-      justifyContent: { xs: "flex-start", sm: "space-between" },
-    }}
-  >
-    <Box
-      sx={{
-        width: { xs: "100%", sm: "40%" },
-        gap: "20px",
-        display: "flex",
-        flexDirection: "row", // Stack selectors vertically on all sizes
-        alignItems: "flex-start",
-      }}
-    >
-      <Select
-        value={selectedMonth}
-        sx={{ width: "100%" }}
-        onChange={(e) => setSelectedMonth(e.target.value)}
-        displayEmpty
-      >
-        <MenuItem value="" disabled>
-          Select Month
-        </MenuItem>
-        {months.map((month) => (
-          <MenuItem key={month.value} value={month.value}>
-            {month.label}
-          </MenuItem>
-        ))}
-      </Select>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: { xs: "column", sm: "row" }, // Stacks items vertically on small screens
+                        alignItems: { xs: "stretch", sm: "center" },
+                        gap: 2,
+                        height: "auto",
+                        width: "100%",
+                        justifyContent: { xs: "flex-start", sm: "space-between" },
+                    }}
+                >
+                    <Box
+                        sx={{
+                            width: { xs: "100%", sm: "40%" },
+                            gap: "20px",
+                            display: "flex",
+                            flexDirection: "row", // Stack selectors vertically on all sizes
+                            alignItems: "flex-start",
+                        }}
+                    >
+                        <Select
+                            value={selectedMonth}
+                            sx={{ width: "100%" }}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled>
+                                Select Month
+                            </MenuItem>
+                            {months.map((month) => (
+                                <MenuItem key={month.value} value={month.value}>
+                                    {month.label}
+                                </MenuItem>
+                            ))}
+                        </Select>
 
-      <Select
-        value={selectedYear}
-        sx={{ width: "100%" }}
-        onChange={(e) => setSelectedYear(e.target.value)}
-        displayEmpty
-      >
-        <MenuItem value="" disabled>
-          Select Year
-        </MenuItem>
-        {[2024, 2025].map((year) => (
-          <MenuItem key={year} value={year}>
-            {year}
-          </MenuItem>
-        ))}
-      </Select>
+                        <Select
+                            value={selectedYear}
+                            sx={{ width: "100%" }}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled>
+                                Select Year
+                            </MenuItem>
+                            {[2024, 2025].map((year) => (
+                                <MenuItem key={year} value={year}>
+                                    {year}
+                                </MenuItem>
+                            ))}
+                        </Select>
 
-      <Button
-        variant="contained"
-        sx={{
-          fontSize: { xs: "10px", sm: "13px" },
-          height: "40px",
-          width: "100%",
-          backgroundColor: "rgb(229, 255, 225)",
-          color: "rgb(43, 217, 144)",
-          "&:hover": {
-            backgroundColor: "rgb(229, 255, 225)",
-          },
-        }}
-        onClick={fetchSalaryGenerationForDateMonthAll}
-        disabled={loading}
-      >
-        Fetch Attendance
-      </Button>
-    </Box>
-    <Box
-      sx={{
-        display: "flex",
-        marginRight: "20px",
-        flexDirection: { xs: "row", sm: "row" },
-      }}
-    >
-      <Box
-        sx={{
-          width: { xs: "100%", sm: "auto" },
-          display: "flex",
-          flexDirection: { xs: "row", sm: "row" },
-          gap: "20px",
-          alignItems: "center",
-          justifyContent: "space-evenly",
-        }}
-      >
-        <ExportVariablePay />
-        <ImportVariablePay
-          handleToast={handleToast}
-          onboardName={user?.name || null}
-        />
+                        <Button
+                            variant="contained"
+                            sx={{
+                                fontSize: { xs: "10px", sm: "13px" },
+                                height: "40px",
+                                width: "70%",
+                                backgroundColor: "rgb(229, 255, 225)",
+                                color: "rgb(43, 217, 144)",
+                                "&:hover": {
+                                    backgroundColor: "rgb(229, 255, 225)",
+                                },
+                            }}
+                            onClick={fetchSalaryGenerationForDateMonthAll}
+                            disabled={loading}
+                        >
+                            PayRoll
+                        </Button>
+                    </Box>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            marginRight: "20px",
+                            flexDirection: { xs: "row", sm: "row" },
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: { xs: "100%", sm: "auto" },
+                                display: "flex",
+                                flexDirection: { xs: "row", sm: "row" },
+                                gap: "20px",
+                                alignItems: "center",
+                                justifyContent: "space-evenly",
+                            }}
+                        >
+                            <ExportVariablePay />
+                            <ImportVariablePay
+                                handleToast={handleToast}
+                                onboardName={user?.name || null}
+                            />
 
-        <TablePagination
-          className="custom-pagination"
-          rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
-          count={labours.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handlePageChange}
-          onRowsPerPageChange={handleRowsPerPageChange}
-        />
-      </Box>
-    </Box>
-  </Box>
-</Box>
+                            <TablePagination
+                                className="custom-pagination"
+                                rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
+                                count={labours.length}
+                                rowsPerPage={rowsPerPage}
+                                page={page}
+                                onPageChange={handlePageChange}
+                                onRowsPerPageChange={handleRowsPerPageChange}
+                            />
+                        </Box>
+                    </Box>
+                </Box>
+            </Box>
 
 
             <TableContainer
@@ -688,13 +710,20 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                 <TableCell>Project</TableCell>
                                 <TableCell>Department</TableCell>
                                 <TableCell>Attendance Count</TableCell>
-                                <TableCell>Present Days</TableCell>
                                 <TableCell>Total OT Hours</TableCell>
-                                <TableCell>Wages Amount</TableCell>
+                                <TableCell>Overtime Pay</TableCell>
+                                <TableCell>Weekly Off Pay</TableCell>
+                                <TableCell>Basic Salary</TableCell>
+                                <TableCell>Bonuse</TableCell>
+                                <TableCell>Total Deductions</TableCell>
+                                <TableCell>Gross Pay</TableCell>
+                                <TableCell>Net Pay</TableCell>
                                 <TableCell>Advance Pay</TableCell>
+                                <TableCell>Advance Remarks</TableCell>
+                                <TableCell>Debit</TableCell>
+                                <TableCell>Debit Remarks</TableCell>
                                 <TableCell>Incentive Pay</TableCell>
-                                <TableCell>Action</TableCell>
-                                <TableCell>History</TableCell>
+                                <TableCell>Incentive Remarks</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody
@@ -711,221 +740,71 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     <TableCell>{labour.LabourID}</TableCell>
                                     <TableCell>{labour.name || '-'}</TableCell>
-                                    <TableCell>{labour.businessUnit || '-'}</TableCell>
-                                    <TableCell>{labour.departmentName || '-'}</TableCell>
-                                    <TableCell>
-                                        <FormControl variant="standard" fullWidth sx={{ mb: 2 }}>
-                                            <InputLabel id="pay-structure-label">Select Variable Pay</InputLabel>
-                                            <Select
-                                                labelId="pay-structure-label"
-                                                value={labour.payStructure || ''}
-                                                onChange={(e) => handlePayStructureChange(e, labour.LabourID)}
-                                                displayEmpty
-                                            >
-                                                <MenuItem value="" disabled>
-                                                    Select Variable Pay
-                                                </MenuItem>
-                                                <MenuItem value="Advance">Advance</MenuItem>
-                                                <MenuItem value="Debit">Debit</MenuItem>
-                                                <MenuItem value="Incentive">Incentive</MenuItem>
-                                            </Select>
-                                        </FormControl>
+                                    <TableCell>{labour.projectName || '-'}</TableCell>
+                                    <TableCell>{labour.department || '-'}</TableCell>
+                                    <TableCell
+                                        onClick={() => handleOpenModal(labour)}
+                                        sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
+                                    >
+                                        {labour.attendanceCount}
                                     </TableCell>
+                                    <TableCell>{labour.totalOvertimeHours}</TableCell>
+                                    <TableCell>{labour.overtimePay}</TableCell>
+                                    <TableCell>{labour.weeklyOffPay}</TableCell>
+                                    <TableCell>{labour.basicSalary}</TableCell>
+                                    <TableCell>{labour.bonuses}</TableCell>
+                                    <TableCell>{labour.totalDeductions}</TableCell>
+                                    <TableCell>{labour.grossPay}</TableCell>
+                                    <TableCell>{labour.netPay}</TableCell>
+                                    <TableCell>{labour.advancePay}</TableCell>
+                                    <TableCell>{labour.advanceRemarks}</TableCell>
+                                    <TableCell>{labour.debit}</TableCell>
+                                    <TableCell>{labour.debitRemarks}</TableCell>
+                                    <TableCell>{labour.incentivePay}</TableCell>
+                                    <TableCell>{labour.incentiveRemarks}</TableCell>
 
-                                    <TableCell>
-                                        <FormControl variant="standard" fullWidth sx={{ mb: 2 }} disabled={!labour.payStructure}>
-                                            <InputLabel id="remark-label">Select Remark</InputLabel>
-                                            <Select
-                                                labelId="remark-label"
-                                                value={labour.variablePayRemark || ''}
-                                                onChange={(e) => handleRemarkChange(e, labour.LabourID)}
-                                                displayEmpty
-                                            >
-                                                <MenuItem value="" disabled>Select Remark</MenuItem>
-                                                {labour.payStructure ? getRemarksOptions(labour.payStructure).map(variablePayRemark => (
-                                                    <MenuItem key={variablePayRemark} value={variablePayRemark}>{variablePayRemark}</MenuItem>
-                                                )) : null}
-                                            </Select>
-                                        </FormControl>
-                                    </TableCell>
-
-
-                                    <TableCell sx={{ mr: 5 }}>
-                                        <TextField
-                                            id="standard-number"
-                                            label="Variable Pay"
-                                            type="number"
-                                            variant="standard"
-                                            fullWidth
-                                            value={labour.variablePay || ''}
-                                            onChange={(e) => handleVariablePayChange(e, labour.LabourID)}
-                                            InputLabelProps={{
-                                                shrink: true,
-                                            }}
-                                            inputProps={{
-                                                maxLength: 5  // Restrict max length of input
-                                            }}
-                                            error={labour.variablePay && labour.variablePay.length > 5}
-                                            sx={{ mb: 2 }}
-                                        />
-                                    </TableCell>
-
-                                    <TableCell>
-                                        <TextField
-                                            id="effective-date"
-                                            label="Effective Date"
-                                            type="date"
-                                            variant="standard"
-                                            fullWidth
-                                            value={labour.effectiveDate || new Date().toISOString().split('T')[0]} // Default to today's date if no effective date set
-                                            onChange={(e) => handleEffectiveDateChange(e, labour.LabourID)}
-                                            InputLabelProps={{
-                                                shrink: true, // Ensures the label doesn't overlap with the input value
-                                            }}
-                                            inputProps={{
-                                                readOnly: true, // Makes the date picker read-only
-                                            }}
-                                            sx={{ mb: 2 }}
-                                            required
-                                        />
-                                    </TableCell>
-
-
-                                    <TableCell>
-                                        <IconButton
-                                            color="rgb(239,230,247)"
-                                            onClick={() => handleViewHistory(labour.LabourID)}
-                                        >
-                                            <VisibilityIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant="contained"
-                                            sx={{
-                                                backgroundColor: 'rgb(229, 255, 225)',
-                                                color: 'rgb(43, 217, 144)',
-                                                width: '100px',
-                                                marginRight: '10px',
-                                                marginBottom: '3px',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgb(229, 255, 225)',
-                                                },
-                                            }}
-                                            onClick={() => handleApproved(labour)}
-                                            disabled={!labour.payStructure || !labour.variablePayRemark || !labour.variablePay} // Button is disabled if either payStructure or variablePayRemark is not selected
-                                        >
-                                            Approve
-                                        </Button>
-                                        {/* <Button
-                                            variant="contained"
-                                            sx={{
-                                                backgroundColor: 'rgb(239,230,247)',
-                                                color: 'rgb(130,54,188)',
-                                                '&:hover': { backgroundColor: 'rgb(239,230,247)' },
-                                            }}
-                                            onClick={() => handleEdit(labour)}
-                                        >
-                                            Add
-                                        </Button> */}
-                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </Box>
             </TableContainer>
-
-
-            {/* Modal for Add Variable Pay */}
-            <Modal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-                aria-labelledby="modal-title"
-                aria-describedby="modal-description"
-            >
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        width: 400,
-                        bgcolor: "background.paper",
-                        boxShadow: 24,
-                        p: 4,
-                        borderRadius: 2,
-                    }}
-                >
-                    <Typography id="modal-title" variant="h6" gutterBottom>
-                        Add Variable Pay
-                    </Typography>
-                    <Typography id="modal-description" gutterBottom>
-                        Selected Labour: {selectedLabour?.name || 'Not Selected'}
-                    </Typography>
-                    <Select
-                        fullWidth
-                        value={selectedLabour?.payStructure || ''}
-                        onChange={(e) => handlePayStructureChange(e, selectedLabour?.LabourID)}
-                        displayEmpty
-                        sx={{ mb: 2 }}
+            <Modal open={modalOpen} onClose={() => setModalOpen(false)} aria-labelledby="attendance-details-modal">
+               <Box sx={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    width: 400,
+                    bgcolor: "background.paper",
+                    boxShadow: 24,
+                    p: 4,
+                    borderRadius: 2
+                }}>
+                    <Typography
+                        variant="h6"
+                        sx={{ mb: 4, fontSize: { xs: "1rem", sm: "1.25rem" } }}
                     >
-                        <MenuItem value="" disabled>
-                            Select Variable Pay
-                        </MenuItem>
-                        <MenuItem value="Advance">Advance</MenuItem>
-                        <MenuItem value="Debit">Debit</MenuItem>
-                        <MenuItem value="Incentive">Incentive</MenuItem>
-                    </Select>
-                    <TextField
-                        label="Variable Pay"
-                        type="number"
-                        fullWidth
-                        value={selectedLabour?.variablePay}
-                        onChange={(e) => {
-                            // Allow only numbers and prevent 'e' or other non-numeric characters
-                            const value = e.target.value;
-                            if (!isNaN(value) && !value.includes('e')) {
-                                handleVariablePayChange(e, selectedLabour.LabourID);
-                            }
-                        }}
-                        sx={{ mb: 2 }}
-                    />
+                        Labour ID: {selectedLabour?.LabourID || "N/A"}
+                    </Typography>
 
-
-                    <TextField
-                        label="Effective Date"
-                        type="date"
-                        fullWidth
-                        value={new Date().toISOString().split('T')[0]} // Sets the date to today's date
-                        InputLabelProps={{ shrink: true }}
-                        inputProps={{
-                            readOnly: true, // Makes the date picker read-only
-                        }}
-                        sx={{ mb: 2 }}
-                        required
-                    />
-
-                    <Box display="flex" justifyContent="space-between">
-                        <Button
-                            variant="outlined"
-                            onClick={() => setModalOpen(false)}
-                            sx={{ width: "45%" }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => handleModalTransfer(selectedLabour)}
-                            sx={{ width: "45%" }}
-                        >
-                            Add Pay
-                        </Button>
+                    <Box sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1,
+                    }}>
+                        <Typography><strong  style={{ marginRight:'25%'}}>Name:</strong> {selectedLabour?.name || "N/A"}</Typography>
+                        <Typography><strong style={{ marginRight:'12%'}}>Present Days:</strong> {selectedLabour?.presentDays || 0}</Typography>
+                        <Typography><strong style={{ marginRight:'13%'}}>Absent Days:</strong> {selectedLabour?.absentDays || 0}</Typography>
+                        <Typography><strong style={{ marginRight:'18.5%'}}>Half Days:</strong> {selectedLabour?.halfDays || 0}</Typography>
+                        <Typography><strong style={{ marginRight:'5%'}}>Miss Punch Days:</strong> {selectedLabour?.missPunchDays || 0}</Typography>
                     </Box>
+
+                    <Button variant="contained" sx={{ mt: 3, float:'right' }} onClick={handleCloseModal}>
+                        Close
+                    </Button>
                 </Box>
             </Modal>
-
 
             {/* Dialog for Confirmation */}
             <Dialog open={openDialogSite} onClose={() => setOpenDialogSite(false)}>
@@ -1018,7 +897,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                             fontSize: { xs: "1rem", sm: "1.25rem" },
                         }}
                     >
-                        Variable Pay History Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
+                         Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
                     </Typography>
 
                     {/* Modal Content */}

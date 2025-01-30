@@ -266,7 +266,7 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
                     )
                 );
 
-                toast.success(`Labour ${selectedLabour.name} Variable Pay sent for Admin Approval`);
+                toast.info(`Labour ${selectedLabour.name} Variable Pay sent for Admin Approval`);
             } else {
                 toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
             }
