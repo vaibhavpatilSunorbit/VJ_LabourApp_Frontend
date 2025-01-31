@@ -18,27 +18,27 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, CircularProgress 
+    DialogActions, FormControl, InputLabel, Tabs, Grid, Divider
 } from '@mui/material';
-import { modalStyle } from './modalStyles.js';
-import { useNavigate } from 'react-router-dom';
+import { modalStyle } from '../modalStyles.js';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchRegister';
-import Loading from "../Loading/Loading";
-import { API_BASE_URL } from "../../Data";
+import SearchBar from '../../SarchBar/SearchRegister';
+import Loading from "../../Loading/Loading.jsx";
+import { API_BASE_URL } from "../../../Data";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useUser } from '../../UserContext/UserContext';
-import ExportVariablePay from '../VariableInputs/ImportExportVariablePay/ExportVariablePay'
-import ImportVariablePay from '../VariableInputs/ImportExportVariablePay/ImportVariablePay'
+import { useUser } from '../../../UserContext/UserContext';
+import ExportVariablePay from '../../VariableInputs/ImportExportVariablePay/ExportVariablePay'
+import ImportVariablePay from '../../VariableInputs/ImportExportVariablePay/ImportVariablePay'
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
 import { parse } from "fast-xml-parser";
-import "./salaryRegister.css";
-import logo from "../../images/vjlogo.png";
+import "../salaryRegister.css";
+import logo from "../../../images/vjlogo.png";
 
-const SalaryRegister = ({ departments, projectNames = [], labour }) => {
+const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
@@ -63,13 +63,38 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     const [selectedHistory, setSelectedHistory] = useState([]);
     const currentDate = new Date();
     const currentMonth = (currentDate.getMonth() + 1).toString();
-    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    // const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+    // const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [openDialogSite, setOpenDialogSite] = useState(false);
     const [statusesSite, setStatusesSite] = useState({});
     const [effectiveDate, setEffectiveDate] = useState("");
-    const [navigating, setNavigating] = useState(false);
+    const location = useLocation();
     const navigate = useNavigate();
+
+    // Extract selectedMonth and selectedYear from navigation state
+    const { selectedMonth, selectedYear } = location.state || {};
+
+    const fetchLabours = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`, {
+                params: { month: selectedMonth, year: selectedYear },
+            });
+            setLabours(response.data);
+            console.log("response.data .", response.data)
+        } catch (error) {
+            console.error('Error fetching labours:', error);
+            toast.error('Failed to fetch data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedMonth && selectedYear) {
+            fetchLabours();
+        }
+    }, [selectedMonth, selectedYear]);
 
     const months = [
         { value: 1, label: 'January' },
@@ -86,164 +111,76 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
         { value: 12, label: 'December' }
     ];
 
-    const fetchLabours = async () => {
+
+
+    const fetchSalaryGenerationForDateMonthAll = async () => {
+        setLoading(true);
         if (!selectedMonth || !selectedYear) {
             toast.warning('Please select a valid month and year.');
+            setLoading(false); 
             return;
         }
-        setLoading(true);
+
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`, {
+            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationDataAllLabours`, {
                 params: { month: selectedMonth, year: selectedYear },
             });
-
-            console.log("response.data:", response.data);
-
-            // Access the 'labourIds' array from the response
-            const salaryData = response.data.labourIds;
-
-            // Verify that salaryData is an array
+            const salaryData = response.data;
             if (!Array.isArray(salaryData)) {
-                throw new Error('Expected salaryData to be an array');
+                throw new Error('Unexpected data format received from the API.');
+            }
+            if (salaryData.length === 0) {
+                setAttendanceData([]); 
+                return;
             }
 
-            // Map the salaryData to the desired structure
-            const ShowSalaryGeneration = salaryData.map((labour, index) => ({
-                srNo: index + 1,
-                LabourID: labour.labourId,
-                name: labour.name || "-",
-                projectName: labour.businessUnit || "-", // Updated key
-                department: labour.departmentName || "-",
-                attendanceCount: labour.attendanceCount || 0,
-            }));
+            const ShowSalaryGeneration = salaryData.map((labour, index) => {
+                return {
+                    srNo: index + 1,
+                    LabourID: labour.labourId,
+                    name: labour.name || "-",
+                    projectName: labour.businessUnit || "-",
+                    department: labour.departmentName || "-",
+                    attendanceCount: labour.attendanceCount || 0,
+                    presentDays: labour.presentDays || 0,
+                    absentDays: labour.absentDays || 0,
+                    halfDays: labour.halfDays || 0,
+                    totalOvertimeHours: labour.cappedOvertime || 0,
+                    basicSalary: labour.basicSalary || 0,
+                    overtimePay: labour.overtimePay || 0,
+                    weeklyOffPay: labour.weeklyOffPay || 0,
+                    bonuses: labour.bonuses || 0,
+                    totalDeductions: labour.totalDeductions || 0,
+                    grossPay: labour.grossPay || 0,
+                    netPay: labour.netPay || 0,
+                    advancePay: labour.advance || 0,
+                    advanceRemarks: labour.advanceRemarks || "-",
+                    debit: labour.debit || 0,
+                    debitRemarks: labour.debitRemarks || "-",
+                    incentivePay: labour.incentive || 0,
+                    incentiveRemarks: labour.incentiveRemarks || "-",
+                    month: labour.month || "-",
+                    year: labour.year || "-",
+                    wageType: labour.wageType || "-",
+                    dailyWageRate: labour.dailyWageRate || 0,
+                    fixedMonthlyWage: labour.fixedMonthlyWage || 0,  
+                };
+            });
 
-            setLabours(ShowSalaryGeneration);
+            setAttendanceData(ShowSalaryGeneration);
         } catch (error) {
-            console.error('Error fetching labours:', error);
-            toast.error('Failed to fetch data: ' + (error.message || 'Unknown error'));
-        } finally {
-            setLoading(false);
+            console.error('Error fetching salary generation data:', error);
+            toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
         }
+        setLoading(false);
     };
 
     useEffect(() => {
         if (selectedMonth && selectedYear) {
-            fetchLabours();
+            fetchSalaryGenerationForDateMonthAll();
         }
     }, [selectedMonth, selectedYear]);
 
-
-
-
-    // const fetchSalaryGenerationForDateMonthAll = async () => {
-    //     if (!selectedMonth || !selectedYear) {
-    //         toast.warning('Please select a valid month and year.');
-    //         return;
-    //     }
-    //     setLoading(true);
-
-    //     try {
-    //         const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`, {
-    //             params: { month: selectedMonth, year: selectedYear },
-    //         });
-
-    //         const salaryData = response.data;
-
-    //         const ShowSalaryGeneration = salaryData.map((labour, index) => {
-    //             return {
-    //                 srNo: index + 1,
-    //                 LabourID: labour.labourId,
-    //                 name: labour.name || "-",
-    //                 projectName: labour.businessUnit || "-",
-    //                 department: labour.departmentName || "-",
-    //                 attendanceCount: labour.attendanceCount || 0,
-    //                 presentDays: labour.presentDays || 0,
-    //                 absentDays: labour.absentDays || 0,
-    //                 halfDays: labour.halfDays || 0,
-    //                 totalOvertimeHours: labour.cappedOvertime || 0,
-    //                 basicSalary: labour.basicSalary || 0,
-    //                 overtimePay: labour.overtimePay || 0,
-    //                 weeklyOffPay: labour.weeklyOffPay || 0,
-    //                 bonuses: labour.bonuses || 0,
-    //                 totalDeductions: labour.totalDeductions || 0,
-    //                 grossPay: labour.grossPay || 0,
-    //                 netPay: labour.netPay || 0,
-    //                 advancePay: labour.advance || 0,
-    //                 advanceRemarks: labour.advanceRemarks || "-",
-    //                 debit: labour.debit || 0,
-    //                 debitRemarks: labour.debitRemarks || "-",
-    //                 incentivePay: labour.incentive || 0,
-    //                 incentiveRemarks: labour.incentiveRemarks || "-",
-    //                 month: labour.month || "-",
-    //                 year: labour.year || "-",
-    //                 wageType: labour.wageType || "-",
-    //                 dailyWageRate: labour.dailyWageRate || 0,
-    //                 fixedMonthlyWage: labour.fixedMonthlyWage || 0,  
-    //             };
-    //         });
-
-    //         setAttendanceData(ShowSalaryGeneration);
-    //     } catch (error) {
-    //         console.error('Error fetching salary generation data:', error);
-    //         toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
-    //     }
-    //     setLoading(false);
-    // };
-
-    // useEffect(() => {
-    //     if (selectedMonth && selectedYear) {
-    //         fetchSalaryGenerationForDateMonthAll();
-    //     }
-    // }, [selectedMonth, selectedYear]);
-
-    // const fetchSalaryGenerationForDateMonthAll = async () => {
-    //     if (!selectedMonth || !selectedYear) {
-    //         toast.warning('Please select a valid month and year.');
-    //         return;
-    //     }
-    //     setLoading(true);
-
-    //     try {
-    //         const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationDataAllLabours`, {
-    //             params: { month: selectedMonth, year: selectedYear },
-    //         });
-
-    //         const salaryData = response.data;
-
-    //         const ShowSalaryGeneration = salaryData.map((labour, index) => {
-    //             const { attendance = {}, wages = null, variablePay = {}, totalOvertime = 0 } = labour;
-
-    //             return {
-    //                 srNo: index + 1,
-    //                 LabourID: labour.labourId,
-    //                 name: labour.name || "-",
-    //                 project: labour.project || "-",
-    //                 department: labour.department || "-",
-    //                 attendanceCount: (attendance.presentDays || 0) + (attendance.halfDays || 0) + (attendance.missPunchDays || 0),
-    //                 presentDays: attendance.presentDays || 0,
-    //                 halfDays: attendance.halfDays || 0,
-    //                 absentDays: attendance.absentDays || 0,
-    //                 missPunchDays: attendance.missPunchDays || 0,
-    //                 totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
-    //                 wagesAmount: wages ? wages.calculatedWages?.dailyWages || wages.calculatedWages?.monthlyWages || 0 : 0,
-    //                 advancePay: variablePay?.advance || 0,
-    //                 incentivePay: variablePay?.incentive || 0,
-    //             };
-    //         });
-
-    //         setAttendanceData(ShowSalaryGeneration);
-    //     } catch (error) {
-    //         console.error('Error fetching salary generation data:', error);
-    //         toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
-    //     }
-    //     setLoading(false);
-    // };
-
-    // useEffect(() => {
-    //     if (selectedMonth && selectedYear) {
-    //         fetchSalaryGenerationForDateMonthAll();
-    //     }
-    // }, [selectedMonth, selectedYear]);
 
     // -------------------------------------   SHOW ATTENDACNE ----------------------
     const handleOpenModal = (labour) => {
@@ -362,23 +299,19 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
         setSelectedLabour(selectedLabour);
     };
 
+    // Filter data to only include the latest entry per LabourID
     const getLatestLabourData = (labours) => {
-        if (!Array.isArray(labours)) {
-          console.error("Expected an array, received:", labours);
-          return [];
-        }
-        
         const latestEntries = {};
         labours.forEach((labour) => {
-          if (
-            labour.LabourID &&
-            (!latestEntries[labour.LabourID] || new Date(labour.Date) > new Date(latestEntries[labour.LabourID].Date))
-          ) {
-            latestEntries[labour.LabourID] = labour;
-          }
+            if (
+                !latestEntries[labour.LabourID] ||
+                new Date(labour.CreatedAt) > new Date(latestEntries[labour.LabourID].CreatedAt)
+            ) {
+                latestEntries[labour.LabourID] = labour;
+            }
         });
         return Object.values(latestEntries);
-      };
+    };
 
     const handleViewHistory = (labourID) => {
         const history = labours.filter((labour) => labour.LabourID === labourID);
@@ -386,7 +319,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
         setOpenModal(true);
     };
 
-    const filteredLabours = getLatestLabourData(labours);
+    const filteredLabours = getLatestLabourData(attendanceData);
     const paginatedLabours = filteredLabours.slice(
         page * rowsPerPage,
         (page + 1) * rowsPerPage
@@ -576,20 +509,28 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
         }
     };
 
-    const navigateToSalaryGeneration = () => {
-        setNavigating(true);
-        navigate('/SalaryGeneration',{ state: { selectedMonth, selectedYear } });
-        setTimeout(() => {
-            navigate('/SalaryGeneration');
-        }, 1000);
-    };
+
+    // const [selectedLabour, setSelectedLabour] = useState(null);
+    // const [isModalOpen, setModalOpen] = useState(false);
+
+    // const handleOpenModal = (labour) => {
+    //     setSelectedLabour(labour);
+    //     setModalOpen(true);
+    // };
+
+    // const handleCloseModal = () => {
+    //     setSelectedLabour(null);
+    //     setModalOpen(false);
+    // };
+
+
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
                 <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
-                    Reports | Salary Register
+                    Reports | Salary Generation
                 </Typography>
                 <SearchBar
                     searchQuery={searchQuery}
@@ -655,10 +596,10 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                             alignItems: "flex-start",
                         }}
                     >
-                        <Select
+                        {/* <Select
                             value={selectedMonth}
                             sx={{ width: "100%" }}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            // onChange={(e) => setSelectedMonth(e.target.value)}
                             displayEmpty
                         >
                             <MenuItem value="" disabled>
@@ -674,7 +615,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                         <Select
                             value={selectedYear}
                             sx={{ width: "100%" }}
-                            onChange={(e) => setSelectedYear(e.target.value)}
+                            // onChange={(e) => setSelectedYear(e.target.value)}
                             displayEmpty
                         >
                             <MenuItem value="" disabled>
@@ -685,7 +626,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                     {year}
                                 </MenuItem>
                             ))}
-                        </Select>
+                        </Select> */}
 
                         <Button
                             variant="contained"
@@ -699,8 +640,8 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                     backgroundColor: "rgb(229, 255, 225)",
                                 },
                             }}
-                            onClick={fetchLabours}
-                            disabled={loading}
+                            onClick={fetchSalaryGenerationForDateMonthAll}
+                            // disabled={loading}
                         >
                             PayRoll
                         </Button>
@@ -722,25 +663,6 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                 justifyContent: "space-evenly",
                             }}
                         >
-                            
-                            <Button
-                        variant="contained"
-                        sx={{
-                            fontSize: { xs: "10px", sm: "13px" },
-                            height: "40px",
-                            width: { xs: "100%", sm: "auto" },
-                            backgroundColor: "rgb(229, 255, 225)",
-                            color: "rgb(43, 217, 144)",
-                            "&:hover": {
-                                backgroundColor: "rgb(229, 255, 225)",
-                            },
-                        }}
-                        onClick={navigateToSalaryGeneration}
-                        disabled={navigating}
-                        startIcon={navigating && <CircularProgress size={20} />}
-                    >
-                        {navigating ? 'Navigating...' : 'Run Salary Generation'}
-                    </Button>
                             <ExportVariablePay />
 
                             <TablePagination
@@ -801,13 +723,13 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                 <TableCell>Project</TableCell>
                                 <TableCell>Department</TableCell>
                                 <TableCell>Attendance Count</TableCell>
-                                {/* <TableCell>Total OT Hours</TableCell>
+                                <TableCell>Total OT Hours</TableCell>
                                 <TableCell>Overtime Pay</TableCell>
                                 <TableCell>Weekly Off Pay</TableCell>
                                 <TableCell>Bonuse</TableCell>
                                 <TableCell>Total Deductions</TableCell>
                                 <TableCell>Basic Salary</TableCell>
-                                <TableCell>Net Pay</TableCell> */}
+                                <TableCell>Net Pay</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody
@@ -832,7 +754,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                     >
                                         {labour.attendanceCount}
                                     </TableCell>
-                                    {/* <TableCell>{labour.totalOvertimeHours}</TableCell>
+                                    <TableCell>{labour.totalOvertimeHours}</TableCell>
                                     <TableCell>{labour.overtimePay}</TableCell>
                                     <TableCell>{labour.weeklyOffPay}</TableCell>
                                     <TableCell
@@ -848,12 +770,13 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                         {labour.totalDeductions}
                                     </TableCell>
                                     <TableCell>{labour.grossPay}</TableCell>
+                                    {/* <TableCell>{labour.netPay}</TableCell> */}
                                     <TableCell
                                         onClick={() => handleOpenModalNetpay(labour)}
                                         sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                     >
                                         {labour.netPay}
-                                    </TableCell> */}
+                                    </TableCell>
 
                                 </TableRow>
                             ))}
@@ -1341,4 +1264,4 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     );
 };
 
-export default SalaryRegister;   
+export default SalaryGeneration;   

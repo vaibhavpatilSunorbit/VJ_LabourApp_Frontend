@@ -96,7 +96,7 @@ export const SidebarData = [
     heading: "Salary Register",
     path: "SalaryRejester",
     roles: ["superadmin"],
-  } 
+  },
 ];
 
 

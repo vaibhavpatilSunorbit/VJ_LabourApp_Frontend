@@ -25,6 +25,7 @@ import WagesApproval from './components/AdminApproval/WagesApproval/WagesApprova
 import VariableInput from './components/VariableInputs/VariableInput';
 import VariableInputApproval from './components/AdminApproval/VariableInputApproval/VariableInputApproval';
 import SalaryRegister from './components/AdminSalary/SalaryRegister';
+import SalaryGeneration from './components/AdminSalary/SalaryGeneration/SalaryGeneration';
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -80,6 +81,8 @@ function App() {
         <Routes>
           {/* Route for Login */}
           <Route path="/" element={<Login />} />
+          {/* <Route path="/SalaryRejester" element={<SalaryRegister />} />
+          <Route path="/SalaryGeneration" element={<SalaryGeneration />} /> */}
           
           {/* Protected Routes with Header and Sidebar */}
           <Route element={<ProtectedRoute />}>
@@ -111,6 +114,7 @@ function App() {
                     <Route path="/variableInput" element={<VariableInput departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/variableInputApproval" element={<VariableInputApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/SalaryRejester" element={<SalaryRegister onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/SalaryGeneration" element={<SalaryGeneration onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }
