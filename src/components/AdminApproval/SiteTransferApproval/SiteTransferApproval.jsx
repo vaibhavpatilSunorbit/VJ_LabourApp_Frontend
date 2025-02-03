@@ -502,6 +502,32 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     // await approveLabourQueue(id);
   };
 
+  const getFilteredLaboursForTab = () => {
+    if (tabValue === 0) {
+      // Pending tab: Filter labours with "Pending" status
+      return filteredIconLabours.length > 0
+        ? filteredIconLabours.filter(labour => labour.adminStatus === 'Pending')
+        : labours.filter(labour => labour.adminStatus === 'Pending');
+    } else if (tabValue === 1) {
+      // Approved tab: Filter labours with "Approved" status
+      return filteredIconLabours.length > 0
+        ? filteredIconLabours.filter(labour => labour.adminStatus === 'Approved')
+        : labours.filter(labour => labour.adminStatus === 'Approved');
+    } else if (tabValue === 2) {
+      // Rejected tab: Filter labours with "Rejected" or "Resubmitted" status
+      return filteredIconLabours.length > 0
+        ? filteredIconLabours.filter(
+          labour => labour.adminStatus === 'Rejected' || labour.adminStatus === 'Resubmitted' || labour.adminStatus === 'Disable'
+        )
+        : labours.filter(
+          labour => labour.adminStatus === 'Rejected' || labour.adminStatus === 'Resubmitted' || labour.adminStatus === 'Disable'
+        );
+    }
+    // return filteredIconLabours.length > 0 ? filteredIconLabours : labours;
+    return filteredLabours.length > 0 ? filteredLabours : labours;
+  };
+
+
 
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
@@ -629,8 +655,8 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
         <TablePagination
           className="custom-pagination"
           rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-          //   count={getFilteredLaboursForTab().length}
-          //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
+          count={getFilteredLaboursForTab().length}
+          //  count={filteredIconLabours.length > 0 ? filteredIconLabours.length : labours.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

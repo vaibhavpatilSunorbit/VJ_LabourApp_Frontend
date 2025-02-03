@@ -133,8 +133,14 @@ import './sidebar.css';
 import profileIcon2 from '../../images/curriculum-vitae.png';
 import profileIcon3 from '../../images/icons8-add-user-50 (1).png';
 import profileIcon4 from '../../images/labor.png';
-import profileIcon5 from '../../images/approval.png';
-import profileIcon6 from '../../images/approval.png';
+import profileIcon5 from '../../images/attendancedevice.png';
+import profileIcon6 from '../../images/attendanceM.png';
+import profileIcon7 from '../../images/wagesReport.png';
+import profileIcon8 from '../../images/user.png';
+import profileIcon9 from '../../images/payyy.png';
+import profileIcon10 from '../../images/multiple.png';
+import profileIcon11 from '../../images/datatransfer.png';
+import profileIcon12 from '../../images/salaryRegister.png';
 import VJLogo from '../../images/VJlogo-1-removebg.png';
 import { SidebarData } from '../../Data';
 import { useUser } from '../../UserContext/UserContext';
@@ -238,12 +244,12 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
                 item.heading === "Labour Details" ? profileIcon4 :
                 item.heading === "Project Machine" ? profileIcon5 :
                 item.heading === "Attendance Report" ? profileIcon6 :
-                item.heading === "Wages Report" ? profileIcon6 :
-                item.heading === "People" ? profileIcon6 :
-                item.heading === "Admin Approval" ? profileIcon6 :
-                item.heading === "Site Transfer" ? profileIcon6 :
-                item.heading === "Variable Input" ? profileIcon6 :
-                item.heading === "Salary Register" ? profileIcon6 :
+                item.heading === "Wages Report" ? profileIcon7 :
+                item.heading === "People" ? profileIcon8 :
+                item.heading === "Admin Approval" ? profileIcon9 :
+                item.heading === "Site Transfer" ? profileIcon10 :
+                item.heading === "Variable Input" ? profileIcon11 :
+                item.heading === "Salary Register" ? profileIcon12 :
                 profileIcon6
               } alt="Profile Icon" className="img-white-fill" style={{ height: "30px" }} />
               <Link

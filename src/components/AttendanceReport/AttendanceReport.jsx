@@ -966,7 +966,7 @@ const AttendanceReport = () => {
                         <TablePagination
                             className="custom-pagination"
                             rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                            // count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
+                            count={attendanceData.length > 0 ? attendanceData.length : labours.length}
                             rowsPerPage={rowsPerPage}
                             page={page}
                             onPageChange={handleChangePage}

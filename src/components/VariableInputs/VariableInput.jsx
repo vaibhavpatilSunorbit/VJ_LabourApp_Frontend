@@ -721,7 +721,7 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
                 <DialogTitle>Confirm Variable Pay</DialogTitle>
                 <DialogContent>
                     <DialogContentText id="EditLabour-dialog-description">
-                        Are you sure you want Variable Pay Labour{" "}
+                        Are you sure you want Variable Pay of Labour{" "}
                         <span style={{ fontWeight: "bold" }}>{selectedLabour?.name} </span>
                         with JCcode{" "}
                     </DialogContentText>

@@ -18,10 +18,11 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, CircularProgress 
+    DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, CircularProgress, Fade 
 } from '@mui/material';
 import { modalStyle } from './modalStyles.js';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import SearchBar from '../SarchBar/SearchRegister';
@@ -33,6 +34,7 @@ import { useUser } from '../../UserContext/UserContext';
 import ExportVariablePay from '../VariableInputs/ImportExportVariablePay/ExportVariablePay'
 import ImportVariablePay from '../VariableInputs/ImportExportVariablePay/ImportVariablePay'
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ViewDetails from '../ViewDetails/ViewDetails.jsx';
 import CloseIcon from "@mui/icons-material/Close";
 import { parse } from "fast-xml-parser";
 import "./salaryRegister.css";
@@ -55,7 +57,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     const [modalOpenDeduction, setModalOpenDeduction] = useState(false);
     const [modalOpenNetpay, setModalOpenNetpay] = useState(false);
     const [selectedLabour, setSelectedLabour] = useState(null);
-    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
     const [attendanceData, setAttendanceData] = useState([]);
     const { user } = useUser();
@@ -70,6 +72,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     const [effectiveDate, setEffectiveDate] = useState("");
     const [navigating, setNavigating] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const months = [
         { value: 1, label: 'January' },
@@ -110,6 +113,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
             // Map the salaryData to the desired structure
             const ShowSalaryGeneration = salaryData.map((labour, index) => ({
                 srNo: index + 1,
+                id: labour.id || 0,
                 LabourID: labour.labourId,
                 name: labour.name || "-",
                 projectName: labour.businessUnit || "-", // Updated key
@@ -576,6 +580,37 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
         }
     };
 
+
+    const openPopup = async (labour) => {
+        try {
+            if (!labour || !labour.id) {
+                console.error('Labour ID is missing:', labour);
+                toast.error('Labour ID is missing. Please try again.');
+                return;  // Exit if the ID is not available
+            }
+            const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+            const labourDetails = response.data;
+            const projectName = getProjectDescription(labourDetails.projectName);
+            const department = getDepartmentDescription(labourDetails.department);
+    
+            setSelectedLabour({
+                ...labourDetails,
+                projectName,
+                department,
+            });
+    
+            setIsPopupOpen(true);
+        } catch (error) {
+            console.error('Error fetching labour details:', error);
+            toast.error('Error fetching labour details. Please try again.');
+        }
+    };
+    
+    // Close the popup
+    const closePopup = () => {
+        setIsPopupOpen(false); // Close the modal
+    };
+
     const navigateToSalaryGeneration = () => {
         setNavigating(true);
         navigate('/SalaryGeneration',{ state: { selectedMonth, selectedYear } });
@@ -820,9 +855,15 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                         >
                             {/* {(rowsPerPage > 0 ? paginatedLabours : filteredLabours).map((labour, index) => ( */}
                             {paginatedLabours.map((labour, index) => (
-                                <TableRow key={labour.LabourID}>
+                                <TableRow key={labour.id}>
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                    <TableCell>{labour.LabourID}</TableCell>
+                                    <TableCell
+                onClick={() => openPopup(labour)} // Open modal with selected labour details
+                sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
+            >
+                {labour.LabourID}
+            </TableCell>
+
                                     <TableCell>{labour.name || '-'}</TableCell>
                                     <TableCell>{labour.projectName || '-'}</TableCell>
                                     <TableCell>{labour.department || '-'}</TableCell>
@@ -1137,7 +1178,20 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     </Modal>
 
 
-
+    <Modal
+    open={isPopupOpen}
+    onClose={closePopup}
+    closeAfterTransition
+>
+    <Fade in={isPopupOpen}>
+        <div className="modal">
+            {/* Only render the modal if selectedLabour exists */}
+            {selectedLabour && (
+                <ViewDetails selectedLabour={selectedLabour} onClose={closePopup} />
+            )}
+        </div>
+    </Fade>
+</Modal>
 
 
             {/* Dialog for Confirmation */}

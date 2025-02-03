@@ -18,7 +18,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions, FormControl, InputLabel, Tabs, Grid, Divider
+    DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, Fade
 } from '@mui/material';
 import { modalStyle } from '../modalStyles.js';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -31,11 +31,12 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../../UserContext/UserContext';
 import ExportVariablePay from '../../VariableInputs/ImportExportVariablePay/ExportVariablePay'
-import ImportVariablePay from '../../VariableInputs/ImportExportVariablePay/ImportVariablePay'
+import ViewDetails from '../../ViewDetails/ViewDetails.jsx';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
 import { parse } from "fast-xml-parser";
 import "../salaryRegister.css";
+import { ArrowBack } from '@mui/icons-material'; 
 import logo from "../../../images/vjlogo.png";
 
 const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
@@ -55,7 +56,7 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
     const [modalOpenDeduction, setModalOpenDeduction] = useState(false);
     const [modalOpenNetpay, setModalOpenNetpay] = useState(false);
     const [selectedLabour, setSelectedLabour] = useState(null);
-    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
     const [attendanceData, setAttendanceData] = useState([]);
     const { user } = useUser();
@@ -67,7 +68,7 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
     // const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [openDialogSite, setOpenDialogSite] = useState(false);
     const [statusesSite, setStatusesSite] = useState({});
-    const [effectiveDate, setEffectiveDate] = useState("");
+    const [navigating, setNavigating] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -131,12 +132,14 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
             }
             if (salaryData.length === 0) {
                 setAttendanceData([]); 
+                setLoading(false); 
                 return;
             }
 
             const ShowSalaryGeneration = salaryData.map((labour, index) => {
                 return {
                     srNo: index + 1,
+                    id: labour.id || 0,
                     LabourID: labour.labourId,
                     name: labour.name || "-",
                     projectName: labour.businessUnit || "-",
@@ -223,6 +226,17 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
         setModalOpenNetpay(false);
     };
 // -----------------------------------------------------------------------------
+const handleOpenModalDetails = (labour) => {
+    setSelectedLabour(labour);
+    setModalOpen(true);
+};
+
+const handleCloseModalDetails = () => {
+    setSelectedLabour(null);
+    setModalOpen(false);
+};
+
+//------------------------------------------------------------------
 
     const handleCancel = () => {
         setModalOpen(false); 
@@ -509,29 +523,56 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
         }
     };
 
+    const navigateToSalaryGeneration = () => {
+        setNavigating(true);
+        navigate('/SalaryRejester',{ state: { selectedMonth, selectedYear } });
+        setTimeout(() => {
+            navigate('/SalaryRejester');
+        }, 1000);
+    };
 
-    // const [selectedLabour, setSelectedLabour] = useState(null);
-    // const [isModalOpen, setModalOpen] = useState(false);
+    const closePopup = () => {
+        setSelectedLabour(null);
+        setIsPopupOpen(false);
+    };
 
-    // const handleOpenModal = (labour) => {
-    //     setSelectedLabour(labour);
-    //     setModalOpen(true);
-    // };
+    const openPopup = async (labour) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+            const labourDetails = response.data;
+            const projectName = getProjectDescription(labourDetails.projectName);
+            const department = getDepartmentDescription(labourDetails.department);
 
-    // const handleCloseModal = () => {
-    //     setSelectedLabour(null);
-    //     setModalOpen(false);
-    // };
-
+            setSelectedLabour({
+                ...labourDetails,
+                projectName,
+                department,
+            });
+            setIsPopupOpen(true);
+        } catch (error) {
+            console.error('Error fetching labour details:', error);
+            toast.error('Error fetching labour details. Please try again.');
+        }
+    };
 
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
-                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
-                    Reports | Salary Generation
-                </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    {/* Back Button */}
+    <IconButton
+        sx={{ marginRight: 2 }}
+        onClick={navigateToSalaryGeneration}  disabled={navigating}
+    >
+        <ArrowBack />
+    </IconButton>
+
+    {/* Title */}
+    <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+        Reports | Salary Generation
+    </Typography>
+
                 <SearchBar
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
@@ -744,7 +785,13 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
                             {paginatedLabours.map((labour, index) => (
                                 <TableRow key={labour.LabourID}>
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                    <TableCell>{labour.LabourID}</TableCell>
+                                    {/* <TableCell>{labour.LabourID}</TableCell> */}
+                                    <TableCell
+                onClick={() => openPopup(labour)} // Open modal with selected labour details
+                sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
+            >
+                {labour.LabourID}
+            </TableCell>
                                     <TableCell>{labour.name || '-'}</TableCell>
                                     <TableCell>{labour.projectName || '-'}</TableCell>
                                     <TableCell>{labour.department || '-'}</TableCell>
@@ -1260,6 +1307,21 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
                 </Box>
             </Modal>
 
+            <Modal
+                open={isPopupOpen}
+                onClose={closePopup}
+                closeAfterTransition
+            // BackdropComponent={Backdrop}
+            // BackdropProps={{ timeout: 500 }}
+            >
+                <Fade in={isPopupOpen}>
+                    <div className="modal">
+                        {selectedLabour && (
+                            <ViewDetails selectedLabour={selectedLabour} onClose={closePopup} />
+                        )}
+                    </div>
+                </Fade>
+            </Modal>
         </Box>
     );
 };
