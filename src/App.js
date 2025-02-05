@@ -26,6 +26,7 @@ import VariableInput from './components/VariableInputs/VariableInput';
 import VariableInputApproval from './components/AdminApproval/VariableInputApproval/VariableInputApproval';
 import SalaryRegister from './components/AdminSalary/SalaryRegister';
 import SalaryGeneration from './components/AdminSalary/SalaryGeneration/SalaryGeneration';
+import PaySlipPage from './PaySlip/PaySlipPage'
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -115,6 +116,7 @@ function App() {
                     <Route path="/adminApproval/variableInputApproval" element={<VariableInputApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/SalaryRejester" element={<SalaryRegister onFormSubmit={handleFormSubmit} />} />
                     <Route path="/SalaryGeneration" element={<SalaryGeneration onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/Payslip" element={<PaySlipPage onFormSubmit={handleFormSubmit} />} />
                   </Routes>
                 </>
               }

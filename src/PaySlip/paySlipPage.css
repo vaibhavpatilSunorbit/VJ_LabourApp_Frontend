@@ -1,0 +1,247 @@
+/* element.style {
+    margin-right: 20px;
+    max-width: 296px;
+}
+*, ::before, ::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: theme('borderColor.DEFAULT', currentColor);
+}
+  
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+  }
+  
+  .payslip-container {
+    width: 80%;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f1f1f1;
+  }
+  
+  header h1 {
+    font-size: 28px;
+    color: #f26b2a;
+  }
+  
+  header p {
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .payslip-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .employee-info,
+  .earnings,
+  .deductions,
+  .yearly-taxable-income,
+  .net-taxable-income {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .employee-information{
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 1rem;
+  }
+  ul{
+    font-weight: bold;
+    color: black;
+    font-size: 1rem;
+    padding-left: 0px;
+
+  }
+
+  h2 {
+    font-size: 20px;
+    color: #444;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  
+  p {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .earnings-details,
+  .deductions-details,
+  .income-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .earnings-details p,
+  .deductions-details p,
+  .income-details p {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .net-pay {
+    background-color: #e9f7e9;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .net-pay p {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2e8b57;
+  }
+  
+  .yearly-taxable-income,
+  .net-taxable-income {
+    background-color: #e6f7ff;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .yearly-taxable-income p,
+  .net-taxable-income p {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1c6fb2;
+  }
+  
+  .yearly-taxable-income h2,
+  .net-taxable-income h2 {
+    color: #1c6fb2;
+  }
+  
+  footer {
+    text-align: center;
+    margin-top: 40px;
+  }
+  
+  footer p {
+    font-size: 14px;
+    color: #999;
+  }
+  
+  @media (max-width: 768px) {
+    .payslip-container {
+      width: 100%;
+      padding: 10px;
+    }
+  
+    header h1 {
+      font-size: 24px;
+    }
+  
+    .employee-info p,
+    .earnings-details p,
+    .deductions-details p,
+    .income-details p {
+      font-size: 14px;
+    }
+  }
+  
+.payslip-container {
+    width: 80%;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f1f1f1;
+  }
+  
+  header h1 {
+    font-size: 28px;
+    color: #f26b2a;
+  }
+  
+  header p {
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .payslip-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .pay-summary {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .pay-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .pay-label {
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .pay-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2e8b57;
+  }
+  
+  footer {
+    text-align: center;
+    margin-top: 40px;
+  }
+  
+  footer p {
+    font-size: 14px;
+    color: #999;
+  }
+  
+  @media (max-width: 768px) {
+    .payslip-container {
+      width: 100%;
+      padding: 10px;
+    }
+  
+    header h1 {
+      font-size: 24px;
+    }
+  
+    .pay-summary {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .pay-item {
+      flex-direction: row;
+    }
+  } */

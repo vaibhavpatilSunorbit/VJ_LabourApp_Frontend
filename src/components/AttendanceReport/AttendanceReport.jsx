@@ -55,6 +55,7 @@ const AttendanceReport = () => {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
     const [manualEditData, setManualEditData] = useState({
+        status: "",
         punchIn: "",
         punchOut: "",
         overtime: "",
@@ -86,6 +87,7 @@ const AttendanceReport = () => {
             overtime: day.overtime || "",
             overtimemanually: day.overtimemanually || "",
             remark: day.remark || "",
+            attendanceStatus: day.status || "",
         });
         setEditManualDialogOpen(true);
     };
@@ -117,6 +119,7 @@ const AttendanceReport = () => {
 
             const onboardName = user.name || null;
             const workingHours = manualEditData.workingHours || selectedDay.workingHours;
+            const AttendanceStatus = manualEditData.attendanceStatus || null;
 
             const payload = {
                 labourId: selectedDay.labourId,
@@ -126,8 +129,8 @@ const AttendanceReport = () => {
                 ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
                 ...(hasOvertime && { overtimeManually: manualEditData.overtime }),
                 ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
-                workingHours,
-                ...(onboardName && { onboardName }),
+                workingHours, 
+                ...(onboardName && { onboardName }), AttendanceStatus,
             };
 
             console.log('Request payload +++++:', payload);
@@ -142,7 +145,7 @@ const AttendanceReport = () => {
                         ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
                         ...(hasOvertime && { overtime: manualEditData.overtime }),
                         ...(manualEditData.remark && { remark: manualEditData.remark }),
-                        workingHours,
+                        workingHours, AttendanceStatus,
                     }
                     : day
             );
@@ -1369,120 +1372,151 @@ const AttendanceReport = () => {
 
 
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <Dialog
-                    open={editManualDialogOpen}
-                    onClose={handleManualEditDialogClose}
-                    fullWidth
-                    maxWidth="sm"
+            <Dialog
+                open={editManualDialogOpen}
+                onClose={handleManualEditDialogClose}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+                    Edit Attendance for {manualEditData.date}
+                </DialogTitle>
+                <DialogContent
+                    sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2, paddingTop: 1 }}
                 >
-                    <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
-                        Edit Attendance for {manualEditData.date}
-                    </DialogTitle>
-                    <DialogContent
-                        sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2, paddingTop: 1 }}
-                    >
-                        <Box>
-                            <TimePicker
-                                label="Punch In (Manually)"
-                                // value={manualEditData.punchIn}
-                                value={
-                                    manualEditData?.punchIn
-                                        ? dayjs(manualEditData.punchIn, 'HH:mm:ss')
-                                        : selectedDay?.firstPunch
-                                            ? dayjs(selectedDay.firstPunch, 'HH:mm:ss')
-                                            : null
-                                }
-                                onChange={(newValue) =>
-                                    setManualEditData({ ...manualEditData, punchIn: newValue })
-                                }
-                                views={['hours', 'minutes', 'seconds']} // Enable hours, minutes, and seconds
-                                ampm={false} // 24-hour format
-                                inputFormat="HH:mm:ss" // Format displayed in the input field
-                                renderInput={(params) => <TextField {...params} fullWidth />}
-                            />
-                        </Box>
-
-                        <Box>
-                            <TimePicker
-                                label="Punch Out (Manually)"
-                                // value={manualEditData.punchOut}
-                                value={
-                                    manualEditData?.punchOut
-                                        ? dayjs(manualEditData.punchOut, 'HH:mm:ss')
-                                        : selectedDay?.lastPunch
-                                            ? dayjs(selectedDay.lastPunch, 'HH:mm:ss')
-                                            : null
-                                }
-                                onChange={(newValue) =>
-                                    setManualEditData({ ...manualEditData, punchOut: newValue })
-                                }
-                                views={['hours', 'minutes', 'seconds']} // Enable hours, minutes, and seconds
-                                ampm={false} // 24-hour format
-                                inputFormat="HH:mm:ss" // Format displayed in the input field
-                                renderInput={(params) => <TextField {...params} fullWidth />}
-                            />
-                        </Box>
+                    {/* Dropdown for Mark Attendance As */}
+                    <Box>
                         <TextField
-                            label="Overtime (Manually)"
-                            type="number"
-                            variant="outlined"
-                            fullWidth
-                            value={manualEditData.overtime}
+                            select
+                            label="Mark Attendance As"
+                            value={manualEditData.status}
                             onChange={(e) =>
-                                setManualEditData({ ...manualEditData, overtime: e.target.value })
+                                setManualEditData({ ...manualEditData, status: e.target.value })
                             }
-                        />
+                            fullWidth
+                        >
+                            <MenuItem value="present">Mark As Present</MenuItem>
+                            <MenuItem value="absent">Mark As Absent</MenuItem>
+                            <MenuItem value="weeklyOff">Mark As WeeklyOff</MenuItem>
+                        </TextField>
+                    </Box>
+
+                    {/* Conditionally render Punch In/Out and Overtime fields */}
+                    {(manualEditData.status === 'present') && (
+                        <>
+                            <Box>
+                                <TimePicker
+                                    label="Punch In (Manually)"
+                                    value={
+                                        manualEditData?.punchIn
+                                            ? dayjs(manualEditData.punchIn, 'HH:mm:ss')
+                                            : selectedDay?.firstPunch
+                                                ? dayjs(selectedDay.firstPunch, 'HH:mm:ss')
+                                                : null
+                                    }
+                                    onChange={(newValue) =>
+                                        setManualEditData({ ...manualEditData, punchIn: newValue })
+                                    }
+                                    views={['hours', 'minutes', 'seconds']}
+                                    ampm={false}
+                                    inputFormat="HH:mm:ss"
+                                    renderInput={(params) => <TextField {...params} fullWidth />}
+                                />
+                            </Box>
+
+                            <Box>
+                                <TimePicker
+                                    label="Punch Out (Manually)"
+                                    value={
+                                        manualEditData?.punchOut
+                                            ? dayjs(manualEditData.punchOut, 'HH:mm:ss')
+                                            : selectedDay?.lastPunch
+                                                ? dayjs(selectedDay.lastPunch, 'HH:mm:ss')
+                                                : null
+                                    }
+                                    onChange={(newValue) =>
+                                        setManualEditData({ ...manualEditData, punchOut: newValue })
+                                    }
+                                    views={['hours', 'minutes', 'seconds']}
+                                    ampm={false}
+                                    inputFormat="HH:mm:ss"
+                                    renderInput={(params) => <TextField {...params} fullWidth />}
+                                />
+                            </Box>
+
+                            <TextField
+                                label="Overtime (Manually)"
+                                type="number"
+                                variant="outlined"
+                                fullWidth
+                                value={manualEditData.overtime}
+                                onChange={(e) =>
+                                    setManualEditData({ ...manualEditData, overtime: e.target.value })
+                                }
+                            />
+                        </>
+                    )}
+
+                    {/* Remark dropdown for Absent or WeeklyOff */}
+                    {(manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff' || manualEditData.status === 'present') && (
                         <TextField
+                            select
                             label="Remark"
                             variant="outlined"
                             fullWidth
-                            multiline
-                            rows={3}
                             value={manualEditData.remark}
                             onChange={(e) =>
                                 setManualEditData({ ...manualEditData, remark: e.target.value })
                             }
-                        />
-                    </DialogContent>
-                    <DialogActions
+                        >
+                            <MenuItem value="Technical Error">Technical Error</MenuItem>
+                            <MenuItem value="Miss Punch">Miss Punch</MenuItem>
+                            <MenuItem value="Forge Punch">Forge Punch</MenuItem>
+                            <MenuItem value="Wrong Punch">Wrong Punch</MenuItem>
+                            <MenuItem value="Forgot To Punch">Forgot To Punch</MenuItem>
+                            <MenuItem value="Weekly Off">Weekly Off</MenuItem>
+                        </TextField>
+                    )}
+                </DialogContent>
+                <DialogActions
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        mt: 2,
+                        px: 2,
+                        gap: 0,
+                    }}
+                >
+                    <Button
+                        onClick={handleManualEditDialogClose}
                         sx={{
-                            display: 'flex',
-                            justifyContent: 'flex-end',
-                            mt: 2,
-                            px: 2,
-                            gap: 0,
+                            backgroundColor: '#fce4ec',
+                            color: 'rgb(255, 100, 100)',
+                            width: '100px',
+                            '&:hover': {
+                                backgroundColor: '#f8bbd0',
+                            },
                         }}
                     >
-                        <Button
-                            onClick={handleManualEditDialogClose}
-                            sx={{
-                                backgroundColor: '#fce4ec',
-                                color: 'rgb(255, 100, 100)',
-                                width: '100px',
-                                '&:hover': {
-                                    backgroundColor: '#f8bbd0',
-                                },
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="contained"
-                            onClick={handleSaveManualEdit}
-                            sx={{
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleSaveManualEdit}
+                        sx={{
+                            backgroundColor: 'rgb(229, 255, 225)',
+                            color: 'rgb(43, 217, 144)',
+                            width: '100px',
+                            '&:hover': {
                                 backgroundColor: 'rgb(229, 255, 225)',
-                                color: 'rgb(43, 217, 144)',
-                                width: '100px',
-                                '&:hover': {
-                                    backgroundColor: 'rgb(229, 255, 225)',
-                                },
-                            }}
-                        >
-                            Save
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-            </LocalizationProvider>
+                            },
+                        }}
+                    >
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </LocalizationProvider>
 
             <Modal open={open} onClose={handleModalCloseCalender}>
                 <Box
