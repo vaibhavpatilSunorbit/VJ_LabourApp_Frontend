@@ -75,27 +75,27 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
     // Extract selectedMonth and selectedYear from navigation state
     const { selectedMonth, selectedYear } = location.state || {};
 
-    const fetchLabours = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`, {
-                params: { month: selectedMonth, year: selectedYear },
-            });
-            setLabours(response.data);
-            console.log("response.data .", response.data)
-        } catch (error) {
-            console.error('Error fetching labours:', error);
-            toast.error('Failed to fetch data');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // const fetchLabours = async () => {
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`, {
+    //             params: { month: selectedMonth, year: selectedYear },
+    //         });
+    //         setLabours(response.data);
+    //         console.log("response.data .", response.data)
+    //     } catch (error) {
+    //         console.error('Error fetching labours:', error);
+    //         toast.error('Failed to fetch data');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
-    useEffect(() => {
-        if (selectedMonth && selectedYear) {
-            fetchLabours();
-        }
-    }, [selectedMonth, selectedYear]);
+    // useEffect(() => {
+    //     if (selectedMonth && selectedYear) {
+    //         fetchLabours();
+    //     }
+    // }, [selectedMonth, selectedYear]);
 
     const months = [
         { value: 1, label: 'January' },
@@ -132,7 +132,6 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
             }
             if (salaryData.length === 0) {
                 setAttendanceData([]); 
-                setLoading(false); 
                 return;
             }
 
@@ -174,8 +173,9 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
         } catch (error) {
             console.error('Error fetching salary generation data:', error);
             toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
-        }
-        setLoading(false);
+        } finally {
+            setLoading(false);
+          }
     };
 
     useEffect(() => {
@@ -280,7 +280,7 @@ const handleCloseModalDetails = () => {
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
-            fetchLabours();
+            fetchSalaryGenerationForDateMonthAll();
             return;
         }
         setLoading(true);
@@ -377,7 +377,7 @@ const handleCloseModalDetails = () => {
 
 
     const confirmTransfer = async () => {
-        setOpenDialogSite(false); // Close the dialog
+        setOpenDialogSite(false); 
 
         try {
             // Fetch current and new site names for transfer
@@ -526,9 +526,9 @@ const handleCloseModalDetails = () => {
     const navigateToSalaryGeneration = () => {
         setNavigating(true);
         navigate('/SalaryRejester',{ state: { selectedMonth, selectedYear } });
-        setTimeout(() => {
-            navigate('/SalaryRejester');
-        }, 1000);
+        // setTimeout(() => {
+        //     navigate('/SalaryRejester');
+        // }, 1000);
     };
 
     const closePopup = () => {

@@ -91,7 +91,12 @@
   width: 100%;
 } */
 
-
+.menu {
+  overflow-y: auto; 
+  max-height: calc(100vh - 60px); 
+  padding-right: 10px; 
+  scrollbar-width: none; 
+}
 
 .sidebar-link.active {
   background-color: #6358da;

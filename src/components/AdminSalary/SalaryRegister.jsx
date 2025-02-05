@@ -614,9 +614,9 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     const navigateToSalaryGeneration = () => {
         setNavigating(true);
         navigate('/SalaryGeneration',{ state: { selectedMonth, selectedYear } });
-        setTimeout(() => {
-            navigate('/SalaryGeneration');
-        }, 1000);
+        // setTimeout(() => {
+        //     navigate('/SalaryGeneration');
+        // }, 1000);
     };
 
     return (
@@ -1248,7 +1248,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                         bgcolor: "background.paper",
                         borderRadius: 2,
                         boxShadow: 24,
-                        p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
+                        p: { xs: 2, sm: 3, md: 4 }, 
                         maxHeight: "85vh",
                         overflowY: "auto",
                         "&::-webkit-scrollbar": {
