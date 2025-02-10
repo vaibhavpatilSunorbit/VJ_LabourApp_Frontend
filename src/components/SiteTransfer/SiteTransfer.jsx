@@ -14,7 +14,7 @@ import {
     TextField,
     TablePagination,
     Select,
-    MenuItem, Modal, Typography, IconButton, Dialog,
+    MenuItem, Modal, Typography, IconButton, Dialog, Checkbox,
     DialogTitle,
     DialogContent,
     DialogContentText,
@@ -32,6 +32,8 @@ import ExportWagesReport from '../WagesReport/ImportExportWages/ExportWages'
 import ImportWagesReport from '../WagesReport/ImportExportWages/ImportWages'
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
+import FilterListIcon from '@mui/icons-material/FilterList';
+import EditIcon from '@mui/icons-material/Edit';
 import { parse } from "fast-xml-parser";
 
 const SiteTransfer = ({ departments, projectNames = [], labour }) => {
@@ -71,11 +73,48 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
     const [statusesSite, setStatusesSite] = useState({});
     const [previousTabValue, setPreviousTabValue] = useState(tabValue);
     const [transferDate, setTransferDate] = useState("");
+    const [filterModalOpen, setFilterModalOpen] = useState(false);
+    const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [selectedPayStructure, setSelectedPayStructure] = useState('');
+    const [employeeToggle, setEmployeeToggle] = useState('all'); // 'all' or 'single'
+    const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [selectedLabourIds, setSelectedLabourIds] = useState([]);
 
-    const fetchLabours = async () => {
+    const getProjectDescription = (projectId) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) {
+            console.error('Projects array is empty or invalid:', projectNames);
+            return 'Unknown';
+        }
+        if (projectId === undefined || projectId === null) {
+            console.error('Project ID is undefined or null:', projectId);
+            return 'Unknown';
+        }
+        const project = projectNames.find(
+            (proj) => proj.id === Number(projectId)
+        );
+        return project ? project.Business_Unit : 'Unknown';
+    };
+
+    // Helper function to get the Department description
+    const getDepartmentDescription = (departmentId) => {
+        if (!Array.isArray(departments) || departments.length === 0) {
+            return 'Unknown';
+        }
+        const department = departments.find(
+            (dept) => dept.Id === Number(departmentId)
+        );
+        return department ? department.Description : 'Unknown';
+    };
+
+
+    const fetchLabours = async (filters = {}) => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours`);
+            const response = await axios.get(`${API_BASE_URL}/insentive/getAllLabours`,
+                {
+                    params: filters, // e.g., { ProjectID: selectedBusinessUnit, DepartmentID: selectedDepartment }
+                }
+            );
             setLabours(response.data);
         } catch (error) {
             console.error('Error fetching labours:', error);
@@ -88,6 +127,39 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
     useEffect(() => {
         fetchLabours();
     }, []);
+
+    const handleApplyFilter = async () => {
+        // Build filter query parameters (only add filters with values)
+        const params = {};
+        if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
+        if (selectedDepartment) params.department = selectedDepartment;
+        if (selectedPayStructure) params.payStructure = selectedPayStructure;
+        if (employeeToggle === 'single' && selectedEmployee) {
+            params.employee = selectedEmployee;
+        }
+    }
+    const handleResetFilter = () => {
+        // Reset all filter fields and refetch the complete data set
+        setSelectedBusinessUnit('');
+        setSelectedDepartment('');
+        setSelectedPayStructure('');
+        setEmployeeToggle('all');
+        setSelectedEmployee('');
+        fetchLabours();
+        setFilterModalOpen(false);
+    };
+
+    const handleApplyFilters = () => {
+        const filters = {};
+        if (selectedBusinessUnit) {
+            filters.ProjectID = selectedBusinessUnit;
+        }
+        if (selectedDepartment) {
+            filters.DepartmentID = selectedDepartment;
+        }
+        fetchLabours(filters);
+        setFilterModalOpen(false);
+    };
 
     const handleSubmit = async () => {
         const formData = paginatedLabours.map(labour => ({
@@ -151,6 +223,28 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
         }
     };
 
+    // Checkbox handling: select/deselect individual row
+    const handleSelectRow = (event, labourID) => {
+        if (event.target.checked) {
+          setSelectedLabourIds((prev) => [...prev, labourID]);
+        } else {
+          setSelectedLabourIds((prev) => prev.filter((id) => id !== labourID));
+        }
+      };
+    
+      const handleSelectAllRows = (event) => {
+        if (event.target.checked) {
+          // Select all on current paginated page
+          const allPageIds = paginatedLabours.map((labour) => labour.LabourID);
+          // Merge them without duplication
+          setSelectedLabourIds((prev) => Array.from(new Set([...prev, ...allPageIds])));
+        } else {
+          // Unselect all on current paginated page
+          setSelectedLabourIds((prev) =>
+            prev.filter((id) => !paginatedLabours.some((labour) => labour.LabourID === id))
+          );
+        }
+      };
 
     // Handle modal edit
     const handleEdit = (labour) => {
@@ -235,27 +329,9 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
     );
     console.log("Filtered Labours _+_+_+:", filteredLabours);
     console.log("Paginated Labours:{{{{{", paginatedLabours);
-
-
-    const getProjectDescription = (projectId) => {
-        if (!Array.isArray(projectNames) || projectNames.length === 0) {
-            console.error('Projects array is empty or invalid:', projectNames);
-            return 'Unknown';
-        }
-
-        if (projectId === undefined || projectId === null) {
-            console.error('Project ID is undefined or null:', projectId);
-            return 'Unknown';
-        }
-
-        const project = projectNames.find(
-            (proj) => proj.id === Number(projectId)
-        );
-
-        return project ? project.Business_Unit : 'Unknown';
-    };
-
-
+    const isAllSelected =
+    paginatedLabours.length > 0 &&
+    paginatedLabours.every((labour) => selectedLabourIds.includes(labour.LabourID));
 
     const handleSiteChange = (labour, siteId) => {
         setSelectedLabour(labour);
@@ -268,6 +344,13 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
         setSelectedLabour(labour);
         setModalOpen(true);
     };
+    const handleOpenModal = () => {
+        if (selectedLabourIds.length === 0) {
+          toast.error("No labours selected!");
+          return;
+        }
+        setModalOpen(true);
+      };
 
     // Handle transfer within the modal
     const handleModalTransfer = () => {
@@ -279,53 +362,137 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
         setOpenDialogSite(true); // Open the confirmation dialog
     };
 
-
     const confirmTransfer = async () => {
-        setOpenDialogSite(false); // Close the dialog
-
+        setOpenDialogSite(false);
+        if (!selectedLabourIds || selectedLabourIds.length === 0) {
+          toast.error("No labour(s) selected to transfer.");
+          return;
+        }
+    
         try {
-            console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
-
-            // Fetch current and new site names for transfer
-            const currentSiteName = projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit || "Unknown";
-            const transferSiteName = projectNames.find((p) => p.id === newSite)?.Business_Unit || "Unknown";
-
-            console.log(`Current Site Name: ${currentSiteName}, Transfer Site Name: ${transferSiteName}`);
-            const onboardName = user.name || null;
-            // Send data to the backend to handle DeleteUser, AddEmployee, and save transfer data
-            const transferDataPayload = {
-                userId: selectedLabour.id,
-                LabourID: selectedLabour.LabourID,
-                name: selectedLabour.name,
-                currentSite: selectedLabour.projectName,
+          // Build payload for each selected labour
+          const selectedLaboursData = labours
+            .filter((labour) => selectedLabourIds.includes(labour.LabourID))
+            .map((labour) => {
+              const currentSiteName =
+                projectNames.find((p) => p.id === labour.projectName)?.Business_Unit ||
+                "Unknown";
+              const transferSiteName =
+                projectNames.find((p) => p.id === Number(newSite))
+                  ?.Business_Unit || "Unknown";
+    
+              return {
+                userId: labour.id, // if needed
+                LabourID: labour.LabourID,
+                name: labour.name,
+                currentSite: labour.projectName,
                 transferSite: newSite,
                 currentSiteName,
                 transferSiteName,
-                transferDate: transferDate,
-                siteTransferBy: onboardName,
-            };
-
-            const response = await axios.post(`${API_BASE_URL}/api/admin/sitetransfertoadmin`, transferDataPayload);
-
-            if (response.status === 200) {
-                // Update UI
-                setLabours((prevLabours) =>
-                    prevLabours.map((labour) =>
-                        labour.LabourID === selectedLabour.LabourID
-                            ? { ...labour, projectName: newSite, Business_Unit: transferSiteName }
-                            : labour
-                    )
-                );
-
-                toast.success(`Labour ${selectedLabour.name} Site Transfer Send Admin Approval successfully!`);
-            } else {
-                toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
+                transferDate,
+                siteTransferBy: user.name || null,
+              };
+            });
+    
+          // Send them all in one request (adapt as needed for your API)
+          const response = await axios.post(
+            `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
+            {
+              labours: selectedLaboursData,
             }
+          );
+    
+          if (response.status === 201) {
+            // Update local state for all selected labours
+            const transferSiteName =
+              projectNames.find((p) => p.id === Number(newSite))?.Business_Unit ||
+              "Unknown";
+    
+            setLabours((prev) =>
+              prev.map((labour) => {
+                if (selectedLabourIds.includes(labour.LabourID)) {
+                  return {
+                    ...labour,
+                    projectName: newSite,
+                    Business_Unit: transferSiteName,
+                  };
+                }
+                return labour;
+              })
+            );
+    
+            toast.success(
+              `Site transfer initiated for ${selectedLabourIds.length} labour(s).`
+            );
+            setSelectedLabourIds([]); // clear the selection
+          } else {
+            toast.error(
+              `Failed to transfer labour(s). ${
+                response.data.message || "Unexpected error occurred."
+              }`
+            );
+            setSelectedLabourIds([]);
+          }
         } catch (error) {
-            console.error("Error during site transfer:", error);
-            toast.error("Failed to transfer labour.");
+          console.error("Error during site transfer:", error);
+          toast.error("Failed to transfer labour(s).");
         }
-    };
+      };
+      const selectedLabours = labours.filter((l) =>
+        selectedLabourIds.includes(l.LabourID)
+      );
+      const selectedNames = selectedLabours.map((l) => l.LabourID).join(", ");
+
+    // const confirmTransfer = async () => {
+    //     setOpenDialogSite(false); // Close the dialog
+    //     if (!selectedLabourIds || selectedLabourIds.length === 0) {
+    //         toast.error("No labour(s) selected to transfer.");
+    //         return;
+    //       }
+
+    //     try {
+    //         console.log(`Changing site for labour ID: ${selectedLabour.LabourID} to site ID: ${newSite}`);
+
+    //         // Fetch current and new site names for transfer
+    //         const currentSiteName = projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit || "Unknown";
+    //         const transferSiteName = projectNames.find((p) => p.id === newSite)?.Business_Unit || "Unknown";
+
+    //         console.log(`Current Site Name: ${currentSiteName}, Transfer Site Name: ${transferSiteName}`);
+    //         const onboardName = user.name || null;
+    //         // Send data to the backend to handle DeleteUser, AddEmployee, and save transfer data
+    //         const transferDataPayload = {
+    //             userId: selectedLabour.id,
+    //             LabourID: selectedLabour.LabourID,
+    //             name: selectedLabour.name,
+    //             currentSite: selectedLabour.projectName,
+    //             transferSite: newSite,
+    //             currentSiteName,
+    //             transferSiteName,
+    //             transferDate: transferDate,
+    //             siteTransferBy: onboardName,
+    //         };
+
+    //         const response = await axios.post(`${API_BASE_URL}/api/admin/sitetransfertoadmin`, transferDataPayload);
+
+    //         if (response.status === 200) {
+    //             // Update UI
+    //             setLabours((prevLabours) =>
+    //                 prevLabours.map((labour) =>
+    //                     labour.LabourID === selectedLabour.LabourID
+    //                         ? { ...labour, projectName: newSite, Business_Unit: transferSiteName }
+    //                         : labour
+    //                 )
+    //             );
+
+    //             toast.success(`Labour ${selectedLabour.name} Site Transfer Send Admin Approval successfully!`);
+    //         } else {
+    //             toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error during site transfer:", error);
+    //         toast.error("Failed to transfer labour.");
+    //     }
+    // };
 
 
     const fetchTransferSiteNames = async (labourIds) => {
@@ -410,6 +577,14 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
             >
                 <ExportWagesReport />
                 <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} />
+                <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
+                    Filter
+                </Button>
+                {selectedLabourIds.length > 0 && (
+                    <Button variant="outlined" color="secondary" startIcon={<EditIcon />}  onClick={handleOpenModal}>
+                        Edit ({selectedLabourIds.length})
+                    </Button>
+                )}
 
 
                 <TablePagination
@@ -463,6 +638,12 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
                                     },
                                 }}
                             >
+                                <TableCell padding="checkbox">
+                                    <Checkbox
+                                        checked={isAllSelected}
+                                        onChange={handleSelectAllRows}
+                                        inputProps={{ 'aria-label': 'select all labours' }}
+                                    /></TableCell>
                                 <TableCell>Sr No</TableCell>
                                 <TableCell>Labour ID</TableCell>
                                 <TableCell>Name</TableCell>
@@ -490,6 +671,13 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
                                 : filteredLabours // Fallback to filteredLabours if no pagination is applied
                             ).map((labour, index) => (
                                 <TableRow key={labour.LabourID}>
+                                    <TableCell padding="checkbox">
+                                        <Checkbox
+                                            checked={selectedLabourIds.includes(labour.LabourID)}
+                                            onChange={(e) => handleSelectRow(e, labour.LabourID)}
+                                            inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
+                                        />
+                                    </TableCell>
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     <TableCell>{labour.LabourID}</TableCell>
                                     <TableCell>{labour.name || '-'}</TableCell>
@@ -533,7 +721,17 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
                                                     backgroundColor: 'rgb(239,230,247)',
                                                 },
                                             }}
-                                            onClick={() => handleEdit(labour)}
+                                            // onClick={() => handleEdit(labour)}
+                                            onClick={() => {
+                                                // If single-labour edit is also wanted:
+                                                if (!selectedLabourIds.includes(labour.LabourID)) {
+                                                  setSelectedLabourIds((prev) => [
+                                                    ...prev,
+                                                    labour.LabourID,
+                                                  ]);
+                                                }
+                                                setModalOpen(true);
+                                              }}
                                         >
                                             Edit
                                         </Button>
@@ -568,9 +766,17 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
                     <Typography id="modal-title" variant="h6" gutterBottom>
                         Transfer Labour
                     </Typography>
-                    <Typography id="modal-description" gutterBottom>
-                        Selected Labour: {selectedLabour?.name}
-                    </Typography>
+                    {selectedLabourIds.length > 1 ? (
+            <Typography id="modal-description" gutterBottom>
+              Selected Labours: {selectedNames}
+            </Typography>
+          ) : selectedLabourIds.length === 1 ? (
+            <Typography id="modal-description" gutterBottom>
+              Selected Labour: {selectedNames}
+            </Typography>
+          ) : (
+            <Typography>No labour selected</Typography>
+          )}
                     <FormControl fullWidth variant="standard" sx={{ mb: 2 }}>
                         <InputLabel id="new-site-select-label">Select New Site</InputLabel>
                         <Select
@@ -631,43 +837,159 @@ const SiteTransfer = ({ departments, projectNames = [], labour }) => {
 
             {/* Dialog for Confirmation */}
             <Dialog open={openDialogSite} onClose={() => setOpenDialogSite(false)}>
-                <DialogTitle>Confirm Transfer</DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="EditLabour-dialog-description">
-                        Are you sure you want to transfer Labour{" "}
-                        <span style={{ fontWeight: "bold" }}>{selectedLabour?.name} </span>
-                        with JCcode{" "}
-                        <span style={{ fontWeight: "bold" }}>{selectedLabour?.LabourID} </span>
-                        to the new site?
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button
-                        onClick={() => setOpenDialogSite(false)}
-                        variant="outlined"
-                        color="secondary"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={confirmTransfer}
-                        sx={{
-                            backgroundColor: "rgb(229, 255, 225)",
-                            color: "rgb(43, 217, 144)",
-                            width: "100px",
-                            marginRight: "10px",
-                            marginBottom: "3px",
-                            "&:hover": {
-                                backgroundColor: "rgb(229, 255, 225)",
-                            },
-                        }}
-                        autoFocus
-                    >
-                        Confirm Transfer
-                    </Button>
-                </DialogActions>
-            </Dialog>
+        <DialogTitle>Confirm Transfer</DialogTitle>
+        <DialogContent>
+          {selectedLabourIds.length > 1 ? (
+            <DialogContentText>
+              Are you sure you want to transfer these&nbsp;
+              <b>{selectedLabourIds.length}</b> labours to the new site?
+              <br />
+              <small>({selectedNames})</small>
+            </DialogContentText>
+          ) : selectedLabourIds.length === 1 ? (
+            <DialogContentText>
+              Are you sure you want to transfer Labour&nbsp;
+              <b>{selectedNames}</b> to the new site?
+            </DialogContentText>
+          ) : (
+            <DialogContentText>No labour selected</DialogContentText>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setOpenDialogSite(false)}
+            variant="outlined"
+            color="secondary"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmTransfer}
+            sx={{
+              backgroundColor: "rgb(229, 255, 225)",
+              color: "rgb(43, 217, 144)",
+              width: "130px",
+              marginRight: "10px",
+              marginBottom: "3px",
+              "&:hover": {
+                backgroundColor: "rgb(229, 255, 225)",
+              },
+            }}
+            autoFocus
+          >
+            Confirm Transfer
+          </Button>
+        </DialogActions>
+      </Dialog>
+            {/* ------------------------------------------------------------------------------------------- */}
+            {/* ===== FILTER MODAL ===== */}
+            <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          {/* Modal Header with Title and Close Button */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Filter Options
+            </Typography>
+            <Button onClick={() => setFilterModalOpen(false)}>
+              <CloseIcon />
+            </Button>
+          </Box>
 
+          {/* Business Unit Filter */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body1">Business Unit</Typography>
+            <Select
+              fullWidth
+              value={selectedBusinessUnit}
+              onChange={(e) => setSelectedBusinessUnit(e.target.value)}
+              displayEmpty
+              sx={{ mt: 1 }}
+            >
+              <MenuItem value="">
+                <em>All</em>
+              </MenuItem>
+              {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                projectNames.map((project) => (
+                  <MenuItem key={project.id} value={project.id}>
+                    {project.Business_Unit}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="Unknown" disabled>
+                  No Projects Available
+                </MenuItem>
+              )}
+            </Select>
+          </Box>
+
+          {/* Department Filter */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body1">Department</Typography>
+            <Select
+              fullWidth
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              displayEmpty
+              sx={{ mt: 1 }}
+            >
+              <MenuItem value="">
+                <em>All</em>
+              </MenuItem>
+              {Array.isArray(departments) && departments.length > 0 ? (
+                departments.map((department) => (
+                  <MenuItem key={department.Id} value={department.Id}>
+                    {department.Description}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="Unknown" disabled>
+                  No Department Available
+                </MenuItem>
+              )}
+            </Select>
+          </Box>
+
+          {/* Action Buttons */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+            <Button variant="outlined" color="secondary" onClick={handleResetFilter}>
+              Reset
+            </Button>
+            <Button
+              variant="contained"
+              sx={{
+                backgroundColor: "rgb(229, 255, 225)",
+                color: "rgb(43, 217, 144)",
+                "&:hover": {
+                  backgroundColor: "rgb(229, 255, 225)",
+                },
+              }}
+              onClick={handleApplyFilters}
+            >
+              Apply
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+            {/* ------------------------------------------------------------------------------------------- */}
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
                 <Box

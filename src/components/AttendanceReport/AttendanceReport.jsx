@@ -27,6 +27,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ImportAttendance from './ImportExportAttendance/ImportAttendance';
 import ExportAttendance from './ImportExportAttendance/ExportAttendance';
 import CloseIcon from '@mui/icons-material/Close'
+import SyncIcon from '@mui/icons-material/Sync';
 
 const AttendanceReport = () => {
     const theme = useTheme();
@@ -120,7 +121,7 @@ const AttendanceReport = () => {
             const onboardName = user.name || null;
             const workingHours = manualEditData.workingHours || selectedDay.workingHours;
             const AttendanceStatus = manualEditData.attendanceStatus || null;
-
+console.log('AttendanceStatus', AttendanceStatus)
             const payload = {
                 labourId: selectedDay.labourId,
                 date: selectedDay.date,
@@ -937,8 +938,9 @@ const AttendanceReport = () => {
                             sx={{
                                 //   fontSize: '13px',
                                 fontSize: { xs: '10px', sm: '13px' },
-                                height: '40px',
-                                width: '100%',
+                                height: '45px',
+                                width: '20%',
+                                borderRadius: '10%',
                                 backgroundColor: 'rgb(229, 255, 225)',
                                 color: 'rgb(43, 217, 144)',
                                 '&:hover': {
@@ -948,7 +950,7 @@ const AttendanceReport = () => {
                             onClick={fetchAttendanceForMonthAll}
                             disabled={loading}
                         >
-                            Fetch Attendance
+                           <SyncIcon/>
                         </Button>
                     </Box>
                     <Box sx={{
@@ -1220,7 +1222,7 @@ const AttendanceReport = () => {
                                     },
                                 }}
                             >
-                                Fetch
+                                <SyncIcon/>
                             </Button>
                         </Box>
                         <Box

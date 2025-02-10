@@ -13,7 +13,7 @@ import {
     Box,
     TextField,
     TablePagination,
-    Select,
+    Select, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Checkbox,
     MenuItem, Modal, Typography, IconButton
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -28,8 +28,11 @@ import ExportWagesReport from './ImportExportWages/ExportWages'
 import ImportWagesReport from './ImportExportWages/ImportWages'
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
+import FilterListIcon from '@mui/icons-material/FilterList';
+import EditIcon from '@mui/icons-material/Edit';
+import './wagesReport.css'
 
-const AttendanceReport = () => {
+const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -60,6 +63,13 @@ const AttendanceReport = () => {
     const [openModal, setOpenModal] = useState(false);
     const [selectedHistory, setSelectedHistory] = useState([]);
     const [effectiveDate, setEffectiveDate] = useState("");
+    const [filterModalOpen, setFilterModalOpen] = useState(false);
+    const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [selectedPayStructure, setSelectedPayStructure] = useState('');
+    const [employeeToggle, setEmployeeToggle] = useState('all'); // 'all' or 'single'
+    const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [selectedLabourIds, setSelectedLabourIds] = useState([]);
+
 
     const convertToIndianTime = (isoString) => {
         const options = {
@@ -77,10 +87,42 @@ const AttendanceReport = () => {
         return formatter.format(new Date(isoString));
     };
 
-    const fetchLabours = async () => {
+    const getProjectDescription = (projectId) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) {
+            console.error('Projects array is empty or invalid:', projectNames);
+            return 'Unknown';
+        }
+        if (projectId === undefined || projectId === null) {
+            console.error('Project ID is undefined or null:', projectId);
+            return 'Unknown';
+        }
+        const project = projectNames.find(
+            (proj) => proj.id === Number(projectId)
+        );
+        return project ? project.Business_Unit : 'Unknown';
+    };
+
+    // Helper function to get the Department description
+    const getDepartmentDescription = (departmentId) => {
+        if (!Array.isArray(departments) || departments.length === 0) {
+            return 'Unknown';
+        }
+        const department = departments.find(
+            (dept) => dept.Id === Number(departmentId)
+        );
+        return department ? department.Description : 'Unknown';
+    };
+
+    // Function to fetch labours from API with optional filters
+    const fetchLabours = async (filters = {}) => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`);
+            const response = await axios.get(
+                `${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`,
+                {
+                    params: filters, // e.g., { ProjectID: selectedBusinessUnit, DepartmentID: selectedDepartment }
+                }
+            );
             setLabours(response.data);
         } catch (error) {
             console.error('Error fetching labours:', error);
@@ -93,6 +135,46 @@ const AttendanceReport = () => {
     useEffect(() => {
         fetchLabours();
     }, []);
+
+    const handleApplyFilter = async () => {
+        // Build filter query parameters (only add filters with values)
+        const params = {};
+        if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
+        if (selectedDepartment) params.department = selectedDepartment;
+        if (selectedPayStructure) params.payStructure = selectedPayStructure;
+        if (employeeToggle === 'single' && selectedEmployee) {
+            params.employee = selectedEmployee;
+        }
+    }
+    const handleResetFilter = () => {
+        // Reset all filter fields and refetch the complete data set
+        setSelectedBusinessUnit('');
+        setSelectedDepartment('');
+        setSelectedPayStructure('');
+        setEmployeeToggle('all');
+        setSelectedEmployee('');
+        fetchLabours();
+        setFilterModalOpen(false);
+    };
+
+    const handleApplyFilters = () => {
+        const filters = {};
+        if (selectedBusinessUnit) {
+            filters.ProjectID = selectedBusinessUnit;
+        }
+        if (selectedDepartment) {
+            filters.DepartmentID = selectedDepartment;
+        }
+        if (selectedPayStructure) {
+            filters.PayStructure = selectedPayStructure;
+        }
+        if (employeeToggle === 'single' && selectedEmployee) {
+            filters.employee = selectedEmployee;
+        }
+        fetchLabours(filters);
+        setFilterModalOpen(false);
+    };
+
 
     const handleWageChange = (labourId, value) => {
         const daysInMonth = getDaysInMonth(); // Check number of days in the current month
@@ -263,10 +345,14 @@ const AttendanceReport = () => {
     // const handleSave = async () => {
     //     try {
     //         const onboardName = user.name || null;
+    //         if (!payStructure || !effectiveDate) {
+    //             toast.error("Please fill in all required fields.");
+    //             return;
+    //         }
     //         const wageData = {
     //             labourId: selectedLabour.LabourID,
     //             payStructure,
-    // effectiveDate,
+    //             effectiveDate,
     //             dailyWages,
     //             monthlyWages,
     //             yearlyWages,
@@ -274,25 +360,42 @@ const AttendanceReport = () => {
     //             totalOvertimeWages,
     //             fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages : null,
     //             weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff : null,
-    //             wagesEditedBy: onboardName, // Replace with logged-in user
+    //             wagesEditedBy: onboardName,
     //         };
-    //         await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-    //         toast.success('Wages updated successfully');
+
+    //         const { data: existingWagesResponse } = await axios.get(`${API_BASE_URL}/labours/checkExistingWages`, {
+    //             params: { labourId: selectedLabour.LabourID },
+    //         });
+
+    //         const { exists, approved, data } = existingWagesResponse;
+
+    //         if (!exists) {
+    //             await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
+    //             toast.success("Wages added successfully.");
+    //         } else if (exists && !approved) {
+    //             wageData.wageId = data.WageID;
+    //             console.log('wageData.wageId .. ', wageData.wageId)
+    //             console.log('wageData.wageId .. ', wageData)
+    //             await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+    //             toast.info("Wages sent for admin approval.");
+    //         } else if (exists && approved) {
+    //             wageData.wageId = data.WageID;
+    //             await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+    //             toast.info("Wages changes sent for admin approval.");
+    //         }
+
     //         fetchLabours();
     //         setModalOpen(false);
-    //         setWeeklyOff(""); // Reset weeklyOff to initial state
-    // setEffectiveDate("");
-    //         setFixedMonthlyWages(0)
+    //         setWeeklyOff("");
+    //         setEffectiveDate("");
+    //         setFixedMonthlyWages(0);
     //         setMonthlyWages(0);
     //         setDailyWages(0);
     //     } catch (error) {
-    //         console.error('Error saving wages:', error);
-    //         toast.error('Failed to save wages');
+    //         console.error("Error saving wages:", error);
+    //         toast.error("Failed to save wages.");
     //     }
     // };
-
-
-    // Handle modal edit
 
     const handleSave = async () => {
         try {
@@ -301,41 +404,46 @@ const AttendanceReport = () => {
                 toast.error("Please fill in all required fields.");
                 return;
             }
-            const wageData = {
-                labourId: selectedLabour.LabourID,
-                payStructure,
-                effectiveDate,
-                dailyWages,
-                monthlyWages,
-                yearlyWages,
-                overtime,
-                totalOvertimeWages,
-                fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages : null,
-                weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff : null,
-                wagesEditedBy: onboardName,
-            };
+            // Loop through each selected labour ID
+            for (const labourId of selectedLabourIds) {
+                const wageData = {
+                    labourId,
+                    payStructure,
+                    effectiveDate,
+                    // Only pass wage values for Daily Wages; otherwise, set them to null.
+                    dailyWages: payStructure === 'Daily Wages' ? (dailyWages || null) : null,
+                    monthlyWages: payStructure === 'Daily Wages' ? (monthlyWages || null) : null,
+                    yearlyWages: payStructure === 'Daily Wages' ? (yearlyWages || null) : null,
+                    overtime: payStructure === 'Daily Wages' ? (overtime || null) : null,
+                    totalOvertimeWages: payStructure === 'Daily Wages' ? (totalOvertimeWages || null) : null,
+                    // For Fixed Monthly Wages, pass fixedMonthlyWages and weeklyOff; others set to null.
+                    fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? (fixedMonthlyWages || null) : null,
+                    weeklyOff: payStructure === 'Fixed Monthly Wages' ? (weeklyOff || null) : null,
+                    wagesEditedBy: onboardName,
+                };
 
-            const { data: existingWagesResponse } = await axios.get(`${API_BASE_URL}/labours/checkExistingWages`, {
-                params: { labourId: selectedLabour.LabourID },
-            });
+                // Check if wages already exist for the current labour
+                const { data: existingWagesResponse } = await axios.get(
+                    `${API_BASE_URL}/labours/checkExistingWages`,
+                    { params: { labourId } }
+                );
 
-            const { exists, approved, data } = existingWagesResponse;
+                const { exists, approved, data } = existingWagesResponse;
 
-            if (!exists) {
-                await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-                toast.success("Wages added successfully.");
-            } else if (exists && !approved) {
-                wageData.wageId = data.WageID;
-                console.log('wageData.wageId .. ', wageData.wageId)
-                console.log('wageData.wageId .. ', wageData)
-                await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-                toast.info("Wages sent for admin approval.");
-            } else if (exists && approved) {
-                wageData.wageId = data.WageID;
-                await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-                toast.info("Wages changes sent for admin approval.");
+                if (!exists) {
+                    await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
+                    toast.success(`Wages added successfully for labour ${labourId}.`);
+                } else if (exists && !approved) {
+                    wageData.wageId = data.WageID;
+                    await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+                    toast.info(`Wages sent for admin approval for labour ${labourId}.`);
+                } else if (exists && approved) {
+                    wageData.wageId = data.WageID;
+                    await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+                    toast.info(`Wages changes sent for admin approval for labour ${labourId}.`);
+                }
             }
-
+            // Refresh the data, close the modal, and reset fields & selections
             fetchLabours();
             setModalOpen(false);
             setWeeklyOff("");
@@ -343,6 +451,7 @@ const AttendanceReport = () => {
             setFixedMonthlyWages(0);
             setMonthlyWages(0);
             setDailyWages(0);
+            setSelectedLabourIds([]);
         } catch (error) {
             console.error("Error saving wages:", error);
             toast.error("Failed to save wages.");
@@ -404,7 +513,6 @@ const AttendanceReport = () => {
     // Data to display on the current page
     // const paginatedLabours = labours.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
-    // Filter data to only include the latest entry per LabourID
     const getLatestLabourData = (labours) => {
         const latestEntries = {};
         labours.forEach((labour) => {
@@ -418,6 +526,26 @@ const AttendanceReport = () => {
         return Object.values(latestEntries);
     };
 
+    // Checkbox handling: select/deselect individual row
+    const handleSelectRow = (event, labourId) => {
+        if (event.target.checked) {
+            setSelectedLabourIds(prev => [...prev, labourId]);
+        } else {
+            setSelectedLabourIds(prev => prev.filter(id => id !== labourId));
+        }
+    };
+
+    // Checkbox handling: select/deselect all rows on current page
+    const handleSelectAllRows = (event) => {
+        if (event.target.checked) {
+            const newSelected = paginatedLabours.map(labour => labour.LabourID);
+            setSelectedLabourIds(prev => [...prev, ...newSelected.filter(id => !prev.includes(id))]);
+        } else {
+            const newSelected = paginatedLabours.map(labour => labour.LabourID);
+            setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+        }
+    };
+
     const handleViewHistory = (labourID) => {
         const history = labours.filter((labour) => labour.LabourID === labourID);
         setSelectedHistory(history);
@@ -427,8 +555,11 @@ const AttendanceReport = () => {
     const filteredLabours = getLatestLabourData(labours);
     const paginatedLabours = filteredLabours.slice(
         page * rowsPerPage,
-        (page + 1) * rowsPerPage
+        rowsPerPage === -1 ? filteredLabours.length : (page + 1) * rowsPerPage
     );
+    const isAllSelected =
+        paginatedLabours.length > 0 &&
+        paginatedLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
@@ -530,6 +661,26 @@ const AttendanceReport = () => {
                     </Button>
                 </Box> */}
 
+                <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
+                    Filter
+                </Button>
+                {selectedLabourIds.length > 0 && (
+                    <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
+                        Edit ({selectedLabourIds.length})
+                    </Button>
+                )}
+
+
+                {/* <IconButton onClick={() => setFilterModalOpen(true)} aria-label="Select Filter">
+  <FilterListIcon />
+</IconButton>
+{selectedLabourIds.length > 0 && (
+  <IconButton onClick={() => setModalOpen(true)} aria-label="Edit Wages">
+    <EditIcon />
+  </IconButton>
+)} */}
+
+
                 <TablePagination
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
@@ -581,6 +732,12 @@ const AttendanceReport = () => {
                                     },
                                 }}
                             >
+                                <TableCell padding="checkbox">
+                                    <Checkbox
+                                        checked={isAllSelected}
+                                        onChange={handleSelectAllRows}
+                                        inputProps={{ 'aria-label': 'select all labours' }}
+                                    /></TableCell>
                                 <TableCell>Sr No</TableCell>
                                 <TableCell>Labour ID</TableCell>
                                 <TableCell>Name</TableCell>
@@ -600,11 +757,18 @@ const AttendanceReport = () => {
                         <TableBody>
                             {paginatedLabours.map((labour, index) => (
                                 <TableRow key={labour.LabourID}>
+                                    <TableCell padding="checkbox">
+                                        <Checkbox
+                                            checked={selectedLabourIds.includes(labour.LabourID)}
+                                            onChange={(e) => handleSelectRow(e, labour.LabourID)}
+                                            inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
+                                        />
+                                    </TableCell>
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     <TableCell>{labour.LabourID}</TableCell>
                                     <TableCell>{labour.name || '-'}</TableCell>
-                                    <TableCell>{labour.businessUnit || '-'}</TableCell>
-                                    <TableCell>{labour.departmentName || '-'}</TableCell>
+                                    <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell>
+                                    <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
                                     <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell>
                                     <TableCell>{labour.PayStructure || '-'}</TableCell>
                                     <TableCell>{labour.DailyWages || '-'}</TableCell>
@@ -626,11 +790,15 @@ const AttendanceReport = () => {
                                             sx={{
                                                 backgroundColor: 'rgb(239,230,247)',
                                                 color: 'rgb(130,54,188)',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgb(239,230,247)',
-                                                },
+                                                '&:hover': { backgroundColor: 'rgb(239,230,247)' },
                                             }}
-                                            onClick={() => handleEdit(labour)}
+                                            onClick={() => {
+                                                // For individual edit, you can add this labour to the selection and open the modal.
+                                                if (!selectedLabourIds.includes(labour.LabourID)) {
+                                                    setSelectedLabourIds([...selectedLabourIds, labour.LabourID]);
+                                                }
+                                                setModalOpen(true);
+                                            }}
                                         >
                                             Edit
                                         </Button>
@@ -642,8 +810,154 @@ const AttendanceReport = () => {
                 </Box>
             </TableContainer>
 
+            {/* ===== FILTER MODAL ===== */}
+            <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: 4,
+                    }}
+                >
+                    {/* Modal Header with Title and Close Button */}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            mb: 2,
+                        }}
+                    >
+                        <Typography variant="h6" gutterBottom>
+                            Filter Options
+                        </Typography>
+                        <Button onClick={() => setFilterModalOpen(false)}>
+                            <CloseIcon />
+                        </Button>
+                    </Box>
+
+                    {/* Business Unit Filter using projectNames from props */}
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="body1">Business Unit</Typography>
+                        <Select
+                            fullWidth
+                            value={selectedBusinessUnit}
+                            onChange={(e) => setSelectedBusinessUnit(e.target.value)}
+                            displayEmpty
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="">
+                                <em>All</em>
+                            </MenuItem>
+                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                projectNames.map((project) => (
+                                    <MenuItem key={project.id} value={project.id}>
+                                        {project.Business_Unit}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Projects Available
+                                </MenuItem>
+                            )}
+                        </Select>
+                    </Box>
+
+                    {/* Department Filter using departments from props */}
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="body1">Department</Typography>
+                        <Select
+                            fullWidth
+                            value={selectedDepartment}
+                            onChange={(e) => setSelectedDepartment(e.target.value)}
+                            displayEmpty
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="">
+                                <em>All</em>
+                            </MenuItem>
+                            {Array.isArray(departments) && departments.length > 0 ? (
+                                departments.map((department) => (
+                                    <MenuItem key={department.Id} value={department.Id}>
+                                        {department.Description}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Department Available
+                                </MenuItem>
+                            )}
+                        </Select>
+                    </Box>
+
+                    {/* Pay Structure Filter */}
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="body1">Pay Structure</Typography>
+                        <Select
+                            fullWidth
+                            value={selectedPayStructure}
+                            onChange={(e) => setSelectedPayStructure(e.target.value)}
+                            displayEmpty
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="">
+                                <em>All</em>
+                            </MenuItem>
+                            <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
+                            <MenuItem value="Daily Wages">Daily Wages</MenuItem>
+                        </Select>
+                    </Box>
+
+                    {/* Employee Filter Section */}
+                    {/* <Box sx={{ mb: 2 }}>
+      <FormControl component="fieldset">
+        <FormLabel component="legend">Employee Filter</FormLabel>
+        <RadioGroup row value={employeeToggle} onChange={(e) => setEmployeeToggle(e.target.value)}>
+          <FormControlLabel value="all" control={<Radio />} label="All" />
+          <FormControlLabel value="single" control={<Radio />} label="Single" />
+        </RadioGroup>
+      </FormControl>
+      {employeeToggle === 'single' && (
+        <TextField
+          fullWidth
+          label="Employee ID"
+          value={selectedEmployee}
+          onChange={(e) => setSelectedEmployee(e.target.value)}
+          sx={{ mt: 1 }}
+        />
+      )}
+    </Box> */}
+
+                    {/* Modal Action Buttons */}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        <Button variant="outlined" color="secondary" onClick={handleResetFilter}>
+                            Reset
+                        </Button>
+                        <Button variant="contained" sx={{
+                            backgroundColor: "rgb(229, 255, 225)",
+                            color: "rgb(43, 217, 144)",
+                            width: "100px",
+                            marginRight: "10px",
+                            marginBottom: "3px",
+                            "&:hover": {
+                                backgroundColor: "rgb(229, 255, 225)",
+                            },
+                        }} onClick={handleApplyFilters}>
+                            Apply
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
+
+
             {/* Modal */}
-            <Modal
+            {/* <Modal
                 open={modalOpen}
                 onClose={handleCancel}
                 aria-labelledby="modal-title"
@@ -664,7 +978,6 @@ const AttendanceReport = () => {
                 >
                     <h2 id="modal-title">Edit Pay Structure</h2>
 
-                    {/* Pay Structure Dropdown */}
                     <Select
                         fullWidth
                         value={payStructure}
@@ -679,7 +992,6 @@ const AttendanceReport = () => {
                         <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
                     </Select>
 
-                    {/* Effective Date Picker */}
                     <TextField
                         label="Effective Date"
                         type="date"
@@ -693,10 +1005,8 @@ const AttendanceReport = () => {
                         required
                     />
 
-                    {/* Dynamic Fields */}
                     {payStructure === 'Daily Wages' && (
                         <>
-                            {/* Daily Wages Input */}
                             <TextField
                                 label="Daily Wages"
                                 type="number"
@@ -716,7 +1026,6 @@ const AttendanceReport = () => {
                                 sx={{ mb: 2 }}
                             />
 
-                            {/* Read-Only Fields */}
                             <TextField
                                 label="Per Hours Wages"
                                 type="number"
@@ -741,42 +1050,11 @@ const AttendanceReport = () => {
                                 InputProps={{ readOnly: true }}
                                 sx={{ mb: 2 }}
                             />
-
-                            {/* Overtime (Hours) Input */}
-                            {/* <TextField
-                                label="Overtime (Hours)"
-                                type="number"
-                                fullWidth
-                                value={overtime}
-                                onChange={(e) => {
-                                    const value = parseFloat(e.target.value) || 0;
-                                    setOvertime(value);
-                                    setTotalOvertimeWages(value * (dailyWages / 8)); // Assuming 8 hours in a workday
-                                }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Overtime Pay"
-                                type="number"
-                                fullWidth
-                                value={totalOvertimeWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Total Wages (Including Overtime)"
-                                type="number"
-                                fullWidth
-                                value={+monthlyWages + +totalOvertimeWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            /> */}
                         </>
                     )}
 
                     {payStructure === 'Fixed Monthly Wages' && (
                         <>
-                            {/* Weekly Off Dropdown */}
                             <Select
                                 label="Weekly Off"
                                 fullWidth
@@ -803,7 +1081,6 @@ const AttendanceReport = () => {
                                 <MenuItem value="4">4</MenuItem>
                             </Select>
 
-                            {/* Fixed Monthly Wages TextField */}
                             <TextField
                                 label="Fixed Monthly Wages"
                                 type="number"
@@ -815,19 +1092,9 @@ const AttendanceReport = () => {
                                 }}
                                 sx={{ mb: 2 }}
                             />
-                            {/* Total Wages */}
-                            {/* <TextField
-                                label="Total Wages (Without Overtime)"
-                                type="number"
-                                fullWidth
-                                value={monthlyWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            /> */}
                         </>
                     )}
 
-                    {/* Save and Cancel Buttons */}
                     <Box display="flex" justifyContent="space-between" mt={2}>
                         <Button variant="contained" sx={{
                             backgroundColor: "#fce4ec",
@@ -851,8 +1118,182 @@ const AttendanceReport = () => {
                         </Button>
                     </Box>
                 </Box>
-            </Modal>
+            </Modal> */}
+            {/* Modal for Batch (or Individual) Wage Update */}
+            <Modal
+                open={modalOpen}
+                onClose={handleCancel}
+                aria-labelledby="modal-title"
+                aria-describedby="modal-description"
+            >
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 500,
+                        bgcolor: 'background.paper',
+                        boxShadow: 24,
+                        p: 4,
+                        borderRadius: 2,
+                    }}
+                >
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Typography id="modal-title" variant="h6">
+                            {selectedLabourIds.length > 1
+                                ? 'Update Wages for Selected Labour'
+                                : 'Edit Pay Structure'}
+                        </Typography>
+                        <IconButton onClick={handleCancel}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
 
+                    {/* Pay Structure Dropdown */}
+                    <Select
+                        fullWidth
+                        value={payStructure}
+                        onChange={(e) => setPayStructure(e.target.value)}
+                        displayEmpty
+                        sx={{ mb: 2 }}
+                    >
+                        <MenuItem value="" disabled>
+                            Select Pay Structure
+                        </MenuItem>
+                        <MenuItem value="Daily Wages">Daily Wages</MenuItem>
+                        <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
+                    </Select>
+
+                    {/* Effective Date Picker */}
+                    <TextField
+                        label="Effective Date"
+                        type="date"
+                        fullWidth
+                        value={effectiveDate}
+                        onChange={(e) => setEffectiveDate(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        sx={{ mb: 2 }}
+                        required
+                    />
+
+                    {/* Dynamic Fields based on Pay Structure */}
+                    {payStructure === 'Daily Wages' && (
+                        <>
+                            <TextField
+                                label="Daily Wages"
+                                type="number"
+                                fullWidth
+                                value={dailyWages || ""}
+                                onChange={(e) => {
+                                    const value = e.target.value === "" ? null : parseFloat(e.target.value);
+                                    setDailyWages(value);
+                                    if (value !== null) {
+                                        setMonthlyWages(value * 30); // assuming 30 days/month
+                                        setYearlyWages(value * 30 * 12); // assuming 12 months/year
+                                    } else {
+                                        setMonthlyWages(null);
+                                        setYearlyWages(null);
+                                    }
+                                }}
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                label="Per Hours Wages"
+                                type="number"
+                                fullWidth
+                                value={dailyWages ? dailyWages / 8 : 0} // assuming 8 hours per day
+                                InputProps={{ readOnly: true }}
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                label="Monthly Wages"
+                                type="number"
+                                fullWidth
+                                value={monthlyWages || 0}
+                                InputProps={{ readOnly: true }}
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                label="Yearly Wages"
+                                type="number"
+                                fullWidth
+                                value={yearlyWages || 0}
+                                InputProps={{ readOnly: true }}
+                                sx={{ mb: 2 }}
+                            />
+                        </>
+                    )}
+
+                    {payStructure === 'Fixed Monthly Wages' && (
+                        <>
+                            <Select
+                                label="Weekly Off"
+                                fullWidth
+                                value={weeklyOff || ""}
+                                onChange={(e) => {
+                                    const selectedValue = e.target.value;
+                                    if (selectedValue === "") {
+                                        setWeeklyOff("");
+                                        setMonthlyWages(0);
+                                    } else {
+                                        setWeeklyOff(selectedValue);
+                                    }
+                                }}
+                                displayEmpty
+                                sx={{ mb: 2 }}
+                            >
+                                <MenuItem value="" disabled>
+                                    Select Weekly Off
+                                </MenuItem>
+                                <MenuItem value="1">1</MenuItem>
+                                <MenuItem value="2">2</MenuItem>
+                                <MenuItem value="3">3</MenuItem>
+                                <MenuItem value="4">4</MenuItem>
+                            </Select>
+                            <TextField
+                                label="Fixed Monthly Wages"
+                                type="number"
+                                fullWidth
+                                value={fixedMonthlyWages || ""}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFixedMonthlyWages(value === "" ? null : parseFloat(value));
+                                }}
+                                sx={{ mb: 2 }}
+                            />
+                        </>
+                    )}
+
+                    <Box display="flex" justifyContent="space-between" mt={2}>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                backgroundColor: "#fce4ec",
+                                color: "rgb(255, 100, 100)",
+                                width: "100px",
+                                "&:hover": { backgroundColor: "#f8bbd0" },
+                            }}
+                            onClick={handleCancel}
+                        >
+                            Close
+                        </Button>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                backgroundColor: "rgb(229, 255, 225)",
+                                color: "rgb(43, 217, 144)",
+                                width: "100px",
+                                "&:hover": { backgroundColor: "rgb(229, 255, 225)" },
+                            }}
+                            onClick={handleSave}
+                            disabled={!payStructure || !effectiveDate}
+                        >
+                            Save
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
                 <Box
