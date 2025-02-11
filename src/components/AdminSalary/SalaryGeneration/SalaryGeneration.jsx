@@ -131,7 +131,7 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
                 throw new Error('Unexpected data format received from the API.');
             }
             if (salaryData.length === 0) {
-                setAttendanceData([]); 
+                setLabours([]); 
                 return;
             }
 
@@ -169,7 +169,7 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
                 };
             });
 
-            setAttendanceData(ShowSalaryGeneration);
+            setLabours(ShowSalaryGeneration);
         } catch (error) {
             console.error('Error fetching salary generation data:', error);
             toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
@@ -333,7 +333,7 @@ const handleCloseModalDetails = () => {
         setOpenModal(true);
     };
 
-    const filteredLabours = getLatestLabourData(attendanceData);
+    const filteredLabours = getLatestLabourData(labours);
     const paginatedLabours = filteredLabours.slice(
         page * rowsPerPage,
         (page + 1) * rowsPerPage
@@ -1014,7 +1014,7 @@ const handleCloseModalDetails = () => {
       <TableRow>
         <TableCell><b>Total Days</b></TableCell>
         <TableCell><b>Present Days</b></TableCell>
-        <TableCell><b>Present Days</b></TableCell>
+        <TableCell><b>Absent Days</b></TableCell>
         <TableCell><b>Half Days</b></TableCell>
         <TableCell><b>Miss Punch Days</b></TableCell>
       </TableRow>

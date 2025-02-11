@@ -4,7 +4,7 @@
     --dur: 0.3s;
     --color-dark: #ffffff;
     --color-light: #ffffff;
-    --color-brand: #13315C;
+    --color-brand: #13325e;
     --font-fam: 'Lato', sans-serif;
     --height: 3.2rem;
     margin: 9px 0px;
@@ -50,6 +50,7 @@
   .search-register__input[type="search"] {
     outline: 0; /* Consider removing for better accessibility */
     width: 100%;
+    color: #000;;
     background: var(--color-light);
     padding: 0 1.6rem;
     border-radius: var(--rad);

@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchVariblePay';
+import SearchBar from '../SarchBar/SearchRegister';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
@@ -208,7 +208,6 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
             const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
             setLabours(response.data);
         } catch (error) {
-            console.error('Error searching:', error);
             toast.error('Search failed');
         } finally {
             setLoading(false);
@@ -635,7 +634,10 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
-            <Box ml={-1.5}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Variable Inputs
+                </Typography>
                 <SearchBar
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}

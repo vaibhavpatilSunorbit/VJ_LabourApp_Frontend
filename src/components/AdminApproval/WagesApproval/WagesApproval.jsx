@@ -25,14 +25,14 @@ import {
   DialogContentText,
   DialogTitle,
   InputLabel,
-  IconButton,
+  IconButton, Checkbox,
   Menu,
   MenuItem, Select, Badge
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate, useLocation } from 'react-router-dom';
-import SearchBar from '../../SarchBar/SearchBar';
+import SearchBar from '../../SarchBar/SearchRegister';
 import ViewDetails from '../../ViewDetails/ViewDetails';
 import Loading from "../../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
@@ -110,6 +110,13 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
   const [pendingCount, setPendingCount] = useState(0);
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
+  const [selectedPayStructure, setSelectedPayStructure] = useState('');
+  const [employeeToggle, setEmployeeToggle] = useState('all'); // 'all' or 'single'
+  const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [selectedLabourIds, setSelectedLabourIds] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isMassModalOpen, setIsMassModalOpen] = useState(false);
+  // const [rejectReason, setRejectReason] = useState('');
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -120,7 +127,7 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
       return;
     }
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+      const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromWagesApproval?q=${searchQuery}`);
       setSearchResults(response.data);
     } catch (error) {
       setError('Error searching. Please try again.');
@@ -137,78 +144,11 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
     setIsApproveConfirmOpen(false);
   };
 
-
-
-
-
-
-
-  //   useEffect(() => {
-  //     fetchAttendanceLabours(); // Start fetching cached labours
-  //   }, []);
-
-  //   const fetchAttendanceLabours = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const response = await axios.get(`${API_BASE_URL}/labours`);
-
-  //       if (response.data.labours.length > 0) {
-  //         setLabours(response.data.labours);  // Set labours directly from the cached result
-  //         console.log('response.data.labours Attendance admin Approval........///......[[[[[', response.data.labours)
-  //       } else {
-  //         console.log('Fetch labour Attendance Approval.');
-  //         setHasMore(false);
-  //       }
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error("Error fetching labours:", error);
-  //       setLoading(false);
-  //     }
-  //   };
-
-
-
   useEffect(() => {
     if (hideResubmit && labourId) {
       setSubmittedLabourIds(prevIds => [...prevIds, labourId]);
     }
   }, [hideResubmit, labourId]);
-
-  //   const handleReject = async (id, rejectReason) => {
-  //     if (!id || !rejectReason) {
-  //         toast.error('Labour ID and rejection reason are required.');
-  //         return;
-  //     }
-
-  //     try {
-  //         const response = await axios.put(
-  //             `${API_BASE_URL}/labours/attendance/reject/${id}`,
-  //             { rejectReason }, // Include rejectReason in the request body
-  //             {
-  //                 headers: {
-  //                     'Content-Type': 'application/json',
-  //                 },
-  //             }
-  //         );
-
-  //         if (response.data.success) {
-  //             setLabours(prevLabours =>
-  //                 prevLabours.map(labour =>
-  //                     labour.id === id
-  //                         ? { ...labour, ApprovalStatus: 'Rejected', rejectReason }
-  //                         : labour
-  //                 )
-  //             );
-  //             toast.success('Attendance rejected successfully.');
-  //             setIsRejectPopupOpen(false); // Close modal
-  //         } else {
-  //             toast.error('Failed to reject attendance. Please try again.');
-  //         }
-  //     } catch (error) {
-  //         console.error('Error rejecting attendance:', error);
-  //         toast.error('Error rejecting attendance. Please try again.');
-  //     }
-  // };
 
   const handleReject = async (ApprovalID) => {
     if (!ApprovalID) {
@@ -269,8 +209,125 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
     }
   };
 
+  const openMassApproveRejectModal = () => {
+    if (selectedLabourIds.length === 0) {
+      toast.error('No labours selected!');
+      return;
+    }
+    setRejectReason('');  // Clear any old reason
+    setIsMassModalOpen(true);
+  };
 
+  const closeMassApproveRejectModal = () => {
+    setIsMassModalOpen(false);
+    setRejectReason('');
+  };
 
+  const handleMassApprove = async () => {
+    if (selectedLabourIds.length === 0) {
+      toast.error('No labours selected!');
+      return;
+    }
+  
+    try {
+      // For each selected "LabourID", find the labour object in state
+      for (const labourID of selectedLabourIds) {
+        const labourObj = labours.find((labour) => labour.LabourID === labourID);
+        if (!labourObj) {
+          console.warn(`No labour found with LabourID=${labourID}`);
+          continue;
+        }
+        if (!labourObj.ApprovalID) {
+          console.warn(`No ApprovalID found for LabourID=${labourID}`);
+          continue;
+        }
+  
+        // Call your existing endpoint with the labour's ApprovalID
+        const response = await axios.put(`${API_BASE_URL}/labours/admin/approveWages`, null, {
+          params: { ApprovalID: labourObj.ApprovalID },
+        });
+  
+        if (!response.data.success) {
+          // Optionally handle partial failures
+          toast.error(`Failed to approve labour with ApprovalID ${labourObj.ApprovalID}`);
+        }
+      }
+  
+      // After all requests are done: update local state
+      setLabours((prevLabours) =>
+        prevLabours.map((labour) =>
+          selectedLabourIds.includes(labour.LabourID)
+            ? { ...labour, ApprovalStatus: 'Approved' }
+            : labour
+        )
+      );
+  
+      toast.success(`${selectedLabourIds.length} labour(s) approved successfully.`);
+    } catch (error) {
+      console.error('Error approving labours:', error);
+      toast.error('Error approving selected labours. Please try again.');
+    } finally {
+      // Clean up
+      setSelectedLabourIds([]);
+      setIsMassModalOpen(false);
+    }
+  };
+  
+  const handleMassReject = async () => {
+    if (selectedLabourIds.length === 0) {
+      toast.error('No labours selected!');
+      return;
+    }
+    if (!Remarks.trim()) {
+      toast.error('Please provide a reason for rejection.');
+      return;
+    }
+  
+    try {
+      // For each selected "LabourID", find the labour object in state
+      for (const labourID of selectedLabourIds) {
+        const labourObj = labours.find((labour) => labour.LabourID === labourID);
+        if (!labourObj) {
+          console.warn(`No labour found with LabourID=${labourID}`);
+          continue;
+        }
+        if (!labourObj.ApprovalID) {
+          console.warn(`No ApprovalID found for LabourID=${labourID}`);
+          continue;
+        }
+  
+        // Reject the labour
+        const response = await axios.put(`${API_BASE_URL}/labours/admin/rejectWages`, null, {
+          params: { 
+            ApprovalID: labourObj.ApprovalID, 
+            Remarks: Remarks 
+          },
+        });
+  
+        if (!response.data.success) {
+          toast.error(`Failed to reject labour with ApprovalID ${labourObj.ApprovalID}`);
+        }
+      }
+  
+      // Update local state to mark them as Rejected
+      setLabours((prev) =>
+        prev.map((labour) =>
+          selectedLabourIds.includes(labour.LabourID)
+            ? { ...labour, ApprovalStatus: 'Rejected', Remarks: Remarks }
+            : labour
+        )
+      );
+  
+      toast.success(`${selectedLabourIds.length} labour(s) rejected successfully.`);
+    } catch (error) {
+      console.error('Error rejecting labours:', error);
+      toast.error('Error rejecting selected labours. Please try again.');
+    } finally {
+      setSelectedLabourIds([]);
+      setIsMassModalOpen(false);
+    }
+  };
+  
   const handleEditLabourOpen = (labour) => {
     setSelectedLabour(labour);
     setIsEditLabourOpen(true);
@@ -327,10 +384,6 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
     setSelectedLabour(selectedLabour);
   };
 
-  // const handleEdit = (labour) => {
-  //   navigate('/edit-labour', { state: { labour } });
-  // };
-
   const handleEdit = (labour) => {
     setFormData(labour);
     setOpen(true);
@@ -382,13 +435,6 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
     fetchAndSortLabours();
   }, [tabValue]);
 
-
-
-  // useEffect(() => {
-  //   fetchLabours();
-  // }, []);
-
-
   const handleAccountNumberChange = (e) => {
     let cleanedValue = e.target.value.replace(/\D/g, '');
     if (cleanedValue.length > 16) {
@@ -415,11 +461,6 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
   const handleClose = () => {
     setOpen(false);
   };
-
-
-  // const API_BASE_URL = 'http://localhost:4000'; 
-  // const API_BASE_URL = "https://laboursandbox.vjerp.com"; 
-  // const API_BASE_URL = "https://vjlabour.vjerp.com"; 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -453,7 +494,39 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
       toast.error('Error updating labour details. Please try again.');
     }
   };
+ // Checkbox handling: select/deselect individual row
+ const handleSelectRow = (event, labourId) => {
+  if (event.target.checked) {
+    setSelectedLabourIds(prev => [...prev, labourId]);
+  } else {
+    setSelectedLabourIds(prev => prev.filter(id => id !== labourId));
+  }
+};
 
+const handleSelectAllRows = (event) => {
+  if (event.target.checked) {
+    const newSelected = filteredLabours.map(labour => labour.LabourID);
+    setSelectedLabourIds(prev => [
+      ...prev,
+      ...newSelected.filter(id => !prev.includes(id)),
+    ]);
+  } else {
+    const newSelected = filteredLabours.map(labour => labour.LabourID);
+    setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+  }
+};
+
+const openVariablePayModal = () => {
+  if (selectedLabourIds.length === 0) {
+    toast.error("No labours selected!");
+    return;
+  }
+  setModalOpen(true);
+};
+
+const closeVariablePayModal = () => {
+  setModalOpen(false);
+};
 
   const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
@@ -466,6 +539,9 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
       return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
     }
   });
+  const isAllSelected =
+  filteredLabours.length > 0 &&
+  filteredLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
 
   const openPopup = async (labour) => {
     try {
@@ -547,11 +623,12 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
 
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
-      {/* <Typography variant="h5" >
-        Labour Details
-      </Typography> */}
+      <ToastContainer />
 
-      <Box ml={-1.5}>
+<Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    Admin | Wages Approval
+                </Typography>
         <SearchBar
           handleSubmit={handleSubmit}
           searchQuery={searchQuery}
@@ -597,12 +674,6 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
         >
           <Tab
             label={`Pending (${pendingCount})`}
-            //    label={
-            //     <Box sx={{display:'flex'}}>
-            //    <Box sx={{alignContent:'center'}}>Pending</Box>
-            //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{pendingCount}</Box>
-            //    </Box>
-            //   }
             style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
             sx={{
               color: tabValue === 0 ? "white" : "black",
@@ -621,12 +692,6 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
           />
           <Tab
             label={`Approved (${approvedCount})`}
-            //   label={
-            //     <Box sx={{display:'flex'}}>
-            //    <Box sx={{alignContent:'center'}}>Approved</Box>
-            //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{approvedCount}</Box>
-            //    </Box>
-            //   }
             style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
             sx={{
               color: tabValue === 1 ? "white" : "black",
@@ -645,12 +710,6 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
           />
           <Tab
             label={`Rejected (${rejectedCount})`}
-            //   label={
-            //     <Box sx={{display:'flex'}}>
-            //    <Box sx={{alignContent:'center'}}>Rejected</Box>
-            //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{rejectedCount}</Box>
-            //    </Box>
-            //   }
             style={{ color: tabValue === 2 ? "rgb(255, 100, 100)" : "black" }}
             sx={{
               color: tabValue === 2 ? "white" : "black",
@@ -667,6 +726,12 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
             }}
           />
         </Tabs>
+
+        {selectedLabourIds.length > 0 && (
+  <Button variant="outlined"  color="secondary" startIcon={<EditIcon />}  onClick={openMassApproveRejectModal}>
+Approve/Reject ({selectedLabourIds.length})
+  </Button>
+)}
 
         <TablePagination
           className="custom-pagination"
@@ -722,6 +787,12 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
                   },
                 }}
               >
+                {tabValue === 0 && <TableCell padding="checkbox">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onChange={handleSelectAllRows}
+                    inputProps={{ 'aria-label': 'select all labours' }}
+                  /></TableCell>}
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
                 <TableCell>Effective Date</TableCell>
@@ -772,6 +843,15 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
                   .sort((a, b) => b.labourID - a.labourID)
               ).map((labour, index) => (
                 <TableRow key={labour.id}>
+                    {tabValue === 0 && (
+                    <><TableCell padding="checkbox">
+                    <Checkbox
+                      checked={selectedLabourIds.includes(labour.LabourID)}
+                      onChange={(e) => handleSelectRow(e, labour.LabourID)}
+                      inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
+                    />
+                  </TableCell> </>
+                  )}
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{labour.LabourID}</TableCell>
                   <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString('en-GB') : '-'}</TableCell>
@@ -855,26 +935,6 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
                       )}
                     </TableCell>
                   )}
-                  {/* {user.userType === 'user' && (
-                    <TableCell>
-                     
-                      {labour.ApprovalStatus === 'Approved' && (
-                        <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
-                              backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                          }}
-                          onClick={() => handleEdit(labour)}
-                        >
-                          Update
-                        </Button>
-                      )}
-                    </TableCell>
-                  )} */}
 
                   {user.userType === 'admin' || user.userType === 'superadmin' && (
                     <TableCell>
@@ -915,53 +975,8 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
                           </Button>
                         </>
                       )}
-                      {/* {labour.ApprovalStatus === 'Approved' && (
-                        <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
-                              backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                          }}
-                          onClick={() => handleEdit(labour)}
-                        >
-                          Update
-                        </Button>
-                      )} */}
-
-
                     </TableCell>
                   )}
-                  {/* 
-                  <TableCell>
-                    <RemoveRedEyeIcon onClick={() => openPopup(labour)} style={{ cursor: 'pointer' }} />
-                  </TableCell> */}
-
-                  {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && tabValue !== 1 && <TableCell>
-                    <Select
-                      value={selectedSite[labour.LabourID] || ''}
-                      displayEmpty
-                      sx={{ minWidth: 150 }}
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            width: 280,
-                          },
-                        },
-                      }}
-                    >
-                      <MenuItem value="" disabled>Select New Site</MenuItem>
-                      {projectNames.map((project) => (
-                        <MenuItem key={project.id} value={project.id}>
-                          {project.Business_Unit}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </TableCell>}
-
-                  {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && tabValue !== 1 && <TableCell>{statusesSite[labour.LabourID] || '-'}</TableCell>}
                 </TableRow>
               ))}
             </TableBody>
@@ -1204,6 +1219,68 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
         </DialogActions>
       </Dialog>
 
+      <Dialog
+        open={isMassModalOpen}
+        onClose={closeMassApproveRejectModal}
+      >
+        <DialogTitle>Approve/Reject No. {selectedLabourIds.length} labours</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Do you want to approve or reject these selected labours? <br />
+            If Reject, please provide a reason below:
+          </DialogContentText>
+
+          <TextField
+            label="Reason for Rejection"
+            value={Remarks}
+            onChange={(e) => setRejectReason(e.target.value)}
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            margin="normal"
+            placeholder="If rejecting, please provide a reason."
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={closeMassApproveRejectModal}
+            variant="outlined"
+            color="secondary"
+          >
+            Cancel
+          </Button>
+
+          {/* Reject Button */}
+          <Button
+            onClick={handleMassReject}
+            sx={{
+              backgroundColor: '#fce4ec',
+              color: 'rgb(255, 100, 100)',
+              '&:hover': {
+                backgroundColor: '#f8bbd0',
+              },
+            }}
+          >
+            Reject
+          </Button>
+
+          {/* Approve Button */}
+          <Button
+            onClick={handleMassApprove}
+            sx={{
+              backgroundColor: 'rgb(229, 255, 225)',
+              color: 'rgb(43, 217, 144)',
+              '&:hover': {
+                backgroundColor: 'rgb(229, 255, 225)',
+              },
+            }}
+          >
+            Approve
+          </Button>
+        </DialogActions>
+      </Dialog>
+
 
       <Dialog
         open={isEditLabourOpen}
@@ -1238,8 +1315,6 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
         </DialogActions>
       </Dialog>
 
-
-      <ToastContainer />
     </Box>
 
   );

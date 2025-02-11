@@ -341,7 +341,6 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
             const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
             setLabours(response.data);
         } catch (error) {
-            console.error('Error searching:', error);
             toast.error('Search failed');
         } finally {
             setLoading(false);
