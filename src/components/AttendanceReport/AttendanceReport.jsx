@@ -28,6 +28,7 @@ import ImportAttendance from './ImportExportAttendance/ImportAttendance';
 import ExportAttendance from './ImportExportAttendance/ExportAttendance';
 import CloseIcon from '@mui/icons-material/Close'
 import SyncIcon from '@mui/icons-material/Sync';
+import Tooltip from '@mui/material/Tooltip';
 
 const AttendanceReport = () => {
     const theme = useTheme();
@@ -76,8 +77,55 @@ const AttendanceReport = () => {
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     // const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
 
+    function formatOvertime(Overtime) {
+        let hours = Math.floor(Overtime);  // Changed from 'const' to 'let' to allow modification
+        let minutes = Math.floor((Overtime - hours) * 60);
+    
+        if (minutes < 15) {
+            minutes = 0;
+        } else if (minutes < 45) {
+            minutes = 30;  // 15 to 44 minutes, considered as 30 minutes
+        } else {
+            minutes = 0;  // More than 45 minutes, round to the next hour
+            hours += 1;  // Increase hour by one
+        }
+    
+        return { hours, minutes };
+    }
+    
+    function formatTotalHours(TotalHours) {
+        let hours = Math.floor(TotalHours);  // Changed from 'const' to 'let' to allow modification
+        let minutes = Math.floor((TotalHours - hours) * 60);
+    
+        if (minutes < 15) {
+            minutes = 0;
+        } else if (minutes < 45) {
+            minutes = 30;  // 15 to 44 minutes, considered as 30 minutes
+        } else {
+            minutes = 0;  // More than 45 minutes, round to the next hour
+            hours += 1;  // Increase hour by one
+        }
+    
+        return { hours, minutes };
+    }
 
-
+    function formatTotalOvertime(TotalOvertimeHours) {
+        let hours = Math.floor(TotalOvertimeHours);
+        let minutes = Math.floor((TotalOvertimeHours - hours) * 60);
+    
+        if (minutes < 15) {
+            minutes = 0; 
+        } else if (minutes < 45) {
+            minutes = 30; // 15 to 44 minutes, consider as 30 minutes
+        } else {
+            minutes = 0; // More than 45 minutes, round to next hour
+            hours += 1; // Increase hour by one
+        }
+    
+        return { hours, minutes };
+    };
+    
+    
     const handleManualEditDialogOpen = (day) => {
         setSelectedDay(day);
         setManualEditData({
@@ -100,16 +148,17 @@ const AttendanceReport = () => {
 
     const handleSaveManualEdit = async () => {
         try {
+            const defaultTime = manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff' ? '00:00:00' : null;
+
             const formattedPunchIn = manualEditData.punchIn && dayjs.isDayjs(manualEditData.punchIn)
                 ? manualEditData.punchIn.format('HH:mm:ss')
-                : null;
+                : defaultTime;
 
             const formattedPunchOut = manualEditData.punchOut && dayjs.isDayjs(manualEditData.punchOut)
                 ? manualEditData.punchOut.format('HH:mm:ss')
-                : null;
+                : defaultTime;
 
             const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
-
             const hasOvertime = overtime !== '';
             const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
 
@@ -128,10 +177,11 @@ console.log('AttendanceStatus', AttendanceStatus)
                 AttendanceId: manualEditData.AttendanceId || "",
                 ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
                 ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
-                ...(hasOvertime && { overtimeManually: manualEditData.overtime }),
+                ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually }),
                 ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
                 workingHours, 
                 ...(onboardName && { onboardName }), AttendanceStatus,
+                markWeeklyOff: manualEditData.status === 'weeklyOff',
             };
 
             console.log('Request payload +++++:', payload);
@@ -144,9 +194,10 @@ console.log('AttendanceStatus', AttendanceStatus)
                         ...day,
                         ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
                         ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
-                        ...(hasOvertime && { overtime: manualEditData.overtime }),
+                        ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually || 0 }),
                         ...(manualEditData.remark && { remark: manualEditData.remark }),
-                        workingHours, AttendanceStatus,
+                        workingHours, AttendanceStatus, 
+                        markWeeklyOff: manualEditData.status === 'weeklyOff',
                     }
                     : day
             );
@@ -272,8 +323,10 @@ console.log('AttendanceStatus', AttendanceStatus)
                     status: attendanceRecord ? attendanceRecord.Status : 'NA',
                     firstPunch: attendanceRecord?.FirstPunch || '-',
                     lastPunch: attendanceRecord?.LastPunch || '-',
-                    totalHours: attendanceRecord?.TotalHours || '0.00',
-                    overtime: attendanceRecord?.Overtime || '0.0',
+                    // totalHours: attendanceRecord?.TotalHours || '0.00',
+                    // overtime: attendanceRecord?.Overtime || '0.0',
+                    totalHours: formatTotalHours(attendanceRecord?.TotalHours || 0),
+                    overtime: formatOvertime(attendanceRecord?.Overtime || 0),
                     isHoliday: attendanceRecord?.Status === 'H',
                     labourId: attendanceRecord?.LabourId || 'NA',
                     overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
@@ -405,7 +458,8 @@ console.log('AttendanceStatus', AttendanceStatus)
                     halfDays: labour.HalfDays,
                     absentDays: labour.AbsentDays,
                     misspunchDays: labour.MissPunchDays,
-                    totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
+                    // totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
+                    totalOvertimeHours: formatTotalOvertime(labour.TotalOvertimeHours || 0),
                     shift: labour.Shift,
                 };
             });
@@ -1121,7 +1175,14 @@ console.log('AttendanceStatus', AttendanceStatus)
                                             <TableCell>{labourAttendance ? labourAttendance.halfDays : '-'}</TableCell>
                                             <TableCell>{labourAttendance ? labourAttendance.absentDays : '-'}</TableCell>
                                             <TableCell>{labourAttendance ? labourAttendance.misspunchDays : '-'}</TableCell>
-                                            <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell>
+                                            {/* <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell> */}
+                                            <TableCell>
+    {labourAttendance && labourAttendance.totalOvertimeHours ? (
+        <Tooltip title={`${labourAttendance.totalOvertimeHours.hours} hours ${labourAttendance.totalOvertimeHours.minutes} minutes`}>
+            <span>{`${labourAttendance.totalOvertimeHours.hours}h ${labourAttendance.totalOvertimeHours.minutes ? labourAttendance.totalOvertimeHours.minutes + 'm' : ''}`}</span>
+        </Tooltip>
+    ) : "0h"}
+</TableCell>
                                             <TableCell>
                                                 <Button
                                                     onClick={() => handleModalOpen(labour)}
@@ -1310,8 +1371,22 @@ console.log('AttendanceStatus', AttendanceStatus)
                                                 </TableCell>
                                                 <TableCell>{day.firstPunch || "-"}</TableCell>
                                                 <TableCell>{day.lastPunch || "-"}</TableCell>
-                                                <TableCell>{day.totalHours || "0.00"}</TableCell>
-                                                <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell>
+                                                {/* <TableCell>{day.totalHours || "0.00"}</TableCell> */}
+                                                <TableCell>
+    {day.totalHours && (day.totalHours.hours > 0 || day.totalHours.minutes > 0) ? (
+        <Tooltip title={`${day.totalHours.hours} hours ${day.totalHours.minutes} minutes`}>
+            <span>{`${day.totalHours.hours}h ${day.totalHours.minutes}m`}</span>
+        </Tooltip>
+    ) : "0h"}
+</TableCell>
+                                                {/* <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell> */}
+                                                <TableCell>
+    {day.overtime && (day.overtime.hours > 0 || day.overtime.minutes > 0) ? (
+        <Tooltip title={`${day.overtime.hours} hours ${day.overtime.minutes} minutes`}>
+            <span>{`${day.overtime.hours}h ${day.overtime.minutes}m`}</span>
+        </Tooltip>
+    ) : "0h"}
+</TableCell>
                                                 <TableCell>{day.overtimemanually || "-"}</TableCell>
                                                 {/* <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell> */}
                                                 <TableCell>{day.remark || "-"}</TableCell>
@@ -1451,9 +1526,9 @@ console.log('AttendanceStatus', AttendanceStatus)
                                 type="number"
                                 variant="outlined"
                                 fullWidth
-                                value={manualEditData.overtime}
+                                value={manualEditData.overtimeManually}
                                 onChange={(e) =>
-                                    setManualEditData({ ...manualEditData, overtime: e.target.value })
+                                    setManualEditData({ ...manualEditData, overtimeManually: e.target.value })
                                 }
                             />
                         </>

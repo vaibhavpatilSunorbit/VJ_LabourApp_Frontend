@@ -349,41 +349,36 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     //             toast.error("Please fill in all required fields.");
     //             return;
     //         }
-    //         const wageData = {
-    //             labourId: selectedLabour.LabourID,
-    //             payStructure,
-    //             effectiveDate,
-    //             dailyWages,
-    //             monthlyWages,
-    //             yearlyWages,
-    //             overtime,
-    //             totalOvertimeWages,
-    //             fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages : null,
-    //             weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff : null,
-    //             wagesEditedBy: onboardName,
-    //         };
+    //         // Loop through each selected labour ID
+    //         for (const labourId of selectedLabourIds) {
+    //             const wageData = {
+    //                 labourId,
+    //                 payStructure,
+    //                 effectiveDate,
+    //                 // Only pass wage values for Daily Wages; otherwise, set them to null.
+    //                 dailyWages: payStructure === 'Daily Wages' ? (dailyWages || null) : null,
+    //                 monthlyWages: payStructure === 'Daily Wages' ? (monthlyWages || null) : null,
+    //                 yearlyWages: payStructure === 'Daily Wages' ? (yearlyWages || null) : null,
+    //                 overtime: payStructure === 'Daily Wages' ? (overtime || null) : null,
+    //                 totalOvertimeWages: payStructure === 'Daily Wages' ? (totalOvertimeWages || null) : null,
+    //                 // For Fixed Monthly Wages, pass fixedMonthlyWages and weeklyOff; others set to null.
+    //                 fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? (fixedMonthlyWages || null) : null,
+    //                 weeklyOff: payStructure === 'Fixed Monthly Wages' ? (weeklyOff || null) : null,
+    //                 wagesEditedBy: onboardName,
+    //             };
 
-    //         const { data: existingWagesResponse } = await axios.get(`${API_BASE_URL}/labours/checkExistingWages`, {
-    //             params: { labourId: selectedLabour.LabourID },
-    //         });
+    //             // Check if wages already exist for the current labour
+    //             const updateResponse =  await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData,
+    //                 { params: { labourId } }
+    //             );
 
-    //         const { exists, approved, data } = existingWagesResponse;
-
-    //         if (!exists) {
-    //             await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-    //             toast.success("Wages added successfully.");
-    //         } else if (exists && !approved) {
-    //             wageData.wageId = data.WageID;
-    //             console.log('wageData.wageId .. ', wageData.wageId)
-    //             console.log('wageData.wageId .. ', wageData)
-    //             await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-    //             toast.info("Wages sent for admin approval.");
-    //         } else if (exists && approved) {
-    //             wageData.wageId = data.WageID;
-    //             await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-    //             toast.info("Wages changes sent for admin approval.");
-    //         }
-
+    //             if (updateResponse.status === 200) {
+    //                 toast.success('Labour details updated successfully.');
+    //               } else {
+    //                 toast.error('Failed to update labour details. Please try again.');
+    //               }
+    //             };
+    //         // Refresh the data, close the modal, and reset fields & selections
     //         fetchLabours();
     //         setModalOpen(false);
     //         setWeeklyOff("");
@@ -391,6 +386,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     //         setFixedMonthlyWages(0);
     //         setMonthlyWages(0);
     //         setDailyWages(0);
+    //         setSelectedLabourIds([]);
     //     } catch (error) {
     //         console.error("Error saving wages:", error);
     //         toast.error("Failed to save wages.");
@@ -1246,6 +1242,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                                 <MenuItem value="" disabled>
                                     Select Weekly Off
                                 </MenuItem>
+                                <MenuItem value="0">0</MenuItem>
                                 <MenuItem value="1">1</MenuItem>
                                 <MenuItem value="2">2</MenuItem>
                                 <MenuItem value="3">3</MenuItem>
