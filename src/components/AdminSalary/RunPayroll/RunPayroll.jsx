@@ -136,7 +136,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             }
             if (fetchedData.length === 0) {
                 setLabours([]);
-                setSalaryData([]); 
+                setSalaryData([]);
                 return;
             }
 
@@ -175,7 +175,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             });
 
             setLabours(ShowSalaryGeneration);
-            setSalaryData(ShowSalaryGeneration); 
+            setSalaryData(ShowSalaryGeneration);
         } catch (error) {
             console.error('Error fetching salary generation data:', error);
             toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
@@ -200,7 +200,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                 setLoading(false);
                 return;
             }
-            const response = await axios.post(`${API_BASE_URL}/insentive/payroll/saveFinalPayrollData`, salaryData);
+            const response = await axios.post(`${API_BASE_URL}/insentive/insentive/generateMonthlyPayroll`, salaryData);
             toast.success(response.data.message);
         } catch (error) {
             console.error('Error saving final payroll data:', error);
@@ -209,6 +209,68 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             setLoading(false);
         }
     };
+
+
+    const saveFinalizePayrollData = async () => {
+        if (!selectedMonth || !selectedYear) {
+            toast.warning("Please select both Month and Year.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            if (salaryData.length === 0) {
+                toast.warning("No salary data available to save.");
+                setLoading(false);
+                return;
+            }
+
+            const response = await axios.post(`${API_BASE_URL}/insentive/generateMonthlyPayroll`, {
+                month: selectedMonth,
+                year: selectedYear,
+            });
+
+            toast.success(response.data.message || "Payroll generated successfully.");
+        } catch (error) {
+            console.error('Error saving payroll data:', error);
+            toast.error(error.response?.data?.message || "Error generating payroll. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    const deletePayrollData = async (labourIds = []) => {
+        if (!selectedMonth || !selectedYear) {
+            toast.warning("Please select both Month and Year.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const requestData = {
+                month: selectedMonth,
+                year: selectedYear,
+            };
+
+            if (labourIds.length > 0) {
+                requestData.labourIds = labourIds; // If deleting specific labourIds, add them to request
+            }
+
+            const response = await axios.delete(`${API_BASE_URL}/insentive/payroll/deleteFinalPayrollData`, {
+                data: requestData, // Pass data inside 'data' property for DELETE requests
+            });
+
+            toast.success(response.data.message || "Payroll records deleted successfully.");
+        } catch (error) {
+            console.error("Error deleting payroll data:", error);
+            toast.error(error.response?.data?.message || "Error deleting payroll data. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
 
 
     // -------------------------------------   SHOW ATTENDACNE ----------------------
@@ -590,10 +652,10 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                 sx={{
                     flex: 3,
                     overflowY: "auto", // Enable scrolling
-                    padding: 3,
+                    padding: "0px 24px",
                     bgcolor: "#f9f9f9", // Light background
                     borderRight: "1px solid #ddd", // Border for separation
-                    height: "84vh", // Full-height scrolling container
+                    height: "90vh", // Full-height scrolling container
                     scrollbarWidth: "none", // Hide scrollbar (Firefox)
                     "&::-webkit-scrollbar": {
                         display: "none", // Hide scrollbar (Chrome, Safari, Edge)
@@ -685,6 +747,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 onChange={(e) => setSelectedMonth(e.target.value)}
                                 displayEmpty
                                 sx={{
+                                    marginTop: '-5px',
                                     width: "100%", // Full width to fill the container space
                                     marginBottom: { xs: "20px", sm: "0" } // Add bottom margin on small screens
                                 }}
@@ -704,6 +767,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 onChange={(e) => setSelectedYear(e.target.value)}
                                 displayEmpty
                                 sx={{
+                                    marginTop: '-5px',
                                     width: "100%", // Ensure this also takes full width
                                     marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
                                 }}
@@ -726,12 +790,13 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                         color="primary"
                                     />
                                 }
-                                label={fetchForAll ? 'Fetch All' : 'Fetch for Labour ID'}
+                                // label={fetchForAll ? 'Fetch All' : 'Fetch for Labour ID'}
                                 sx={{
                                     marginBottom: { xs: "20px", sm: "0" }, // Margin bottom on small screens
-                                    width: "100%", // Full width to align switch properly
+                                    // width: "100%", // Full width to align switch properly
                                 }}
                             />
+
 
                             {!fetchForAll && (
                                 <TextField
@@ -742,7 +807,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     onChange={(e) => setLabourId(e.target.value)}
                                     sx={{
                                         width: "100%", // Full width
-                                        marginBottom: "20px" // Bottom margin for spacing
+                                        marginBottom: { xs: "20px", sm: "0" }  // Bottom margin for spacing
                                     }}
                                 />
                             )}
@@ -1305,13 +1370,14 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 </MenuItem>
                             ))}
                         </Select>
-                        <Typography variant="h4" sx={{ fontSize: '15px', lineHeight: 1.435, background:'#d89d9d', padding:'15px' }}>
-                        Finalize your payroll to view the required amount.
-                    </Typography>
+                        <Typography variant="h4" sx={{ fontSize: '15px', lineHeight: 1.435, background: '#d89d9d', padding: '15px' }}>
+                            Finalize your payroll to view the required amount.
+                        </Typography>
 
                         <Button
                             variant="contained"
-                            onClick={saveFinalPayrollData}
+                            // onClick={saveFinalPayrollData}
+                            onClick={saveFinalizePayrollData}
                             sx={{
                                 fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
                                 height: "40px",
@@ -1325,6 +1391,23 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             }}
                         >
                             Finalize PayRoll
+                        </Button>
+
+                        {/* Delete Payroll Button */}
+                        <Button
+                            variant="contained"
+                            onClick={() => deletePayrollData()} // Calls delete function without labourIds (deletes all)
+                            sx={{
+                                fontSize: { xs: "0.8rem", sm: "1rem" },
+                                height: "40px",
+                                width: "100%",
+                                backgroundColor: "rgb(255, 225, 225)",
+                                color: "rgb(255, 43, 43)",
+                                '&:hover': { backgroundColor: "rgb(255, 200, 200)" },
+                                marginBottom: { xs: "20px", sm: "0" }
+                            }}
+                        >
+                            Delete Payroll
                         </Button>
                     </Box>
 
