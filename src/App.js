@@ -28,6 +28,7 @@ import SalaryRegister from './components/AdminSalary/SalaryRegister';
 import SalaryGeneration from './components/AdminSalary/SalaryGeneration/SalaryGeneration';
 import PaySlipPage from './PaySlip/PaySlipPage';
 import RunPayroll from './components/AdminSalary/RunPayroll/RunPayroll';
+import ViewMonthlyPayroll from './components/AdminSalary/ViewMonthlyPayroll/ViewMonthlyPayroll';
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -118,6 +119,7 @@ function App() {
                     <Route path="/SalaryRejester" element={<SalaryRegister onFormSubmit={handleFormSubmit} />} />
                     <Route path="/SalaryGeneration" element={<SalaryGeneration onFormSubmit={handleFormSubmit} />} />
                     <Route path="/RunPayroll" element={<RunPayroll onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/ViewMonthlyPayroll" element={<ViewMonthlyPayroll onFormSubmit={handleFormSubmit} />} />
                
                     <Route path="/Payslip" element={<PaySlipPage onFormSubmit={handleFormSubmit} />} />
                   </Routes>

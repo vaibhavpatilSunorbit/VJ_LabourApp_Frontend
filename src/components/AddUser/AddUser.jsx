@@ -441,7 +441,7 @@ import { API_BASE_URL } from "../../Data";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const accessPages = ["Application", "Labour Details", "Add User", "Project Machine", "Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Salary Generation", "Run PayRoll"];
+const accessPages = ["Application", "Labour Details", "Add User", "Project Machine", "Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Salary Generation", "Run PayRoll", "View Payroll"];
 
 const AddUser = () => {
   const [showModal, setShowModal] = useState(false);

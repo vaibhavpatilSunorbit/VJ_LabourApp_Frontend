@@ -17,7 +17,7 @@ import {
     MenuItem, Modal, Typography, IconButton, Dialog,
     DialogTitle,
     DialogContent,
-    DialogContentText,
+    DialogContentText, Checkbox,
     DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, Fade, FormControlLabel, Switch
 } from '@mui/material';
 import { modalStyle } from '../modalStyles.js';
@@ -25,13 +25,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import SearchBar from '../../SarchBar/SearchRegister.jsx';
-// import Loading from "../../Loading/Loading.jsx";
+import Loading from "../../Loading/Loading.jsx";
 import TableSkeletonLoading from "../../Loading/TableSkeletonLoading.jsx";
 import { API_BASE_URL } from "../../../Data.js";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../../UserContext/UserContext.js';
-import ExportVariablePay from '../../VariableInputs/ImportExportVariablePay/ExportVariablePay.jsx'
+import ExportMonthlyPayroll from '../ViewMonthlyPayroll/ExportMonthlyPayroll.jsx'
 import ViewDetails from '../../ViewDetails/ViewDetails.jsx';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
@@ -40,8 +40,7 @@ import { ArrowBack } from '@mui/icons-material';
 import logo from "../../../images/vjlogo.png";
 import NoData from "../../../images/NoData.jpg";
 
-
-const RunPayroll = ({ departments, projectNames = [], labour }) => {
+const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
@@ -77,6 +76,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     const [labourId, setLabourId] = useState('');
     const [salaryData, setSalaryData] = useState([]);
     const [noDataAvailable, setNoDataAvailable] = useState(false);
+    const [selectedLabourIds, setSelectedLabourIds] = useState([]);
 
 
     // Extract selectedMonth and selectedYear from navigation state
@@ -119,39 +119,50 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
         { value: 12, label: 'December' }
     ];
 
-
+    useEffect(() => {
+        setTimeout(() => setLoading(false), 2000); // Simulate API loading
+    }, []);
 
     const fetchSalaryGenerationForDateMonthAll = async () => {
         setLoading(true);
+
         if (!selectedMonth || !selectedYear) {
             toast.warning('Please select a valid month and year.');
             setLoading(false);
             return;
         }
+
         const params = { month: selectedMonth, year: selectedYear };
         if (!fetchForAll) {
-            params.labourIds = labourId;
+            params.labourId = labourId;
         }
 
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationDataAllLabours`, { params });
+            const response = await axios.get(`${API_BASE_URL}/insentive/payroll/finalizedSalaryData`, { params });
             const fetchedData = response.data;
-            if (!Array.isArray(fetchedData)) {
+
+            console.log('Fetched Data from API:', fetchedData);
+
+            // Check if data is in expected format
+            if (!fetchedData || !Array.isArray(fetchedData.data)) {
                 throw new Error('Unexpected data format received from the API.');
             }
-            if (fetchedData.length === 0) {
-                setLabours([]);
+
+            if (fetchedData.data.length === 0) {
+                setLabours([]); // Clear previous data
                 setSalaryData([]);
-                setNoDataAvailable(true); 
+                setNoDataAvailable(true); // Set flag to show no data image
                 return;
             }
-            setNoDataAvailable(false);
 
-            const ShowSalaryGeneration = fetchedData.map((labour, index) => {
+            setNoDataAvailable(false); // Reset flag if data is available
+
+            // Mapping API response fields to frontend expected structure
+            const mappedSalaryData = fetchedData.data.map((labour, index) => {
                 return {
                     srNo: index + 1,
                     id: labour.id || 0,
-                    LabourID: labour.labourId,
+                    LabourID: labour.LabourID || labour.LabourId || "-",
                     name: labour.name || "-",
                     projectName: labour.businessUnit || "-",
                     department: labour.departmentName || "-",
@@ -178,19 +189,33 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     wageType: labour.wageType || "-",
                     dailyWageRate: labour.dailyWageRate || 0,
                     fixedMonthlyWage: labour.fixedMonthlyWage || 0,
+
+                    // Newly added fields mapped from API response
+                    holidayOvertimeHours: labour.holidayOvertimeHours || 0,
+                    holidayOvertimeWages: labour.holidayOvertimeWages || 0,
+                    normalOvertimeCount: labour.normalOvertimeCount || 0,
+                    holidayOvertimeCount: labour.holidayOvertimeCount || 0,
+                    missPunchDays: labour.missPunchDays || 0,
+                    previousWageAmount: labour.previousWageAmount || 0,
+                    totalHolidaysInMonth: labour.totalHolidaysInMonth || 0,
                 };
             });
 
-            setLabours(ShowSalaryGeneration);
-            setSalaryData(ShowSalaryGeneration);
+            setLabours(mappedSalaryData);
+            setSalaryData(mappedSalaryData);
+
         } catch (error) {
             console.error('Error fetching salary generation data:', error);
-            setNoDataAvailable(true); 
+            setLabours([]); // Clear previous data
+            setSalaryData([]);
+            setNoDataAvailable(true); // Show no data image
             toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
         } finally {
             setLoading(false);
         }
     };
+
+
 
     useEffect(() => {
         if (selectedMonth && selectedYear) {
@@ -253,23 +278,32 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     //         toast.warning("Please select both Month and Year.");
     //         return;
     //     }
+    //     if (selectedLabourIds.length === 0) {
+    //         toast.warning("No records selected for deletion.");
+    //         return;
+    //     }
 
     //     setLoading(true);
     //     try {
     //         const requestData = {
     //             month: selectedMonth,
     //             year: selectedYear,
+    //             labourIds: selectedLabourIds,
     //         };
 
     //         if (labourIds.length > 0) {
     //             requestData.labourIds = labourIds; // If deleting specific labourIds, add them to request
     //         }
+    //         for (const labourId of selectedLabourIds) {
+    //             const foundLabour = labours.find((lab) => lab.LabourID === labourId);
+    //             if (!foundLabour) continue;
 
-    //         const response = await axios.delete(`${API_BASE_URL}/insentive/payroll/deleteFinalPayrollData`, {
-    //             data: requestData, // Pass data inside 'data' property for DELETE requests
-    //         });
-
-    //         toast.success(response.data.message || "Payroll records deleted successfully.");
+    //             const response = await axios.post(`${API_BASE_URL}/insentive/payroll/deleteFinalPayrollData`, requestData);
+    //             setLabours((prev) => prev.filter((lab) => !selectedLabourIds.includes(lab.LabourID)));
+    //             setSalaryData((prev) => prev.filter((lab) => !selectedLabourIds.includes(lab.LabourID)));
+    //             setSelectedLabourIds([]); 
+    //             toast.success(response.data.message || "Payroll records deleted successfully.");
+    //         }
     //     } catch (error) {
     //         console.error("Error deleting payroll data:", error);
     //         toast.error(error.response?.data?.message || "Error deleting payroll data. Please try again.");
@@ -282,6 +316,45 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
 
     // -------------------------------------   SHOW ATTENDACNE ----------------------
+   
+    const deletePayrollData = async (labourIds = []) => {
+        if (!selectedMonth || !selectedYear) {
+            toast.warning("Please select both Month and Year.");
+            return;
+        }
+        if (selectedLabourIds.length === 0) {
+            toast.warning("No records selected for deletion.");
+            return;
+        }
+    
+        setLoading(true);
+        try {
+            const requestData = {
+                month: selectedMonth,
+                year: selectedYear,
+                labourIds: labourIds.length > 0 ? labourIds : selectedLabourIds, // Use provided labourIds or selectedLabourIds
+            };
+    
+            // Send a single delete request for all selected LabourIDs
+            const response = await axios.post(`${API_BASE_URL}/insentive/payroll/deleteFinalPayrollData`, requestData);
+    
+            // Update state only once after successful deletion
+            setLabours((prev) => prev.filter((lab) => !requestData.labourIds.includes(lab.LabourID)));
+            setSalaryData((prev) => prev.filter((lab) => !requestData.labourIds.includes(lab.LabourID)));
+            setSelectedLabourIds([]);
+    
+            // Show success toast only once after all deletions are completed
+            toast.success(response.data.message || "Payroll records deleted successfully.");
+    
+        } catch (error) {
+            console.error("Error deleting payroll data:", error);
+            toast.error(error.response?.data?.message || "Error deleting payroll data. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+   
    
     const handleOpenModal = (labour) => {
         setSelectedLabour(labour);
@@ -382,7 +455,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/insentive/searchFromViewMonthlyPayroll?q=${searchQuery}`);
             setLabours(response.data);
         } catch (error) {
             console.error('Error searching:', error);
@@ -424,6 +497,37 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
         return Object.values(latestEntries);
     };
 
+    // Checkbox handling: select/deselect individual row
+    const handleSelectRow = (event, labourId) => {
+        if (event.target.checked) {
+            setSelectedLabourIds((prev) => [...prev, labourId]);
+        } else {
+            setSelectedLabourIds((prev) => prev.filter((id) => id !== labourId));
+        }
+    };
+
+    // const handleSelectAllRows = (event) => {
+    //     if (event.target.checked) {
+    //         const newSelected = paginatedLabours.map((lab) => lab.LabourID);
+    //         setSelectedLabourIds((prev) => [
+    //             ...prev,
+    //             ...newSelected.filter((id) => !prev.includes(id)),
+    //         ]);
+    //     } else {
+    //         const newSelected = paginatedLabours.map((lab) => lab.LabourID);
+    //         setSelectedLabourIds((prev) => prev.filter((id) => !newSelected.includes(id)));
+    //     }
+    // };
+
+    const handleSelectAllRows = (event) => {
+        if (event.target.checked) {
+            const allLabourIds = filteredLabours.map((lab) => lab.LabourID); // Select ALL rows from the dataset
+            setSelectedLabourIds(allLabourIds);
+        } else {
+            setSelectedLabourIds([]); // Deselect all
+        }
+    };
+
     const handleViewHistory = (labourID) => {
         const history = labours.filter((labour) => labour.LabourID === labourID);
         setSelectedHistory(history);
@@ -431,10 +535,12 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     };
 
     const filteredLabours = getLatestLabourData(labours);
-    const paginatedLabours = filteredLabours.slice(
-        page * rowsPerPage,
-        (page + 1) * rowsPerPage
-    );
+    const paginatedLabours = rowsPerPage > 0
+        ? filteredLabours.slice(page * rowsPerPage, (page + 1) * rowsPerPage)
+        : filteredLabours;
+
+    // const isAllSelected = paginatedLabours.length > 0 && paginatedLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
+    const isAllSelected = selectedLabourIds.length === filteredLabours.length && filteredLabours.length > 0;
 
     const getProjectDescription = (projectId) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) {
@@ -622,7 +728,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
     const navigateToSalaryGeneration = () => {
         setNavigating(true);
-        navigate('/SalaryRejester', { state: { selectedMonth, selectedYear } });
+        navigate('/RunPayroll', { state: { selectedMonth, selectedYear } });
         // setTimeout(() => {
         //     navigate('/SalaryRejester');
         // }, 1000);
@@ -682,7 +788,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
                     {/* Title */}
                     <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
-                        Reports | Run PayRoll
+                        Reports | View PayRoll
                     </Typography>
 
                     <SearchBar
@@ -698,7 +804,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     />
                 </Box>
                 {/* {loading && <Loading />} */}
-
+                {/* {loading && <TableSkeleton rows={5} columns={13}  />} */}
+                {/* {loading ? <TableSkeleton rows={5} columns={13} /> : <ViewMonthlyPayroll />} */}
 
                 <Box
                     sx={{
@@ -743,7 +850,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     >
                         <Box
                             sx={{
-                                width: "100%",
+                                width: "40%",
                                 gap: "20px",
                                 display: "flex",
                                 flexDirection: { xs: "column", sm: "row" }, // Stack selectors vertically on smaller screens, horizontally on larger
@@ -791,7 +898,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     </MenuItem>
                                 ))}
                             </Select>
-
+                            {/* 
                             <FormControlLabel
                                 control={
                                     <Switch
@@ -820,7 +927,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                         marginBottom: { xs: "20px", sm: "0" }  // Bottom margin for spacing
                                     }}
                                 />
-                            )}
+                            )} */}
 
                             <Button
                                 variant="contained"
@@ -858,6 +965,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     justifyContent: "space-evenly",
                                 }}
                             >
+                                <ExportMonthlyPayroll />
 
                                 <TablePagination
                                     className="custom-pagination"
@@ -911,17 +1019,17 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                         },
                                     }}
                                 >
+                                    <TableCell padding="checkbox">
+                                        <Checkbox
+                                            checked={isAllSelected}
+                                            onChange={handleSelectAllRows}
+                                            inputProps={{ 'aria-label': 'select all labours' }}
+                                        /></TableCell>
                                     <TableCell>Sr No</TableCell>
                                     <TableCell>Labour ID</TableCell>
                                     <TableCell>Name</TableCell>
                                     <TableCell>Project</TableCell>
                                     <TableCell>Department</TableCell>
-                                    <TableCell>Attendance Count</TableCell>
-                                    <TableCell>Total OT Hours</TableCell>
-                                    <TableCell>Overtime Pay</TableCell>
-                                    <TableCell>Weekly Off Pay</TableCell>
-                                    <TableCell>Bonuse</TableCell>
-                                    <TableCell>Total Deductions</TableCell>
                                     <TableCell>Basic Salary</TableCell>
                                     <TableCell>Net Pay</TableCell>
                                 </TableRow>
@@ -934,74 +1042,56 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     },
                                 }}
                             >
-                               {loading ? (
+                                 {loading ? (
                     <TableRow>
-                        <TableCell colSpan={13} align="center">
-                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <TableSkeletonLoading rows={5} columns={13} sx={{ maxWidth: '300px' }} />
-            </Box>
+                        <TableCell colSpan={8} align="center">
+                            <TableSkeletonLoading rows={5} columns={8} />
                         </TableCell>
                     </TableRow>
-                ) : noDataAvailable ? (
-                    <TableRow>
-                        <TableCell colSpan={13} align="center">
-                        <Box display="flex" flexDirection="column" alignItems="center">
-                            <img
-                                src={NoData}
-                                alt="No Data Available"
-                                style={{ width: "250px", opacity: 0.7 }}
-                            />
-                            <Typography variant="h6" sx={{ mt: 2, color: "#777" }}>
-                                No salary data available for this month.
-                            </Typography>
-                            </Box>
-                        </TableCell>
-                    </TableRow>
-                ) : (  paginatedLabours.map((labour, index) => (
-                                    <TableRow key={labour.LabourID}>
-                                        <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                        {/* <TableCell>{labour.LabourID}</TableCell> */}
-                                        <TableCell
-                                            onClick={() => openPopup(labour)} // Open modal with selected labour details
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
-                                            {labour.LabourID}
+                ) :  noDataAvailable ? (
+                                    <TableRow>
+                                        <TableCell colSpan={12} align="center">
+                                            <img
+                                                src={NoData}
+                                                alt="No Data Available"
+                                                style={{ width: "250px", opacity: 0.7 }}
+                                            />
+                                            <Typography variant="h6" sx={{ mt: 2, color: "#777" }}>
+                                                No salary data available for this month.
+                                            </Typography>
                                         </TableCell>
-                                        <TableCell>{labour.name || '-'}</TableCell>
-                                        <TableCell>{labour.projectName || '-'}</TableCell>
-                                        <TableCell>{labour.department || '-'}</TableCell>
-                                        <TableCell
-                                            onClick={() => handleOpenModal(labour)}
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
-                                            {labour.attendanceCount}
-                                        </TableCell>
-                                        <TableCell>{labour.totalOvertimeHours}</TableCell>
-                                        <TableCell>{labour.overtimePay}</TableCell>
-                                        <TableCell>{labour.weeklyOffPay}</TableCell>
-                                        <TableCell
-                                            onClick={() => handleOpenModalBonus(labour)}
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
-                                            {labour.bonuses}
-                                        </TableCell>
-                                        <TableCell
-                                            onClick={() => handleOpenModalDeduction(labour)}
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
-                                            {labour.totalDeductions}
-                                        </TableCell>
-                                        <TableCell>{labour.grossPay}</TableCell>
-                                        {/* <TableCell>{labour.netPay}</TableCell> */}
-                                        <TableCell
-                                            onClick={() => handleOpenModalNetpay(labour)}
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
-                                            {labour.netPay}
-                                        </TableCell>
-
                                     </TableRow>
-                                )))}
+                                ) : (
+                                    paginatedLabours.map((labour, index) => (
+                                        <TableRow key={labour.LabourID}>
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    checked={selectedLabourIds.includes(labour.LabourID)}
+                                                    onChange={(e) => handleSelectRow(e, labour.LabourID)}
+                                                    inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                            <TableCell
+                                                onClick={() => openPopup(labour)}
+                                                sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
+                                            >
+                                                {labour.LabourID}
+                                            </TableCell>
+                                            <TableCell>{labour.name || '-'}</TableCell>
+                                            <TableCell>{labour.projectName || '-'}</TableCell>
+                                            <TableCell>{labour.department || '-'}</TableCell>
+                                            <TableCell>{labour.basicSalary}</TableCell>
+                                            <TableCell
+                                                onClick={() => handleOpenModalNetpay(labour)}
+                                                sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
+                                            >
+                                                {labour.netPay}
+                                            </TableCell>
+
+                                        </TableRow>
+                                    ))
+                                )}
                             </TableBody>
                         </Table>
                     </Box>
@@ -1405,7 +1495,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             Finalize your payroll to view the required amount.
                         </Typography>
 
-                        <Button
+                        {/* <Button
                             variant="contained"
                             // onClick={saveFinalPayrollData}
                             onClick={saveFinalizePayrollData}
@@ -1422,24 +1512,26 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             }}
                         >
                             Finalize PayRoll
-                        </Button>
+                        </Button> */}
 
                         {/* Delete Payroll Button */}
-                        {/* <Button
-                            variant="contained"
-                            onClick={() => deletePayrollData()} // Calls delete function without labourIds (deletes all)
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                height: "40px",
-                                width: "100%",
-                                backgroundColor: "rgb(255, 225, 225)",
-                                color: "rgb(255, 43, 43)",
-                                '&:hover': { backgroundColor: "rgb(255, 200, 200)" },
-                                marginBottom: { xs: "20px", sm: "0" }
-                            }}
-                        >
-                            Delete Payroll
-                        </Button> */}
+                        {/* {selectedLabourIds.length > 0 && ( */}
+                            <Button
+                                variant="contained"
+                                onClick={deletePayrollData} // Calls delete function without labourIds (deletes all)
+                                sx={{
+                                    fontSize: { xs: "0.8rem", sm: "1rem" },
+                                    height: "40px",
+                                    width: "100%",
+                                    backgroundColor: "rgb(255, 225, 225)",
+                                    color: "rgb(255, 43, 43)",
+                                    '&:hover': { backgroundColor: "rgb(255, 200, 200)" },
+                                    marginBottom: { xs: "20px", sm: "0" }
+                                }}
+                            >
+                                Delete Payroll  ({selectedLabourIds.length})
+                            </Button>
+                         {/* )} */}
                     </Box>
 
 
@@ -1625,5 +1717,5 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     );
 };
 
-export default RunPayroll;
+export default ViewMonthlyPayroll;
 

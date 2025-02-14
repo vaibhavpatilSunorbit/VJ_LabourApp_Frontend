@@ -142,6 +142,7 @@ import profileIcon10 from '../../images/multiple.png';
 import profileIcon11 from '../../images/datatransfer.png';
 import profileIcon12 from '../../images/salaryRegister.png';
 import profileIcon13 from '../../images/wages.png';
+import profileIcon14 from '../../images/payroll.png';
 import VJLogo from '../../images/VJlogo-1-removebg.png';
 import { SidebarData } from '../../Data';
 import { useUser } from '../../UserContext/UserContext';
@@ -187,7 +188,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
   }, [openSidebarToggle]);
 
   const isSuperAdminOnly = (item) => {
-    const superAdminPages = ["Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Run PayRoll"];
+    const superAdminPages = ["Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Run PayRoll", "View Payroll"];
     return superAdminPages.includes(item.heading) && user?.userType !== 'superadmin';
   };
 
@@ -252,6 +253,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
                 item.heading === "Variable Input" ? profileIcon11 :
                 item.heading === "Salary Register" ? profileIcon12 :
                 item.heading === "Run PayRoll" ? profileIcon13 :
+                item.heading === "View Payroll" ? profileIcon14 :
                 profileIcon6
               } alt="Profile Icon" className="img-white-fill" style={{ height: "30px" }} />
               <Link

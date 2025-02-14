@@ -103,6 +103,12 @@ export const SidebarData = [
     path: "RunPayroll",
     roles: ["superadmin"],
   },
+  {
+    icon: UilFileAlt,
+    heading: "View Payroll",
+    path: "ViewMonthlyPayroll",
+    roles: ["superadmin"],
+  },
 ];
 
 

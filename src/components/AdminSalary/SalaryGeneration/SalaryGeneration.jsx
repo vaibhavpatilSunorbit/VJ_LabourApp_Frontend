@@ -704,7 +704,6 @@ const handleCloseModalDetails = () => {
                                 justifyContent: "space-evenly",
                             }}
                         >
-                            <ExportVariablePay />
 
                             <TablePagination
                                 className="custom-pagination"

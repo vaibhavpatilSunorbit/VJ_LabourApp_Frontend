@@ -775,7 +775,6 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                     >
                         {navigating ? 'Navigating...' : 'Run Salary Generation'}
                     </Button>
-                            <ExportVariablePay />
 
                             <TablePagination
                                 className="custom-pagination"
