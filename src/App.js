@@ -49,6 +49,7 @@ function App() {
       try {
         const departmentsRes = await axios.get(API_BASE_URL + '/api/departments');
         setDepartments(departmentsRes.data);
+      
 
         const projectsRes = await axios.get(API_BASE_URL + '/api/project-names');
         setProjectNames(projectsRes.data);

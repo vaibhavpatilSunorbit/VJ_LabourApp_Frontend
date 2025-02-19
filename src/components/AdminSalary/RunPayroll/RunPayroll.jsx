@@ -21,6 +21,8 @@ import {
     DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, Fade, FormControlLabel, Switch
 } from '@mui/material';
 import { modalStyle } from '../modalStyles.js';
+import { StyleForPayslip } from '../modalStyles.js';
+import { StyleEmpInfo } from '../modalStyles.js';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -37,7 +39,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
 import { parse } from "fast-xml-parser";
 import { ArrowBack } from '@mui/icons-material';
-import logo from "../../../images/vjlogo.png";
+import logo from "../../../images/VJlogo-1-removebg.png";
 import NoData from "../../../images/NoData.jpg";
 
 
@@ -78,6 +80,14 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     const [salaryData, setSalaryData] = useState([]);
     const [noDataAvailable, setNoDataAvailable] = useState(false);
 
+    const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false); 
+    const handleApproveConfirmOpen = () => {
+        setIsApproveConfirmOpen(true);
+      };
+    
+      const handleApproveConfirmClose = () => {
+        setIsApproveConfirmOpen(false);
+      };
 
     // Extract selectedMonth and selectedYear from navigation state
     // const { selectedMonth, selectedYear } = location.state || {};
@@ -142,7 +152,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             if (fetchedData.length === 0) {
                 setLabours([]);
                 setSalaryData([]);
-                setNoDataAvailable(true); 
+                setNoDataAvailable(true);
                 return;
             }
             setNoDataAvailable(false);
@@ -156,28 +166,43 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     projectName: labour.businessUnit || "-",
                     department: labour.departmentName || "-",
                     attendanceCount: labour.attendanceCount || 0,
-                    presentDays: labour.presentDays || 0,
-                    absentDays: labour.absentDays || 0,
-                    halfDays: labour.halfDays || 0,
+                    presentDays: labour.attendance?.presentDays || 0,
+                    absentDays: labour.attendance?.absentDays || 0,
+                    halfDays: labour.attendance?.halfDays || 0,
+                    missPunchDays: labour.attendance?.missPunchDays || 0,
+                    normalOvertimeCount: labour.attendance?.normalOvertimeCount || 0,
+                    holidayOvertimeCount: labour.attendance?.holidayOvertimeCount || 0,
+                    totalHolidaysInMonth: labour.attendance?.totalHolidaysInMonth || 0,
+                    holidayOvertimeHours: labour.attendance?.holidayOvertimeHours || 0,
+                    holidayOvertimeWages: labour.attendance?.holidayOvertimeWages || 0,
                     totalOvertimeHours: labour.cappedOvertime || 0,
-                    basicSalary: labour.basicSalary || 0,
+                    derivedPerHour: labour.derivedPerHour || 0,
+                    basicSalary: labour.baseWage || 0,
                     overtimePay: labour.overtimePay || 0,
+                    holidayOvertimePay: labour.holidayOvertimePay || 0,
                     weeklyOffPay: labour.weeklyOffPay || 0,
                     bonuses: labour.bonuses || 0,
+                    previousWageAmount: labour.previousWageAmount || 0,
+                    totalAttendanceDeductions: labour.totalAttendanceDeductions || 0,
                     totalDeductions: labour.totalDeductions || 0,
                     grossPay: labour.grossPay || 0,
                     netPay: labour.netPay || 0,
-                    advancePay: labour.advance || 0,
-                    advanceRemarks: labour.advanceRemarks || "-",
-                    debit: labour.debit || 0,
-                    debitRemarks: labour.debitRemarks || "-",
-                    incentivePay: labour.incentive || 0,
-                    incentiveRemarks: labour.incentiveRemarks || "-",
+                    // Variable Pay
+                    advancePay: labour.variablePay?.advance || 0,
+                    advanceRemarks: labour.variablePay?.advanceRemarks || "-",
+                    debit: labour.variablePay?.debit || 0,
+                    debitRemarks: labour.variablePay?.debitRemarks || "-",
+                    incentivePay: labour.variablePay?.incentive || 0,
+                    incentiveRemarks: labour.variablePay?.incentiveRemarks || "-",
                     month: labour.month || "-",
                     year: labour.year || "-",
+                    // Wages Info
                     wageType: labour.wageType || "-",
                     dailyWageRate: labour.dailyWageRate || 0,
                     fixedMonthlyWage: labour.fixedMonthlyWage || 0,
+                    totalWagesForMonth: labour.wagesInfo?.totalWagesForMonth || 0,
+                    wageBreakdown: labour.wagesInfo?.wageBreakdown || [],
+                    fullResponse: labour
                 };
             });
 
@@ -755,9 +780,10 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             <Select
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
+                                // size="small"
                                 displayEmpty
                                 sx={{
-                                    marginTop: '-5px',
+                                    // marginTop: '-5px',
                                     width: "100%", // Full width to fill the container space
                                     marginBottom: { xs: "20px", sm: "0" } // Add bottom margin on small screens
                                 }}
@@ -775,9 +801,10 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             <Select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(e.target.value)}
+                                // size="small"
                                 displayEmpty
                                 sx={{
-                                    marginTop: '-5px',
+                                    // marginTop: '-5px',
                                     width: "100%", // Ensure this also takes full width
                                     marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
                                 }}
@@ -920,7 +947,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     <TableCell>Total OT Hours</TableCell>
                                     <TableCell>Overtime Pay</TableCell>
                                     <TableCell>Weekly Off Pay</TableCell>
-                                    <TableCell>Bonuse</TableCell>
+                                    <TableCell>Bonus</TableCell>
                                     <TableCell>Total Deductions</TableCell>
                                     <TableCell>Basic Salary</TableCell>
                                     <TableCell>Net Pay</TableCell>
@@ -938,7 +965,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     <TableRow>
                         <TableCell colSpan={13} align="center">
                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <TableSkeletonLoading rows={5} columns={13} sx={{ maxWidth: '300px' }} />
+                <TableSkeletonLoading rows={9} columns={13} sx={{ maxWidth: '300px' }} />
             </Box>
                         </TableCell>
                     </TableRow>
@@ -952,7 +979,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 style={{ width: "250px", opacity: 0.7 }}
                             />
                             <Typography variant="h6" sx={{ mt: 2, color: "#777" }}>
-                                No salary data available for this month.
+                                No labour salary available for this month.
                             </Typography>
                             </Box>
                         </TableCell>
@@ -1142,145 +1169,187 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                 {/* --------------------------------------------------------------------------- */}
 
                 <Modal open={modalOpenNetpay} onClose={handleCloseModalNetpay} aria-labelledby="attendance-details-modal">
-                    <Box sx={modalStyle} className="payslip-modal">
-                        <Box display="flex" justifyContent="space-between" alignItems="center" className="payslip-header">
-                            <img src={logo} alt="SunOrbit" className="payslip-logo" />
-                            <Typography variant="h6" fontWeight="bold">
-                                Payslip: {months.find(m => m.value === selectedLabour?.month)?.label || "N/A"}  {selectedLabour?.year || 0}
-                            </Typography>
+                    <Box sx={modalStyle}>
+                        {/* Header */}
+                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                            {/* Logo with right-side clipPath */}
+                            <Box sx={{
+                                width: '50%',
+                                backgroundColor: "#E4D3B5",
+                                padding: "10px",
+                                clipPath: "polygon(0% 0%, 100% 0%, 78% 100%, 0% 100%)",
+                                borderRadius: "4px",
+                                display: "flex",
+                                alignItems: "center"
+                            }}>
+                                <img src={logo} alt="SunOrbit" className="payslip-logo" style={{ width: "160px" }} />
+                            </Box>
+
+                            {/* Payslip Text with left-top clipped style */}
+                            <Box sx={{
+                                backgroundColor: "#E4D3B5",
+                                marginBottom: '20px',
+                                padding: "12px 30px",
+                                clipPath: "polygon(19% 0%, 100% 0%, 100% 100%, 0% 100%)",
+                                // clipPath: "polygon(100% 0%, 0% 0%, 15% 100%, 100% 100%)",
+                                borderRadius: "4px",
+                                display: "inline-block"
+                            }}>
+                                <Typography variant="subtitle1" fontWeight="bold">
+                                    Payslip: {months.find(m => m.value === selectedLabour?.month)?.label || "N/A"} {selectedLabour?.year || 0}
+                                </Typography>
+                            </Box>
                         </Box>
+
+
                         <Divider sx={{ my: 2 }} />
 
-                        <Box textAlign="center" className="payslip-summary">
-                            <Typography
-                                variant="h4"
-                                fontWeight="bold"
-                                sx={{ color: selectedLabour?.netPay ? "#4CAF50" : "gray" }} // Green for Net Pay
-                            >
-                                Net Pay: {selectedLabour?.netPay || "N/A"}
-                            </Typography>
-                            <Typography variant="body1">
-                                Gross Pay (A):
-                                <b style={{ color: "#1E88E5" }}> {selectedLabour?.grossPay || "N/A"} </b> |
-                                Deductions (B):
-                                <b style={{ color: "#D32F2F" }}> {selectedLabour?.totalDeductions || "N/A"} </b>
-                            </Typography>
+                        {/* Net Pay Summary */}
+                        <Box textAlign="left" sx={{ display: 'flex', justifyContent: 'flex-end', mr: 3 }}>
+                            <Box textAlign="left" sx={{ backgroundColor: "#FFECB3", padding: 2, borderRadius: 2, width: "40%" }}>
+                                <Typography variant="h6" fontWeight="bold">Net Pay: ₹{selectedLabour?.netPay || "N/A"}</Typography>
+                                <Typography variant="body2">
+                                    Gross Pay (A): <b>₹{selectedLabour?.grossPay || "N/A"}</b>
+                                </Typography>
+                                <Typography>
+                                    Deductions (B): <b>₹{selectedLabour?.totalDeductions || "0.00"}</b>
+                                </Typography>
+                            </Box>
                         </Box>
 
-
-                        <Grid container spacing={2} className="payslip-grid">
-                            <Grid item xs={6}>
-                                <Typography><b>Employee Code:</b> {selectedLabour?.LabourID || "N/A"}</Typography>
-                                <Typography><b>Name:</b> {selectedLabour?.name || "N/A"}</Typography>
-                                <Typography><b>Business Unit:</b> {selectedLabour?.projectName || "N/A"}</Typography>
-                                <Typography><b>Department:</b> {selectedLabour?.department || "N/A"}</Typography>
+                        {/* Employee Details */}
+                        <Box sx={StyleEmpInfo}>
+                            <Grid container spacing={2}>
+                                <Grid item xs={6}>
+                                    <Typography><b>Employee Code:</b> {selectedLabour?.LabourID || "N/A"}</Typography>
+                                    <Typography><b>Name:</b> {selectedLabour?.name || "N/A"}</Typography>
+                                    <Typography><b>Business Unit:</b> {selectedLabour?.projectName || "N/A"}</Typography>
+                                    <Typography><b>Department:</b> {selectedLabour?.department || "N/A"}</Typography>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography><b>Aadhar No:</b> N/A</Typography>
+                                    <Typography><b>Account No:</b> N/A</Typography>
+                                    <Typography><b>IFSC Code:</b> N/A</Typography>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={6}>
-                                <Typography><b>Aadhar Number:</b> {selectedLabour?.pan || "N/A"}</Typography>
-                                <Typography><b>UAN:</b> {selectedLabour?.uan || "N/A"}</Typography>
-                                <Typography><b>Account No:</b> {selectedLabour?.accountNo || "N/A"}</Typography>
-                                <Typography><b>IFSC Code:</b> {selectedLabour?.ifscCode || "N/A"}</Typography>
-                            </Grid>
-                        </Grid>
+                        </Box>
 
-                        <Divider sx={{ my: 2 }} />
+                        {/* Attendance Section */}
+                        <Box sx={StyleForPayslip}>
+                            <Typography fontWeight="bold">• Attendance Count (A)</Typography>
+                        </Box>
+                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><b>Total Days</b></TableCell>
+                                            <TableCell><b>Present Days</b></TableCell>
+                                            <TableCell><b>Half Days</b></TableCell>
+                                            <TableCell><b>Miss Punch Days</b></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell>{selectedLabour?.attendanceCount || "N/A"}</TableCell>
+                                            <TableCell>{selectedLabour?.presentDays || "N/A"}</TableCell>
+                                            <TableCell>{selectedLabour?.halfDays || "N/A"}</TableCell>
+                                            <TableCell>{selectedLabour?.missPunchDays || "N/A"}</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Box>
 
-                        <Typography variant="h6" fontWeight="bold">Attendance Count (A)</Typography>
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell><b>Total Days</b></TableCell>
-                                        <TableCell><b>Present Days</b></TableCell>
-                                        <TableCell><b>Absent Days</b></TableCell>
-                                        <TableCell><b>Half Days</b></TableCell>
-                                        <TableCell><b>Miss Punch Days</b></TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    <TableCell>{selectedLabour?.attendanceCount || 0}</TableCell>
-                                    <TableCell>{selectedLabour?.presentDays || 0}</TableCell>
-                                    <TableCell>{selectedLabour?.absentDays || 0}</TableCell>
-                                    <TableCell>{selectedLabour?.halfDays || 0}</TableCell>
-                                    <TableCell>{selectedLabour?.missPunchDays || 0}</TableCell>
-                                    {/* )) || <TableRow><TableCell colSpan={3}>No earnings data available.</TableCell></TableRow> */}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                        {/* ----------------------------------------------------------------------------------- */}
+                        {/* Wages Section */}
+                        <Box sx={StyleForPayslip}>
+                            <Typography fontWeight="bold">• Wages Count (B)</Typography>
+                        </Box>
+                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><b>Wages Type</b></TableCell>
+                                            <TableCell><b>Daily Wages</b></TableCell>
+                                            <TableCell><b>Fixed Monthly Wages</b></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell>{selectedLabour?.wageType || "N/A"}</TableCell>
+                                            <TableCell>{selectedLabour?.dailyWageRate || "0.00"}</TableCell>
+                                            <TableCell>{selectedLabour?.fixedMonthlyWage || "0.00"}</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Box>
 
-                        <Divider sx={{ my: 2 }} />
+                        {/* Gross Pay Section */}
+                        <Box sx={StyleForPayslip}>
+                            <Typography fontWeight="bold">• Gross Pay (C)</Typography>
+                        </Box>
+                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><b>Earnings Pay</b></TableCell>
+                                            <TableCell><b>Monthly Bonus</b></TableCell>
+                                            <TableCell><b>Total</b></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell>{selectedLabour?.basicSalary || "0.00"}</TableCell>
+                                            <TableCell>{selectedLabour?.bonuses || "0.00"}</TableCell>
+                                            <TableCell>{selectedLabour?.grossPay || "0.00"}</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Box>
 
-                        <Typography variant="h6" fontWeight="bold">Wages Count (B)</Typography>
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell><b>Wages Type</b></TableCell>
-                                        <TableCell><b>Daily Wages</b></TableCell>
-                                        <TableCell><b>Fix monthly wages</b></TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    <TableCell>{selectedLabour?.wageType || "N/A"}</TableCell>
-                                    <TableCell>{selectedLabour?.dailyWageRate || 0}</TableCell>
-                                    <TableCell>{selectedLabour?.fixedMonthlyWage || 0}</TableCell>
-                                    {/* )) || <TableRow><TableCell colSpan={3}>No earnings data available.</TableCell></TableRow> */}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                        {/* Deductions Section */}
+                        <Box sx={StyleForPayslip}>
+                            <Typography fontWeight="bold">• Deductions (D)</Typography>
+                        </Box>
+                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><b>Debit</b></TableCell>
+                                            <TableCell><b>Debit Remarks</b></TableCell>
+                                            <TableCell><b>Advance</b></TableCell>
+                                            <TableCell><b>Advance Remarks</b></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell>{selectedLabour?.debit || "0.00"}</TableCell>
+                                            <TableCell>{selectedLabour?.debitRemarks || "-"}</TableCell>
+                                            <TableCell>{selectedLabour?.advance || "0.00"}</TableCell>
+                                            <TableCell>{selectedLabour?.advanceRemarks || "-"}</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Box>
 
-
-                        <Divider sx={{ my: 2 }} />
-
-                        <Typography variant="h6" fontWeight="bold">Gross Pay (C)</Typography>
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell><b>Earnings Pay</b></TableCell>
-                                        <TableCell><b>Monthly Bonus</b></TableCell>
-                                        <TableCell><b>Total</b></TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    <TableCell>{selectedLabour?.basicSalary || "N/A"}</TableCell>
-                                    <TableCell>{selectedLabour?.bonuses || "N/A"}</TableCell>
-                                    <TableCell>{selectedLabour?.netPay || "N/A"}</TableCell>
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-
-                        <Divider sx={{ my: 2 }} />
-
-                        <Typography variant="h6" fontWeight="bold">Deductions (D)</Typography>
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell><b>Debit</b></TableCell>
-                                        <TableCell><b>Debit Remark </b></TableCell>
-                                        <TableCell><b>Advance</b></TableCell>
-                                        <TableCell><b>Advance Remarks</b></TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    <TableCell>{selectedLabour?.debit || 0}</TableCell>
-                                    <TableCell>{selectedLabour?.debitRemarks || "N/A"}</TableCell>
-                                    <TableCell>{selectedLabour?.advance || 0}</TableCell>
-                                    <TableCell>{selectedLabour?.advanceRemarks || "N/A"}</TableCell>
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-
-                        <Button
+                        {/* Action Buttons */}
+                        <Box display="flex" justifyContent="center" gap={2} sx={{ m: "20px 0px" }}>
+                            <Button variant="contained" color="primary">Download</Button>
+                            {/* <Button variant="contained" color="secondary">View Details</Button> */}
+                            <Button
                             variant="contained"
                             className="modal-close-button"
                             onClick={handleCloseModalNetpay}
-                            sx={{ mt: 2, float: 'right' }}
                         >
                             Close
                         </Button>
+                        </Box>
                     </Box>
                 </Modal>
 
@@ -1407,8 +1476,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
                         <Button
                             variant="contained"
-                            // onClick={saveFinalPayrollData}
-                            onClick={saveFinalizePayrollData}
+                            // onClick={saveFinalizePayrollData}
+                            onClick={() => handleApproveConfirmOpen()}
                             sx={{
                                 fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
                                 height: "40px",
@@ -1446,6 +1515,43 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
                 </Box>
             </Box>
+
+            <Dialog
+        open={isApproveConfirmOpen}
+        onClose={handleApproveConfirmClose}
+        aria-labelledby="approve-confirm-dialog-title"
+        aria-describedby="approve-confirm-dialog-description"
+      >
+        <DialogTitle id="approve-confirm-dialog-title">
+        Finalize PayRoll
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="approve-confirm-dialog-description">
+            Are you sure you want to Finalize PayRoll this labours?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
+            Cancel
+          </Button>
+          <Button
+                                variant="contained"
+                                onClick={saveFinalizePayrollData} 
+                                sx={{
+                                    backgroundColor: 'rgb(229, 255, 225)',
+            color: 'rgb(43, 217, 144)',
+            width: 'auto',
+            marginRight: '10px',
+            marginBottom: '3px',
+            '&:hover': {
+              backgroundColor: 'rgb(229, 255, 225)',
+            },
+          }} autoFocus
+                            >
+                                Finalize PayRoll
+                            </Button>
+        </DialogActions>
+      </Dialog>
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
                 <Box

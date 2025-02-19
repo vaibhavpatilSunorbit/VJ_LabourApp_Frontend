@@ -13,6 +13,7 @@ const TableSkeletonLoading = ({ rows = 5, columns = 13 }) => {
                 overflowX: 'auto',
                 borderRadius: 2,
                 boxShadow: 3,
+                mt:-1,
                 maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
                 '&::-webkit-scrollbar': { width: '8px' },
                 '&::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1' },
@@ -21,7 +22,7 @@ const TableSkeletonLoading = ({ rows = 5, columns = 13 }) => {
         >
             <Box sx={{ width: '100%' }}>
                 <Table stickyHeader sx={{ minWidth: 800 }}>
-                    <TableHead>
+                    {/* <TableHead>
                         <TableRow>
                             {Array.from({ length: columns }).map((_, index) => (
                                 <TableCell key={index}>
@@ -29,7 +30,7 @@ const TableSkeletonLoading = ({ rows = 5, columns = 13 }) => {
                                 </TableCell>
                             ))}
                         </TableRow>
-                    </TableHead>
+                    </TableHead> */}
                     <TableBody>
                         {Array.from({ length: rows }).map((_, rowIndex) => (
                             <TableRow key={rowIndex}>

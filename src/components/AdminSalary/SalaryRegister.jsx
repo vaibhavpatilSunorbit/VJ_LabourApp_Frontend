@@ -39,6 +39,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import { parse } from "fast-xml-parser";
 import "./salaryRegister.css";
 import logo from "../../images/vjlogo.png";
+import NoData from "../../images/NoData.jpg";
+import TableSkeletonLoading from "../Loading/TableSkeletonLoading.jsx";
+
 
 const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     const theme = useTheme();
@@ -73,6 +76,8 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
     const [navigating, setNavigating] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const [noDataAvailable, setNoDataAvailable] = useState(false);
+
 
     const months = [
         { value: 1, label: 'January' },
@@ -110,6 +115,11 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                 throw new Error('Expected salaryData to be an array');
             }
 
+            if (salaryData.length === 0) {
+                setNoDataAvailable(true); // Set flag to show no data image
+                return;
+            }
+            setNoDataAvailable(false);
             // Map the salaryData to the desired structure
             const ShowSalaryGeneration = salaryData.map((labour, index) => ({
                 srNo: index + 1,
@@ -124,6 +134,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
             setLabours(ShowSalaryGeneration);
         } catch (error) {
             console.error('Error fetching labours:', error);
+            setNoDataAvailable(true); 
             toast.error('Failed to fetch data: ' + (error.message || 'Unknown error'));
         } finally {
             setLoading(false);
@@ -844,15 +855,34 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                             </TableRow>
                         </TableHead>
                         <TableBody
-                            sx={{
-                                '& td': {
-                                    padding: '16px 9px',
-                                    '@media (max-width: 600px)': { padding: '14px 8px' },
-                                },
-                            }}
-                        >
-                            {/* {(rowsPerPage > 0 ? paginatedLabours : filteredLabours).map((labour, index) => ( */}
-                            {paginatedLabours.map((labour, index) => (
+                           sx={{
+                            '& td': {
+                                padding: '16px 9px',
+                                '@media (max-width: 600px)': { padding: '14px 8px' },
+                            },
+                        }}
+                    >
+                         {loading ? (
+            <TableRow>
+                <TableCell colSpan={8} align="center">
+                    <TableSkeletonLoading rows={10} columns={6} />
+                </TableCell>
+            </TableRow>
+        ) :  noDataAvailable ? (
+                            <TableRow>
+                                <TableCell colSpan={12} align="center">
+                                    <img
+                                        src={NoData}
+                                        alt="No Data Available"
+                                        style={{ width: "250px", opacity: 0.7 }}
+                                    />
+                                    <Typography variant="h6" sx={{ mt: 2, color: "#777" }}>
+                                        No eligible labours data available for this month.
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            paginatedLabours.map((labour, index) => (
                                 <TableRow key={labour.id}>
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     <TableCell
@@ -895,7 +925,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                                     </TableCell> */}
 
                                 </TableRow>
-                            ))}
+                            )))}
                         </TableBody>
                     </Table>
                 </Box>
