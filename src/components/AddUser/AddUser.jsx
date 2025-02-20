@@ -49,7 +49,7 @@
 
 //   useEffect(() => {
 //     fetchUsers();
-//   }, []); 
+//   }, []);
 
 //   const fetchUsers = async () => {
 //     try {
@@ -61,7 +61,7 @@
 //       });
 
 //       if (response.status === 200) {
-//         setUsers(response.data.data); 
+//         setUsers(response.data.data);
 //       } else {
 //         console.error("Failed to fetch users:", response.statusText);
 //       }
@@ -158,7 +158,7 @@
 //     if (!userData.contactNo) newErrors.contactNo = "Contact number is required";
 //     if (userData.contactNo && userData.contactNo.length !== 10)
 //         newErrors.contactNo = "Contact number must be 10 digits";
-//     if (!userData.pasword && !userData.id) newErrors.pasword = "Password is required"; 
+//     if (!userData.pasword && !userData.id) newErrors.pasword = "Password is required";
 //     if (!userData.userType) newErrors.userType = "User type is required";
 
 //     setErrors(newErrors);
@@ -172,7 +172,7 @@
 
 //             const payload = {
 //                 ...userData,
-//                 id: userData.id ? parseInt(userData.id, 10) : undefined, 
+//                 id: userData.id ? parseInt(userData.id, 10) : undefined,
 //                 accessPages: selectedValues,
 //                 isApproved: userData.isApproved,
 //             };
@@ -277,9 +277,9 @@
 //                 right: 8,
 //                 top: 8,
 //                 color: (theme) => theme.palette.grey[500],
-//                 backgroundColor: '',  
+//                 backgroundColor: '',
 //                 '&:hover': {
-//                   backgroundColor: 'red', 
+//                   backgroundColor: 'red',
 //                 },
 //               }}
 //             >
@@ -386,8 +386,8 @@
 //                   display: 'flex',
 //                   justifyContent: 'center',
 //                   justifyContent: 'space-around',
-//                   gap: 2, 
-//                   mt: 2 
+//                   gap: 2,
+//                   mt: 2
 //                 }}
 //               >
 //                 <Button onClick={handleCloseModal}>Cancel</Button>
@@ -404,16 +404,6 @@
 // };
 
 // export default AddUser;
-
-
-
-
-
-
-
-
-
-
 
 import React, { useState, useEffect } from "react";
 import {
@@ -435,13 +425,28 @@ import CloseIcon from "@mui/icons-material/Close";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import TableComponent from "./TableComponent";
-import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { API_BASE_URL } from "../../Data";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const accessPages = ["Application", "Labour Details", "Add User", "Project Machine", "Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Salary Generation", "Run PayRoll", "View Payroll"];
+const accessPages = [
+  "Application",
+  "Labour Details",
+  "Add User",
+  "Project Machine",
+  "Attendance Report",
+  "Wages Report",
+  "People",
+  "Admin Approval",
+  "Site Transfer",
+  "Variable Input",
+  "Salary Register",
+  "Salary Generation",
+  "Run PayRoll",
+  "View Payroll",
+];
 
 const AddUser = () => {
   const [showModal, setShowModal] = useState(false);
@@ -462,17 +467,47 @@ const AddUser = () => {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [departments, setDepartments] = useState([]);
+  const [projectNames, setProjectNames] = useState([]);
+  const [selectedDeparmentsIds, setSelectedDeparmentsIds] = useState([]);
+  const [selectedProjectIds, setSelectedProjectIds] = useState([]);
+  let fetchDepartmentsAndProjects;
+
+  if (projectNames) {
+    console.log("projectNames", projectNames);
+    console.log("departments", departments);
+  }
 
   useEffect(() => {
     fetchUsers();
-  }, []); 
+  }, []);
 
   useEffect(() => {
     filterUsers();
   }, [searchQuery, users, page, rowsPerPage]);
+
+  useEffect(() => {
+    fetchDepartmentsAndProjects = async () => {
+      try {
+        const departmentsRes = await axios.get(
+          API_BASE_URL + "/api/departments"
+        );
+        setDepartments(departmentsRes.data);
+
+        const projectsRes = await axios.get(
+          API_BASE_URL + "/api/project-names"
+        );
+        setProjectNames(projectsRes.data);
+      } catch (err) {
+        console.error("Error fetching departments or projects:", err);
+      }
+    };
+
+    fetchDepartmentsAndProjects();
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -484,7 +519,7 @@ const AddUser = () => {
       });
 
       if (response.status === 200) {
-        setUsers(response.data.data); 
+        setUsers(response.data.data);
       } else {
         console.error("Failed to fetch users:", response.statusText);
       }
@@ -495,12 +530,15 @@ const AddUser = () => {
 
   const filterUsers = () => {
     const lowercasedQuery = searchQuery.toLowerCase();
-    const filtered = users.filter(user => 
-      user.name.toLowerCase().includes(lowercasedQuery) || 
-      user.emailID.toLowerCase().includes(lowercasedQuery) || 
-      user.contactNo.includes(lowercasedQuery)
+    const filtered = users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(lowercasedQuery) ||
+        user.emailID.toLowerCase().includes(lowercasedQuery) ||
+        user.contactNo.includes(lowercasedQuery)
     );
-    setFilteredUsers(filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage));
+    setFilteredUsers(
+      filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+    );
   };
 
   const handleSearchChange = (event) => {
@@ -534,12 +572,16 @@ const AddUser = () => {
         break;
       case "name":
         setErrors((prevErrors) =>
-          value.trim() === "" ? { ...prevErrors, name: "Name is required" } : { ...prevErrors, name: "" }
+          value.trim() === ""
+            ? { ...prevErrors, name: "Name is required" }
+            : { ...prevErrors, name: "" }
         );
         break;
       case "pasword":
         setErrors((prevErrors) =>
-          value.trim() === "" ? { ...prevErrors, pasword: "Password is required" } : { ...prevErrors, pasword: "" }
+          value.trim() === ""
+            ? { ...prevErrors, pasword: "Password is required" }
+            : { ...prevErrors, pasword: "" }
         );
         setUserData((prevUserData) => ({
           ...prevUserData,
@@ -548,7 +590,9 @@ const AddUser = () => {
         break;
       case "userType":
         setErrors((prevErrors) =>
-          value.trim() === "" ? { ...prevErrors, userType: "User type is required" } : { ...prevErrors, userType: "" }
+          value.trim() === ""
+            ? { ...prevErrors, userType: "User type is required" }
+            : { ...prevErrors, userType: "" }
         );
         break;
       default:
@@ -585,9 +629,28 @@ const AddUser = () => {
     setShowModal(true);
     if (edit && user) {
       setUserData(user);
-      setSelectedValues(Array.isArray(user.accessPages) ? user.accessPages : []);
+      setSelectedValues(
+        Array.isArray(user.accessPages) ? user.accessPages : []
+      );
+
+      // Parse assigned department and project IDs from string to array
+      const assignedDepts = user.assigned_departments ? JSON.parse(user.assigned_departments) : [];
+      const assignedProjs = user.assigned_projects ? JSON.parse(user.assigned_projects) : [];
+
+      // Find matching objects to display names in Autocomplete
+      const selectedDeptObjects = departments.filter((dept) => assignedDepts.includes(dept.Id));
+      const selectedProjObjects = projectNames.filter((proj) => assignedProjs.includes(proj.id));
+
+      setSelectedDeparmentsIds(assignedDepts);
+      setSelectedProjectIds(assignedProjs);
+
+      console.log("Selected Departments (IDs):", assignedDepts);
+      console.log("Selected Projects (IDs):", assignedProjs);
+      console.log("Matching Department Names:", selectedDeptObjects);
+      console.log("Matching Project Names:", selectedProjObjects);
     }
   };
+
 
   const handleFormSubmit = async () => {
     const newErrors = {};
@@ -595,69 +658,83 @@ const AddUser = () => {
     if (!userData.emailID) newErrors.emailID = "Email is required";
     if (!userData.contactNo) newErrors.contactNo = "Contact number is required";
     if (userData.contactNo && userData.contactNo.length !== 10)
-        newErrors.contactNo = "Contact number must be 10 digits";
-    if (!userData.pasword && !userData.id) newErrors.pasword = "Password is required"; 
+      newErrors.contactNo = "Contact number must be 10 digits";
+    if (!userData.pasword && !userData.id)
+      newErrors.pasword = "Password is required";
     if (!userData.userType) newErrors.userType = "User type is required";
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-        try {
-            const token = localStorage.getItem("token");
-            const endpoint = userData.id ? "updateUser" : "registerUser";
-            const method = userData.id ? "put" : "post";
-            const url = API_BASE_URL +`/users/${endpoint}`;
+      try {
+        const token = localStorage.getItem("token");
+        const endpoint = userData.id ? "updateUser" : "registerUser";
+        const method = userData.id ? "put" : "post";
+        const url = API_BASE_URL + `/users/${endpoint}`;
 
-            const payload = {
-                ...userData,
-                id: userData.id ? parseInt(userData.id, 10) : undefined, 
-                accessPages: selectedValues,
-                isApproved: userData.isApproved,
-            };
+        const payload = {
+          ...userData,
+          id: userData.id ? parseInt(userData.id, 10) : undefined,
+          accessPages: selectedValues, // Existing access pages
+          selectedDeparmentsIds, // Send selected department IDs
+          selectedProjectIds, // Send selected project IDs
+          isApproved: userData.isApproved,
+        };
 
-            if (!userData.id) {
-              payload.CreatedAt = new Date().toISOString();
-              payload.userToken = uuidv4();
-          }
-
-            const response = await axios({
-                method,
-                url,
-                data: payload,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.status === 200 || response.status === 201) {
-                const updatedUser = {
-                    ...userData,
-                    id: userData.id || uuidv4(),
-                    accessPages: selectedValues,
-                };
-
-                setUsers((prevUsers) => {
-                    if (userData.id) {
-                        return prevUsers.map((user) => (user.id === userData.id ? updatedUser : user));
-                    } else {
-                        return [updatedUser, ...prevUsers];
-                    }
-                });
-
-                handleCloseModal();
-                toast.success(userData.pasword ? "User and Password successfully saved" : "User successfully saved");
-            } else {
-                setErrors({ form: response.data.message });
-                toast.error("Failed to save user");
-            }
-        } catch (error) {
-            console.error("Error submitting form:", error);
-            setErrors({ form: "Error submitting form" });
-            toast.error("Error submitting form");
+        if (!userData.id) {
+          payload.CreatedAt = new Date().toISOString();
+          payload.userToken = uuidv4();
         }
+
+        const response = await axios({
+          method,
+          url,
+          data: payload,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 200 || response.status === 201) {
+          const updatedUser = {
+            ...userData,
+            id: userData.id || uuidv4(),
+            accessPages: selectedValues,
+            selectedDeparmentsIds, // Ensure state consistency
+            selectedProjectIds,
+          };
+
+          setUsers((prevUsers) => {
+            if (userData.id) {
+              return prevUsers.map((user) =>
+                user.id === userData.id ? updatedUser : user
+              );
+            } else {
+              return [updatedUser, ...prevUsers];
+            }
+          });
+          setSelectedDeparmentsIds([]);
+          setSelectedProjectIds([]);
+          handleCloseModal();
+          fetchUsers();
+          toast.success(
+            userData.pasword
+              ? "User and Password successfully saved"
+              : "User successfully saved"
+          );
+        } else {
+          setErrors({ form: response.data.message });
+          toast.error("Failed to save user");
+        }
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        setErrors({ form: "Error submitting form" });
+        toast.error("Error submitting form");
+      }
     }
-};
+  };
+
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -673,38 +750,46 @@ const AddUser = () => {
   };
 
   return (
-    <Box py={2} px={1} sx={{ width: isMobile ? '96vw' : 'auto' }}>
+    <Box py={2} px={1} sx={{ width: isMobile ? "96vw" : "auto" }}>
       <ToastContainer />
       <div className="MainDash">
         <Typography variant="h5" mb={1}>
           Add User
         </Typography>
         <div className="Main-div">
-          <Box sx={{display:'flex', justifyContent:'space-between',alignItems:'center'}}>
-          <Button
-            variant="contained"
+          <Box
             sx={{
-              width: isMobile ? '30%' : '12%', height:'45px', mt:1,
-              backgroundColor: '#EFE6F7',
-              color: '#8236BC',
-              marginRight: '10px',
-              '&:hover': {
-                backgroundColor: '#bfa7d7',
-              },
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
-            onClick={() => handleShowModal(false)}
           >
-            Add User
-          </Button>
-          <TextField
-          sx={{ml:5, width: isMobile ? '50%' : '40%',}}
-            label="Search"
-            variant="outlined"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            fullWidth
-            margin="normal"
-          />
+            <Button
+              variant="contained"
+              sx={{
+                width: isMobile ? "30%" : "12%",
+                height: "45px",
+                mt: 1,
+                backgroundColor: "#EFE6F7",
+                color: "#8236BC",
+                marginRight: "10px",
+                "&:hover": {
+                  backgroundColor: "#bfa7d7",
+                },
+              }}
+              onClick={() => handleShowModal(false)}
+            >
+              Add User
+            </Button>
+            <TextField
+              sx={{ ml: 5, width: isMobile ? "50%" : "40%" }}
+              label="Search"
+              variant="outlined"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              fullWidth
+              margin="normal"
+            />
           </Box>
           <TableComponent
             users={filteredUsers}
@@ -727,9 +812,9 @@ const AddUser = () => {
                 right: 8,
                 top: 8,
                 color: (theme) => theme.palette.grey[500],
-                backgroundColor: '',  
-                '&:hover': {
-                  backgroundColor: 'red', 
+                backgroundColor: "",
+                "&:hover": {
+                  backgroundColor: "red",
                 },
               }}
             >
@@ -782,6 +867,53 @@ const AddUser = () => {
                 error={!!errors.pasword}
                 helperText={errors.pasword}
               />
+
+              {/* Autocomplete for Departments */}
+              <Autocomplete
+                multiple
+                style={{margin:'25px 0px'}}
+                options={departments}
+                getOptionLabel={(option) => option.Description} // Display department names
+                value={departments.filter((dept) => selectedDeparmentsIds.includes(dept.Id))} // Prefill selected IDs
+                onChange={(event, newValue) => {
+                  const selectedIdsOnly = newValue.map((dept) => dept.Id);
+                  setSelectedDeparmentsIds(selectedIdsOnly);
+                }}
+                disableCloseOnSelect
+                renderOption={(props, option, { selected }) => (
+                  <li {...props}>
+                    <Checkbox checked={selected} style={{ marginRight: 8 }} />
+                    {option.Description} {/* Show Name */}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField {...params} variant="outlined" label="Departments" fullWidth />
+                )}
+              />
+
+              {/* Autocomplete for Projects */}
+              <Autocomplete
+                multiple
+                options={projectNames}
+                getOptionLabel={(option) => option.Business_Unit} // Display project names
+                value={projectNames.filter((proj) => selectedProjectIds.includes(proj.id))} // Prefill selected IDs
+                onChange={(event, newValue) => {
+                  const selectedIdsOnly = newValue.map((proj) => proj.id);
+                  setSelectedProjectIds(selectedIdsOnly);
+                }}
+                disableCloseOnSelect
+                renderOption={(props, option, { selected }) => (
+                  <li {...props}>
+                    <Checkbox checked={selected} style={{ marginRight: 8 }} />
+                    {option.Business_Unit} {/* Show Name */}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField {...params} variant="outlined" label="Project Names" fullWidth />
+                )}
+              />
+
+
               <TextField
                 select
                 name="userType"
@@ -792,7 +924,7 @@ const AddUser = () => {
                 variant="outlined"
                 error={!!errors.userType}
                 helperText={errors.userType}
-                sx={{ margin: '20px 0' }}
+                sx={{ margin: "20px 0" }}
               >
                 <MenuItem value="superadmin">Super Admin</MenuItem>
                 <MenuItem value="admin">Admin</MenuItem>
@@ -816,7 +948,12 @@ const AddUser = () => {
                   </li>
                 )}
                 renderInput={(params) => (
-                  <TextField {...params} variant="outlined" label="Access Pages" fullWidth />
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    label="Access Pages"
+                    fullWidth
+                  />
                 )}
               />
 
@@ -834,11 +971,11 @@ const AddUser = () => {
             <DialogActions>
               <Box
                 sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  justifyContent: 'space-around',
-                  gap: 2, 
-                  mt: 2 
+                  display: "flex",
+                  justifyContent: "center",
+                  justifyContent: "space-around",
+                  gap: 2,
+                  mt: 2,
                 }}
               >
                 <Button onClick={handleCloseModal}>Cancel</Button>
@@ -855,16 +992,6 @@ const AddUser = () => {
 };
 
 export default AddUser;
-
-
-
-
-
-
-
-
-
-
 
 // import React, { useState, useEffect } from "react";
 // import {
@@ -917,7 +1044,7 @@ export default AddUser;
 
 //   useEffect(() => {
 //     fetchUsers();
-//   }, []); 
+//   }, []);
 
 //   const fetchUsers = async () => {
 //     try {
@@ -929,7 +1056,7 @@ export default AddUser;
 //       });
 
 //       if (response.status === 200) {
-//         setUsers(response.data.data); 
+//         setUsers(response.data.data);
 //       } else {
 //         console.error("Failed to fetch users:", response.statusText);
 //       }
@@ -1026,7 +1153,7 @@ export default AddUser;
 //     if (!userData.contactNo) newErrors.contactNo = "Contact number is required";
 //     if (userData.contactNo && userData.contactNo.length !== 10)
 //         newErrors.contactNo = "Contact number must be 10 digits";
-//     if (!userData.pasword && !userData.id) newErrors.pasword = "Password is required"; 
+//     if (!userData.pasword && !userData.id) newErrors.pasword = "Password is required";
 //     if (!userData.userType) newErrors.userType = "User type is required";
 
 //     setErrors(newErrors);
@@ -1040,7 +1167,7 @@ export default AddUser;
 
 //             const payload = {
 //                 ...userData,
-//                 id: userData.id ? parseInt(userData.id, 10) : undefined, 
+//                 id: userData.id ? parseInt(userData.id, 10) : undefined,
 //                 accessPages: selectedValues,
 //                 isApproved: userData.isApproved,
 //             };
@@ -1145,9 +1272,9 @@ export default AddUser;
 //                 right: 8,
 //                 top: 8,
 //                 color: (theme) => theme.palette.grey[500],
-//                 backgroundColor: '',  
+//                 backgroundColor: '',
 //                 '&:hover': {
-//                   backgroundColor: 'red', 
+//                   backgroundColor: 'red',
 //                 },
 //               }}
 //             >
@@ -1254,8 +1381,8 @@ export default AddUser;
 //                   display: 'flex',
 //                   justifyContent: 'center',
 //                   justifyContent: 'space-around',
-//                   gap: 2, 
-//                   mt: 2 
+//                   gap: 2,
+//                   mt: 2
 //                 }}
 //               >
 //                 <Button onClick={handleCloseModal}>Cancel</Button>
@@ -1272,17 +1399,6 @@ export default AddUser;
 // };
 
 // export default AddUser;
-
-
-
-
-
-
-
-
-
-
-
 
 // import React, { useState, useEffect } from "react";
 // import {
@@ -1333,7 +1449,7 @@ export default AddUser;
 
 //   useEffect(() => {
 //     fetchUsers();
-//   }, []); 
+//   }, []);
 
 //   const fetchUsers = async () => {
 //     try {
@@ -1345,7 +1461,7 @@ export default AddUser;
 //       });
 
 //       if (response.status === 200) {
-//         setUsers(response.data.data); 
+//         setUsers(response.data.data);
 //       } else {
 //         console.error("Failed to fetch users:", response.statusText);
 //       }
@@ -1442,7 +1558,7 @@ export default AddUser;
 //     if (!userData.contactNo) newErrors.contactNo = "Contact number is required";
 //     if (userData.contactNo && userData.contactNo.length !== 10)
 //         newErrors.contactNo = "Contact number must be 10 digits";
-//     if (!userData.pasword && !userData.id) newErrors.pasword = "Password is required"; 
+//     if (!userData.pasword && !userData.id) newErrors.pasword = "Password is required";
 //     if (!userData.userType) newErrors.userType = "User type is required";
 
 //     setErrors(newErrors);
@@ -1456,7 +1572,7 @@ export default AddUser;
 
 //             const payload = {
 //                 ...userData,
-//                 id: userData.id ? parseInt(userData.id, 10) : undefined, 
+//                 id: userData.id ? parseInt(userData.id, 10) : undefined,
 //                 accessPages: selectedValues,
 //                 isApproved: userData.isApproved,
 //             };
@@ -1472,7 +1588,6 @@ export default AddUser;
 //               payload.CreatedAt = new Date().toISOString();
 //               payload.userToken = uuidv4();
 //           }
-
 
 //             const response = await axios({
 //                 method,
@@ -1499,7 +1614,7 @@ export default AddUser;
 //                     }
 //                 });
 
-//                 handleCloseModal(); 
+//                 handleCloseModal();
 //             } else {
 //                 setErrors({ form: response.data.message });
 //             }
@@ -1509,7 +1624,6 @@ export default AddUser;
 //         }
 //     }
 // };
-  
 
 //   const handleChangePage = (event, newPage) => {
 //     setPage(newPage);
@@ -1567,9 +1681,9 @@ export default AddUser;
 //     right: 8,
 //     top: 8,
 //     color: (theme) => theme.palette.grey[500],
-//     backgroundColor: '',  
+//     backgroundColor: '',
 //     '&:hover': {
-//       backgroundColor: 'red', 
+//       backgroundColor: 'red',
 //     },
 //   }}
 // >
@@ -1676,8 +1790,8 @@ export default AddUser;
 //         display: 'flex',
 //         justifyContent: 'center',
 //         justifyContent: 'space-around',
-//         gap: 2, 
-//         mt: 2 
+//         gap: 2,
+//         mt: 2
 //       }}
 //     >
 //               <Button onClick={handleCloseModal}>Cancel</Button>
