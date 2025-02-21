@@ -188,8 +188,9 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
   }, [openSidebarToggle]);
 
   const isSuperAdminOnly = (item) => {
-    const superAdminPages = ["Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Run PayRoll", "View Payroll"];
-    return superAdminPages.includes(item.heading) && user?.userType !== 'superadmin';
+    // const superAdminPages = ["Attendance Report", "Wages Report",  "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Run PayRoll", "View Payroll"];
+    const superAdminPages = [];
+        return superAdminPages.includes(item.heading) && user?.userType !== 'superadmin';
   };
 
   return (
