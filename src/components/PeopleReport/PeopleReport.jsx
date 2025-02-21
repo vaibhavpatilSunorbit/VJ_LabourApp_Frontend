@@ -254,25 +254,22 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
 
 
     const getProjectDescription = (projectId) => {
-
-        if (!projectNames || projectNames.length === 0) {
-            // console.log('Projects array is empty or undefined');
-            return 'Unknown';
+        if (!Array.isArray(projectNames) || projectNames.length === 0) {
+          return 'Unknown';
         }
-
-        if (projectId === undefined || projectId === null) {
-            // console.log('Project ID is undefined or null');
-            return 'Unknown';
+      
+        if (projectId === undefined || projectId === null || projectId === '') {
+          return 'Unknown';
         }
-
-        const project = projectNames.find(proj => {
-            // console.log(`Checking project: ${proj.id} === ${Number(projectId)} (Type: ${typeof proj.id})`);
-            return proj.id === Number(projectId);
-        });
-
+      
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+      
+        // console.log('Project Names:', projectNames);
+        // console.log('Searching for Project ID:', projectId);
         // console.log('Found Project:', project);
-        return project ? project.Business_Unit : 'Unknown';
-    };
+      
+        return project ? project.projectName : 'Unknown';
+      };
 
 
     const handleDownload = async () => {

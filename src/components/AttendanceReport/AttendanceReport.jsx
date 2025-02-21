@@ -124,6 +124,23 @@ const AttendanceReport = () => {
     
         return { hours, minutes };
     };
+
+
+    function formatovertimemanually(overtimemanually) {
+        let hours = Math.floor(overtimemanually);
+        let minutes = Math.floor((overtimemanually - hours) * 60);
+    
+        if (minutes < 15) {
+            minutes = 0; 
+        } else if (minutes < 45) {
+            minutes = 30; // 15 to 44 minutes, consider as 30 minutes
+        } else {
+            minutes = 0; // More than 45 minutes, round to next hour
+            hours += 1; // Increase hour by one
+        }
+    
+        return { hours, minutes };
+    };
     
     
     const handleManualEditDialogOpen = (day) => {
@@ -329,7 +346,8 @@ console.log('AttendanceStatus', AttendanceStatus)
                     overtime: formatOvertime(attendanceRecord?.Overtime || 0),
                     isHoliday: attendanceRecord?.Status === 'H',
                     labourId: attendanceRecord?.LabourId || 'NA',
-                    overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
+                    // overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
+                    overtimemanually: formatovertimemanually(attendanceRecord?.OvertimeManually || 0),
                     remark: attendanceRecord?.RemarkManually || '-',
                     attendanceId: attendanceRecord?.AttendanceId || '-',
                 };
@@ -1387,7 +1405,14 @@ console.log('AttendanceStatus', AttendanceStatus)
         </Tooltip>
     ) : "0h"}
 </TableCell>
-                                                <TableCell>{day.overtimemanually || "-"}</TableCell>
+                                                {/* <TableCell>{day.overtimemanually || "-"}</TableCell> */}
+                                                <TableCell>
+    {day.overtimemanually && (day.overtimemanually.hours > 0 || day.overtimemanually.minutes > 0) ? (
+        <Tooltip title={`${day.overtimemanually.hours} hours ${day.overtimemanually.minutes} minutes`}>
+            <span>{`${day.overtimemanually.hours}h ${day.overtimemanually.minutes}m`}</span>
+        </Tooltip>
+    ) : "0h"}
+</TableCell>
                                                 {/* <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell> */}
                                                 <TableCell>{day.remark || "-"}</TableCell>
                                                 <TableCell>

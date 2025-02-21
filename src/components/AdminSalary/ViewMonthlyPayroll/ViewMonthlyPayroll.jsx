@@ -42,7 +42,7 @@ import { ArrowBack } from '@mui/icons-material';
 import logo from "../../../images/VJlogo-1-removebg.png";
 import NoData from "../../../images/NoData.jpg";
 
-const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
+const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
@@ -555,21 +555,21 @@ const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
 
     const getProjectDescription = (projectId) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) {
-            console.error('Projects array is empty or invalid:', projectNames);
-            return 'Unknown';
+          return 'Unknown';
         }
-
-        if (projectId === undefined || projectId === null) {
-            console.error('Project ID is undefined or null:', projectId);
-            return 'Unknown';
+      
+        if (projectId === undefined || projectId === null || projectId === '') {
+          return 'Unknown';
         }
-
-        const project = projectNames.find(
-            (proj) => proj.id === Number(projectId)
-        );
-
-        return project ? project.Business_Unit : 'Unknown';
-    };
+      
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+      
+        // console.log('Project Names:', projectNames);
+        // console.log('Searching for Project ID:', projectId);
+        // console.log('Found Project:', project);
+      
+        return project ? project.projectName : 'Unknown';
+      };
 
 
     const getDepartmentDescription = (departmentId) => {
