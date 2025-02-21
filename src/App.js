@@ -52,7 +52,13 @@ function App() {
       
 
         const projectsRes = await axios.get(API_BASE_URL + '/api/project-names');
-        setProjectNames(projectsRes.data);
+        const formattedProjects = projectsRes.data.map(project => ({
+          Id: project.Id,  // Keep Id if needed
+          projectName: project.Description,  // Use `Description` as project name
+        }));
+  
+        setProjectNames(formattedProjects);
+        console.log("Formatted Projects:", formattedProjects);
       } catch (err) {
         console.error('Error fetching departments or projects:', err);
       }

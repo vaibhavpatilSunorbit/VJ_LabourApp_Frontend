@@ -2117,25 +2117,23 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   };
 
 
-
-
   const getProjectDescription = (projectId) => {
-
-    if (!projectNames || projectNames.length === 0) {
+    if (!Array.isArray(projectNames) || projectNames.length === 0) {
       return 'Unknown';
     }
-
-    if (projectId === undefined || projectId === null) {
+  
+    if (projectId === undefined || projectId === null || projectId === '') {
       return 'Unknown';
     }
-
-    const project = projectNames.find(proj => {
-      return proj.id === Number(projectId);
-    });
-
-    return project ? project.Business_Unit : 'Unknown';
+  
+    const project = projectNames.find(proj => proj.Id === Number(projectId));
+  
+    // console.log('Project Names:', projectNames);
+    // console.log('Searching for Project ID:', projectId);
+    // console.log('Found Project:', project);
+  
+    return project ? project.projectName : 'Unknown';
   };
-
 
   const handleDownload = async () => {
     setLoadingExcel(true);
