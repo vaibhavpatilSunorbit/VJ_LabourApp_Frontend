@@ -396,49 +396,54 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const handleSave = async () => {
         try {
             const onboardName = user.name || null;
+    
             if (!payStructure || !effectiveDate) {
                 toast.error("Please fill in all required fields.");
                 return;
             }
+    
+            // Store promises for API calls
+            const apiPromises = [];
+    
             // Loop through each selected labour ID
             for (const labourId of selectedLabourIds) {
                 const wageData = {
                     labourId,
                     payStructure,
                     effectiveDate,
-                    // Only pass wage values for Daily Wages; otherwise, set them to null.
-                    dailyWages: payStructure === 'Daily Wages' ? (dailyWages || null) : null,
-                    monthlyWages: payStructure === 'Daily Wages' ? (monthlyWages || null) : null,
-                    yearlyWages: payStructure === 'Daily Wages' ? (yearlyWages || null) : null,
-                    overtime: payStructure === 'Daily Wages' ? (overtime || null) : null,
-                    totalOvertimeWages: payStructure === 'Daily Wages' ? (totalOvertimeWages || null) : null,
-                    // For Fixed Monthly Wages, pass fixedMonthlyWages and weeklyOff; others set to null.
-                    fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? (fixedMonthlyWages || null) : null,
-                    weeklyOff: payStructure === 'Fixed Monthly Wages' ? (weeklyOff || null) : null,
+                    dailyWages: payStructure === 'Daily Wages' ? dailyWages || null : null,
+                    monthlyWages: payStructure === 'Daily Wages' ? monthlyWages || null : null,
+                    yearlyWages: payStructure === 'Daily Wages' ? yearlyWages || null : null,
+                    overtime: payStructure === 'Daily Wages' ? overtime || null : null,
+                    totalOvertimeWages: payStructure === 'Daily Wages' ? totalOvertimeWages || null : null,
+                    fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages || null : null,
+                    weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff || null : null,
                     wagesEditedBy: onboardName,
                 };
-
-                // Check if wages already exist for the current labour
-                const { data: existingWagesResponse } = await axios.get(
-                    `${API_BASE_URL}/labours/checkExistingWages`,
-                    { params: { labourId } }
-                );
-
-                const { exists, approved, data } = existingWagesResponse;
-
-                if (!exists) {
-                    await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-                    toast.success(`Wages added successfully for labour ${labourId}.`);
-                } else if (exists && !approved) {
-                    wageData.wageId = data.WageID;
-                    await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-                    toast.info(`Wages sent for admin approval for labour ${labourId}.`);
-                } else if (exists && approved) {
-                    wageData.wageId = data.WageID;
-                    await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-                    toast.info(`Wages changes sent for admin approval for labour ${labourId}.`);
+    
+                try {
+                    // **Run upsertLabourMonthlyWages API and wait for WageID**
+                    const upsertResponse = await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
+                    
+                    if (upsertResponse.data && upsertResponse.data.WageID) {
+                        wageData.wageId = upsertResponse.data.WageID; // Assign WageID
+    
+                        // **Run sendWagesForApproval API using the received WageID**
+                        apiPromises.push(axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData));
+                    } else {
+                        console.error(`Failed to get WageID for LabourID ${labourId}`);
+                    }
+                } catch (error) {
+                    console.error(`Error processing LabourID ${labourId}:`, error);
                 }
             }
+    
+            // **Wait for all sendWagesForApproval API calls to complete**
+            await Promise.all(apiPromises);
+    
+            // Show success message after all API calls complete
+            toast.info("Wages sent for admin approval.");
+    
             // Refresh the data, close the modal, and reset fields & selections
             fetchLabours();
             setModalOpen(false);
@@ -448,11 +453,75 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
             setMonthlyWages(0);
             setDailyWages(0);
             setSelectedLabourIds([]);
+    
         } catch (error) {
             console.error("Error saving wages:", error);
             toast.error("Failed to save wages.");
         }
     };
+    
+    
+
+    // const handleSave = async () => {
+    //     try {
+    //         const onboardName = user.name || null;
+    //         if (!payStructure || !effectiveDate) {
+    //             toast.error("Please fill in all required fields.");
+    //             return;
+    //         }
+    //         // Loop through each selected labour ID
+    //         for (const labourId of selectedLabourIds) {
+    //             const wageData = {
+    //                 labourId,
+    //                 payStructure,
+    //                 effectiveDate,
+    //                 // Only pass wage values for Daily Wages; otherwise, set them to null.
+    //                 dailyWages: payStructure === 'Daily Wages' ? (dailyWages || null) : null,
+    //                 monthlyWages: payStructure === 'Daily Wages' ? (monthlyWages || null) : null,
+    //                 yearlyWages: payStructure === 'Daily Wages' ? (yearlyWages || null) : null,
+    //                 overtime: payStructure === 'Daily Wages' ? (overtime || null) : null,
+    //                 totalOvertimeWages: payStructure === 'Daily Wages' ? (totalOvertimeWages || null) : null,
+    //                 // For Fixed Monthly Wages, pass fixedMonthlyWages and weeklyOff; others set to null.
+    //                 fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? (fixedMonthlyWages || null) : null,
+    //                 weeklyOff: payStructure === 'Fixed Monthly Wages' ? (weeklyOff || null) : null,
+    //                 wagesEditedBy: onboardName,
+    //             };
+
+    //             // Check if wages already exist for the current labour
+    //             const { data: existingWagesResponse } = await axios.get(
+    //                 `${API_BASE_URL}/labours/checkExistingWages`,
+    //                 { params: { labourId } }
+    //             );
+
+    //             const { exists, approved, data } = existingWagesResponse;
+
+    //             if (!exists) {
+    //                 await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
+    //                 toast.success(`Wages added successfully for labour ${labourId}.`);
+    //             } else if (exists && !approved) {
+    //                 wageData.wageId = data.WageID;
+    //                 await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+    //                 toast.info(`Wages sent for admin approval for labour ${labourId}.`);
+    //             } else if (exists && approved) {
+    //                 wageData.wageId = data.WageID;
+    //                 await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
+    //                 toast.info(`Wages changes sent for admin approval for labour ${labourId}.`);
+    //             }
+    //         }
+    //         // Refresh the data, close the modal, and reset fields & selections
+    //         fetchLabours();
+    //         setModalOpen(false);
+    //         setWeeklyOff("");
+    //         setEffectiveDate("");
+    //         setFixedMonthlyWages(0);
+    //         setMonthlyWages(0);
+    //         setDailyWages(0);
+    //         setSelectedLabourIds([]);
+    //     } catch (error) {
+    //         console.error("Error saving wages:", error);
+    //         toast.error("Failed to save wages.");
+    //     }
+    // };
 
 
 

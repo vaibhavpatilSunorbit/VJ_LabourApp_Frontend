@@ -12,7 +12,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions,IconButton
+    DialogActions,IconButton, Select,MenuItem
 } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -21,6 +21,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { differenceInYears, differenceInMonths, differenceInDays } from "date-fns"
 import CloseIcon from '@mui/icons-material/Close'
+import ViewPaySlip from '../Payslip/ViewPaySlip'
 
 const PeopleEditDetails = () => {
     const [loading, setLoading] = useState(true);
@@ -32,11 +33,12 @@ const PeopleEditDetails = () => {
     const [openModal, setOpenModal] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const currentDate = new Date();
-    const currentMonth = (currentDate.getMonth() + 1).toString();
+    const currentMonth = (currentDate.getMonth() + 0).toString();
     const [selectedLabourId, setSelectedLabourId] = useState('');
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [open, setOpen] = useState(false);
+    const [onClosed, setonClosed] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [attendanceData, setAttendanceData] = useState([]);
     const location = useLocation();
@@ -44,6 +46,9 @@ const PeopleEditDetails = () => {
     // const [openModal, setOpenModal] = useState(false);
     const [modalImageSrc, setModalImageSrc] = useState('');
     const [showDocuments, setShowDocuments] = useState(false);
+    const [modalOpenNetpay, setModalOpenNetpay] = useState(false);
+    const [selectedMonths, setSelectedMonths] = useState("");
+    const [showMonthYearModal, setShowMonthYearModal] = useState(false);
 
     const statusColors = {
         P: '#4CAF50',
@@ -313,11 +318,22 @@ const PeopleEditDetails = () => {
           console.error("LabourID is null or undefined for the selected labour.");
         }
       };
-    //   useEffect(() => {
-    //     if (selectedLabourId) {
-    //       fetchAttendance(); // Fetch attendance whenever the selectedLabourId changes
-    //     }
-    //   }, [selectedLabourId, selectedMonth, selectedYear]);
+
+    //   const [modalOpenNetpay, setModalOpenNetpay] = useState(false);
+      const handleModalOpenPayslip = (labourID) => {
+        if (labourID) {
+          setSelectedLabourId(labourID);
+          setShowMonthYearModal(true);
+        } else {
+          console.error("LabourID is null or undefined for the selected labour.");
+        }
+      };
+
+      const handleProceedToPayslip = () => {
+        setShowMonthYearModal(false); // Close selection modal
+        setModalOpenNetpay(true); 
+        
+    };
 
       const handleSidebarClick = (label) => {
         switch (label) {
@@ -330,6 +346,7 @@ const PeopleEditDetails = () => {
                 setSelectedComponent("View Attendance Component");
                 break;
             case "View Payslips":
+                handleModalOpenPayslip(labourDetails?.LabourID);
                 setSelectedComponent("View Payslips Component");
                 break;
             case "View Documents":
@@ -346,7 +363,10 @@ const PeopleEditDetails = () => {
                 setSelectedComponent(null);
         }
     };
-    
+    const handleClosePaySlip = () => {
+        setSelectedLabourId(null);
+        setOpen(false)
+      };
     const LegendItem = ({ color, text }) => {
         return (
             <Box display="flex" alignItems="center" mx={1} mb={1}>
@@ -1105,8 +1125,76 @@ const PeopleEditDetails = () => {
       {/* Sidebar */}
       {/* <Button onClick={() => handleSidebarClick("View Documents")}>View Documents</Button> */}
 
+
+ {/* Month & Year Selection Modal */}
+ <Modal open={showMonthYearModal} onClose={() => setShowMonthYearModal(false)}>
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        bgcolor: "white",
+                        boxShadow: 24,
+                        p: 4,
+                        borderRadius: 2,
+                        width: 300,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                    }}
+                >
+                    <Typography variant="h6">Select Month & Year</Typography>
+
+                    <Select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        displayEmpty
+                    >
+                        <MenuItem value="" disabled>
+                            Select Month
+                        </MenuItem>
+                        {[...Array(12)].map((_, i) => (
+                            <MenuItem key={i + 1} value={i + 1}>
+                                {new Date(0, i).toLocaleString("default", { month: "long" })}
+                            </MenuItem>
+                        ))}
+                    </Select>
+
+                    <Select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        displayEmpty
+                    >
+                        <MenuItem value="" disabled>
+                            Select Year
+                        </MenuItem>
+                        {[2023, 2024, 2025].map((year) => (
+                            <MenuItem key={year} value={year}>
+                                {year}
+                            </MenuItem>
+                        ))}
+                    </Select>
+
+                    <Button variant="contained" onClick={handleProceedToPayslip}>
+                        Proceed to Payslip
+                    </Button>
+                </Box>
+            </Modal>
+        {modalOpenNetpay && (
+          <ViewPaySlip
+          open={modalOpenNetpay}
+          labourID={selectedLabourId}
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+          onClose={handleClosePaySlip}
+          />
+        )}
+
       <Modal
-        open={showDocuments}
+        modalOpenNetpay={showDocuments}
         onClose={() => setShowDocuments(false)}
         aria-labelledby="view-documents-modal"
       >
