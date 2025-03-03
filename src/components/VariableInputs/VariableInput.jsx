@@ -36,7 +36,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
 import { parse } from "fast-xml-parser";
 
-const VariableInput = ({ departments, projectNames = [], labour }) => {
+const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
@@ -52,7 +52,7 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
     const [payStructure, setPayStructure] = useState({});
     const [weakelyOff, setWeakelyOff] = useState({});
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(25);
+    const [rowsPerPage, setRowsPerPage] = useState(200);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedLabour, setSelectedLabour] = useState(null);
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
@@ -77,6 +77,7 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
         variablePayRemark: "",
         effectiveDate: new Date().toISOString().split("T")[0],
       });
+      const [filteredIconLabours, setFilteredIconLabours] = useState([]);
 
     
     // const getProjectDescription = (projectId) => {
@@ -94,34 +95,34 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
     //     return project ? project.Business_Unit : 'Unknown';
     //   };
 
-    const getProjectDescription = (projectId) => {
-      if (!Array.isArray(projectNames) || projectNames.length === 0) {
-        return 'Unknown';
-      }
+    // const getProjectDescription = (projectId) => {
+    //   if (!Array.isArray(projectNames) || projectNames.length === 0) {
+    //     return 'Unknown';
+    //   }
     
-      if (projectId === undefined || projectId === null || projectId === '') {
-        return 'Unknown';
-      }
+    //   if (projectId === undefined || projectId === null || projectId === '') {
+    //     return 'Unknown';
+    //   }
     
-      const project = projectNames.find(proj => proj.Id === Number(projectId));
+    //   const project = projectNames.find(proj => proj.Id === Number(projectId));
     
-      // console.log('Project Names:', projectNames);
-      // console.log('Searching for Project ID:', projectId);
-      // console.log('Found Project:', project);
+    //   console.log('Project Names variablPay:', projectNames);
+    //   console.log('Searching for Project ID variablPay:', projectId);
+    //   console.log('Found Project: variablPay', project);
     
-      return project ? project.projectName : 'Unknown';
-    };
+    //   return project ? project.projectName : 'Unknown';
+    // };
     
-      // Helper function to get the Department description
-      const getDepartmentDescription = (departmentId) => {
-        if (!Array.isArray(departments) || departments.length === 0) {
-          return 'Unknown';
-        }
-        const department = departments.find(
-          (dept) => dept.Id === Number(departmentId)
-        );
-        return department ? department.Description : 'Unknown';
-      };
+    //   // Helper function to get the Department description
+    //   const getDepartmentDescription = (departmentId) => {
+    //     if (!Array.isArray(departments) || departments.length === 0) {
+    //       return 'Unknown';
+    //     }
+    //     const department = departments.find(
+    //       (dept) => dept.Id === Number(departmentId)
+    //     );
+    //     return department ? department.Description : 'Unknown';
+    //   };
     
     const fetchLabours = async (filters = {}) => {
         setLoading(true);
@@ -141,6 +142,17 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
     useEffect(() => {
         fetchLabours();
     }, []);
+
+    const allowedProjectIds =
+    user && user.projectIds ? JSON.parse(user.projectIds) : [];
+  const allowedDepartmentIds =
+    user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+    // console.log('allowedProjectIds:', allowedProjectIds);
+    // console.log('allowedDepartmentIds:', allowedDepartmentIds);
+  // Use labourlist prop if available, otherwise use state labours
+  const laboursSource =
+    labourlist && labourlist.length > 0 ? labourlist : labours;
+  
 
     const handleApplyFilter = () => {
         const params = {};
@@ -202,8 +214,9 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
     };
 
     const handleApproved = (labour) => {
-        setSelectedLabour(labour);  // Preserves all current details of the labour
-        setOpenDialogSite(true);
+        setSelectedLabour(labour);  
+        setSelectedLabourIds([labour.LabourID]);
+        openVariablePayModal();
     };
 
 
@@ -232,15 +245,15 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
         }
     };
 
-    const handlePageChange = (e, newPage) => {
-        setPage(newPage);
-    };
+    // const handlePageChange = (e, newPage) => {
+    //     setPage(newPage);
+    // };
 
-    const handleRowsPerPageChange = (e) => {
-        const newRowsPerPage = parseInt(e.target.value, 10);
-        setRowsPerPage(newRowsPerPage);
-        setPage(0); // Reset to the first page
-    };
+    // const handleRowsPerPageChange = (e) => {
+    //     const newRowsPerPage = parseInt(e.target.value, 10);
+    //     setRowsPerPage(newRowsPerPage);
+    //     setPage(0); // Reset to the first page
+    // };
     const handleSelectLabour = (selectedLabour) => {
         setSelectedLabour(selectedLabour);
     };
@@ -260,43 +273,43 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
     };
 
       // Checkbox handling: select/deselect individual row
-      const handleSelectRow = (event, labourId) => {
-        if (event.target.checked) {
-          setSelectedLabourIds((prev) => [...prev, labourId]);
-        } else {
-          setSelectedLabourIds((prev) => prev.filter((id) => id !== labourId));
-        }
-      };
+    //   const handleSelectRow = (event, labourId) => {
+    //     if (event.target.checked) {
+    //       setSelectedLabourIds((prev) => [...prev, labourId]);
+    //     } else {
+    //       setSelectedLabourIds((prev) => prev.filter((id) => id !== labourId));
+    //     }
+    //   };
     
-      const handleSelectAllRows = (event) => {
-        if (event.target.checked) {
-          // Select all on current page
-          const newSelected = paginatedLabours.map((lab) => lab.LabourID);
-          setSelectedLabourIds((prev) => [
-            ...prev,
-            ...newSelected.filter((id) => !prev.includes(id)),
-          ]);
-        } else {
-          // Unselect all on current page
-          const newSelected = paginatedLabours.map((lab) => lab.LabourID);
-          setSelectedLabourIds((prev) => prev.filter((id) => !newSelected.includes(id)));
-        }
-      };
+    //   const handleSelectAllRows = (event) => {
+    //     if (event.target.checked) {
+    //       // Select all on current page
+    //       const newSelected = paginatedLabours.map((lab) => lab.LabourID);
+    //       setSelectedLabourIds((prev) => [
+    //         ...prev,
+    //         ...newSelected.filter((id) => !prev.includes(id)),
+    //       ]);
+    //     } else {
+    //       // Unselect all on current page
+    //       const newSelected = paginatedLabours.map((lab) => lab.LabourID);
+    //       setSelectedLabourIds((prev) => prev.filter((id) => !newSelected.includes(id)));
+    //     }
+    //   };
 
-    const handleViewHistory = (labourID) => {
-        const history = labours.filter((labour) => labour.LabourID === labourID);
-        setSelectedHistory(history);
-        setOpenModal(true);
-    };
+    // const handleViewHistory = (labourID) => {
+    //     const history = labours.filter((labour) => labour.LabourID === labourID);
+    //     setSelectedHistory(history);
+    //     setOpenModal(true);
+    // };
 
-    const filteredLabours = getLatestLabourData(labours);
-    const paginatedLabours = rowsPerPage > 0
-    ? filteredLabours.slice(page * rowsPerPage, (page + 1) * rowsPerPage)
-    : filteredLabours;
+    // const filteredLabours = getLatestLabourData(labours);
+    // const paginatedLabours = rowsPerPage > 0
+    // ? filteredLabours.slice(page * rowsPerPage, (page + 1) * rowsPerPage)
+    // : filteredLabours;
 
-    const isAllSelected =
-    paginatedLabours.length > 0 &&
-    paginatedLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
+    // const isAllSelected =
+    // paginatedLabours.length > 0 &&
+    // paginatedLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
 
     // const getProjectDescription = (projectId) => {
     //     if (!Array.isArray(projectNames) || projectNames.length === 0) {
@@ -327,7 +340,8 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
 
     const openVariablePayModal = () => {
         if (selectedLabourIds.length === 0) {
-          toast.error("No labours selected!");
+          // toast.error("No labours selected!");
+          console.log('No labours selected!')
           return;
         }
         // Reset or set any default values
@@ -360,73 +374,7 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
         setOpenDialogSite(true); // open the confirmation
       };
 
-    // const confirmTransfer = async () => {
-    //     setOpenDialogSite(false); // Close the dialog
-
-    //     try {
-    //         // Fetch current and new site names for transfer
-    //         // const projectName = projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit || "Unknown";
-
-    //         if (!payStructure || !variablePay) {
-    //             toast.error("Please fill in all required fields.");
-    //             return;
-    //         }
-    //         const onboardName = user.name || null;
-    //         const transferDataPayload = {
-    //             userId: selectedLabour.id,
-    //             LabourID: selectedLabour.LabourID,
-    //             name: selectedLabour.name,
-    //             month: selectedLabour.month,
-    //             fullDate: selectedLabour.fullDate,
-    //             payStructure: selectedLabour.payStructure,
-    //             variablePay: selectedLabour.variablePay,
-    //             variablePayRemark: selectedLabour.variablePayRemark,
-    //             effectiveDate: selectedLabour.effectiveDate || new Date().toISOString().split('T')[0],
-    //             payAddedBy: onboardName,
-    //         };
-
-    //         // const { data: existingVariablePayResponse } = await axios.get(`${API_BASE_URL}/insentive/checkExistingVariablePay`, {
-    //         //     params: { LabourID: selectedLabour.LabourID },
-    //         // });
-
-    //         // const { exists, approved, data } = existingVariablePayResponse;
-
-    //         // if (!exists) {
-    //         //     await axios.post(`${API_BASE_URL}/insentive/upsertVariablePay`, transferDataPayload);
-    //         //     toast.success("Variable Pay added successfully.");
-    //         // } else if (exists && !approved) {
-    //         //     transferDataPayload.payId = data.VariablePayId;
-    //         //     await axios.post(`${API_BASE_URL}/insentive/sendVariablePayForApproval`, transferDataPayload);
-    //         //     toast.info("Variable Pay sent for admin approval.");
-    //         // } else if (exists && approved) {
-    //         //     transferDataPayload.payId = data.VariablePayId;
-    //         //     await axios.post(`${API_BASE_URL}/insentive/sendVariablePayForApproval`, transferDataPayload);
-    //         //     toast.info("Variable Pay changes sent for admin approval.");
-    //         // }
-
-
-    //         const response = await axios.post(`${API_BASE_URL}/insentive/upsertVariablePay`, transferDataPayload);
-
-    //         if (response.status === 200) {
-    //             // Update UI
-    //             setLabours((prevLabours) =>
-    //                 prevLabours.map((labour) =>
-    //                     labour.LabourID === selectedLabour.LabourID
-    //                         ? { ...labour, ...selectedLabour }
-    //                         : labour
-    //                 )
-    //             );
-
-    //             toast.info(`Labour ${selectedLabour.name} Variable Pay sent for Admin Approval`);
-    //         } else {
-    //             toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
-    //         }
-    //     } catch (error) {
-    //         console.error("Error during site transfer:", error);
-    //         toast.error("Failed to sent for Admin Approval.");
-    //     }
-    // };
-
+   
     const confirmTransfer = async () => {
     setOpenDialogSite(false);
 
@@ -501,7 +449,7 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
     const fetchs = async (labourIds) => {
         try {
             const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
-            console.log('API Response:', response.data); // Debug response
+            // console.log('API Response:', response.data); // Debug response
             return response.data.map((item) => ({
                 LabourID: item.LabourID,
                 projectNames: item.projectNames,
@@ -528,7 +476,7 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
                     return acc;
                 }, {});
                 setStatusesSite(mappedStatuses);
-                console.log('Mapped Statuses with Dates:', mappedStatuses); // Debug statuses
+                // console.log('Mapped Statuses with Dates:', mappedStatuses); // Debug statuses
             }
 
             setLoading(false);
@@ -649,6 +597,134 @@ const VariableInput = ({ departments, projectNames = [], labour }) => {
         );
       };
 
+
+     
+
+      laboursSource.forEach((labour) => {
+        const labourProjectId = Number(labour.ProjectID);
+        const labourDepartmentId = Number(labour.DepartmentID);
+        const projectMatch =
+          allowedProjectIds.length > 0
+            ? allowedProjectIds.includes(labourProjectId)
+            : true;
+        const departmentMatch =
+          allowedDepartmentIds.length > 0
+            ? allowedDepartmentIds.includes(labourDepartmentId)
+            : true;
+        // For strict logging (both must match), you could use:
+        if (!projectMatch && !departmentMatch) {
+        //   console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
+        }
+      });
+    
+      // Strict filtering: record must match allowed project and department IDs, and status "Approved"
+      const getFilteredLaboursForTable = () => {
+        let baseLabours = [...laboursSource];
+        baseLabours = baseLabours.filter((labour) => {
+          const labourProjectId = Number(labour.ProjectID);
+          const labourDepartmentId = Number(labour.DepartmentID);
+          const projectMatch =
+            allowedProjectIds.length > 0
+              ? allowedProjectIds.includes(labourProjectId)
+              : true;
+          const departmentMatch =
+            allowedDepartmentIds.length > 0
+              ? allowedDepartmentIds.includes(labourDepartmentId)
+              : true;
+        //   console.log('projectMatch', projectMatch, 'departmentMatch', departmentMatch);
+          // Return true if either matches
+          return projectMatch || departmentMatch;
+        });
+        // Ensure that only records with status "Approved" are included.
+        // baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
+        // console.log('Filtered Labours For Table:', baseLabours);
+        return baseLabours;
+      };
+    
+      // Helper: Get project description
+      const getProjectDescription = (ProjectID) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
+        if (ProjectID === undefined || ProjectID === null || ProjectID === '') return 'Unknown';
+        const project = projectNames.find((proj) => proj.Id === Number(ProjectID));
+        return project ? project.Business_Unit : 'Unknown';
+      };
+    
+      // Helper: Get department description
+      const getDepartmentDescription = (departmentId) => {
+        if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
+        const department = departments.find((dept) => dept.Id === Number(departmentId));
+        return department ? department.Description : 'Unknown';
+      };
+    
+      const filteredLaboursForTable = getFilteredLaboursForTable();
+// console.log('filteredLaboursForTable}}',filteredLaboursForTable)
+      // Reset page if current page is out of range after filtering
+      useEffect(() => {
+        if (page * rowsPerPage >= filteredLaboursForTable.length) {
+          setPage(0);
+        }
+      }, [filteredLaboursForTable, page, rowsPerPage]);
+    
+      const paginatedLabours = filteredLaboursForTable.slice(
+        page * rowsPerPage,
+        rowsPerPage === -1
+          ? filteredLaboursForTable.length
+          : (page + 1) * rowsPerPage
+      );
+    //   console.log('Paginated Labours:', paginatedLabours);
+    
+      const displayedLabours = paginatedLabours.filter((labour) => {
+        return (
+          getProjectDescription(labour.ProjectID) !== 'Unknown' &&
+          getDepartmentDescription(labour.DepartmentID) !== 'Unknown'
+        );
+      });
+      // console.log('Displayed Labours:', displayedLabours);
+    
+      const isAllSelected =
+        paginatedLabours.length > 0 &&
+        paginatedLabours.every((labour) => selectedLabourIds.includes(labour.LabourID));
+    
+      // Handlers
+      const handleSelectRow = (event, labourId) => {
+        if (event.target.checked) {
+          setSelectedLabourIds((prev) => [...prev, labourId]);
+        } else {
+          setSelectedLabourIds((prev) => prev.filter((id) => id !== labourId));
+        }
+      };
+    
+      const handleSelectAllRows = (event) => {
+        if (event.target.checked) {
+          const newSelected = paginatedLabours.map((labour) => labour.LabourID);
+          setSelectedLabourIds((prev) => [
+            ...prev,
+            ...newSelected.filter((id) => !prev.includes(id)),
+          ]);
+        } else {
+          const newSelected = paginatedLabours.map((labour) => labour.LabourID);
+          setSelectedLabourIds((prev) =>
+            prev.filter((id) => !newSelected.includes(id))
+          );
+        }
+      };
+    
+      const handleViewHistory = (labourID) => {
+        const history = labours.filter((labour) => labour.LabourID === labourID);
+        setSelectedHistory(history);
+        setOpenModal(true);
+      };
+    
+      const handlePageChange = (event, newPage) => {
+        setPage(newPage);
+      };
+    
+      const handleRowsPerPageChange = (event) => {
+        const newRows = parseInt(event.target.value, 10);
+        setRowsPerPage(newRows);
+        setPage(0);
+      }; 
+
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
@@ -701,7 +777,8 @@ Edit ({selectedLabourIds.length})
                 <TablePagination
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                    count={labours.length}
+                    // count={labours.length}
+                    count={displayedLabours.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handlePageChange}
@@ -756,10 +833,10 @@ Edit ({selectedLabourIds.length})
                                 <TableCell>Name</TableCell>
                                 <TableCell>Project</TableCell>
                                 <TableCell>Department</TableCell>
-                                <TableCell>Select Variable</TableCell>
+                                {/* <TableCell>Select Variable</TableCell>
                                 <TableCell>Select Remark</TableCell>
                                 <TableCell>Add Amount</TableCell>
-                                <TableCell>Date</TableCell>
+                                <TableCell>Date</TableCell> */}
                                 <TableCell>History</TableCell>
                                 <TableCell>Action</TableCell>
                             </TableRow>
@@ -773,7 +850,8 @@ Edit ({selectedLabourIds.length})
                             }}
                         >
                             {/* {(rowsPerPage > 0 ? paginatedLabours : filteredLabours).map((labour, index) => ( */}
-                            {paginatedLabours.map((labour, index) => (
+                            {/* {paginatedLabours.map((labour, index) => ( */}
+                            {displayedLabours.map((labour, index) => (
                                 <TableRow key={labour.LabourID}>
                                      <TableCell padding="checkbox">
                     <Checkbox
@@ -787,9 +865,9 @@ Edit ({selectedLabourIds.length})
                                     <TableCell>{labour.name || '-'}</TableCell>
                                     <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell>
                                     <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
-                                    <TableCell>
+
+                                    {/* <TableCell>
                                         <FormControl variant="standard" fullWidth sx={{ mb: 2 }}>
-                                            {/* <InputLabel id="pay-structure-label">Select Variable Pay</InputLabel> */}
                                             <Select
                                                 labelId="pay-structure-label"
                                                 value={labour.payStructure || ''}
@@ -808,7 +886,6 @@ Edit ({selectedLabourIds.length})
 
                                     <TableCell>
                                         <FormControl variant="standard" fullWidth sx={{ mb: 2 }} disabled={!labour.payStructure}>
-                                            {/* <InputLabel id="remark-label">Select Remark</InputLabel> */}
                                             <Select
                                                 labelId="remark-label"
                                                 value={labour.variablePayRemark || ''}
@@ -837,7 +914,7 @@ Edit ({selectedLabourIds.length})
                                                 shrink: true,
                                             }}
                                             inputProps={{
-                                                maxLength: 5  // Restrict max length of input
+                                                maxLength: 5  
                                             }}
                                             error={labour.variablePay && labour.variablePay.length > 5}
                                             sx={{ mb: 2 }}
@@ -851,18 +928,19 @@ Edit ({selectedLabourIds.length})
                                             type="date"
                                             variant="standard"
                                             fullWidth
-                                            value={labour.effectiveDate || new Date().toISOString().split('T')[0]} // Default to today's date if no effective date set
+                                            value={labour.effectiveDate || new Date().toISOString().split('T')[0]} 
                                             onChange={(e) => handleEffectiveDateChange(e, labour.LabourID)}
                                             InputLabelProps={{
-                                                shrink: true, // Ensures the label doesn't overlap with the input value
+                                                shrink: true,
                                             }}
                                             inputProps={{
-                                                readOnly: true, // Makes the date picker read-only
+                                                readOnly: true, 
                                             }}
                                             sx={{ mb: 2 }}
                                             required
                                         />
-                                    </TableCell>
+                                    </TableCell> */}
+
 
 
                                     <TableCell>
@@ -879,17 +957,18 @@ Edit ({selectedLabourIds.length})
                                             sx={{
                                                 backgroundColor: 'rgb(229, 255, 225)',
                                                 color: 'rgb(43, 217, 144)',
-                                                width: '100px',
+                                                width: '60px',
                                                 marginRight: '10px',
                                                 marginBottom: '3px',
                                                 '&:hover': {
                                                     backgroundColor: 'rgb(229, 255, 225)',
                                                 },
                                             }}
+                                            // onClick={() => openVariablePayModal(labour)}
                                             onClick={() => handleApproved(labour)}
-                                            disabled={!labour.payStructure || !labour.variablePayRemark || !labour.variablePay} // Button is disabled if either payStructure or variablePayRemark is not selected
+                                            // disabled={!labour.payStructure || !labour.variablePayRemark || !labour.variablePay} 
                                         >
-                                            Approve
+                                            Add
                                         </Button>
                                         {/* <Button
                                             variant="contained"

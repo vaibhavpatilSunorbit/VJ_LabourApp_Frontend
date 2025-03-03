@@ -30,10 +30,10 @@ import CloseIcon from '@mui/icons-material/Close'
 import SyncIcon from '@mui/icons-material/Sync';
 import Tooltip from '@mui/material/Tooltip';
 
-const AttendanceReport = () => {
+const AttendanceReport = (departments, projectNames, labour, labourlist) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const [labours, setLabours] = useState([]);
+    const [labours, setLabours] = useState(labourlist || []);
     const [attendanceData, setAttendanceData] = useState([]);
     const [selectedLabour, setSelectedLabour] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -76,6 +76,63 @@ const AttendanceReport = () => {
     const [projectName, setProjectName] = useState('');
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     // const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+
+    const getDepartmentDescription = (departmentId) => {
+        if (!departments || departments.length === 0) {
+          return 'Unknown';
+        }
+        const department = departments.find(dept => dept.Id === Number(departmentId));
+        return department ? department.Description : 'Unknown';
+      };    
+
+      const getProjectDescription = (projectId) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) {
+          return 'Unknown';
+        }
+        if (projectId === undefined || projectId === null || projectId === '') {
+          return 'Unknown';
+        }
+      
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+      
+        // console.log('Project Names:', projectNames);
+        // console.log('Searching for Project ID:', projectId);
+        // console.log('Found Project:', project);
+      
+        return project ? project.Business_Unit : 'Unknown';
+      };
+    
+
+    const allowedProjectIds = user && user.projectIds ? JSON.parse(user.projectIds) : [];
+    const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+  
+    const laboursToDisplay = (
+      // If you have search or additional filters, you can integrate them here.
+      labours
+    )
+      .filter((labour) => {
+        // Filter based on tab status (Pending, Approved, etc.)
+        if (tabValue === 0) return labour.status === 'Pending';
+        if (tabValue === 1) return labour.status === 'Approved';
+        if (tabValue === 2)
+          return (
+            labour.status === 'Rejected' ||
+            labour.status === 'Resubmitted' ||
+            labour.status === 'Disable'
+          );
+        return true;
+      })
+      .filter((labour) => {
+        // Convert fields to numbers if they aren’t already.
+        // Assuming labour.projectName holds the project ID and labour.department holds the department ID.
+        const labourProjectId = Number(labour.projectName);
+        const labourDepartmentId = Number(labour.department);
+        return (
+          allowedProjectIds.includes(labourProjectId) &&
+          allowedDepartmentIds.includes(labourDepartmentId)
+        );
+      })
+      .sort((a, b) => b.labourID - a.labourID);
 
     function formatOvertime(Overtime) {
         let hours = Math.floor(Overtime);  // Changed from 'const' to 'let' to allow modification
@@ -495,6 +552,33 @@ console.log('AttendanceStatus', AttendanceStatus)
             fetchAttendanceForMonthAll();
         }
     }, [selectedMonth, selectedYear]);
+
+
+
+    const getFilteredLaboursForTable = () => {
+        // Choose base data from searchResults, filteredIconLabours, or labours
+        let baseLabours = rowsPerPage > 0
+          ? (searchResults.length > 0
+              ? searchResults
+              : (filteredIconLabours.length > 0
+                  ? filteredIconLabours
+                  : [...labours]))
+          : [];
+    
+        // First, filter by allowed project and department IDs.
+        baseLabours = baseLabours.filter((labour) => {
+          const labourProjectId = Number(labour.projectName);  // assuming labour.projectName holds the project id
+          const labourDepartmentId = Number(labour.department);  // assuming labour.department holds the department id
+          return (
+            allowedProjectIds.includes(labourProjectId) &&
+            allowedDepartmentIds.includes(labourDepartmentId)
+          );
+        });
+    
+        // Then filter by labour status. Here we show only Approved labours.
+        baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
+        return baseLabours;
+      };
 
 
     const renderAttendanceForMonth = () => {
@@ -1040,10 +1124,12 @@ console.log('AttendanceStatus', AttendanceStatus)
                         }}>
                             <ExportAttendance />
                             <ImportAttendance /></Box>
+                            
                         <TablePagination
                             className="custom-pagination"
                             rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                            count={attendanceData.length > 0 ? attendanceData.length : labours.length}
+                            // count={attendanceData.length > 0 ? attendanceData.length : labours.length}
+                            count={getFilteredLaboursForTable().length}
                             rowsPerPage={rowsPerPage}
                             page={page}
                             onPageChange={handleChangePage}
@@ -1167,7 +1253,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                         </TableHead>
 
                         <TableBody>
-                            {(
+                            {/* {(
                                 rowsPerPage > 0
                                     ? (searchResults.length > 0
                                         ? searchResults
@@ -1178,7 +1264,10 @@ console.log('AttendanceStatus', AttendanceStatus)
                             )
                                 .filter((labour) => labour.status === 'Approved')
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((labour, index) => {
+                                .map((labour, index) => { */}
+                                  {getFilteredLaboursForTable()
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((labour, index) => {
                                     const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
 
                                     return (

@@ -32,7 +32,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
 import './wagesReport.css'
 
-const AttendanceReport = ({ departments = [], projectNames = [] }) => {
+const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -49,7 +49,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const [payStructure, setPayStructure] = useState({});
     const [weakelyOff, setWeakelyOff] = useState({});
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(25);
+    const [rowsPerPage, setRowsPerPage] = useState(200);
     const [weeklyOff, setWeeklyOff] = useState('');
     const [fixedMonthlyWages, setFixedMonthlyWages] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
@@ -69,7 +69,9 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const [employeeToggle, setEmployeeToggle] = useState('all'); // 'all' or 'single'
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [selectedLabourIds, setSelectedLabourIds] = useState([]);
-
+    const [tabValue, setTabValue] = useState(0);
+    const [filteredIconLabours, setFilteredIconLabours] = useState([]);
+    const [modalOpens, setModalOpens] = useState(true);
 
     const convertToIndianTime = (isoString) => {
         const options = {
@@ -87,6 +89,16 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
         return formatter.format(new Date(isoString));
     };
 
+    const allowedProjectIds =
+    user && user.projectIds ? JSON.parse(user.projectIds) : [];
+  const allowedDepartmentIds =
+    user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+    console.log('allowedProjectIds:', allowedProjectIds);
+    console.log('allowedDepartmentIds:', allowedDepartmentIds);
+  // Use labourlist prop if available, otherwise use state labours
+  const laboursSource =
+    labourlist && labourlist.length > 0 ? labourlist : labours;
+
     // const getProjectDescription = (projectId) => {
     //     if (!Array.isArray(projectNames) || projectNames.length === 0) {
     //         console.error('Projects array is empty or invalid:', projectNames);
@@ -102,34 +114,32 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     //     return project ? project.Business_Unit : 'Unknown';
     // };
 
-    const getProjectDescription = (projectId) => {
-        if (!Array.isArray(projectNames) || projectNames.length === 0) {
-          return 'Unknown';
-        }
-      
-        if (projectId === undefined || projectId === null || projectId === '') {
-          return 'Unknown';
-        }
-      
-        const project = projectNames.find(proj => proj.Id === Number(projectId));
-      
-        // console.log('Project Names:', projectNames);
-        // console.log('Searching for Project ID:', projectId);
-        // console.log('Found Project:', project);
-      
-        return project ? project.projectName : 'Unknown';
-      };
+    // const getProjectDescription = (ProjectID) => {
+    //     if (!Array.isArray(projectNames) || projectNames.length === 0) {
+    //       console.log('projectNames empty');
+    //       return 'Unknown';
+    //     }
+    //     if (ProjectID === undefined || ProjectID === null || ProjectID === '') {
+    //       console.log('ProjectID invalid:', ProjectID);
+    //       return 'Unknown';
+    //     }
+    //     const project = projectNames.find(
+    //       (proj) => proj.Id === Number(ProjectID)
+    //     );
+    //     console.log(`For ProjectID ${ProjectID}, found project:`, project);
+    //     return project ? project.Business_Unit : 'Unknown';
+    //   };
 
-    // Helper function to get the Department description
-    const getDepartmentDescription = (departmentId) => {
-        if (!Array.isArray(departments) || departments.length === 0) {
-            return 'Unknown';
-        }
-        const department = departments.find(
-            (dept) => dept.Id === Number(departmentId)
-        );
-        return department ? department.Description : 'Unknown';
-    };
+    // // Helper function to get the Department description
+    // const getDepartmentDescription = (departmentId) => {
+    //     if (!Array.isArray(departments) || departments.length === 0) {
+    //         return 'Unknown';
+    //     }
+    //     const department = departments.find(
+    //         (dept) => dept.Id === Number(departmentId)
+    //     );
+    //     return department ? department.Description : 'Unknown';
+    // };
 
     // Function to fetch labours from API with optional filters
     const fetchLabours = async (filters = {}) => {
@@ -329,7 +339,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/exportWagesExcel`, {
+            const response = await axios.get(`${API_BASE_URL}/insentive/exportWagesExcel`, {
                 params: { startDate, endDate },
                 responseType: 'blob',
             });
@@ -557,6 +567,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const handleToast = (type, message) => {
         if (type === 'success') {
             toast.success(message);
+            setModalOpen(false);
         } else if (type === 'error') {
             toast.error(message);
         }
@@ -580,15 +591,15 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
         }
     };
 
-    const handlePageChange = (e, newPage) => {
-        setPage(newPage);
-    };
+    // const handlePageChange = (e, newPage) => {
+    //     setPage(newPage);
+    // };
 
-    const handleRowsPerPageChange = (e) => {
-        const newRowsPerPage = parseInt(e.target.value, 10);
-        setRowsPerPage(newRowsPerPage);
-        setPage(0); // Reset to the first page
-    };
+    // const handleRowsPerPageChange = (e) => {
+    //     const newRowsPerPage = parseInt(e.target.value, 10);
+    //     setRowsPerPage(newRowsPerPage);
+    //     setPage(0); // Reset to the first page
+    // };
     const handleSelectLabour = (selectedLabour) => {
         setSelectedLabour(selectedLabour);
     };
@@ -596,53 +607,162 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     // Data to display on the current page
     // const paginatedLabours = labours.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
-    const getLatestLabourData = (labours) => {
-        const latestEntries = {};
-        labours.forEach((labour) => {
-            if (
-                !latestEntries[labour.LabourID] ||
-                new Date(labour.CreatedAt) > new Date(latestEntries[labour.LabourID].CreatedAt)
-            ) {
-                latestEntries[labour.LabourID] = labour;
-            }
+    // const getLatestLabourData = (labours) => {
+    //     const latestEntries = {};
+    //     labours.forEach((labour) => {
+    //         if (
+    //             !latestEntries[labour.LabourID] ||
+    //             new Date(labour.CreatedAt) > new Date(latestEntries[labour.LabourID].CreatedAt)
+    //         ) {
+    //             latestEntries[labour.LabourID] = labour;
+    //         }
+    //     });
+    //     return Object.values(latestEntries);
+    // };
+
+    // // Checkbox handling: select/deselect individual row
+    // const handleSelectRow = (event, labourId) => {
+    //     if (event.target.checked) {
+    //         setSelectedLabourIds(prev => [...prev, labourId]);
+    //     } else {
+    //         setSelectedLabourIds(prev => prev.filter(id => id !== labourId));
+    //     }
+    // };
+    
+    // const handleSelectAllRows = (event) => {
+    //     if (event.target.checked) {
+    //         const newSelected = paginatedLabours.map(labour => labour.LabourID);
+    //         setSelectedLabourIds(prev => [...prev, ...newSelected.filter(id => !prev.includes(id))]);
+    //     } else {
+    //         const newSelected = paginatedLabours.map(labour => labour.LabourID);
+    //         setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+    //     }
+    // };
+    laboursSource.forEach((labour) => {
+        const labourProjectId = Number(labour.ProjectID);
+        const labourDepartmentId = Number(labour.DepartmentID);
+        const projectMatch =
+          allowedProjectIds.length > 0
+            ? allowedProjectIds.includes(labourProjectId)
+            : true;
+        const departmentMatch =
+          allowedDepartmentIds.length > 0
+            ? allowedDepartmentIds.includes(labourDepartmentId)
+            : true;
+        // For strict logging (both must match), you could use:
+        if (!projectMatch && !departmentMatch) {
+        //   console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
+        }
+      });
+    
+      // Strict filtering: record must match allowed project and department IDs, and status "Approved"
+      const getFilteredLaboursForTable = () => {
+        let baseLabours = [...laboursSource];
+        baseLabours = baseLabours.filter((labour) => {
+          const labourProjectId = Number(labour.ProjectID);
+          const labourDepartmentId = Number(labour.DepartmentID);
+          const projectMatch =
+            allowedProjectIds.length > 0
+              ? allowedProjectIds.includes(labourProjectId)
+              : true;
+          const departmentMatch =
+            allowedDepartmentIds.length > 0
+              ? allowedDepartmentIds.includes(labourDepartmentId)
+              : true;
+        //   console.log('projectMatch', projectMatch, 'departmentMatch', departmentMatch);
+          // Return true if either matches
+          return projectMatch || departmentMatch;
         });
-        return Object.values(latestEntries);
-    };
+        // Ensure that only records with status "Approved" are included.
+        // baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
+        // console.log('Filtered Labours For Table:', baseLabours);
+        return baseLabours;
+      };
+    
+      // Helper: Get project description
+      const getProjectDescription = (ProjectID) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
+        if (ProjectID === undefined || ProjectID === null || ProjectID === '') return 'Unknown';
+        const project = projectNames.find((proj) => proj.Id === Number(ProjectID));
+        return project ? project.Business_Unit : 'Unknown';
+      };
+    
+      // Helper: Get department description
+      const getDepartmentDescription = (departmentId) => {
+        if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
+        const department = departments.find((dept) => dept.Id === Number(departmentId));
+        return department ? department.Description : 'Unknown';
+      };
+    
+      const filteredLaboursForTable = getFilteredLaboursForTable();
 
-    // Checkbox handling: select/deselect individual row
-    const handleSelectRow = (event, labourId) => {
-        if (event.target.checked) {
-            setSelectedLabourIds(prev => [...prev, labourId]);
-        } else {
-            setSelectedLabourIds(prev => prev.filter(id => id !== labourId));
+      // Reset page if current page is out of range after filtering
+      useEffect(() => {
+        if (page * rowsPerPage >= filteredLaboursForTable.length) {
+          setPage(0);
         }
-    };
-
-    // Checkbox handling: select/deselect all rows on current page
-    const handleSelectAllRows = (event) => {
+      }, [filteredLaboursForTable, page, rowsPerPage]);
+    
+      const paginatedLabours = filteredLaboursForTable.slice(
+        page * rowsPerPage,
+        rowsPerPage === -1
+          ? filteredLaboursForTable.length
+          : (page + 1) * rowsPerPage
+      );
+    //   console.log('Paginated Labours:', paginatedLabours);
+    
+      const displayedLabours = paginatedLabours.filter((labour) => {
+        return (
+          getProjectDescription(labour.ProjectID) !== 'Unknown' &&
+          getDepartmentDescription(labour.DepartmentID) !== 'Unknown'
+        );
+      });
+    //   console.log('Displayed Labours:', displayedLabours);
+    
+      const isAllSelected =
+        paginatedLabours.length > 0 &&
+        paginatedLabours.every((labour) => selectedLabourIds.includes(labour.LabourID));
+    
+      // Handlers
+      const handleSelectRow = (event, labourId) => {
         if (event.target.checked) {
-            const newSelected = paginatedLabours.map(labour => labour.LabourID);
-            setSelectedLabourIds(prev => [...prev, ...newSelected.filter(id => !prev.includes(id))]);
+          setSelectedLabourIds((prev) => [...prev, labourId]);
         } else {
-            const newSelected = paginatedLabours.map(labour => labour.LabourID);
-            setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+          setSelectedLabourIds((prev) => prev.filter((id) => id !== labourId));
         }
-    };
-
-    const handleViewHistory = (labourID) => {
+      };
+    
+      const handleSelectAllRows = (event) => {
+        if (event.target.checked) {
+          const newSelected = paginatedLabours.map((labour) => labour.LabourID);
+          setSelectedLabourIds((prev) => [
+            ...prev,
+            ...newSelected.filter((id) => !prev.includes(id)),
+          ]);
+        } else {
+          const newSelected = paginatedLabours.map((labour) => labour.LabourID);
+          setSelectedLabourIds((prev) =>
+            prev.filter((id) => !newSelected.includes(id))
+          );
+        }
+      };
+    
+      const handleViewHistory = (labourID) => {
         const history = labours.filter((labour) => labour.LabourID === labourID);
         setSelectedHistory(history);
         setOpenModal(true);
-    };
-
-    const filteredLabours = getLatestLabourData(labours);
-    const paginatedLabours = filteredLabours.slice(
-        page * rowsPerPage,
-        rowsPerPage === -1 ? filteredLabours.length : (page + 1) * rowsPerPage
-    );
-    const isAllSelected =
-        paginatedLabours.length > 0 &&
-        paginatedLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
+      };
+    
+      const handlePageChange = (event, newPage) => {
+        setPage(newPage);
+      };
+    
+      const handleRowsPerPageChange = (event) => {
+        const newRows = parseInt(event.target.value, 10);
+        setRowsPerPage(newRows);
+        setPage(0);
+      };  
+        
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
@@ -679,8 +799,8 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                     flexWrap: "wrap",
                 }}
             >
-                <ExportWagesReport />
-                <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} />
+                <ExportWagesReport departments={departments} projectNames={projectNames}/>
+                <ImportWagesReport handleToast={handleToast} onboardName={user.name || null}  modalOpens={modalOpens} setModalOpens={setModalOpens}/>
 
                 {/* <Box display="flex" alignItems="flex-end" gap={2}>
                     <Select
@@ -766,8 +886,10 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
 
                 <TablePagination
                     className="custom-pagination"
-                    rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                    count={labours.length}
+                    // rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
+                    rowsPerPageOptions={[ 200, { label: 'All', value: -1 }]}
+                    // count={labours.length}
+                    count={displayedLabours.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handlePageChange}
@@ -838,7 +960,8 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {paginatedLabours.map((labour, index) => (
+                            {/* {paginatedLabours.map((labour, index) => ( */}
+                            {displayedLabours.map((labour, index) => (
                                 <TableRow key={labour.LabourID}>
                                     <TableCell padding="checkbox">
                                         <Checkbox

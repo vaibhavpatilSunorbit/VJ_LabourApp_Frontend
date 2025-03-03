@@ -112,6 +112,37 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  const allowedProjectIds = user && user.projectIds ? JSON.parse(user.projectIds) : [];
+  const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+  const laboursToDisplay = (
+    // If you have search or additional filters, you can integrate them here.
+    labours
+  )
+    .filter((labour) => {
+      // Filter based on tab status (Pending, Approved, etc.)
+      if (tabValue === 0) return labour.status === 'Pending';
+      if (tabValue === 1) return labour.status === 'Approved';
+      if (tabValue === 2)
+        return (
+          labour.status === 'Rejected' ||
+          labour.status === 'Resubmitted' ||
+          labour.status === 'Disable'
+        );
+      return true;
+    })
+    .filter((labour) => {
+      // Convert fields to numbers if they aren’t already.
+      // Assuming labour.projectName holds the project ID and labour.department holds the department ID.
+      const labourProjectId = Number(labour.projectName);
+      const labourDepartmentId = Number(labour.department);
+      return (
+        allowedProjectIds.includes(labourProjectId) &&
+        allowedDepartmentIds.includes(labourDepartmentId)
+      );
+    })
+    .sort((a, b) => b.labourID - a.labourID);
+
+
   const handleSearch = async (e) => {
     e.preventDefault();
     if (searchQuery.trim() === '') {
@@ -2117,11 +2148,12 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   };
 
 
+
+
   const getProjectDescription = (projectId) => {
     if (!Array.isArray(projectNames) || projectNames.length === 0) {
       return 'Unknown';
     }
-  
     if (projectId === undefined || projectId === null || projectId === '') {
       return 'Unknown';
     }
@@ -2132,8 +2164,10 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     // console.log('Searching for Project ID:', projectId);
     // console.log('Found Project:', project);
   
-    return project ? project.projectName : 'Unknown';
+    return project ? project.Business_Unit : 'Unknown';
   };
+
+
 
   const handleDownload = async () => {
     setLoadingExcel(true);
@@ -2253,31 +2287,63 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     setAnchorEl(null); // Close dropdown
   };
 
-  const getFilteredLaboursForTab = () => {
-    if (tabValue === 0) {
-      // Pending tab: Filter labours with "Pending" status
-      return filteredIconLabours.length > 0
-        ? filteredIconLabours.filter(labour => labour.status === 'Pending')
-        : labours.filter(labour => labour.status === 'Pending');
-    } else if (tabValue === 1) {
-      // Approved tab: Filter labours with "Approved" status
-      return filteredIconLabours.length > 0
-        ? filteredIconLabours.filter(labour => labour.status === 'Approved')
-        : labours.filter(labour => labour.status === 'Approved');
-    } else if (tabValue === 2) {
-      // Rejected tab: Filter labours with "Rejected" or "Resubmitted" status
-      return filteredIconLabours.length > 0
-        ? filteredIconLabours.filter(
-          labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
-        )
-        : labours.filter(
-          labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
-        );
-    }
-    // return filteredIconLabours.length > 0 ? filteredIconLabours : labours;
-    return filteredLabours.length > 0 ? filteredLabours : labours;
-  };
+  // const getFilteredLaboursForTab = () => {
+  //   if (tabValue === 0) {
+  //     // Pending tab: Filter labours with "Pending" status
+  //     return filteredIconLabours.length > 0
+  //       ? filteredIconLabours.filter(labour => labour.status === 'Pending')
+  //       : labours.filter(labour => labour.status === 'Pending');
+  //   } else if (tabValue === 1) {
+  //     // Approved tab: Filter labours with "Approved" status
+  //     return filteredIconLabours.length > 0
+  //       ? filteredIconLabours.filter(labour => labour.status === 'Approved')
+  //       : labours.filter(labour => labour.status === 'Approved');
+  //   } else if (tabValue === 2) {
+  //     // Rejected tab: Filter labours with "Rejected" or "Resubmitted" status
+  //     return filteredIconLabours.length > 0
+  //       ? filteredIconLabours.filter(
+  //         labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
+  //       )
+  //       : labours.filter(
+  //         labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
+  //       );
+  //   }
+  //   // return filteredIconLabours.length > 0 ? filteredIconLabours : labours;
+  //   return filteredLabours.length > 0 ? filteredLabours : labours;
+  // };
 
+  const getFilteredLaboursForTab = () => {
+    // Start with the base list (using filteredIconLabours if available)
+    let baseLabours = filteredIconLabours.length > 0 ? filteredIconLabours : labours;
+  
+    // Filter labours by allowed project IDs
+    baseLabours = baseLabours.filter((labour) => {
+      // Here, labour.projectName holds the project id. Convert it to Number.
+      return allowedProjectIds.includes(Number(labour.projectName));
+    });
+  
+    // Optionally, if you want to restrict by department as well, you can add:
+    // baseLabours = baseLabours.filter((labour) => allowedDepartmentIds.includes(Number(labour.department)));
+  
+    // Now apply the tab-specific filters
+    if (tabValue === 0) {
+      // Pending tab
+      baseLabours = baseLabours.filter((labour) => labour.status === 'Pending');
+    } else if (tabValue === 1) {
+      // Approved tab
+      baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
+    } else if (tabValue === 2) {
+      // Rejected tab
+      baseLabours = baseLabours.filter(
+        (labour) =>
+          labour.status === 'Rejected' ||
+          labour.status === 'Resubmitted' ||
+          labour.status === 'Disable'
+      );
+    }
+    // Return the filtered list
+    return baseLabours;
+  };
 
   //////////////////////////  Site Transfer Code for labour  ////////////////////////////////////////////
 
@@ -2684,7 +2750,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                 },
               }}
             >
-              {(rowsPerPage > 0
+              {/* {(rowsPerPage > 0
                 ? (searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours]))
                   .filter(labour => {
                     if (tabValue === 0) return labour.status === 'Pending';
@@ -2702,7 +2768,12 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                     return true; // fallback if no condition matches
                   })
                   .sort((a, b) => b.labourID - a.labourID)
-              ).map((labour, index) => (
+              ).map((labour, index) => ( */}
+
+{(rowsPerPage > 0
+              ? laboursToDisplay.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              : laboursToDisplay
+            ).map((labour, index) => (
                 <TableRow key={labour.id}>
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.LabourID}</TableCell>}

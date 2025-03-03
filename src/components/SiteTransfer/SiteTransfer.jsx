@@ -36,7 +36,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
 import { parse } from "fast-xml-parser";
 
-const SiteTransfer = ({ departments, projectNames, labour }) => {
+const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
@@ -80,34 +80,34 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [selectedLabourIds, setSelectedLabourIds] = useState([]);
 
-    const getProjectDescription = (projectId) => {
-        if (!Array.isArray(projectNames) || projectNames.length === 0) {
-          return 'Unknown';
-        }
+    // const getProjectDescription = (projectId) => {
+    //     if (!Array.isArray(projectNames) || projectNames.length === 0) {
+    //       return 'Unknown';
+    //     }
       
-        if (projectId === undefined || projectId === null || projectId === '') {
-          return 'Unknown';
-        }
+    //     if (projectId === undefined || projectId === null || projectId === '') {
+    //       return 'Unknown';
+    //     }
       
-        const project = projectNames.find(proj => proj.Id === Number(projectId));
+    //     const project = projectNames.find(proj => proj.Id === Number(projectId));
       
-        // console.log('Project Names:', projectNames);
-        // console.log('Searching for Project ID:', projectId);
-        // console.log('Found Project:', project);
+    //     // console.log('Project Names:', projectNames);
+    //     // console.log('Searching for Project ID:', projectId);
+    //     // console.log('Found Project:', project);
       
-        return project ? project.projectName : 'Unknown';
-      };
+    //     return project ? project.projectName : 'Unknown';
+    //   };
 
-    // Helper function to get the Department description
-    const getDepartmentDescription = (departmentId) => {
-        if (!Array.isArray(departments) || departments.length === 0) {
-            return 'Unknown';
-        }
-        const department = departments.find(
-            (dept) => dept.Id === Number(departmentId)
-        );
-        return department ? department.Description : 'Unknown';
-    };
+    // // Helper function to get the Department description
+    // const getDepartmentDescription = (departmentId) => {
+    //     if (!Array.isArray(departments) || departments.length === 0) {
+    //         return 'Unknown';
+    //     }
+    //     const department = departments.find(
+    //         (dept) => dept.Id === Number(departmentId)
+    //     );
+    //     return department ? department.Description : 'Unknown';
+    // };
 
 
     const fetchLabours = async (filters = {}) => {
@@ -118,6 +118,7 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
                     params: filters, // e.g., { ProjectID: selectedBusinessUnit, DepartmentID: selectedDepartment }
                 }
             );
+            // console.log('response.data siteTransfer',response.data)
             setLabours(response.data);
         } catch (error) {
             console.error('Error fetching labours:', error);
@@ -130,6 +131,17 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
     useEffect(() => {
         fetchLabours();
     }, []);
+
+
+    const allowedProjectIds =
+    user && user.projectIds ? JSON.parse(user.projectIds) : [];
+  const allowedDepartmentIds =
+    user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+    // console.log('allowedProjectIds: SiteTransfer', allowedProjectIds);
+    // console.log('allowedDepartmentIds:SiteTransfer', allowedDepartmentIds);
+  // Use labourlist prop if available, otherwise use state labours
+  const laboursSource =
+    labourlist && labourlist.length > 0 ? labourlist : labours;
 
     const handleApplyFilter = async () => {
         // Build filter query parameters (only add filters with values)
@@ -226,28 +238,28 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
         }
     };
 
-    // Checkbox handling: select/deselect individual row
-    const handleSelectRow = (event, labourID) => {
-        if (event.target.checked) {
-          setSelectedLabourIds((prev) => [...prev, labourID]);
-        } else {
-          setSelectedLabourIds((prev) => prev.filter((id) => id !== labourID));
-        }
-      };
+    // // Checkbox handling: select/deselect individual row
+    // const handleSelectRow = (event, labourID) => {
+    //     if (event.target.checked) {
+    //       setSelectedLabourIds((prev) => [...prev, labourID]);
+    //     } else {
+    //       setSelectedLabourIds((prev) => prev.filter((id) => id !== labourID));
+    //     }
+    //   };
     
-      const handleSelectAllRows = (event) => {
-        if (event.target.checked) {
-          // Select all on current paginated page
-          const allPageIds = paginatedLabours.map((labour) => labour.LabourID);
-          // Merge them without duplication
-          setSelectedLabourIds((prev) => Array.from(new Set([...prev, ...allPageIds])));
-        } else {
-          // Unselect all on current paginated page
-          setSelectedLabourIds((prev) =>
-            prev.filter((id) => !paginatedLabours.some((labour) => labour.LabourID === id))
-          );
-        }
-      };
+    //   const handleSelectAllRows = (event) => {
+    //     if (event.target.checked) {
+    //       // Select all on current paginated page
+    //       const allPageIds = paginatedLabours.map((labour) => labour.LabourID);
+    //       // Merge them without duplication
+    //       setSelectedLabourIds((prev) => Array.from(new Set([...prev, ...allPageIds])));
+    //     } else {
+    //       // Unselect all on current paginated page
+    //       setSelectedLabourIds((prev) =>
+    //         prev.filter((id) => !paginatedLabours.some((labour) => labour.LabourID === id))
+    //       );
+    //     }
+    //   };
 
     // Handle modal edit
     const handleEdit = (labour) => {
@@ -287,15 +299,15 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
         }
     };
 
-    const handlePageChange = (e, newPage) => {
-        setPage(newPage);
-    };
+    // const handlePageChange = (e, newPage) => {
+    //     setPage(newPage);
+    // };
 
-    const handleRowsPerPageChange = (e) => {
-        const newRowsPerPage = parseInt(e.target.value, 10);
-        setRowsPerPage(newRowsPerPage);
-        setPage(0); // Reset to the first page
-    };
+    // const handleRowsPerPageChange = (e) => {
+    //     const newRowsPerPage = parseInt(e.target.value, 10);
+    //     setRowsPerPage(newRowsPerPage);
+    //     setPage(0); // Reset to the first page
+    // };
     const handleSelectLabour = (selectedLabour) => {
         setSelectedLabour(selectedLabour);
     };
@@ -317,24 +329,24 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
         return Object.values(latestEntries);
     };
 
-    const handleViewHistory = (labourID) => {
-        const history = labours.filter((labour) => labour.LabourID === labourID);
-        setSelectedHistory(history);
-        setOpenModal(true);
-    };
+    // const handleViewHistory = (labourID) => {
+    //     const history = labours.filter((labour) => labour.LabourID === labourID);
+    //     setSelectedHistory(history);
+    //     setOpenModal(true);
+    // };
 
     const filteredLabours = getLatestLabourData(labours).filter(
         (labour) => labour.status === 'Approved'
     );
-    const paginatedLabours = filteredLabours.slice(
-        page * rowsPerPage,
-        (page + 1) * rowsPerPage
-    );
-    console.log("Filtered Labours _+_+_+:", filteredLabours);
-    console.log("Paginated Labours:{{{{{", paginatedLabours);
-    const isAllSelected =
-    paginatedLabours.length > 0 &&
-    paginatedLabours.every((labour) => selectedLabourIds.includes(labour.LabourID));
+    // const paginatedLabours = filteredLabours.slice(
+    //     page * rowsPerPage,
+    //     (page + 1) * rowsPerPage
+    // );
+    // console.log("Filtered Labours _+_+_+:", filteredLabours);
+    // console.log("Paginated Labours:{{{{{", paginatedLabours);
+    // const isAllSelected =
+    // paginatedLabours.length > 0 &&
+    // paginatedLabours.every((labour) => selectedLabourIds.includes(labour.LabourID));
 
     const handleSiteChange = (labour, siteId) => {
         setSelectedLabour(labour);
@@ -501,7 +513,7 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
     const fetchTransferSiteNames = async (labourIds) => {
         try {
             const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
-            console.log('API Response:', response.data); // Debug response
+            // console.log('API Response:', response.data); // Debug response
             return response.data.map((item) => ({
                 LabourID: item.LabourID,
                 transferSiteName: item.transferSiteName,
@@ -532,7 +544,7 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
                     return acc;
                 }, {});
                 setStatusesSite(mappedStatuses);
-                console.log('Mapped Statuses with Dates:', mappedStatuses); // Debug statuses
+                // console.log('Mapped Statuses with Dates:', mappedStatuses); // Debug statuses
             }
 
             setLoading(false);
@@ -542,6 +554,133 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
     }, [labours]);
 
     const today = new Date().toISOString().split('T')[0];
+
+    
+    laboursSource.forEach((labour) => {
+      const labourProjectId = Number(labour.projectName);
+      const labourDepartmentId = Number(labour.departmentId);
+      const projectMatch =
+        allowedProjectIds.length > 0
+          ? allowedProjectIds.includes(labourProjectId)
+          : true;
+      const departmentMatch =
+        allowedDepartmentIds.length > 0
+          ? allowedDepartmentIds.includes(labourDepartmentId)
+          : true;
+      // For strict logging (both must match), you could use:
+      if (!projectMatch && !departmentMatch) {
+        // console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
+      }
+    });
+  
+    // Strict filtering: record must match allowed project and department IDs, and status "Approved"
+    const getFilteredLaboursForTable = () => {
+      let baseLabours = [...laboursSource];
+      baseLabours = baseLabours.filter((labour) => {
+        const labourProjectId = Number(labour.projectName);
+        const labourDepartmentId = Number(labour.departmentId);
+        const projectMatch =
+          allowedProjectIds.length > 0
+            ? allowedProjectIds.includes(labourProjectId)
+            : true;
+        const departmentMatch =
+          allowedDepartmentIds.length > 0
+            ? allowedDepartmentIds.includes(labourDepartmentId)
+            : true;
+      //   console.log('projectMatch', projectMatch, 'departmentMatch', departmentMatch);
+        // Return true if either matches
+        return projectMatch || departmentMatch;
+      });
+      // Ensure that only records with status "Approved" are included.
+      // baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
+      // console.log('Filtered Labours For Table:', baseLabours);
+      return baseLabours;
+    };
+  
+    // Helper: Get project description
+    const getProjectDescription = (projectName) => {
+      if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
+      if (projectName === undefined || projectName === null || projectName === '') return 'Unknown';
+      const project = projectNames.find((proj) => proj.Id === Number(projectName));
+      return project ? project.Business_Unit : 'Unknown';
+    };
+  
+    // Helper: Get department description
+    const getDepartmentDescription = (departmentId) => {
+      if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
+      const department = departments.find((dept) => dept.Id === Number(departmentId));
+      return department ? department.Description : 'Unknown';
+    };
+  
+    const filteredLaboursForTable = getFilteredLaboursForTable();
+// console.log('filteredLaboursForTable}}SiteTransfer',filteredLaboursForTable)
+    // Reset page if current page is out of range after filtering
+    useEffect(() => {
+      if (page * rowsPerPage >= filteredLaboursForTable.length) {
+        setPage(0);
+      }
+    }, [filteredLaboursForTable, page, rowsPerPage]);
+  
+    const paginatedLabours = filteredLaboursForTable.slice(
+      page * rowsPerPage,
+      rowsPerPage === -1
+        ? filteredLaboursForTable.length
+        : (page + 1) * rowsPerPage
+    );
+  //   console.log('Paginated Labours:', paginatedLabours);
+  
+    const displayedLabours = paginatedLabours.filter((labour) => {
+      return (
+        getProjectDescription(labour.projectName) !== 'Unknown' &&
+        getDepartmentDescription(labour.departmentId) !== 'Unknown'
+      );
+    });
+    // console.log('Displayed Labours:SiteTransfer', displayedLabours);
+  
+    const isAllSelected =
+      paginatedLabours.length > 0 &&
+      paginatedLabours.every((labour) => selectedLabourIds.includes(labour.LabourID));
+  
+    // Handlers
+    const handleSelectRow = (event, labourID) => {
+      if (event.target.checked) {
+        setSelectedLabourIds((prev) => [...prev, labourID]);
+      } else {
+        setSelectedLabourIds((prev) => prev.filter((id) => id !== labourID));
+      }
+    };
+  
+    const handleSelectAllRows = (event) => {
+      if (event.target.checked) {
+        const newSelected = paginatedLabours.map((labour) => labour.LabourID);
+        setSelectedLabourIds((prev) => [
+          ...prev,
+          ...newSelected.filter((id) => !prev.includes(id)),
+        ]);
+      } else {
+        const newSelected = paginatedLabours.map((labour) => labour.LabourID);
+        setSelectedLabourIds((prev) =>
+          prev.filter((id) => !newSelected.includes(id))
+        );
+      }
+    };
+  
+    const handleViewHistory = (labourID) => {
+      const history = labours.filter((labour) => labour.LabourID === labourID);
+      setSelectedHistory(history);
+      setOpenModal(true);
+    };
+  
+    const handlePageChange = (event, newPage) => {
+      setPage(newPage);
+    };
+  
+    const handleRowsPerPageChange = (event) => {
+      const newRows = parseInt(event.target.value, 10);
+      setRowsPerPage(newRows);
+      setPage(0);
+    }; 
+
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
@@ -669,10 +808,11 @@ const SiteTransfer = ({ departments, projectNames, labour }) => {
                                 },
                             }}
                         >
-                            {(rowsPerPage > 0
+                            {/* {(rowsPerPage > 0
                                 ? paginatedLabours // Use the paginatedLabours directly for pagination
                                 : filteredLabours // Fallback to filteredLabours if no pagination is applied
-                            ).map((labour, index) => (
+                            ).map((labour, index) => ( */}
+                            {displayedLabours.map((labour, index) => (
                                 <TableRow key={labour.LabourID}>
                                     <TableCell padding="checkbox">
                                         <Checkbox

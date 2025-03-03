@@ -1467,7 +1467,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       const selectedProject = projectNames.find(project => project.Id === projectId);
 
       if (selectedProject) {
-        const companyName = selectedProject.Description; // Get the corresponding company name
+        const companyName = selectedProject.Business_Unit; // Get the corresponding company name
 
         setFormData((prevFormData) => ({
           ...prevFormData,
@@ -1538,7 +1538,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
     const processedData = {
       ...formData,
-      projectName: project ? project.Description : formData.projectName,
+      projectName: project ? project.Business_Unit : formData.projectName,
       department: department ? department.Description : formData.department
     };
 
@@ -2479,7 +2479,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 <option value="" >Select a project</option>
                                 {projectNames.map(project => (
                                   // <option key={project.id} value={project.Business_Unit}>{project.Business_Unit}</option>
-                                  <option key={project.Id} value={project.Id}>{project.Description}</option>
+                                  <option key={project.Id} value={project.Id}>{project.Business_Unit}</option>
                                 ))}
                               </select>
                             </div>

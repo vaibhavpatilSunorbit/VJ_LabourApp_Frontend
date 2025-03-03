@@ -51,7 +51,7 @@ function App() {
       try {
         const departmentsRes = await axios.get(API_BASE_URL + "/api/departments");
         const projectsRes = await axios.get(API_BASE_URL + "/api/project-names");
-
+console.log('projectsRes',projectsRes.data)
         setDepartments(departmentsRes.data);
         setProjectNames(projectsRes.data);
 
@@ -70,7 +70,7 @@ function App() {
           );
 
           const filteredProjects = projectsRes.data.filter((proj) =>
-            projectIdsArray.includes(proj.id)
+            projectIdsArray.includes(proj.Id)
           );
 
           console.log("Filtered Departments:", filteredDepartments);
