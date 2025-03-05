@@ -292,23 +292,23 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
       toast.error('No labours selected!');
       return;
     }
-  
+    console.log('selectedLabourIds atendance',selectedLabourIds)
     try {
       // For each selected "labourID", find the labour object in state
       for (const labourID of selectedLabourIds) {
-        const labourObj = labours.find((labour) => labour.labourID === labourID);
+        console.log('labourID atendance',labourID)
+        const labourObj = labours.find((labour) => labour.AttendanceId === labourID);
         if (!labourObj) {
           console.warn(`No labour found with labourID=${labourID}`);
           continue;
         }
-        if (!labourObj.id) {
+        if (!labourObj.AttendanceId) {
           console.warn(`No id found for labourID=${labourID}`);
           continue;
         }
-  
         // Call your existing endpoint with the labour's id
         const response = await axios.put(`${API_BASE_URL}/labours/attendance/approve`, null, {
-          params: { id: labourObj.id },
+          params: { id: labourObj.AttendanceId },
         });
   
         if (!response.data.success) {
@@ -478,7 +478,7 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
       setPendingCount(pendingAttendance);
       setApprovedCount(approvedAttendance);
       setRejectedCount(rejectedAttendance);
-      console.log('Counts before navigating:', { pendingAttendance, approvedAttendance, rejectedAttendance });
+      // console.log('Counts before navigating:', { pendingAttendance, approvedAttendance, rejectedAttendance });
       localStorage.setItem('pendingAttendance', pendingAttendance);
       localStorage.setItem('approvedAttendance', approvedAttendance);
       localStorage.setItem('rejectedAttendance', rejectedAttendance);
@@ -903,7 +903,7 @@ Approve/Reject ({selectedLabourIds.length})
                 <TableCell>Attendance Edit By</TableCell>
                 <TableCell>Status</TableCell>
                 {tabValue !== 2 && <TableCell>Send Approval Date</TableCell>}
-                {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>}
+                {/* {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>} */}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
                 {tabValue === 1 && <TableCell>Approve Date</TableCell>}
                 {tabValue !== 0 && tabValue !== 1 && <TableCell>Rejected Date</TableCell>}
@@ -945,9 +945,9 @@ Approve/Reject ({selectedLabourIds.length})
                    {tabValue === 0 && (
                     <><TableCell padding="checkbox">
                     <Checkbox
-                      checked={selectedLabourIds.includes(labour.LabourId)}
-                      onChange={(e) => handleSelectRow(e, labour.LabourId)}
-                      inputProps={{ 'aria-label': `select labour ${labour.LabourId}` }}
+                      checked={selectedLabourIds.includes(labour.AttendanceId)}
+                      onChange={(e) => handleSelectRow(e, labour.AttendanceId)}
+                      inputProps={{ 'aria-label': `select labour ${labour.AttendanceId}` }}
                     />
                   </TableCell> </>
                   )}
@@ -1015,7 +1015,7 @@ Approve/Reject ({selectedLabourIds.length})
                     </TableCell>
                   )}
 
-                  {tabValue === 0 && (
+                  {/* {tabValue === 0 && (
                     <TableCell>
                       {(user.userType === 'user' && labour.ApprovalStatus === 'Pending') && (
                         <IconButton
@@ -1032,7 +1032,7 @@ Approve/Reject ({selectedLabourIds.length})
                         </IconButton>
                       )}
                     </TableCell>
-                  )}
+                  )} */}
                   {/* {user.userType === 'user' && (
                     <TableCell>
                      

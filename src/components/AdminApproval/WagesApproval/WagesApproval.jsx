@@ -232,7 +232,7 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
     try {
       // For each selected "LabourID", find the labour object in state
       for (const labourID of selectedLabourIds) {
-        const labourObj = labours.find((labour) => labour.LabourID === labourID);
+        const labourObj = labours.find((labour) => labour.ApprovalID === labourID);
         if (!labourObj) {
           console.warn(`No labour found with LabourID=${labourID}`);
           continue;
@@ -846,9 +846,9 @@ Approve/Reject ({selectedLabourIds.length})
                     {tabValue === 0 && (
                     <><TableCell padding="checkbox">
                     <Checkbox
-                      checked={selectedLabourIds.includes(labour.LabourID)}
-                      onChange={(e) => handleSelectRow(e, labour.LabourID)}
-                      inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
+                      checked={selectedLabourIds.includes(labour.ApprovalID)}
+                      onChange={(e) => handleSelectRow(e, labour.ApprovalID)}
+                      inputProps={{ 'aria-label': `select labour ${labour.ApprovalID}` }}
                     />
                   </TableCell> </>
                   )}

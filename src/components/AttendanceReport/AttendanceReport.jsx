@@ -134,6 +134,30 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
       })
       .sort((a, b) => b.labourID - a.labourID);
 
+    //   function formatOvertime(Overtime) {
+    //     // console.log("inside Function: Overtime", Overtime);
+    //     if (isNaN(Overtime) || Overtime === null || Overtime === undefined) {
+    //         console.error("Invalid input detected: Overtime", Overtime);
+    //         return 0;
+    //     }
+    //     Overtime = Math.min(Overtime, 4);
+    
+    //     let hours = Math.floor(Overtime);
+    //     let minutes = Math.floor((Overtime - hours) * 60);
+    // console.log('hours',hours, 'minutes',minutes)
+    //     if (minutes < 15) {
+    //         minutes = 0;
+    //     } else if (minutes < 45) {
+    //         minutes = 30;  // 15 to 44 minutes, considered as 30 minutes
+    //     } else {
+    //         minutes = 0;  // More than 45 minutes, round to the next hour
+    //         hours += 1;  // Increase hour by one
+    //     }
+    
+    //     // console.log('hours + (minutes / 60)h',hours + (minutes / 60));
+    //     return hours + (minutes / 60);
+    // }
+
     function formatOvertime(Overtime) {
         let hours = Math.floor(Overtime);  // Changed from 'const' to 'let' to allow modification
         let minutes = Math.floor((Overtime - hours) * 60);
@@ -166,6 +190,29 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
         return { hours, minutes };
     }
 
+    // function formatTotalHours(TotalHours) {
+    //     // console.log("inside Function: TotalHours", TotalHours);
+    //     if (isNaN(TotalHours) || TotalHours === null || TotalHours === undefined) {
+    //         console.error("Invalid input detected: Overtime", TotalHours);
+    //         return 0;
+    //     }
+    //     TotalHours = Math.min(TotalHours, 4);
+    
+    //     let hours = Math.floor(TotalHours);
+    //     let minutes = Math.floor((TotalHours - hours) * 60);
+    
+    //     if (minutes < 15) {
+    //         minutes = 0;
+    //     } else if (minutes < 45) {
+    //         minutes = 30;  // 15 to 44 minutes, considered as 30 minutes
+    //     } else {
+    //         minutes = 0;  // More than 45 minutes, round to the next hour
+    //         hours += 1;  // Increase hour by one
+    //     }
+    
+    //     return hours + (minutes / 60);
+    // }
+
     function formatTotalOvertime(TotalOvertimeHours) {
         let hours = Math.floor(TotalOvertimeHours);
         let minutes = Math.floor((TotalOvertimeHours - hours) * 60);
@@ -183,6 +230,35 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
     };
 
 
+    // function formatTotalOvertime(TotalOvertimeHours) {
+    //     console.log("inside Function:", TotalOvertimeHours);
+    
+    //     // Ensure the input is a valid number, default to 0 if undefined or null
+    //     if (isNaN(TotalOvertimeHours) || TotalOvertimeHours === null || TotalOvertimeHours === undefined) {
+    //         console.error("Invalid input detected:", TotalOvertimeHours);
+    //         return 0;
+    //     }
+    
+    //     // Cap TotalOvertimeHours at 4 hours maximum
+    //     TotalOvertimeHours = Math.min(TotalOvertimeHours, 120);
+    
+    //     let hours = Math.floor(TotalOvertimeHours);
+    //     let minutes = Math.round((TotalOvertimeHours - hours) * 60); // Convert decimal to minutes
+    
+    //     if (minutes < 15) {
+    //         minutes = 0;
+    //     } else if (minutes < 45) {
+    //         minutes = 30; // 15 to 44 minutes → round to 30 minutes
+    //     } else {
+    //         minutes = 0; // More than 45 minutes → round up to next hour
+    //         hours += 1; // Increase hour by one
+    //     }
+    
+    //     // Convert final hours and minutes into decimal format
+    //     return hours + (minutes / 60);
+    // }
+    
+
     function formatovertimemanually(overtimemanually) {
         let hours = Math.floor(overtimemanually);
         let minutes = Math.floor((overtimemanually - hours) * 60);
@@ -196,7 +272,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
             hours += 1; // Increase hour by one
         }
     
-        return { hours, minutes };
+        return hours + (minutes / 60);
     };
     
     
@@ -397,10 +473,10 @@ console.log('AttendanceStatus', AttendanceStatus)
                     status: attendanceRecord ? attendanceRecord.Status : 'NA',
                     firstPunch: attendanceRecord?.FirstPunch || '-',
                     lastPunch: attendanceRecord?.LastPunch || '-',
-                    // totalHours: attendanceRecord?.TotalHours || '0.00',
+                    totalHours: attendanceRecord?.TotalHours || '0.00',
                     // overtime: attendanceRecord?.Overtime || '0.0',
-                    totalHours: formatTotalHours(attendanceRecord?.TotalHours || 0),
-                    overtime: formatOvertime(attendanceRecord?.Overtime || 0),
+                    // totalHours: formatTotalHours(attendanceRecord?.TotalHours),
+                    overtime: formatOvertime(attendanceRecord?.Overtime),
                     isHoliday: attendanceRecord?.Status === 'H',
                     labourId: attendanceRecord?.LabourId || 'NA',
                     // overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
@@ -1224,7 +1300,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                                         '@media (max-width: 600px)': {
                                             padding: '10px',
                                         },
-                                        backgroundColor: 'white', // Ensure the background color is set
+                                        backgroundColor: 'white', 
                                         position: 'sticky',
                                         top: 0,
                                         zIndex: 1,
@@ -1478,15 +1554,15 @@ console.log('AttendanceStatus', AttendanceStatus)
                                                 </TableCell>
                                                 <TableCell>{day.firstPunch || "-"}</TableCell>
                                                 <TableCell>{day.lastPunch || "-"}</TableCell>
-                                                {/* <TableCell>{day.totalHours || "0.00"}</TableCell> */}
-                                                <TableCell>
+                                                <TableCell>{day.totalHours || "0.00"}</TableCell>
+                                                {/* <TableCell>
     {day.totalHours && (day.totalHours.hours > 0 || day.totalHours.minutes > 0) ? (
         <Tooltip title={`${day.totalHours.hours} hours ${day.totalHours.minutes} minutes`}>
             <span>{`${day.totalHours.hours}h ${day.totalHours.minutes}m`}</span>
         </Tooltip>
     ) : "0h"}
-</TableCell>
-                                                {/* <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell> */}
+</TableCell> */}
+                                                 {/* <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell> */}
                                                 <TableCell>
     {day.overtime && (day.overtime.hours > 0 || day.overtime.minutes > 0) ? (
         <Tooltip title={`${day.overtime.hours} hours ${day.overtime.minutes} minutes`}>

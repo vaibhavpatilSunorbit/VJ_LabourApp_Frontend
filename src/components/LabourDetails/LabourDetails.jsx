@@ -147,11 +147,11 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     e.preventDefault();
     if (searchQuery.trim() === '') {
       setSearchResults([]);
-      return;
+     await fetchLabours();
     }
     try {
       const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
-      setSearchResults(response.data);
+      setLabours(response.data);
     } catch (error) {
       setError('Error searching. Please try again.');
     }
@@ -2475,8 +2475,8 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
           // handleSearch={() => {}}
+            setSearchResults={setSearchResults} 
           searchResults={searchResults}
-          setSearchResults={setSearchResults}
           handleSelectLabour={handleSelectLabour}
           showResults={false}
           className="search-bar"

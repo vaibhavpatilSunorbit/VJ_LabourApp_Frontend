@@ -49,7 +49,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const [payStructure, setPayStructure] = useState({});
     const [weakelyOff, setWeakelyOff] = useState({});
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(200);
+    const [rowsPerPage, setRowsPerPage] = useState(900);
     const [weeklyOff, setWeeklyOff] = useState('');
     const [fixedMonthlyWages, setFixedMonthlyWages] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
@@ -152,6 +152,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 }
             );
             setLabours(response.data);
+            console.log('response.data wages r',response.data)
+
         } catch (error) {
             console.error('Error fetching labours:', error);
             toast.error('Failed to fetch data');
@@ -439,13 +441,13 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     labourId,
                     payStructure,
                     effectiveDate,
-                    dailyWages: payStructure === 'Daily Wages' ? dailyWages || null : null,
-                    monthlyWages: payStructure === 'Daily Wages' ? monthlyWages || null : null,
-                    yearlyWages: payStructure === 'Daily Wages' ? yearlyWages || null : null,
-                    overtime: payStructure === 'Daily Wages' ? overtime || null : null,
-                    totalOvertimeWages: payStructure === 'Daily Wages' ? totalOvertimeWages || null : null,
-                    fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages || null : null,
-                    weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff || null : null,
+                    dailyWages: payStructure === 'DAILY WAGES' ? dailyWages || null : null,
+                    monthlyWages: payStructure === 'DAILY WAGES' ? monthlyWages || null : null,
+                    yearlyWages: payStructure === 'DAILY WAGES' ? yearlyWages || null : null,
+                    overtime: payStructure === 'DAILY WAGES' ? overtime || null : null,
+                    totalOvertimeWages: payStructure === 'DAILY WAGES' ? totalOvertimeWages || null : null,
+                    fixedMonthlyWages: payStructure === 'FIXED MONTHLY WAGES' ? fixedMonthlyWages || null : null,
+                    weeklyOff: payStructure === 'FIXED MONTHLY WAGES' ? weeklyOff || null : null,
                     wagesEditedBy: onboardName,
                 };
     
@@ -576,13 +578,13 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
-            fetchLabours();
+            setSearchResults([]);
             return;
         }
         setLoading(true);
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromWages?q=${searchQuery}`);
-            setLabours(response.data);
+            setSearchResults(response.data);
         } catch (error) {
             console.error('Error searching:', error);
             toast.error('Search failed');
@@ -658,6 +660,14 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
       // Strict filtering: record must match allowed project and department IDs, and status "Approved"
       const getFilteredLaboursForTable = () => {
         let baseLabours = [...laboursSource];
+        // let baseLabours = rowsPerPage > 0
+        //   ? (searchResults.length > 0
+        //       ? searchResults
+        //       : (filteredIconLabours.length > 0
+        //           ? filteredIconLabours
+        //           : [...labours]))
+        //   : [];
+       
         baseLabours = baseLabours.filter((labour) => {
           const labourProjectId = Number(labour.ProjectID);
           const labourDepartmentId = Number(labour.DepartmentID);
@@ -749,6 +759,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     
       const handleViewHistory = (labourID) => {
         const history = labours.filter((labour) => labour.LabourID === labourID);
+        console.log('history',history)
         setSelectedHistory(history);
         setOpenModal(true);
       };
@@ -769,11 +780,10 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
             <ToastContainer />
             <Box ml={-1.5}>
                 <SearchBar
-                    handleSubmit={handleSubmit}
+                    // handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
                     handleSearch={handleSearch}
-                    // handleSearch={() => {}}
                     searchResults={searchResults}
                     setSearchResults={setSearchResults}
                     handleSelectLabour={handleSelectLabour}
@@ -887,7 +897,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 <TablePagination
                     className="custom-pagination"
                     // rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                    rowsPerPageOptions={[ 200, { label: 'All', value: -1 }]}
+                    rowsPerPageOptions={[ 900, { label: 'All', value: -1 }]}
                     // count={labours.length}
                     count={displayedLabours.length}
                     rowsPerPage={rowsPerPage}
@@ -1115,8 +1125,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                             <MenuItem value="">
                                 <em>All</em>
                             </MenuItem>
-                            <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
-                            <MenuItem value="Daily Wages">Daily Wages</MenuItem>
+                            <MenuItem value="FIXED MONTHLY WAGES">Fixed Monthly Wages</MenuItem>
+                            <MenuItem value="DAILY WAGES">Daily Wages</MenuItem>
                         </Select>
                     </Box>
 
@@ -1367,8 +1377,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                         <MenuItem value="" disabled>
                             Select Pay Structure
                         </MenuItem>
-                        <MenuItem value="Daily Wages">Daily Wages</MenuItem>
-                        <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
+                        <MenuItem value="DAILY WAGES">Daily Wages</MenuItem>
+                        <MenuItem value="FIXED MONTHLY WAGES">Fixed Monthly Wages</MenuItem>
                     </Select>
 
                     {/* Effective Date Picker */}
@@ -1384,10 +1394,10 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     />
 
                     {/* Dynamic Fields based on Pay Structure */}
-                    {payStructure === 'Daily Wages' && (
+                    {payStructure === 'DAILY WAGES' && (
                         <>
                             <TextField
-                                label="Daily Wages"
+                                label="DAILY WAGES"
                                 type="number"
                                 fullWidth
                                 value={dailyWages || ""}
@@ -1431,7 +1441,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                         </>
                     )}
 
-                    {payStructure === 'Fixed Monthly Wages' && (
+                    {payStructure === 'FIXED MONTHLY WAGES' && (
                         <>
                             <Select
                                 label="Weekly Off"
@@ -1459,7 +1469,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                 <MenuItem value="4">4</MenuItem>
                             </Select>
                             <TextField
-                                label="Fixed Monthly Wages"
+                                label="FIXED MONTHLY WAGES"
                                 type="number"
                                 fullWidth
                                 value={fixedMonthlyWages || ""}
