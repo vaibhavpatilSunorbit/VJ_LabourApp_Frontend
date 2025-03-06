@@ -89,7 +89,7 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
   const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
   // const { labourId } = location.state || {};
   const { hideResubmit, labourId } = location.state || {};
-
+  const [isAllSelected, setIsAllSelected] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null); // For the dropdown menu
   const [filter, setFilter] = useState(""); // To store selected filter
   const [filteredIconLabours, setFilteredIconLabours] = useState([]);
@@ -213,21 +213,21 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
   //     }
   // };
 
-  const handleReject = async (id) => {
-    if (!id) {
+  const handleReject = async (AttendanceId) => {
+    if (!AttendanceId) {
       toast.error('Attendance ID is missing.');
       return;
     }
 
     try {
       const response = await axios.put(`${API_BASE_URL}/labours/attendance/reject`, null, {
-        params: { id, rejectReason },
+        params: { AttendanceId, rejectReason },
       });
 
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
-            labour.id === id ? { ...labour, ApprovalStatus: 'Rejected', rejectReason } : labour
+            labour.AttendanceId === AttendanceId ? { ...labour, ApprovalStatus: 'Rejected', rejectReason } : labour
           )
         );
         toast.success('Attendance Rejected successfully.');
@@ -244,21 +244,21 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
 
 
 
-  const approveLabour = async (id) => {
-    if (!id) {
+  const approveLabour = async (AttendanceId) => {
+    if (!AttendanceId) {
       toast.error('Attendance ID is missing.');
       return;
     }
 
     try {
       const response = await axios.put(`${API_BASE_URL}/labours/attendance/approve`, null, {
-        params: { id },
+        params: { AttendanceId },
       });
 
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
-            labour.id === id ? { ...labour, ApprovalStatus: 'Approved' } : labour
+            labour.AttendanceId === AttendanceId ? { ...labour, ApprovalStatus: 'Approved' } : labour
           )
         );
         toast.success('Attendance approved successfully.');
@@ -587,9 +587,9 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
       return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
     }
   });
-  const isAllSelected =
-  filteredLabours.length > 0 &&
-  filteredLabours.every(labour => selectedLabourIds.includes(labour.labourID));
+  // const isAllSelected =  
+  // filteredLabours.length > 0 &&
+  // filteredLabours.every(labour => selectedLabourIds.includes(labour.labourID));
 
   const openPopup = async (labour) => {
     try {
@@ -680,14 +680,20 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
     
     const handleSelectAllRows = (event) => {
       if (event.target.checked) {
-        const newSelected = filteredLabours.map(labour => labour.labourID);
+        const newSelected = labours
+        ?.filter(labour => labour.ApprovalStatus === "Pending")
+        .map(labour => labour.AttendanceId);
         setSelectedLabourIds(prev => [
           ...prev,
           ...newSelected.filter(id => !prev.includes(id)),
         ]);
+        setIsAllSelected(true);
       } else {
-        const newSelected = filteredLabours.map(labour => labour.labourID);
+        const newSelected = labours
+        ?.filter(labour => labour.ApprovalStatus === "Pending")
+        .map(labour => labour.AttendanceId);
         setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+        setIsAllSelected(false);
       }
     };
     
@@ -1173,7 +1179,7 @@ Approve/Reject ({selectedLabourIds.length})
                   if (!rejectReason.trim()) {
                     toast.error('Please add a reason for rejection.');
                   } else {
-                    handleReject(selectedLabour.id, rejectReason);
+                    handleReject(selectedLabour.AttendanceId, rejectReason);
                     closeRejectPopup();
                   }
                 }}
@@ -1243,11 +1249,11 @@ Approve/Reject ({selectedLabourIds.length})
           </Button>
           <Button
             onClick={() => {
-              if (!labourToApprove || !labourToApprove.id) {
+              if (!labourToApprove || !labourToApprove.AttendanceId) {
                 toast.error('Labour data or ID is missing.');
                 return;
               }
-              approveLabour(labourToApprove.id);
+              approveLabour(labourToApprove.AttendanceId);
             }}
             sx={{
               backgroundColor: 'rgb(229, 255, 225)',

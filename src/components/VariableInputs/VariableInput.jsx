@@ -236,7 +236,8 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
+            // const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
             setLabours(response.data);
         } catch (error) {
             toast.error('Search failed');
@@ -441,7 +442,12 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
       setSelectedLabourIds([]);
     } catch (error) {
       console.error("Error during variable pay submission:", error);
-      toast.error("Failed to send for Admin Approval.");
+      // Check if the backend sent an error message and show that instead
+      const backendMessage =
+        error.response && error.response.data && error.response.data.message
+          ? error.response.data.message
+          : "Failed to send for Admin Approval.";
+      toast.info(backendMessage);
     }
   };
 
@@ -617,9 +623,23 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
         }
       });
     
+      const getLatestUniqueLabours = (labours) => {
+        const uniqueLabours = [];
+        const seen = new Set();
+        // Iterate backwards so that the first encountered record is the latest one
+        for (let i = labours.length - 1; i >= 0; i--) {
+          if (!seen.has(labours[i].LabourID)) {
+            uniqueLabours.unshift(labours[i]);
+            seen.add(labours[i].LabourID);
+          }
+        }
+        return uniqueLabours;
+      };
+
       // Strict filtering: record must match allowed project and department IDs, and status "Approved"
       const getFilteredLaboursForTable = () => {
-        let baseLabours = [...laboursSource];
+        // let baseLabours = [...laboursSource];
+        let baseLabours = getLatestUniqueLabours(laboursSource);
         baseLabours = baseLabours.filter((labour) => {
           const labourProjectId = Number(labour.ProjectID);
           const labourDepartmentId = Number(labour.DepartmentID);

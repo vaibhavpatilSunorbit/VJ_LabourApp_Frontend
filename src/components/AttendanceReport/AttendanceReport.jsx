@@ -229,6 +229,22 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
         return { hours, minutes };
     };
 
+    function formatRoundOffTotalOvertime(RoundOffTotalOvertime) {
+        let hours = Math.floor(RoundOffTotalOvertime);
+        let minutes = Math.floor((RoundOffTotalOvertime - hours) * 60);
+    
+        if (minutes < 15) {
+            minutes = 0; 
+        } else if (minutes < 45) {
+            minutes = 30; // 15 to 44 minutes, consider as 30 minutes
+        } else {
+            minutes = 0; // More than 45 minutes, round to next hour
+            hours += 1; // Increase hour by one
+        }
+    
+        return { hours, minutes };
+    };
+
 
     // function formatTotalOvertime(TotalOvertimeHours) {
     //     console.log("inside Function:", TotalOvertimeHours);
@@ -473,9 +489,9 @@ console.log('AttendanceStatus', AttendanceStatus)
                     status: attendanceRecord ? attendanceRecord.Status : 'NA',
                     firstPunch: attendanceRecord?.FirstPunch || '-',
                     lastPunch: attendanceRecord?.LastPunch || '-',
-                    totalHours: attendanceRecord?.TotalHours || '0.00',
+                    // totalHours: attendanceRecord?.TotalHours || '0.00',
                     // overtime: attendanceRecord?.Overtime || '0.0',
-                    // totalHours: formatTotalHours(attendanceRecord?.TotalHours),
+                    totalHours: formatTotalHours(attendanceRecord?.TotalHours),
                     overtime: formatOvertime(attendanceRecord?.Overtime),
                     isHoliday: attendanceRecord?.Status === 'H',
                     labourId: attendanceRecord?.LabourId || 'NA',
@@ -611,6 +627,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                     misspunchDays: labour.MissPunchDays,
                     // totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
                     totalOvertimeHours: formatTotalOvertime(labour.TotalOvertimeHours || 0),
+                    roundOffTotalOvertime: formatRoundOffTotalOvertime(labour.RoundOffTotalOvertime || 0),
                     shift: labour.Shift,
                 };
             });
@@ -1131,7 +1148,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                     justifyContent: { xs: 'flex-start', sm: 'space-between' },
                 }}>
                     <Box sx={{
-                        width: { xs: '100%', sm: '40%' },
+                        width: { xs: '100%', sm: '33%' },
                         gap: '20px',
                         display: 'flex',
                         flexDirection: 'row', // Stack selectors vertically on all sizes
@@ -1187,6 +1204,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                     </Box>
                     <Box sx={{
                         display: 'flex',
+                        width:'42vw',
                         marginRight: '20px',
                         flexDirection: { xs: 'row', sm: 'row' }
                     }}>
@@ -1197,6 +1215,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                             gap: '20px',
                             alignItems: 'center',
                             justifyContent: 'space-evenly',
+                            marginRight: '3vw'
                         }}>
                             <ExportAttendance />
                             <ImportAttendance /></Box>
@@ -1324,6 +1343,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                                 <TableCell>Absent Days</TableCell>
                                 <TableCell>MissPunch Days</TableCell>
                                 <TableCell>Overtime (Hours)</TableCell>
+                                <TableCell>RoundOffTotalOvertime (Hours)</TableCell>
                                 <TableCell>Actions</TableCell>
                             </TableRow>
                         </TableHead>
@@ -1363,6 +1383,13 @@ console.log('AttendanceStatus', AttendanceStatus)
     {labourAttendance && labourAttendance.totalOvertimeHours ? (
         <Tooltip title={`${labourAttendance.totalOvertimeHours.hours} hours ${labourAttendance.totalOvertimeHours.minutes} minutes`}>
             <span>{`${labourAttendance.totalOvertimeHours.hours}h ${labourAttendance.totalOvertimeHours.minutes ? labourAttendance.totalOvertimeHours.minutes + 'm' : ''}`}</span>
+        </Tooltip>
+    ) : "0h"}
+</TableCell>
+<TableCell>
+    {labourAttendance && labourAttendance.roundOffTotalOvertime ? (
+        <Tooltip title={`${labourAttendance.roundOffTotalOvertime.hours} hours ${labourAttendance.roundOffTotalOvertime.minutes} minutes`}>
+            <span>{`${labourAttendance.roundOffTotalOvertime.hours}h ${labourAttendance.roundOffTotalOvertime.minutes ? labourAttendance.roundOffTotalOvertime.minutes + 'm' : ''}`}</span>
         </Tooltip>
     ) : "0h"}
 </TableCell>
@@ -1554,14 +1581,14 @@ console.log('AttendanceStatus', AttendanceStatus)
                                                 </TableCell>
                                                 <TableCell>{day.firstPunch || "-"}</TableCell>
                                                 <TableCell>{day.lastPunch || "-"}</TableCell>
-                                                <TableCell>{day.totalHours || "0.00"}</TableCell>
-                                                {/* <TableCell>
+                                                {/* <TableCell>{day.totalHours || "0.00"}</TableCell> */}
+                                                <TableCell>
     {day.totalHours && (day.totalHours.hours > 0 || day.totalHours.minutes > 0) ? (
         <Tooltip title={`${day.totalHours.hours} hours ${day.totalHours.minutes} minutes`}>
             <span>{`${day.totalHours.hours}h ${day.totalHours.minutes}m`}</span>
         </Tooltip>
     ) : "0h"}
-</TableCell> */}
+</TableCell>
                                                  {/* <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell> */}
                                                 <TableCell>
     {day.overtime && (day.overtime.hours > 0 || day.overtime.minutes > 0) ? (

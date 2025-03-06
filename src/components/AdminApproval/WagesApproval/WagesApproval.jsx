@@ -89,7 +89,7 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
   const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
   // const { labourId } = location.state || {};
   const { hideResubmit, labourId } = location.state || {};
-
+  const [isAllSelected, setIsAllSelected] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null); // For the dropdown menu
   const [filter, setFilter] = useState(""); // To store selected filter
   const [filteredIconLabours, setFilteredIconLabours] = useState([]);
@@ -505,14 +505,20 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
 
 const handleSelectAllRows = (event) => {
   if (event.target.checked) {
-    const newSelected = filteredLabours.map(labour => labour.LabourID);
+    const newSelected = labours
+      ?.filter(labour => labour.ApprovalStatus === "Pending")
+      .map(labour => labour.ApprovalID  );
     setSelectedLabourIds(prev => [
       ...prev,
       ...newSelected.filter(id => !prev.includes(id)),
     ]);
+    setIsAllSelected(true);
   } else {
-    const newSelected = filteredLabours.map(labour => labour.LabourID);
+    const newSelected = labours
+      ?.filter(labour => labour.ApprovalStatus === "Pending")
+      .map(labour => labour.ApprovalID);
     setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+    setIsAllSelected(false);
   }
 };
 
@@ -539,9 +545,6 @@ const closeVariablePayModal = () => {
       return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
     }
   });
-  const isAllSelected =
-  filteredLabours.length > 0 &&
-  filteredLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
 
   const openPopup = async (labour) => {
     try {

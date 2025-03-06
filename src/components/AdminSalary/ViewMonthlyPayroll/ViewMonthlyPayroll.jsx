@@ -466,7 +466,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/searchFromViewMonthlyPayroll?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
             setLabours(response.data);
         } catch (error) {
             console.error('Error searching:', error);

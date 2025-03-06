@@ -143,19 +143,22 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     .sort((a, b) => b.labourID - a.labourID);
 
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (searchQuery.trim() === '') {
-      setSearchResults([]);
-     await fetchLabours();
-    }
-    try {
-      const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
-      setLabours(response.data);
-    } catch (error) {
-      setError('Error searching. Please try again.');
-    }
-  };
+    const handleSearch = async (e) => {
+      e.preventDefault();
+      if (searchQuery.trim() === '') {
+        // Clear any search results and fetch all labours
+        setSearchResults([]);
+        await fetchLabours();
+        return; // Stop execution if the search query is empty
+      }
+      try {
+        const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+        setLabours(response.data);
+      } catch (error) {
+        setError('Error searching. Please try again.');
+      }
+    };
+    
 
   const handleApproveConfirmOpen = (labour) => {
     setLabourToApprove(labour);
