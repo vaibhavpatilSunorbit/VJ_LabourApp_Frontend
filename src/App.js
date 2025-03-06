@@ -30,6 +30,7 @@ import PaySlipPage from './PaySlip/PaySlipPage';
 import RunPayroll from './components/AdminSalary/RunPayroll/RunPayroll';
 import ViewMonthlyPayroll from './components/AdminSalary/ViewMonthlyPayroll/ViewMonthlyPayroll';
 import { useUser } from './UserContext/UserContext';
+import LabourIdCard from './PaySlip/LabourIdCard';
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -149,6 +150,7 @@ console.log('projectsRes',projectsRes.data)
                     <Route path="/ViewMonthlyPayroll" element={<ViewMonthlyPayroll onFormSubmit={handleFormSubmit} />} />
                
                     <Route path="/Payslip" element={<PaySlipPage onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/LabourIdCard" element={<LabourIdCard  />} />
                   </Routes>
                 </>
               }
