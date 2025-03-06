@@ -557,8 +557,8 @@ const VariableInputApproval = ({ onApprove, departments, projectNames, labour, l
   const closePopup = () => {
     setSelectedLabour(null);
     setIsPopupOpen(false);
-  };
-
+  }; 
+ 
   const handleApprove = async (id) => {
 
     handleApproveConfirmClose();
