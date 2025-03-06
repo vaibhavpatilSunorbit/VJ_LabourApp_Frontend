@@ -143,19 +143,22 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     .sort((a, b) => b.labourID - a.labourID);
 
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (searchQuery.trim() === '') {
-      setSearchResults([]);
-      return;
-    }
-    try {
-      const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
-      setSearchResults(response.data);
-    } catch (error) {
-      setError('Error searching. Please try again.');
-    }
-  };
+    const handleSearch = async (e) => {
+      e.preventDefault();
+      if (searchQuery.trim() === '') {
+        // Clear any search results and fetch all labours
+        setSearchResults([]);
+        await fetchLabours();
+        return; // Stop execution if the search query is empty
+      }
+      try {
+        const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+        setLabours(response.data);
+      } catch (error) {
+        setError('Error searching. Please try again.');
+      }
+    };
+    
 
   const handleApproveConfirmOpen = (labour) => {
     setLabourToApprove(labour);
@@ -2475,8 +2478,8 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
           // handleSearch={() => {}}
+            setSearchResults={setSearchResults} 
           searchResults={searchResults}
-          setSearchResults={setSearchResults}
           handleSelectLabour={handleSelectLabour}
           showResults={false}
           className="search-bar"

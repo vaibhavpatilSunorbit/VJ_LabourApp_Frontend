@@ -90,7 +90,7 @@ const VariableInputApproval = ({ onApprove, departments, projectNames, labour, l
   const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
   // const { labourId } = location.state || {};
   const { hideResubmit, labourId } = location.state || {};
-
+  const [isAllSelected, setIsAllSelected] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null); // For the dropdown menu
   const [filter, setFilter] = useState(""); // To store selected filter
   const [filteredIconLabours, setFilteredIconLabours] = useState([]);
@@ -540,9 +540,7 @@ const VariableInputApproval = ({ onApprove, departments, projectNames, labour, l
       return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
     }
   });
-  const isAllSelected =
-  filteredLabours.length > 0 &&
-  filteredLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
+  
 
   const openPopup = async (labour) => {
     try {
@@ -633,14 +631,20 @@ const VariableInputApproval = ({ onApprove, departments, projectNames, labour, l
 
 const handleSelectAllRows = (event) => {
   if (event.target.checked) {
-    const newSelected = filteredLabours.map(labour => labour.LabourID);
+    const newSelected = labours
+      ?.filter(labour => labour.ApprovalStatusPay === "AdminPending")
+      .map(labour => labour.VariablePayId);
     setSelectedLabourIds(prev => [
       ...prev,
       ...newSelected.filter(id => !prev.includes(id)),
     ]);
+    setIsAllSelected(true);
   } else {
-    const newSelected = filteredLabours.map(labour => labour.LabourID);
+    const newSelected = labours
+      ?.filter(labour => labour.ApprovalStatusPay === "AdminPending")
+      .map(labour => labour.VariablePayId);
     setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+    setIsAllSelected(false);
   }
 };
 
@@ -898,9 +902,9 @@ Approve/Reject ({selectedLabourIds.length})
                    {tabValue === 0 && (
                     <><TableCell padding="checkbox">
                     <Checkbox
-                      checked={selectedLabourIds.includes(labour.LabourID)}
-                      onChange={(e) => handleSelectRow(e, labour.LabourID)}
-                      inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
+                      checked={selectedLabourIds.includes(labour.VariablePayId)}
+                      onChange={(e) => handleSelectRow(e, labour.VariablePayId)}
+                      inputProps={{ 'aria-label': `select labour ${labour.VariablePayId}` }}
                     />
                   </TableCell> </>
                   )}

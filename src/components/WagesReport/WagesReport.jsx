@@ -49,7 +49,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const [payStructure, setPayStructure] = useState({});
     const [weakelyOff, setWeakelyOff] = useState({});
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(200);
+    const [rowsPerPage, setRowsPerPage] = useState(25);
     const [weeklyOff, setWeeklyOff] = useState('');
     const [fixedMonthlyWages, setFixedMonthlyWages] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
@@ -152,6 +152,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 }
             );
             setLabours(response.data);
+            console.log('response.data wages r',response.data)
+
         } catch (error) {
             console.error('Error fetching labours:', error);
             toast.error('Failed to fetch data');
@@ -439,13 +441,13 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     labourId,
                     payStructure,
                     effectiveDate,
-                    dailyWages: payStructure === 'Daily Wages' ? dailyWages || null : null,
-                    monthlyWages: payStructure === 'Daily Wages' ? monthlyWages || null : null,
-                    yearlyWages: payStructure === 'Daily Wages' ? yearlyWages || null : null,
-                    overtime: payStructure === 'Daily Wages' ? overtime || null : null,
-                    totalOvertimeWages: payStructure === 'Daily Wages' ? totalOvertimeWages || null : null,
-                    fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages || null : null,
-                    weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff || null : null,
+                    dailyWages: payStructure === 'DAILY WAGES' ? dailyWages || null : null,
+                    monthlyWages: payStructure === 'DAILY WAGES' ? monthlyWages || null : null,
+                    yearlyWages: payStructure === 'DAILY WAGES' ? yearlyWages || null : null,
+                    overtime: payStructure === 'DAILY WAGES' ? overtime || null : null,
+                    totalOvertimeWages: payStructure === 'DAILY WAGES' ? totalOvertimeWages || null : null,
+                    fixedMonthlyWages: payStructure === 'FIXED MONTHLY WAGES' ? fixedMonthlyWages || null : null,
+                    weeklyOff: payStructure === 'FIXED MONTHLY WAGES' ? weeklyOff || null : null,
                     wagesEditedBy: onboardName,
                 };
     
@@ -488,71 +490,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
         }
     };
     
-    
-
-    // const handleSave = async () => {
-    //     try {
-    //         const onboardName = user.name || null;
-    //         if (!payStructure || !effectiveDate) {
-    //             toast.error("Please fill in all required fields.");
-    //             return;
-    //         }
-    //         // Loop through each selected labour ID
-    //         for (const labourId of selectedLabourIds) {
-    //             const wageData = {
-    //                 labourId,
-    //                 payStructure,
-    //                 effectiveDate,
-    //                 // Only pass wage values for Daily Wages; otherwise, set them to null.
-    //                 dailyWages: payStructure === 'Daily Wages' ? (dailyWages || null) : null,
-    //                 monthlyWages: payStructure === 'Daily Wages' ? (monthlyWages || null) : null,
-    //                 yearlyWages: payStructure === 'Daily Wages' ? (yearlyWages || null) : null,
-    //                 overtime: payStructure === 'Daily Wages' ? (overtime || null) : null,
-    //                 totalOvertimeWages: payStructure === 'Daily Wages' ? (totalOvertimeWages || null) : null,
-    //                 // For Fixed Monthly Wages, pass fixedMonthlyWages and weeklyOff; others set to null.
-    //                 fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? (fixedMonthlyWages || null) : null,
-    //                 weeklyOff: payStructure === 'Fixed Monthly Wages' ? (weeklyOff || null) : null,
-    //                 wagesEditedBy: onboardName,
-    //             };
-
-    //             // Check if wages already exist for the current labour
-    //             const { data: existingWagesResponse } = await axios.get(
-    //                 `${API_BASE_URL}/labours/checkExistingWages`,
-    //                 { params: { labourId } }
-    //             );
-
-    //             const { exists, approved, data } = existingWagesResponse;
-
-    //             if (!exists) {
-    //                 await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-    //                 toast.success(`Wages added successfully for labour ${labourId}.`);
-    //             } else if (exists && !approved) {
-    //                 wageData.wageId = data.WageID;
-    //                 await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-    //                 toast.info(`Wages sent for admin approval for labour ${labourId}.`);
-    //             } else if (exists && approved) {
-    //                 wageData.wageId = data.WageID;
-    //                 await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-    //                 toast.info(`Wages changes sent for admin approval for labour ${labourId}.`);
-    //             }
-    //         }
-    //         // Refresh the data, close the modal, and reset fields & selections
-    //         fetchLabours();
-    //         setModalOpen(false);
-    //         setWeeklyOff("");
-    //         setEffectiveDate("");
-    //         setFixedMonthlyWages(0);
-    //         setMonthlyWages(0);
-    //         setDailyWages(0);
-    //         setSelectedLabourIds([]);
-    //     } catch (error) {
-    //         console.error("Error saving wages:", error);
-    //         toast.error("Failed to save wages.");
-    //     }
-    // };
-
-
-
     const handleEdit = (labour) => {
         setSelectedLabour(labour);
         setPayStructure('');
@@ -576,13 +513,13 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
-            fetchLabours();
+            setSearchResults([]);
             return;
         }
         setLoading(true);
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromWages?q=${searchQuery}`);
-            setLabours(response.data);
+            setSearchResults(response.data);
         } catch (error) {
             console.error('Error searching:', error);
             toast.error('Search failed');
@@ -590,54 +527,11 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
             setLoading(false);
         }
     };
-
-    // const handlePageChange = (e, newPage) => {
-    //     setPage(newPage);
-    // };
-
-    // const handleRowsPerPageChange = (e) => {
-    //     const newRowsPerPage = parseInt(e.target.value, 10);
-    //     setRowsPerPage(newRowsPerPage);
-    //     setPage(0); // Reset to the first page
-    // };
     const handleSelectLabour = (selectedLabour) => {
         setSelectedLabour(selectedLabour);
     };
 
-    // Data to display on the current page
-    // const paginatedLabours = labours.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
-
-    // const getLatestLabourData = (labours) => {
-    //     const latestEntries = {};
-    //     labours.forEach((labour) => {
-    //         if (
-    //             !latestEntries[labour.LabourID] ||
-    //             new Date(labour.CreatedAt) > new Date(latestEntries[labour.LabourID].CreatedAt)
-    //         ) {
-    //             latestEntries[labour.LabourID] = labour;
-    //         }
-    //     });
-    //     return Object.values(latestEntries);
-    // };
-
-    // // Checkbox handling: select/deselect individual row
-    // const handleSelectRow = (event, labourId) => {
-    //     if (event.target.checked) {
-    //         setSelectedLabourIds(prev => [...prev, labourId]);
-    //     } else {
-    //         setSelectedLabourIds(prev => prev.filter(id => id !== labourId));
-    //     }
-    // };
     
-    // const handleSelectAllRows = (event) => {
-    //     if (event.target.checked) {
-    //         const newSelected = paginatedLabours.map(labour => labour.LabourID);
-    //         setSelectedLabourIds(prev => [...prev, ...newSelected.filter(id => !prev.includes(id))]);
-    //     } else {
-    //         const newSelected = paginatedLabours.map(labour => labour.LabourID);
-    //         setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
-    //     }
-    // };
     laboursSource.forEach((labour) => {
         const labourProjectId = Number(labour.ProjectID);
         const labourDepartmentId = Number(labour.DepartmentID);
@@ -657,7 +551,15 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     
       // Strict filtering: record must match allowed project and department IDs, and status "Approved"
       const getFilteredLaboursForTable = () => {
-        let baseLabours = [...laboursSource];
+        // let baseLabours = [...laboursSource];
+        let baseLabours = rowsPerPage > 0
+          ? (searchResults.length > 0
+              ? searchResults
+              : (filteredIconLabours.length > 0
+                  ? filteredIconLabours
+                  : [...labours]))
+          : [];
+       
         baseLabours = baseLabours.filter((labour) => {
           const labourProjectId = Number(labour.ProjectID);
           const labourDepartmentId = Number(labour.DepartmentID);
@@ -749,6 +651,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     
       const handleViewHistory = (labourID) => {
         const history = labours.filter((labour) => labour.LabourID === labourID);
+        console.log('history',history)
         setSelectedHistory(history);
         setOpenModal(true);
       };
@@ -769,11 +672,10 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
             <ToastContainer />
             <Box ml={-1.5}>
                 <SearchBar
-                    handleSubmit={handleSubmit}
+                    // handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
                     handleSearch={handleSearch}
-                    // handleSearch={() => {}}
                     searchResults={searchResults}
                     setSearchResults={setSearchResults}
                     handleSelectLabour={handleSelectLabour}
@@ -886,8 +788,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
 
                 <TablePagination
                     className="custom-pagination"
-                    // rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                    rowsPerPageOptions={[ 200, { label: 'All', value: -1 }]}
+                    rowsPerPageOptions={[25, 100, 900, { label: 'All', value: -1 }]}
+                    // rowsPerPageOptions={[ 100, { label: 'All', value: -1 }]}
                     // count={labours.length}
                     count={displayedLabours.length}
                     rowsPerPage={rowsPerPage}
@@ -1115,8 +1017,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                             <MenuItem value="">
                                 <em>All</em>
                             </MenuItem>
-                            <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
-                            <MenuItem value="Daily Wages">Daily Wages</MenuItem>
+                            <MenuItem value="FIXED MONTHLY WAGES">Fixed Monthly Wages</MenuItem>
+                            <MenuItem value="DAILY WAGES">Daily Wages</MenuItem>
                         </Select>
                     </Box>
 
@@ -1367,8 +1269,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                         <MenuItem value="" disabled>
                             Select Pay Structure
                         </MenuItem>
-                        <MenuItem value="Daily Wages">Daily Wages</MenuItem>
-                        <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
+                        <MenuItem value="DAILY WAGES">Daily Wages</MenuItem>
+                        <MenuItem value="FIXED MONTHLY WAGES">Fixed Monthly Wages</MenuItem>
                     </Select>
 
                     {/* Effective Date Picker */}
@@ -1384,10 +1286,10 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     />
 
                     {/* Dynamic Fields based on Pay Structure */}
-                    {payStructure === 'Daily Wages' && (
+                    {payStructure === 'DAILY WAGES' && (
                         <>
                             <TextField
-                                label="Daily Wages"
+                                label="DAILY WAGES"
                                 type="number"
                                 fullWidth
                                 value={dailyWages || ""}
@@ -1431,7 +1333,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                         </>
                     )}
 
-                    {payStructure === 'Fixed Monthly Wages' && (
+                    {payStructure === 'FIXED MONTHLY WAGES' && (
                         <>
                             <Select
                                 label="Weekly Off"
@@ -1459,7 +1361,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                 <MenuItem value="4">4</MenuItem>
                             </Select>
                             <TextField
-                                label="Fixed Monthly Wages"
+                                label="FIXED MONTHLY WAGES"
                                 type="number"
                                 fullWidth
                                 value={fixedMonthlyWages || ""}

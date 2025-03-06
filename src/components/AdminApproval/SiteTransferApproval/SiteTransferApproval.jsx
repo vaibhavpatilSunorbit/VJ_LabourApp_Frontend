@@ -44,11 +44,6 @@ import { API_BASE_URL } from "../../../Data";
 import InfoIcon from '@mui/icons-material/Info';
 import jsPDF from 'jspdf';
 import { useUser } from '../../../UserContext/UserContext';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { format } from 'date-fns';
-import { ClipLoader } from 'react-spinners';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import CircleIcon from '@mui/icons-material/Circle';
 
 const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, labourlist }) => {
   const { user } = useUser();
@@ -107,12 +102,14 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
   const [statusesSite, setStatusesSite] = useState({});
   const [previousTabValue, setPreviousTabValue] = useState(tabValue);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAllSelected, setIsAllSelected] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
   const [selectedLabourIds, setSelectedLabourIds] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [isMassModalOpen, setIsMassModalOpen] = useState(false);
+
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -139,35 +136,6 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     setLabourToApprove(null); // Clear selected labour
     setIsApproveConfirmOpen(false);
   };
-
-
-
-
-
-
-
-  //   useEffect(() => {
-  //     fetchAttendanceLabours(); // Start fetching cached labours
-  //   }, []);
-
-  //   const fetchAttendanceLabours = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const response = await axios.get(`${API_BASE_URL}/labours`);
-
-  //       if (response.data.labours.length > 0) {
-  //         setLabours(response.data.labours);  // Set labours directly from the cached result
-  //         console.log('response.data.labours Attendance admin Approval........///......[[[[[', response.data.labours)
-  //       } else {
-  //         console.log('Fetch labour Attendance Approval.');
-  //         setHasMore(false);
-  //       }
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error("Error fetching labours:", error);
-  //       setLoading(false);
-  //     }
-  //   };
 
 
 
@@ -569,9 +537,9 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
       return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
     }
   });
-  const isAllSelected =
-  filteredLabours.length > 0 &&
-  filteredLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
+  // const isAllSelected =true
+  // filteredLabours.length > 0 &&
+  // filteredLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
 
   const openPopup = async (labour) => {
     try {
@@ -663,16 +631,23 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
 
 const handleSelectAllRows = (event) => {
   if (event.target.checked) {
-    const newSelected = filteredLabours.map(labour => labour.LabourID);
+    const newSelected = labours
+      ?.filter(labour => labour.adminStatus === "Pending")
+      .map(labour => labour.LabourID);
     setSelectedLabourIds(prev => [
       ...prev,
       ...newSelected.filter(id => !prev.includes(id)),
     ]);
+    setIsAllSelected(true);
   } else {
-    const newSelected = filteredLabours.map(labour => labour.LabourID);
+    const newSelected = labours
+      ?.filter(labour => labour.adminStatus === "Pending")
+      .map(labour => labour.LabourID);
     setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+    setIsAllSelected(false);
   }
 };
+
 
 
 

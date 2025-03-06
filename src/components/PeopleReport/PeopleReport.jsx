@@ -120,7 +120,7 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromSiteTransfer?q=${searchQuery}`);
             setSearchResults(response.data);
         } catch (error) {
             setError('Error searching. Please try again.');
@@ -458,7 +458,6 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
         navigate(`/peopleEditDetails`, { state: { labourId: labour.id } }); // Pass labour.id in the state
     };
 
-
   
     laboursSource.forEach((labour) => {
         const labourProjectId = Number(labour.projectName);
@@ -479,7 +478,15 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
     
       // Strict filtering: record must match allowed project and department IDs, and status "Approved"
       const getFilteredLaboursForTable = () => {
-        let baseLabours = [...laboursSource];
+        // let baseLabours = [...laboursSource];
+        let baseLabours = rowsPerPage > 0
+      ? (searchResults.length > 0
+          ? searchResults
+          : (filteredIconLabours.length > 0
+              ? filteredIconLabours
+              : [...labours]))
+      : [];
+
         baseLabours = baseLabours.filter((labour) => {
           const labourProjectId = Number(labour.projectName);
           const labourDepartmentId = Number(labour.departmentId);
@@ -809,8 +816,8 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
                                     })
                                     .sort((a, b) => b.labourID - a.labourID)
                             ).map((labour, index) => ( */}
-                            {paginatedLabours.map((labour, index) => (
-                                <TableRow key={labour.id}>
+                            {displayedLabours.map((labour, index) => (
+                                <TableRow key={labour.LabourID}>
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     {tabValue !== 3 && <TableCell>{labour.LabourID}</TableCell>}
                                     <TableCell>{labour.name}</TableCell>
