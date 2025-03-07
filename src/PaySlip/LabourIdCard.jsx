@@ -22,7 +22,7 @@ const LabourIdCard = ({ open, handleClose, labourData }) => {
     const [cardHeight, setCardHeight] = useState(500);
 
     // Ensure equal height for both cards
-    useEffect(() => {
+    useEffect(() => {       
         if (cardRef.current) {
             setCardHeight(cardRef.current.clientHeight);
         }
