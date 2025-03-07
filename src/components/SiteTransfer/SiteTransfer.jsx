@@ -390,10 +390,10 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             .filter((labour) => selectedLabourIds.includes(labour.LabourID))
             .map((labour) => {
               const currentSiteName =
-                projectNames.find((p) => p.id === labour.projectName)?.Business_Unit ||
+                projectNames.find((p) => p.Id === labour.projectName)?.Business_Unit ||
                 "Unknown";
               const transferSiteName =
-                projectNames.find((p) => p.id === Number(newSite))
+                projectNames.find((p) => p.Id === Number(newSite))
                   ?.Business_Unit || "Unknown";
     
               return {
@@ -420,7 +420,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
           if (response.status === 201) {
             // Update local state for all selected labours
             const transferSiteName =
-              projectNames.find((p) => p.id === Number(newSite))?.Business_Unit ||
+              projectNames.find((p) => p.Id === Number(newSite))?.Business_Unit ||
               "Unknown";
     
             setLabours((prev) =>

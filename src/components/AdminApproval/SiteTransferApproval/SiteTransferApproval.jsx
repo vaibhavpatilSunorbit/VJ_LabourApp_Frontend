@@ -153,7 +153,7 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     }
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/api/admin/rejectSiteTransferadmin`, { id, rejectReason });
+      const response = await axios.put(`${API_BASE_URL}/api/admin/rejectSiteTransferadmin`,  {params:  { id, rejectReason }});
 
       if (response.data.success) {
         setLabours(prevLabours =>
@@ -228,7 +228,7 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     try {
       // For each selected "LabourID", find the labour object in state
       for (const labourID of selectedLabourIds) {
-        const labourObj = labours.find((labour) => labour.LabourID === labourID);
+        const labourObj = labours.find((labour) => labour.id === labourID);
         if (!labourObj) {
           console.warn(`No labour found with LabourID=${labourID}`);
           continue;
@@ -281,7 +281,7 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     try {
       // For each selected "LabourID", find the labour object in state
       for (const labourID of selectedLabourIds) {
-        const labourObj = labours.find((labour) => labour.LabourID === labourID);
+        const labourObj = labours.find((labour) => labour.id === labourID);
         if (!labourObj) {
           console.log(`No labour found with LabourID=${labourID}`);
           continue;
@@ -290,17 +290,18 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
           console.log(`No id found for LabourID=${labourID}`);
           continue;
         }
-  
+        console.log(`No ithis kjfelkfjdk LabourID=${labourObj.id}`);
         // Reject the labour
+        console.log("hdcgjsdc ", labourID.id)
         const response = await axios.put(`${API_BASE_URL}/api/admin/rejectSiteTransferadmin`, {
-          params: { 
+        
             id: labourObj.id, 
             rejectReason: rejectReason 
-          },
+         
         });
   
         if (!response.data.success) {
-          toast.error(`Failed to reject labour with id ${labourObj.id}`);
+          toast.error(`Failed to reject labour with id ${labourObj}`);
         }
       }
   
@@ -848,7 +849,7 @@ Approve/Reject ({selectedLabourIds.length})
                 <TableCell>Site Transfer By</TableCell>
                 <TableCell>Status</TableCell>
                 {tabValue === 0 && <TableCell>Send Approval Date</TableCell>}
-                {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>}
+                {/* {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>} */}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
                 {tabValue === 1 && <TableCell>Approve Date</TableCell>}
                 {tabValue !== 0 && tabValue !== 1 && <TableCell>Rejected Date</TableCell>}
@@ -890,9 +891,9 @@ Approve/Reject ({selectedLabourIds.length})
                    {tabValue === 0 && (
                     <><TableCell padding="checkbox">
                     <Checkbox
-                      checked={selectedLabourIds.includes(labour.LabourID)}
-                      onChange={(e) => handleSelectRow(e, labour.LabourID)}
-                      inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
+                      checked={selectedLabourIds.includes(labour.id)}
+                      onChange={(e) => handleSelectRow(e, labour.id)}
+                      inputProps={{ 'aria-label': `select labour ${labour.id}` }}
                     />
                   </TableCell> </>
                   )}
@@ -960,7 +961,7 @@ Approve/Reject ({selectedLabourIds.length})
                     </TableCell>
                   )}
 
-                  {tabValue === 0 && (
+                  {/* {tabValue === 0 && (
                     <TableCell>
                       {(user.userType === 'user' && labour.adminStatus === 'Pending') && (
                         <IconButton
@@ -977,7 +978,7 @@ Approve/Reject ({selectedLabourIds.length})
                         </IconButton>
                       )}
                     </TableCell>
-                  )}
+                  )} */}
 
                   {user.userType === 'admin' || user.userType === 'superadmin' && (
                     <TableCell>
