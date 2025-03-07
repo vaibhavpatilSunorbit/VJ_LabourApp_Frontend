@@ -230,7 +230,9 @@ const VariableInputApproval = ({ onApprove, departments, projectNames, labour, l
     try {
       // For each selected "LabourID", find the labour object in state
       for (const labourID of selectedLabourIds) {
-        const labourObj = labours.find((labour) => labour.LabourID === labourID);
+        console.log('labourObj++__',labourID)
+        const labourObj = labours.find((labour) => labour.VariablePayId === labourID);
+        console.log('labourObj++__+++',labourObj)
         if (!labourObj) {
           console.warn(`No labour found with LabourID=${labourID}`);
           continue;

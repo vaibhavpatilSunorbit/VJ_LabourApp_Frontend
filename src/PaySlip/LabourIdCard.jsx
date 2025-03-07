@@ -53,6 +53,10 @@ const LabourIdCard = ({ open, handleClose, labourData }) => {
         }
     };
 
+    if (!labourData) {
+        return null; // or render a loading state
+    }
+
     return (
         <Modal open={open} onClose={handleClose} sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
             <Box
@@ -201,4 +205,4 @@ const LabourIdCard = ({ open, handleClose, labourData }) => {
     );
 };
 
-export default LabourIdCard;
+export default LabourIdCard;    

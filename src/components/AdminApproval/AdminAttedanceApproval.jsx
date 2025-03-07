@@ -308,12 +308,12 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
         }
         // Call your existing endpoint with the labour's id
         const response = await axios.put(`${API_BASE_URL}/labours/attendance/approve`, null, {
-          params: { id: labourObj.AttendanceId },
+          params: { AttendanceId: labourObj.AttendanceId },
         });
   
         if (!response.data.success) {
           // Optionally handle partial failures
-          toast.error(`Failed to approve labour with id ${labourObj.id}`);
+          toast.error(`Failed to approve labour with id ${labourObj.AttendanceId}`);
         }
       }
   
