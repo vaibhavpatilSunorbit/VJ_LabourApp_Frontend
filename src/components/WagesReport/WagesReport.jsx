@@ -69,9 +69,15 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const [employeeToggle, setEmployeeToggle] = useState('all'); // 'all' or 'single'
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [selectedLabourIds, setSelectedLabourIds] = useState([]);
+    const [selectedLabourWorkingHours, setSelectedLabourWorkingHours] = useState("");
     const [tabValue, setTabValue] = useState(0);
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
     const [modalOpens, setModalOpens] = useState(true);
+    const [perHourWages, setPerHourWages] = useState(null); 
+
+    const workingHoursString = labours?.workingHours || "FLEXI SHIFT - 9 HRS";
+    const workingHours = parseInt(workingHoursString.match(/\d+/)?.[0], 10) || 8;
+
 
     const convertToIndianTime = (isoString) => {
         const options = {
@@ -483,6 +489,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
             setMonthlyWages(0);
             setDailyWages(0);
             setSelectedLabourIds([]);
+            setSelectedLabourWorkingHours("")
     
         } catch (error) {
             console.error("Error saving wages:", error);
@@ -626,9 +633,10 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
         paginatedLabours.every((labour) => selectedLabourIds.includes(labour.LabourID));
     
       // Handlers
-      const handleSelectRow = (event, labourId) => {
+      const handleSelectRow = (event, labourId, workingHours) => {
         if (event.target.checked) {
           setSelectedLabourIds((prev) => [...prev, labourId]);
+          setSelectedLabourWorkingHours( workingHours);
         } else {
           setSelectedLabourIds((prev) => prev.filter((id) => id !== labourId));
         }
@@ -868,7 +876,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                     <TableCell padding="checkbox">
                                         <Checkbox
                                             checked={selectedLabourIds.includes(labour.LabourID)}
-                                            onChange={(e) => handleSelectRow(e, labour.LabourID)}
+                                            onChange={(e) => handleSelectRow(e, labour.LabourID, labour.workingHours)}
                                             inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
                                         />
                                     </TableCell>
@@ -904,6 +912,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                                 // For individual edit, you can add this labour to the selection and open the modal.
                                                 if (!selectedLabourIds.includes(labour.LabourID)) {
                                                     setSelectedLabourIds([...selectedLabourIds, labour.LabourID]);
+                                                    setSelectedLabourWorkingHours(labour.workingHours);
                                                 }
                                                 setModalOpen(true);
                                             }}
@@ -1288,29 +1297,34 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     {/* Dynamic Fields based on Pay Structure */}
                     {payStructure === 'DAILY WAGES' && (
                         <>
-                            <TextField
-                                label="DAILY WAGES"
-                                type="number"
-                                fullWidth
-                                value={dailyWages || ""}
-                                onChange={(e) => {
-                                    const value = e.target.value === "" ? null : parseFloat(e.target.value);
-                                    setDailyWages(value);
-                                    if (value !== null) {
-                                        setMonthlyWages(value * 30); // assuming 30 days/month
-                                        setYearlyWages(value * 30 * 12); // assuming 12 months/year
-                                    } else {
-                                        setMonthlyWages(null);
-                                        setYearlyWages(null);
-                                    }
-                                }}
-                                sx={{ mb: 2 }}
-                            />
+                           <TextField
+                            label="DAILY WAGES"
+                            type="number"
+                            fullWidth
+                            value={dailyWages || ""}
+                            onChange={(e) => {
+                                const value = e.target.value === "" ? null : parseFloat(e.target.value);
+                                setDailyWages(value);
+
+                                console.log("selectedLabourIds.workingHours",selectedLabourWorkingHours)
+                                if (value !== null) {
+                                    setMonthlyWages(value * 30); // Assuming 30 days/month
+                                    setYearlyWages(value * 30 * 12); // Assuming 12 months/year
+                                    if(selectedLabourWorkingHours=== 'FLEXI SHIFT - 8 HRS'){ setPerHourWages(8); } else { setPerHourWages(9); }
+
+                                } else {
+                                    setMonthlyWages(null);
+                                    setYearlyWages(null);
+                                    setPerHourWages(null);
+                                }
+                            }}
+                            sx={{ mb: 2 }}
+                        />
                             <TextField
                                 label="Per Hours Wages"
                                 type="number"
                                 fullWidth
-                                value={dailyWages ? dailyWages / 8 : 0} // assuming 8 hours per day
+                                value={dailyWages ? dailyWages / perHourWages: 0} // assuming 8 hours per day
                                 InputProps={{ readOnly: true }}
                                 sx={{ mb: 2 }}
                             />

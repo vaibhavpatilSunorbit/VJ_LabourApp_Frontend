@@ -205,7 +205,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     fullResponse: labour
                 };
             });
-
+console.log('ShowSalaryGeneration for month',ShowSalaryGeneration)
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {

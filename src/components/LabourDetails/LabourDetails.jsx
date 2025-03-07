@@ -2009,7 +2009,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   };
 
 
-
   const handleDownloadPDF = async (labourId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
@@ -2021,6 +2020,125 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       toast.error('Error generating PDF. Please try again.');
     }
   };
+
+  // const handleDownloadPDF = async (labourId) => {
+  //   try {
+  //     const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
+  //     const labour = response.data;
+  //     const doc = new jsPDF();
+  //     const logoUrl = `${process.env.PUBLIC_URL}/images/vjlogo.png`; // Use the public URL
+
+  //     // Verify that the logoUrl is correctly defined
+  //     if (!logoUrl) {
+  //       throw new Error('Logo URL is undefined');
+  //     }
+
+  //     // Load the logo image
+  //     const loadImage = (url) => {
+  //       return new Promise((resolve, reject) => {
+  //         const img = new Image();
+  //         img.crossOrigin = 'Anonymous';
+  //         img.onload = () => resolve(img);
+  //         img.onerror = (error) => {
+  //           console.error(`Failed to load image: ${url}`, error);
+  //           reject(new Error(`Failed to load image: ${url}`));
+  //         };
+  //         img.src = url;
+  //         console.log(`Attempting to load image from URL: ${url}`);
+  //       });
+  //     };
+
+  //     // Function to convert an image element to a data URL
+  //     const getDataUrl = (img) => {
+  //       const canvas = document.createElement('canvas');
+  //       canvas.width = img.width;
+  //       canvas.height = img.height;
+  //       const ctx = canvas.getContext('2d');
+  //       ctx.drawImage(img, 0, 0);
+  //       return canvas.toDataURL('image/png');
+  //     };
+
+  //     const logoImg = await loadImage(logoUrl);
+  //     const logoDataUrl = getDataUrl(logoImg);
+
+  //     // Add logo to PDF
+  //     doc.addImage(logoDataUrl, 'PNG', 10, 10, 50, 15);
+  //     doc.setFontSize(20);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.text('LABOUR ID CARD', 70, 20);
+
+  //     // Check if labour photo is available
+  //     let labourPhotoDataUrl = null;
+  //     if (labour.photoSrc) {
+  //       try {
+  //         const labourPhoto = await loadImage(labour.photoSrc);
+  //         labourPhotoDataUrl = getDataUrl(labourPhoto);
+  //       } catch (error) {
+  //         console.warn('Labour photo could not be loaded:', error);
+  //       }
+  //     } else {
+  //       console.warn('Labour photo URL is undefined or missing');
+  //     }
+
+  //     // If labour photo is available, add to PDF
+  //     if (labourPhotoDataUrl) {
+  //       doc.addImage(labourPhotoDataUrl, 'PNG', 10, 30, 50, 70);
+  //       doc.setLineWidth(1); // Set line width for darker border
+  //       doc.setDrawColor(0, 0, 0); // Set border color to black
+  //       doc.rect(10, 30, 50, 70); // Add border around image
+  //     }
+
+  //     const formatDate = (dateString) => {
+  //       if (!dateString) return 'N/A';
+  //       const date = new Date(dateString);
+  //       const day = String(date.getDate()).padStart(2, '0');
+  //       const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  //       const year = date.getFullYear();
+  //       return `${day}-${month}-${year}`;
+  //     };
+
+  //     doc.setFontSize(12);
+  //     doc.setFont("helvetica", "normal");
+  //     const lineHeight = 7;
+  //     const startX = 70;
+  //     const valueStartX = 120;
+  //     let startY = 32;
+
+  //     const addDetail = (label, value) => {
+  //       doc.text(`${label.toUpperCase()}`, startX, startY);
+  //       doc.text(`: ${value ? value.toUpperCase() : 'N/A'}`, valueStartX, startY);
+  //       startY += lineHeight;
+  //     };
+
+  //     const departmentDescription = getDepartmentDescription(labour.department);
+
+  //     addDetail('Name', labour.name);
+  //     addDetail('Location', labour.location);
+  //     addDetail('Date of Birth', formatDate(labour.dateOfBirth));
+  //     addDetail('Aadhaar No.', labour.aadhaarNumber);
+  //     addDetail('Department', departmentDescription);
+  //     addDetail('Designation', labour.designation);
+  //     addDetail('Emergency No.', labour.emergencyContact);
+  //     addDetail('Inducted by', labour.Inducted_By);
+  //     addDetail('Induction date', formatDate(labour.Induction_Date));
+  //     addDetail('Date Of joining', formatDate(labour.dateOfJoining));
+  //     addDetail('Valid till', formatDate(labour.ValidTill));
+
+  //     const cardX = 5;
+  //     const cardY = 3;
+  //     const cardWidth = 200;
+  //     const cardHeight = startY + 2;
+
+  //     doc.setLineWidth(1); // Set line width for the outer border
+  //     doc.setDrawColor(0, 0, 0); // Set outer border color to black
+  //     doc.rect(cardX, cardY, cardWidth, cardHeight);
+
+  //     doc.save(`labourID_${labour.labourID || labourId}.pdf`);
+  //   } catch (error) {
+  //     console.error('Error generating PDF:', error);
+  //     toast.error('Error generating PDF. Please try again.');
+  //   }
+  // };
 
 
 
@@ -3010,7 +3128,11 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
         </Box>
       </TableContainer>
 
-
+      <LabourIdCard
+        open={isLabourCardOpen}
+        handleClose={() => setIsLabourCardOpen(false)}
+        labourData={selectedLabourData}
+      />
 
       <Modal
         open={isPopupOpen}

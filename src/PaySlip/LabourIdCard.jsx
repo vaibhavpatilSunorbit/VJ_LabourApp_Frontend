@@ -205,4 +205,4 @@ const LabourIdCard = ({ open, handleClose, labourData }) => {
     );
 };
 
-export default LabourIdCard;
+export default LabourIdCard;    
