@@ -45,7 +45,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
     const [loading, setLoading] = useState(false);
     const [dailyWages, setDailyWages] = useState({});
     const [perDayWages, setPerDayWages] = useState({});
-    const [monthlyWages, setMonthlyWages] = useState({});
+    const [monthlyWages, setMonthlyWages] = useState(0);
     const [yearlyWages, setYearlyWages] = useState({});
     const [overtime, setOvertime] = useState({});
     const [variablePay, setvariablePay] = useState({});
@@ -366,14 +366,49 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
         setOpenDialogSite(true); // Open the confirmation dialog
     };
 
-    const handleModalConfirm = () => {
-        if (!modalPayData.payStructure || !modalPayData.variablePay) {
-          toast.error("Please fill in all required fields in the modal.");
-          return;
+    const handleModalConfirm = async () => {
+      if (!modalPayData.payStructure || !modalPayData.variablePay) {
+        toast.error("Please fill in all required fields in the modal.");
+        return;
+      }
+      if (!selectedLabourIds || selectedLabourIds.length === 0) {
+        toast.error("No labour selected.");
+        return;
+      }
+    
+      let labourIDforWages = selectedLabourIds[0]; 
+    
+      if (!labourIDforWages) {
+        toast.error("Labour ID is missing.");
+        return;
+      }
+    
+      try {
+        const wagesResponse = await axios.get(
+          `${API_BASE_URL}/api/getWagesforInsentiveAdd?LabourID=${labourIDforWages}`
+        );
+    
+        if (wagesResponse.status === 200 && wagesResponse.data.length > 0) {
+          const { MonthlyWages } = wagesResponse.data[0];
+    
+    
+          if (
+            modalPayData.payStructure === "Incentive" &&
+            modalPayData.variablePay > 0.1 * MonthlyWages
+          ) {
+            toast.error("Variable Pay cannot be greater than 10% of Monthly Wages.");
+            return;
+          }
+          setModalOpen(false);
+          setOpenDialogSite(true);
+        } else {
+          toast.error("Failed to fetch Monthly Wages. Try again.");
         }
-        setModalOpen(false);
-        setOpenDialogSite(true); // open the confirmation
-      };
+      } catch (error) {
+        console.error("Error fetching Monthly Wages:", error);
+        toast.error("Error fetching Monthly Wages.");
+      }
+    };
 
    
     const confirmTransfer = async () => {
@@ -383,7 +418,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
       toast.error("No labour(s) selected.");
       return;
     }
-
+  
     try {
       const onboardName = user.name || null;
 
@@ -1144,7 +1179,6 @@ Edit ({selectedLabourIds.length})
                 setModalPayData((prev) => ({
                   ...prev,
                   payStructure: e.target.value,
-                  // Clear remark if pay structure changes
                   variablePayRemark: "",
                 }))
               }
@@ -1316,7 +1350,7 @@ Edit ({selectedLabourIds.length})
                 </MenuItem>
                 {Array.isArray(projectNames) && projectNames.length > 0 ? (
                   projectNames.map((project) => (
-                    <MenuItem key={project.id} value={project.id}>
+                    <MenuItem key={project.Id} value={project.Id}>
                       {project.Business_Unit}
                     </MenuItem>
                   ))

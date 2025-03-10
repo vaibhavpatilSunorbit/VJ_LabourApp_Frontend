@@ -48,7 +48,8 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
     const [searchResults, setSearchResults] = useState([]);
     const [totalDays, setTotalDays] = useState(0);
     const [presentDays, setPresentDays] = useState(0);
-    const [totalOvertime, setTotalOvertime] = useState(0);
+    const [totalOvertimehours, setTotalOvertimehours] = useState(0);
+    const [totalOvertimeminute, setTotalOvertimeminute] = useState(0);
     const [tabValue, setTabValue] = useState(0);
     const [selectedLabourId, setSelectedLabourId] = useState('');
     const [editManualDialogOpen, setEditManualDialogOpen] = useState(false);
@@ -189,6 +190,20 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
 
     return { hours, minutes };
 }
+
+function formatConvertedOvertimemanually(Overtimemanually) {
+    console.log("---------OverTime", Overtimemanually);
+    
+    Overtimemanually = Overtimemanually ?? 0;
+
+    let hours = Math.floor(Overtimemanually); // Extract whole hours
+    let minutes = Math.round((Overtimemanually - hours) * 60); // Convert decimal fraction to minutes
+
+    console.log("Converted Time - Hours:", hours, "Minutes:", minutes);
+
+    return { hours, minutes };
+}
+
 
 
     function formatTotalHours(TotalHours) {
@@ -457,10 +472,13 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
         }
     }, [modalOpen]);
 
-    const handleModalOpen = (labour) => {
+    const handleModalOpen = (labour , totalOvertimeHours ) => {
         if (labour && labour.LabourID) {
+            console.log("totalOvertimeHours.hours",totalOvertimeHours.hours)
             setSelectedLabour(labour);
             setSelectedLabourId(labour.LabourID);
+            setTotalOvertimehours(totalOvertimeHours.hours)
+            setTotalOvertimeminute(totalOvertimeHours.minutes)
             setModalOpen(true);
             fetchAttendanceForMonth();
             // fetchAttendanceData(labour.LabourID, startDate, endDate);
@@ -519,20 +537,16 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
                     remark: attendanceRecord?.RemarkManually || '-',
                     attendanceId: attendanceRecord?.AttendanceId || '-',
                     ApprovalStatus: attendanceRecord?.ApprovalStatus || '-',
+                    TotalOvertimeHoursManually: attendanceRecord?.TotalOvertimeHoursManually || '-',
                 };
             });
             console.log('attendanceRecord+++', fullMonthAttendance)
             setAttendanceData(fullMonthAttendance);
-            function calculateTotalOverTimeForAll(employeesAttendance) {
-                return employeesAttendance.map(employee => ({
-                    employeeId: employee.id, // Assuming there's an employee ID
-                    totalOvertime: employee.attendance.reduce((totalOvertime, day) => totalOvertime + (day.overtime || 0), 0)
-                }));
-            }
-            
-            let totalOvertimeData = calculateTotalOverTimeForAll(fullMonthAttendance); 
-            setTotalOvertime(totalOvertimeData);
-            
+            // function calculateTotalOverTime(fullMonthAttendance) { 
+            //     return fullMonthAttendance.reduce((totalOvertime, day) => totalOvertime + (day.overtime || 0), 0);
+            // }
+            // let datatotalovertime=calculateTotalOverTime(fullMonthAttendance);
+            // setTotalOvertime(datatotalovertime)
 
             
         } catch (error) {
@@ -1289,7 +1303,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
 
                         <TablePagination
                             className="custom-pagination"
-                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
+                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: getFilteredLaboursForTable().length }]}
                             // count={attendanceData.length > 0 ? attendanceData.length : labours.length}
                             count={getFilteredLaboursForTable().length}
                             rowsPerPage={rowsPerPage}
@@ -1462,7 +1476,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
                                             </TableCell>
                                             <TableCell>
                                                 <Button
-                                                    onClick={() => handleModalOpen(labour)}
+                                                    onClick={() => handleModalOpen(labour, labourAttendance.totalOvertimeHours)}
                                                     sx={{
                                                         backgroundColor: 'rgb(229, 255, 225)',
                                                         color: 'rgb(43, 217, 144)',
@@ -1605,8 +1619,9 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
                                         <TableCell>Punch In</TableCell>
                                         <TableCell>Punch Out</TableCell>
                                         <TableCell>Total Hours <br></br>  ( {formattedTotalHours.hours}h {formattedTotalHours.minutes}m )</TableCell>
-                                        <TableCell>System Overtime <br></br> ( {totalOvertime} )</TableCell>
-                                        <TableCell>Manual Overtime <br></br> ( {formattedManualOvertime.hours}h {formattedManualOvertime.minutes}m )</TableCell>
+                                        <TableCell>System Overtime <br></br> ( {totalOvertimehours}h {totalOvertimeminute}m )</TableCell>
+                                        <TableCell>Manual Overtime <br></br> ({isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h  
+  {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m)</TableCell>
                                         {/* <TableCell>Holiday</TableCell> */}
                                         <TableCell>Remark</TableCell>
                                         <TableCell>Actions</TableCell>
@@ -1687,7 +1702,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
                                                 {/* <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell> */}
                                                 <TableCell>
                                                     {day.overtime && (day.overtime) ? (
-                                                        <Tooltip title={`${formatConvertedOverTime(day.overtime).hours}h ${formatConvertedOverTime(day.overtime).minutes}m`}>
+                                                        <Tooltip title={`${formatConvertedOverTime(day.overtime).hours}hours ${formatConvertedOverTime(day.overtime).minutes}minutes`}>
                                                           <span>{`${formatOvertime(day.overtime).hours}h ${formatOvertime(day.overtime).minutes}m`}</span>
                                                         </Tooltip>
                                                     ) : "0h"}
@@ -1695,13 +1710,11 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
                                                 {/* <TableCell>{day.overtimemanually || "-"}</TableCell> */}
                                                 <TableCell>
                                                     {console.log("-->",day.overtimemanually )}
-                                                    {day.overtimemanually && (day.overtimemanually > 0 ? (
-                                                        <Tooltip title={`${day.overtime?.hours} hours ${day.overtime?.minutes} minutes`}>
-                                                            <span>{`${day.overtimemanually}h `}</span>
+                                                    {day.overtimemanually && (day.overtimemanually) ? (
+                                                        <Tooltip title={`${formatConvertedOvertimemanually(day.overtimemanually).hours}hours ${formatConvertedOvertimemanually(day.overtimemanually).minutes}minutes`}>
+                                                          <span>{`${formatConvertedOvertimemanually(day.overtimemanually).hours}h ${formatConvertedOvertimemanually(day.overtimemanually).minutes}m`}</span>
                                                         </Tooltip>
-                                                    ) :<Tooltip title={`${day.overtime?.hours} hours ${day.overtime?.minutes} minutes`}>
-                                                    <span>{`${day.overtime?.hours}h ${day.overtime?.minutes}m`}</span>
-                                                </Tooltip>)}
+                                                    ) : "0h"}
                                                 </TableCell>
                                                 {/* <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell> */}
                                                 <TableCell>{day.remark || "-"}</TableCell>
@@ -1736,13 +1749,13 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
                                         </TableCell>
                                         <TableCell>
                                             <strong>
-                                                {formattedOvertime.hours}h {formattedOvertime.minutes}m
+                                            {totalOvertimehours}h {totalOvertimeminute}m
                                             </strong>
                                         </TableCell>
                                         <TableCell>
                                             <strong>
-                                                {formattedManualOvertime.hours}h {formattedManualOvertime.minutes}m
-                                            </strong>
+                                            ({isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h
+                                            {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m) </strong>
                                         </TableCell>
                                         {/* Last two columns empty */}
                                         <TableCell colSpan={2} />

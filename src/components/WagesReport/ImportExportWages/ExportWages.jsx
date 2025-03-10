@@ -298,8 +298,8 @@ console.log('response for export',response.data)
                                 displayEmpty
                             >
                                 <MenuItem value="" disabled>Select Pay Structure</MenuItem>
-                                <MenuItem value="Daily Wages">Daily Wages</MenuItem>
-                                <MenuItem value="Fix Monthly Wages">Fixed Monthly Wages</MenuItem>
+                                <MenuItem value="DAILY WAGES">Daily Wages</MenuItem>
+                                <MenuItem value="FIXED MONTHLY WAGES">Fixed Monthly Wages</MenuItem>
                             </Select>
                         </Box>
                         {/* Buttons */}

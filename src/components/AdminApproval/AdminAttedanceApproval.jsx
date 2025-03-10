@@ -279,7 +279,7 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
       return;
     }
     setRejectReason('');  // Clear any old reason
-    setIsMassModalOpen(true);
+    setIsMassModalOpen(true); 
   };
 
   const closeMassApproveRejectModal = () => {

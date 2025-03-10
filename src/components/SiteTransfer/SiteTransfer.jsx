@@ -350,85 +350,86 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
   
   
 
-  const confirmTransfer = async () => {
-    setOpenDialogSite(false);
-    if (!selectedLabourIds || selectedLabourIds.length === 0) {
-      toast.error("No labour(s) selected to transfer.");
-      return;
-    }
-
-    try {
-      // Build payload for each selected labour
-      const selectedLaboursData = labours
-        .filter((labour) => selectedLabourIds.includes(labour.LabourID))
-        .map((labour) => {
-          const currentSiteName =
-            projectNames.find((p) => p.id === labour.projectName)?.Business_Unit ||
-            "Unknown";
-          const transferSiteName =
-            projectNames.find((p) => p.id === Number(newSite))
-              ?.Business_Unit || "Unknown";
-
-          return {
-            userId: labour.id, // if needed
-            LabourID: labour.LabourID,
-            name: labour.name,
-            currentSite: labour.projectName,
-            transferSite: newSite,
-            currentSiteName,
-            transferSiteName,
-            transferDate,
-            siteTransferBy: user.name || null,
-          };
-        });
-
-      // Send them all in one request (adapt as needed for your API)
-      const response = await axios.post(
-        `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
-        {
-          labours: selectedLaboursData,
+    const confirmTransfer = async () => {
+        setOpenDialogSite(false);
+        if (!selectedLabourIds || selectedLabourIds.length === 0) {
+          toast.error("No labour(s) selected to transfer.");
+          return;
         }
-      );
-
-      if (response.status === 201) {
-        // Update local state for all selected labours
-        const transferSiteName =
-          projectNames.find((p) => p.id === Number(newSite))?.Business_Unit ||
-          "Unknown";
-
-        setLabours((prev) =>
-          prev.map((labour) => {
-            if (selectedLabourIds.includes(labour.LabourID)) {
+    
+        try {
+          // Build payload for each selected labour
+          const selectedLaboursData = labours
+            .filter((labour) => selectedLabourIds.includes(labour.LabourID))
+            .map((labour) => {
+              const currentSiteName =
+                projectNames.find((p) => p.Id === labour.projectName)?.Business_Unit ||
+                "Unknown";
+              const transferSiteName =
+                projectNames.find((p) => p.Id === Number(newSite))
+                  ?.Business_Unit || "Unknown";
+    
               return {
-                ...labour,
-                projectName: newSite,
-                Business_Unit: transferSiteName,
+                userId: labour.id, // if needed
+                LabourID: labour.LabourID,
+                name: labour.name,
+                currentSite: labour.projectName,
+                transferSite: newSite,
+                currentSiteName,
+                transferSiteName,
+                transferDate,
+                siteTransferBy: user.name || null,
               };
+            });
+    
+          // Send them all in one request (adapt as needed for your API)
+          const response = await axios.post(
+            `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
+            {
+              labours: selectedLaboursData,
             }
-            return labour;
-          })
-        );
-
-        toast.success(
-          `Site transfer initiated for ${selectedLabourIds.length} labour(s).`
-        );
-        setSelectedLabourIds([]); // clear the selection
-      } else {
-        toast.error(
-          `Failed to transfer labour(s). ${response.data.message || "Unexpected error occurred."
-          }`
-        );
-        setSelectedLabourIds([]);
-      }
-    } catch (error) {
-      console.error("Error during site transfer:", error);
-      toast.error("Failed to transfer labour(s).");
-    }
-  };
-  const selectedLabours = labours.filter((l) =>
-    selectedLabourIds.includes(l.LabourID)
-  );
-  const selectedNames = selectedLabours.map((l) => l.LabourID).join(", ");
+          );
+    
+          if (response.status === 201) {
+            // Update local state for all selected labours
+            const transferSiteName =
+              projectNames.find((p) => p.Id === Number(newSite))?.Business_Unit ||
+              "Unknown";
+    
+            setLabours((prev) =>
+              prev.map((labour) => {
+                if (selectedLabourIds.includes(labour.LabourID)) {
+                  return {
+                    ...labour,
+                    projectName: newSite,
+                    Business_Unit: transferSiteName,
+                  };
+                }
+                return labour;
+              })
+            );
+    
+            toast.success(
+              `Site transfer initiated for ${selectedLabourIds.length} labour(s).`
+            );
+            setSelectedLabourIds([]); // clear the selection
+          } else {
+            toast.error(
+              `Failed to transfer labour(s). ${
+                response.data.message || "Unexpected error occurred."
+              }`
+            );
+            setSelectedLabourIds([]);
+          }
+        } catch (error) {
+          console.error("Error during site transfer:", error);
+          toast.error("Failed to transfer labour(s).");
+        }
+      };
+      const selectedLabours = labours.filter((l) =>
+        selectedLabourIds.includes(l.LabourID)
+      );
+      const selectedNames = selectedLabours.map((l) => l.LabourID).join(", ");
 
  
   const fetchTransferSiteNames = async (labourIds) => {
@@ -1025,7 +1026,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
               </MenuItem>
               {Array.isArray(projectNames) && projectNames.length > 0 ? (
                 projectNames.map((project) => (
-                  <MenuItem key={project.id} value={project.id}>
+                  <MenuItem key={project.Id} value={project.Id}>
                     {project.Business_Unit}
                   </MenuItem>
                 ))
