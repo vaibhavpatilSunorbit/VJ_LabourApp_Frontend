@@ -1702,7 +1702,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                                 {/* <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell> */}
                                                 <TableCell>
                                                     {day.overtime && (day.overtime) ? (
-                                                        <Tooltip title={`${formatConvertedOverTime(day.overtime).hours}h ${formatConvertedOverTime(day.overtime).minutes}m`}>
+                                                        <Tooltip title={`${formatConvertedOverTime(day.overtime).hours}hours ${formatConvertedOverTime(day.overtime).minutes}minutes`}>
                                                           <span>{`${formatOvertime(day.overtime).hours}h ${formatOvertime(day.overtime).minutes}m`}</span>
                                                         </Tooltip>
                                                     ) : "0h"}
@@ -1711,7 +1711,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                                 <TableCell>
                                                     {console.log("-->",day.overtimemanually )}
                                                     {day.overtimemanually && (day.overtimemanually) ? (
-                                                        <Tooltip title={`${formatConvertedOvertimemanually(day.overtimemanually).hours}h ${formatConvertedOvertimemanually(day.overtimemanually).minutes}m`}>
+                                                        <Tooltip title={`${formatConvertedOvertimemanually(day.overtimemanually).hours}hours ${formatConvertedOvertimemanually(day.overtimemanually).minutes}minutes`}>
                                                           <span>{`${formatConvertedOvertimemanually(day.overtimemanually).hours}h ${formatConvertedOvertimemanually(day.overtimemanually).minutes}m`}</span>
                                                         </Tooltip>
                                                     ) : "0h"}

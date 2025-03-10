@@ -1082,7 +1082,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
               </MenuItem>
               {Array.isArray(projectNames) && projectNames.length > 0 ? (
                 projectNames.map((project) => (
-                  <MenuItem key={project.id} value={project.id}>
+                  <MenuItem key={project.Id} value={project.Id}>
                     {project.Business_Unit}
                   </MenuItem>
                 ))

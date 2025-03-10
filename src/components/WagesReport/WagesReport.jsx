@@ -273,6 +273,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     };
     const handleCancel = () => {
         setModalOpen(false); // Close the modal without saving
+        setPayStructure ({})
     };
     // const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
@@ -847,12 +848,12 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                     },
                                 }}
                             >
-                                <TableCell padding="checkbox">
+                                {/* <TableCell padding="checkbox">
                                     <Checkbox
                                         checked={isAllSelected}
                                         onChange={handleSelectAllRows}
                                         inputProps={{ 'aria-label': 'select all labours' }}
-                                    /></TableCell>
+                                    /></TableCell> */}
                                 <TableCell>Sr No</TableCell>
                                 <TableCell>Labour ID</TableCell>
                                 <TableCell>Name</TableCell>
@@ -873,13 +874,13 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                             {/* {paginatedLabours.map((labour, index) => ( */}
                             {displayedLabours.map((labour, index) => (
                                 <TableRow key={labour.LabourID}>
-                                    <TableCell padding="checkbox">
+                                    {/* <TableCell padding="checkbox">
                                         <Checkbox
                                             checked={selectedLabourIds.includes(labour.LabourID)}
                                             onChange={(e) => handleSelectRow(e, labour.LabourID, labour.workingHours)}
                                             inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
                                         />
-                                    </TableCell>
+                                    </TableCell> */}
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     <TableCell>{labour.LabourID}</TableCell>
                                     <TableCell>{labour.name || '-'}</TableCell>
@@ -974,7 +975,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                             </MenuItem>
                             {Array.isArray(projectNames) && projectNames.length > 0 ? (
                                 projectNames.map((project) => (
-                                    <MenuItem key={project.id} value={project.id}>
+                                    <MenuItem key={project.Id} value={project.Id}>
                                         {project.Business_Unit}
                                     </MenuItem>
                                 ))
@@ -1298,7 +1299,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     {payStructure === 'DAILY WAGES' && (
                         <>
                            <TextField
-                            label="DAILY WAGES"
+                            label="Daily Wages"
                             type="number"
                             fullWidth
                             value={dailyWages || ""}
