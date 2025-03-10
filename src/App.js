@@ -31,6 +31,7 @@ import RunPayroll from './components/AdminSalary/RunPayroll/RunPayroll';
 import ViewMonthlyPayroll from './components/AdminSalary/ViewMonthlyPayroll/ViewMonthlyPayroll';
 import { useUser } from './UserContext/UserContext';
 import LabourIdCard from './PaySlip/LabourIdCard';
+import CompanyTransfer from './components/CompanyTransfer/CompanyTransfer';
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -148,6 +149,7 @@ console.log('projectsRes',projectsRes.data)
                     <Route path="/SalaryGeneration" element={<SalaryGeneration onFormSubmit={handleFormSubmit} />} />
                     <Route path="/RunPayroll" element={<RunPayroll onFormSubmit={handleFormSubmit} />} />
                     <Route path="/ViewMonthlyPayroll" element={<ViewMonthlyPayroll onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/companyTransfer" element={<CompanyTransfer onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
                
                     <Route path="/Payslip" element={<PaySlipPage onFormSubmit={handleFormSubmit} />} />
                     <Route path="/LabourIdCard" element={<LabourIdCard  />} />

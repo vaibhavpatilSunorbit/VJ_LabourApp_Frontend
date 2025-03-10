@@ -243,6 +243,60 @@ const AdminApproval = ({ onFormSubmit }) => {
           </Card>
         </Link>
       </Grid>
+
+
+
+      <Grid item xs={12} sm={6} md={4}>
+  <Link to={'/adminApproval/variableInputApproval'} style={{ textDecoration: 'none' }}>
+    <Card
+      sx={{
+        background: 'linear-gradient(135deg, #eef5ff 0%, #d1e3ff 100%)',
+        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+        borderRadius: '12px',
+        minHeight: '220px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        transition: 'all 0.3s ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-5px)',
+          boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.15)',
+        },
+      }}
+    >
+      <CardContent>
+        <Typography variant="h5" sx={{ color: '#0a2c65', fontWeight: 'bold', mb: 1 }}>
+          Company Transfer Approval
+        </Typography>
+
+        <Box
+          sx={{
+            background: 'rgba(255, 255, 255, 0.6)',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
+          <Typography sx={{ fontSize: '18px', color: '#10294c', fontWeight: 500 }}>
+            Pending: <span style={{ fontWeight: 600 }}>{pendingVariablePay}</span>
+          </Typography>
+          <Typography sx={{ fontSize: '18px', color: '#10294c', fontWeight: 500 }}>
+            Approved: <span style={{ fontWeight: 600 }}>{approvedVariablePay}</span>
+          </Typography>
+          <Typography sx={{ fontSize: '18px', color: '#10294c', fontWeight: 500 }}>
+            Rejected: <span style={{ fontWeight: 600 }}>{rejectedVariablePay}</span>
+          </Typography>
+        </Box>
+      </CardContent>
+    </Card>
+  </Link>
+</Grid>
+
     </Grid>
   );
 };

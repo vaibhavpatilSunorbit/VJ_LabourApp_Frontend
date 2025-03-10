@@ -255,6 +255,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
                 item.heading === "Salary Register" ? profileIcon12 :
                 item.heading === "Run PayRoll" ? profileIcon13 :
                 item.heading === "View Payroll" ? profileIcon14 :
+                item.heading === "Company Transfer" ? profileIcon14 :
                 profileIcon6
               } alt="Profile Icon" className="img-white-fill" style={{ height: "30px" }} />
               <Link

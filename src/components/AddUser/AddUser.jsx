@@ -40,6 +40,7 @@ const accessPages = [
   "Salary Generation",
   "Run PayRoll",
   "View Payroll",
+  "Company Transfer",
 ];
 
 const AddUser = () => {
