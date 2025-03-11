@@ -45,6 +45,10 @@ const AdminApproval = ({ onFormSubmit }) => {
   const [approvedWagesCount, setApprovedWagesCount] = useState(0);
   const [rejectedWagesCount, setRejectedWagesCount] = useState(0);
 
+  const [pendingCompanyTransfer, setPendingCompanyTransfer] = useState(0);
+  const [approvedCompanyTransfer, setApprovedCompanyTransfer] = useState(0);
+  const [rejectedCompanyTransfer, setRejectedCompanyTransfer] = useState(0);
+
   useEffect(() => {
     // Get counts from localStorage
     const pending = localStorage.getItem('pendingSiteTransfer');
@@ -92,6 +96,19 @@ const AdminApproval = ({ onFormSubmit }) => {
     setPendingWagesCount(pending || 0);
     setApprovedWagesCount(approved || 0);
     setRejectedWagesCount(rejected || 0);
+  }, []);
+
+
+  useEffect(() => {
+    // Get counts from localStorage
+    const pending = localStorage.getItem('pendingCompanyTransfer');
+    const approved = localStorage.getItem('approvedCompanyTransfer');
+    const rejected = localStorage.getItem('rejectedCompanyTransfer');
+
+    // Update state with the retrieved values
+    setPendingCompanyTransfer(pending || 0);
+    setApprovedCompanyTransfer(approved || 0);
+    setRejectedCompanyTransfer(rejected || 0);
   }, []);
 
   return (
@@ -238,6 +255,43 @@ const AdminApproval = ({ onFormSubmit }) => {
                 <Typography>Pending: {pendingVariablePay}</Typography>
                 <Typography>Approved: {approvedVariablePay}</Typography>
                 <Typography>Rejected: {rejectedVariablePay}</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Link>
+      </Grid>
+      
+      <Grid item xs={12} sm={6} md={4}>
+        <Link to={'/adminApproval/CompanyTransferApproval'} style={{ textDecoration: 'none' }}>
+          <Card
+            sx={{
+              backgroundColor: '#e6eefa',
+              boxShadow: 'none',
+              minHeight: '220px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              '&:hover': {
+                transform: 'scale(1.03)',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+              },
+            }}
+          >
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h5" component="div" sx={{ color: '#10294c' }}>
+              Company Transfer Approval
+              </Typography>
+              <Box
+                variant="body2"
+                sx={{
+                  fontSize: { xs: '25px', md: '45px' },
+                  color: '#10294c',
+                  fontWeight: "600"
+                }}
+              >
+                <Typography>Pending: {pendingCompanyTransfer}</Typography>
+                <Typography>Approved: {approvedCompanyTransfer}</Typography>
+                <Typography>Rejected: {rejectedCompanyTransfer}</Typography>
               </Box>
             </CardContent>
           </Card>

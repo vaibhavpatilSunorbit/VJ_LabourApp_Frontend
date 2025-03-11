@@ -50,6 +50,9 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
     const [presentDays, setPresentDays] = useState(0);
     const [totalOvertimehours, setTotalOvertimehours] = useState(0);
     const [totalOvertimeminute, setTotalOvertimeminute] = useState(0);
+
+    const [totalOvertimehoursManually, setTotalOvertimehoursManually] = useState(0);
+    const [totalOvertimeminuteManually, setTotalOvertimeminuteManually] = useState(0);
     const [tabValue, setTabValue] = useState(0);
     const [selectedLabourId, setSelectedLabourId] = useState('');
     const [editManualDialogOpen, setEditManualDialogOpen] = useState(false);
@@ -262,9 +265,9 @@ function formatConvertedOvertimemanually(Overtimemanually) {
         return { hours, minutes };
     };
 
-    function formatRoundOffTotalOvertime(RoundOffTotalOvertime) {
-        let hours = Math.floor(RoundOffTotalOvertime);
-        let minutes = Math.floor((RoundOffTotalOvertime - hours) * 60);
+    function formatRoundOffTotalOvertime(PayrollCalRoundoffTotalOvertime) {
+        let hours = Math.floor(PayrollCalRoundoffTotalOvertime);
+        let minutes = Math.floor((PayrollCalRoundoffTotalOvertime - hours) * 60);
 
         if (minutes < 15) {
             minutes = 0;
@@ -348,7 +351,12 @@ function formatConvertedOvertimemanually(Overtimemanually) {
 
     const handleSaveManualEdit = async () => {
         try {
-            const defaultTime = manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff' ? '00:00:00' : null;
+
+            if (manualEditData.overtimeManually && Number(manualEditData.overtimeManually) > 4) {
+                toast.error("Overtime manually cannot exceed 4 hours.");
+                return;
+            }
+            const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
 
             const formattedPunchIn = manualEditData.punchIn && dayjs.isDayjs(manualEditData.punchIn)
                 ? manualEditData.punchIn.format('HH:mm:ss')
@@ -418,7 +426,93 @@ function formatConvertedOvertimemanually(Overtimemanually) {
         }
     };
 
-
+    // const handleSaveManualEdit = async () => {
+    //     try {
+    //         // Check if manual overtime provided exceeds 4 hours
+    //         if (manualEditData.overtimeManually && Number(manualEditData.overtimeManually) > 4) {
+    //             toast.error("Overtime manually cannot exceed 4 hours.");
+    //             return;
+    //         }
+    
+    //         // Determine default time based on status
+    //         const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') 
+    //             ? '00:00:00' 
+    //             : null;
+    
+    //         // Format Punch In/Out if they are provided as dayjs objects; otherwise, use defaultTime
+    //         const formattedPunchIn = manualEditData.punchIn && dayjs.isDayjs(manualEditData.punchIn)
+    //             ? manualEditData.punchIn.format('HH:mm:ss')
+    //             : defaultTime;
+    
+    //         const formattedPunchOut = manualEditData.punchOut && dayjs.isDayjs(manualEditData.punchOut)
+    //             ? manualEditData.punchOut.format('HH:mm:ss')
+    //             : defaultTime;
+    
+    //         // For overtime, if provided, trim and convert to string
+    //         const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
+    //         const hasOvertime = overtime !== '';
+    //         const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
+    
+    //         if (!hasOvertime && !hasPunchInOrOut) {
+    //             toast.error('At least provide Overtime or Punch In/Out details to save.');
+    //             return;
+    //         }
+    
+    //         const onboardName = user.name || null;
+    //         const workingHours = manualEditData.workingHours || selectedDay.workingHours;
+    //         const AttendanceStatus = manualEditData.attendanceStatus || null;
+    //         console.log('AttendanceStatus', AttendanceStatus);
+    
+    //         const payload = {
+    //             labourId: selectedDay.labourId,
+    //             date: selectedDay.date,
+    //             AttendanceId: manualEditData.AttendanceId || "",
+    //             ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
+    //             ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
+    //             // Note: If the frontend passes overtimeManually (which is validated to be <= 4), use that.
+    //             ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually }),
+    //             ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
+    //             workingHours,
+    //             ...(onboardName && { onboardName }),
+    //             AttendanceStatus,
+    //             markWeeklyOff: manualEditData.status === 'weeklyOff',
+    //         };
+    
+    //         console.log('Request payload +++++:', payload);
+    
+    //         const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+    
+    //         // Update attendance data in state accordingly
+    //         const updatedAttendanceData = attendanceData.map((day) =>
+    //             day.date === selectedDay.date
+    //                 ? {
+    //                       ...day,
+    //                       ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
+    //                       ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
+    //                       ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually || 0 }),
+    //                       ...(manualEditData.remark && { remark: manualEditData.remark }),
+    //                       workingHours,
+    //                       AttendanceStatus,
+    //                       markWeeklyOff: manualEditData.status === 'weeklyOff',
+    //                   }
+    //                 : day
+    //         );
+    
+    //         setAttendanceData(updatedAttendanceData);
+    //         toast.success(response.data.message || 'Attendance updated successfully!');
+    //         handleManualEditDialogClose();
+    //     } catch (error) {
+    //         const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
+    //         console.error('Error saving attendance:', errorMessage);
+    
+    //         if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
+    //             toast.info('The date is a holiday. You cannot modify punch times or overtime.');
+    //         } else {
+    //             toast.error(errorMessage);
+    //         }
+    //     }
+    // };
+    
     const months = [
         { value: 1, label: 'January' },
         { value: 2, label: 'February' },
@@ -472,13 +566,15 @@ function formatConvertedOvertimemanually(Overtimemanually) {
         }
     }, [modalOpen]);
 
-    const handleModalOpen = (labour , totalOvertimeHours ) => {
+    const handleModalOpen = (labour , totalOvertimeHours ,TotalOvertimeHoursManually) => {
         if (labour && labour.LabourID) {
             console.log("totalOvertimeHours.hours",totalOvertimeHours.hours)
             setSelectedLabour(labour);
             setSelectedLabourId(labour.LabourID);
             setTotalOvertimehours(totalOvertimeHours.hours)
             setTotalOvertimeminute(totalOvertimeHours.minutes)
+            setTotalOvertimehoursManually(TotalOvertimeHoursManually.hours)
+            setTotalOvertimeminuteManually(TotalOvertimeHoursManually.minutes)
             setModalOpen(true);
             fetchAttendanceForMonth();
             // fetchAttendanceData(labour.LabourID, startDate, endDate);
@@ -673,7 +769,8 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                     misspunchDays: labour.MissPunchDays,
                     // totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
                     totalOvertimeHours: formatTotalOvertime(labour.TotalOvertimeHours || 0),
-                    roundOffTotalOvertime: formatRoundOffTotalOvertime(labour.RoundOffTotalOvertime || 0),
+                    roundOffTotalOvertime: formatRoundOffTotalOvertime(labour.PayrollCalRoundoffTotalOvertime || 0),
+                    TotalOvertimeHoursManually: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
                     shift: labour.Shift,
                 };
             });
@@ -1476,7 +1573,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                             </TableCell>
                                             <TableCell>
                                                 <Button
-                                                    onClick={() => handleModalOpen(labour, labourAttendance.totalOvertimeHours)}
+                                                    onClick={() => handleModalOpen(labour, labourAttendance.totalOvertimeHours, labourAttendance.TotalOvertimeHoursManually)}
                                                     sx={{
                                                         backgroundColor: 'rgb(229, 255, 225)',
                                                         color: 'rgb(43, 217, 144)',
@@ -1620,8 +1717,21 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                         <TableCell>Punch Out</TableCell>
                                         <TableCell>Total Hours <br></br>  ( {formattedTotalHours.hours}h {formattedTotalHours.minutes}m )</TableCell>
                                         <TableCell>System Overtime <br></br> ( {totalOvertimehours}h {totalOvertimeminute}m )</TableCell>
-                                        <TableCell>Manual Overtime <br></br> ({isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h  
-  {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m)</TableCell>
+                                        {/* <TableCell>Manual Overtime <br></br> ( {totalOvertimehoursManually}h {totalOvertimeminuteManually}m )</TableCell> */}
+                                        <TableCell>
+  Manual Overtime <br />
+  (
+  { 
+    ((!totalOvertimehoursManually && totalOvertimehoursManually !== 0) ||
+     (totalOvertimehoursManually === 0 && !totalOvertimeminuteManually)) 
+      ? `${totalOvertimehours}h ${totalOvertimeminute}m`
+      : `${totalOvertimehoursManually}h ${totalOvertimeminuteManually}m`
+  }
+  )
+</TableCell>
+
+                                        {/* <TableCell>Manual Overtime <br></br> ({isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h  
+  {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m)</TableCell> */}
                                         {/* <TableCell>Holiday</TableCell> */}
                                         <TableCell>Remark</TableCell>
                                         <TableCell>Actions</TableCell>
@@ -1754,8 +1864,10 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                         </TableCell>
                                         <TableCell>
                                             <strong>
-                                            ({isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h
-                                            {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m) </strong>
+                                            {totalOvertimehours}h {totalOvertimeminute}m
+                                            {/* {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h
+                                            {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m */}
+                                            </strong> 
                                         </TableCell>
                                         {/* Last two columns empty */}
                                         <TableCell colSpan={2} />
