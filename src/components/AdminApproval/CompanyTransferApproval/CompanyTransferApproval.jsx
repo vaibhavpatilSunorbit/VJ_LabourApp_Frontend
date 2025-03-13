@@ -421,18 +421,18 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
       const response = await axios.get(`${API_BASE_URL}/api/getAdminCompanyTransferApproval`);
       // console.log('API Response:', response.data);
       setLabours(response.data);
-      const pendingSiteTransfer = response.data.filter((labour) => labour.adminStatus === "Pending").length;
-      const approvedSiteTransfer = response.data.filter((labour) => labour.adminStatus === "Approved").length;
-      const rejectedSiteTransfer = response.data.filter((labour) => labour.adminStatus === "Rejected").length;
+      const pendingCompanyTransfer = response.data.filter((labour) => labour.adminStatus === "Pending").length;
+      const approvedCompanyTransfer = response.data.filter((labour) => labour.adminStatus === "Approved").length;
+      const rejectedCompanyTransfer = response.data.filter((labour) => labour.adminStatus === "Rejected").length;
 
       // Update counts
-      setPendingCount(pendingSiteTransfer);
-      setApprovedCount(approvedSiteTransfer);
-      setRejectedCount(rejectedSiteTransfer);
-      console.log('Counts before navigating:', { pendingSiteTransfer, approvedSiteTransfer, rejectedSiteTransfer });
-      localStorage.setItem('pendingSiteTransfer', pendingSiteTransfer);
-      localStorage.setItem('approvedSiteTransfer', approvedSiteTransfer);
-      localStorage.setItem('rejectedSiteTransfer', rejectedSiteTransfer);
+      setPendingCount(pendingCompanyTransfer);
+      setApprovedCount(approvedCompanyTransfer);
+      setRejectedCount(rejectedCompanyTransfer);
+      console.log('Counts before navigating:', { pendingCompanyTransfer, approvedCompanyTransfer, rejectedCompanyTransfer });
+      localStorage.setItem('pendingCompanyTransfer', pendingCompanyTransfer);
+      localStorage.setItem('approvedCompanyTransfer', approvedCompanyTransfer);
+      localStorage.setItem('rejectedCompanyTransfer', rejectedCompanyTransfer);
       setLoading(false);
     } catch (error) {
       // console.error('Error fetching labours:', error);
@@ -1197,6 +1197,7 @@ Approve/Reject ({selectedLabourIds.length})
                 return;
               }
               approveLabour(labourToApprove.id);
+              handleApproveConfirmClose();
             }}
             sx={{
               backgroundColor: 'rgb(229, 255, 225)',

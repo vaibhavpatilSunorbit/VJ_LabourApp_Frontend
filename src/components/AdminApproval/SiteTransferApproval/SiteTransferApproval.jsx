@@ -1197,6 +1197,7 @@ Approve/Reject ({selectedLabourIds.length})
                 return;
               }
               approveLabour(labourToApprove.id);
+              handleApproveConfirmClose();
             }}
             sx={{
               backgroundColor: 'rgb(229, 255, 225)',

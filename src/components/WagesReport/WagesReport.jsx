@@ -1250,7 +1250,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        width: 500,
+                        width: 550,
                         bgcolor: 'background.paper',
                         boxShadow: 24,
                         p: 4,
@@ -1258,11 +1258,14 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     }}
                 >
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Box display="flex" flexDirection="column" justifyContent="flex-start" alignItems="flex-start" mb={2}>
                         <Typography id="modal-title" variant="h6">
                             {selectedLabourIds.length > 1
                                 ? 'Update Wages for Selected Labour'
                                 : 'Edit Pay Structure'}
                         </Typography>
+                        <Typography>Shift:  <strong>{selectedLabourWorkingHours}</strong></Typography>
+                        </Box>
                         <IconButton onClick={handleCancel}>
                             <CloseIcon />
                         </IconButton>
@@ -1325,7 +1328,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                 label="Per Hours Wages"
                                 type="number"
                                 fullWidth
-                                value={dailyWages ? dailyWages / perHourWages: 0} // assuming 8 hours per day
+                                value={dailyWages ? (dailyWages / perHourWages).toFixed(2) : 0} // assuming 8 hours per day
                                 InputProps={{ readOnly: true }}
                                 sx={{ mb: 2 }}
                             />

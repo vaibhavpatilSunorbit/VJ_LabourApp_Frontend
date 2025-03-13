@@ -1111,6 +1111,7 @@ Approve/Reject ({selectedLabourIds.length})
                 return;
               }
               approveLabour(labourToApprove.ApprovalID);
+              handleApproveConfirmClose();
             }}
             sx={{
               backgroundColor: 'rgb(229, 255, 225)',

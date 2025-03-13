@@ -1210,6 +1210,7 @@ Approve/Reject ({selectedLabourIds.length})
                 return;
               }
               approveLabour(labourToApprove.VariablePayId);
+              handleApproveConfirmClose();
             }}
             sx={{
               backgroundColor: 'rgb(229, 255, 225)',

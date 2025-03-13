@@ -536,7 +536,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             );
     
             toast.success(
-              `Site transfer initiated for ${selectedLabourIds.length} labour(s).`
+              `Site transfer send ${selectedLabourIds.length} labour(s) for Admin Approval.`
             );
             setSelectedLabourIds([]); // clear the selection
           } else {
@@ -651,7 +651,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             );
       
             toast.success(
-              `Site transfer Send ${selectedLabourIds.length} labour(s) for Admin Approval.`
+              `Company transfer Send ${selectedLabourIds.length} labour(s) for Admin Approval.`
             );
             setSelectedLabourIds([]); // clear selection
           } else {
@@ -661,8 +661,8 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             setSelectedLabourIds([]);
           }
         } catch (error) {
-          console.error("Error during site transfer:", error);
-          toast.error("Failed to transfer labour(s).");
+          console.error("Error during Company transfer:", error);
+          toast.error("Failed to Company transfer labour(s).");
         }
       };
       
@@ -1196,7 +1196,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
 
       {/* Dialog for Confirmation */}
       <Dialog open={openDialogSite} onClose={() => setOpenDialogSite(false)}>
-        <DialogTitle>Confirm Transfer</DialogTitle>
+        <DialogTitle>Confirm Site Transfer</DialogTitle>
         <DialogContent>
           {selectedLabourIds.length > 1 ? (
             <DialogContentText>
@@ -1227,7 +1227,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             sx={{
               backgroundColor: "rgb(229, 255, 225)",
               color: "rgb(43, 217, 144)",
-              width: "130px",
+              width: "auto",
               marginRight: "10px",
               marginBottom: "3px",
               "&:hover": {
