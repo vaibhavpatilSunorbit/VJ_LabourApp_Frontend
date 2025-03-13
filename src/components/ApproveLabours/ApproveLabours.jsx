@@ -249,7 +249,7 @@ const ApproveLabours = () => {
             >
               <option value="">Select a project</option>
               {availableProjectNames.map((project) => (
-                <option key={project.id} value={project.id}>{project.Business_Unit}</option>
+                <option key={project.Id} value={project.Id}>{project.Business_Unit}</option>
               ))}
             </select>
           </div>

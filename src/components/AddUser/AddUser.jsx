@@ -66,6 +66,7 @@ const AddUser = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [departments, setDepartments] = useState([]);
   const [projectNames, setProjectNames] = useState([]);
+  const [accessPagesAdd, setAccessPagesAdd] = useState([]);
   const [selectedDeparmentsIds, setSelectedDeparmentsIds] = useState([]);
   const [selectedProjectIds, setSelectedProjectIds] = useState([]);
   let fetchDepartmentsAndProjects;
@@ -114,6 +115,7 @@ const AddUser = () => {
 
       if (response.status === 200) {
         setUsers(response.data.data);
+        setAccessPagesAdd(JSON.parse(response.data.data.accessPages));
       } else {
         console.error("Failed to fetch users:", response.statusText);
       }
@@ -222,18 +224,24 @@ const AddUser = () => {
   const handleShowModal = (edit = false, user = null) => {
     setShowModal(true);
     if (edit && user) {
+      console.log("user : ", user)
       setUserData(user);
+      // setSelectedValues(
+      //   Array.isArray(user.accessPages) ? user.accessPages : []
+      // );
       setSelectedValues(
-        Array.isArray(user.accessPages) ? user.accessPages : []
+        user.accessPages ? JSON.parse(user.accessPages) : []
       );
 
       // Parse assigned department and project IDs from string to array
       const assignedDepts = user.assigned_departments ? JSON.parse(user.assigned_departments) : [];
       const assignedProjs = user.assigned_projects ? JSON.parse(user.assigned_projects) : [];
+      // const assignedAccessPages = user.accessPages ? JSON.parse(user.accessPages) : [];
 
       // Find matching objects to display names in Autocomplete
       const selectedDeptObjects = departments.filter((dept) => assignedDepts.includes(dept.Id));
       const selectedProjObjects = projectNames.filter((proj) => assignedProjs.includes(proj.Id));
+      // const selectedAcessPages = accessPagesAdd.filter((acc) => assignedAccessPages.includes([]));
 
       setSelectedDeparmentsIds(assignedDepts);
       setSelectedProjectIds(assignedProjs);
@@ -529,6 +537,7 @@ const AddUser = () => {
                 multiple
                 options={accessPages}
                 value={selectedValues}
+                // value={accessPagesAdd.filter((acc) => selectedProjectIds.includes(proj.Id))} 
                 onChange={(event, newValue) => {
                   if (Array.isArray(newValue)) {
                     setSelectedValues(newValue);
@@ -557,6 +566,9 @@ const AddUser = () => {
                     checked={selectedValues.length === accessPages.length}
                     onChange={handleSelectAll}
                     color="primary"
+                    indeterminate={
+                      selectedValues.length > 0 && selectedValues.length < accessPages.length
+                    }
                   />
                 }
                 label="Select All"

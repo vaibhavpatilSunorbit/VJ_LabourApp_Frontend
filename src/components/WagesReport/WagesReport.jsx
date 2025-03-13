@@ -13,7 +13,7 @@ import {
     Box,
     TextField,
     TablePagination,
-    Select, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Checkbox,
+    Select,CircularProgress,
     MenuItem, Modal, Typography, IconButton
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -40,6 +40,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [saveLoader, setSaveLoader] = useState(false);
     const [dailyWages, setDailyWages] = useState({});
     const [perDayWages, setPerDayWages] = useState({});
     const [monthlyWages, setMonthlyWages] = useState({});
@@ -49,7 +50,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const [payStructure, setPayStructure] = useState({});
     const [weakelyOff, setWeakelyOff] = useState({});
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(500);
+    const [rowsPerPage, setRowsPerPage] = useState(25);
     const [weeklyOff, setWeeklyOff] = useState('');
     const [fixedMonthlyWages, setFixedMonthlyWages] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
@@ -244,27 +245,27 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
         setWeakelyOff(prev => ({ ...prev, [labourId]: value }));
     };
 
-    const handleSubmit = async () => {
-        const formData = paginatedLabours.map(labour => ({
-            labourId: labour.LabourID,
-            payStructure: payStructure[labour.LabourID],
-            dailyWages: dailyWages[labour.LabourID],
-            perDayWages: perDayWages[labour.LabourID],
-            monthlyWages: monthlyWages[labour.LabourID],
-            yearlyWages: yearlyWages[labour.LabourID],
-            overtime: overtime[labour.LabourID],
-            totalOvertimeWages: totalOvertimeWages[labour.LabourID],
-            weakelyOff: weakelyOff[labour.LabourID],
-        }));
+    // const handleSubmit = async () => {
+    //     const formData = paginatedLabours.map(labour => ({
+    //         labourId: labour.LabourID,
+    //         payStructure: payStructure[labour.LabourID],
+    //         dailyWages: dailyWages[labour.LabourID],
+    //         perDayWages: perDayWages[labour.LabourID],
+    //         monthlyWages: monthlyWages[labour.LabourID],
+    //         yearlyWages: yearlyWages[labour.LabourID],
+    //         overtime: overtime[labour.LabourID],
+    //         totalOvertimeWages: totalOvertimeWages[labour.LabourID],
+    //         weakelyOff: weakelyOff[labour.LabourID],
+    //     }));
 
-        try {
-            await axios.post(`${API_BASE_URL}/labours/submitWages`, formData);
-            alert("Data submitted successfully!");
-        } catch (error) {
-            console.error("Error submitting data:", error);
-            alert("Failed to submit data.");
-        }
-    };
+    //     try {
+    //         await axios.post(`${API_BASE_URL}/labours/submitWages`, formData);
+    //         alert("Data submitted successfully!");
+    //     } catch (error) {
+    //         console.error("Error submitting data:", error);
+    //         alert("Failed to submit data.");
+    //     }
+    // };
 
     // Utility function to get the number of days in the current month
     const getDaysInMonth = () => {
@@ -431,6 +432,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     // };
 
     const handleSave = async () => {
+        setSaveLoader(true);
         try {
             const onboardName = user.name || null;
     
@@ -467,21 +469,23 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     
                         // **Run sendWagesForApproval API using the received WageID**
                         apiPromises.push(axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData));
+
+                         // **Wait for all sendWagesForApproval API calls to complete**
+                        await Promise.all(apiPromises);
+    
+                        // Show success message after all API calls complete
+                        toast.info("Wages sent for admin approval.");
                     } else {
                         console.error(`Failed to get WageID for LabourID ${labourId}`);
+                        toast.error(upsertResponse.data.message);
                     }
                 } catch (error) {
                     console.error(`Error processing LabourID ${labourId}:`, error);
                 }
             }
+            setSaveLoader(false);
+        handleCancel();
     
-            // **Wait for all sendWagesForApproval API calls to complete**
-            await Promise.all(apiPromises);
-    
-            // Show success message after all API calls complete
-            toast.info("Wages sent for admin approval.");
-    
-            // Refresh the data, close the modal, and reset fields & selections
             fetchLabours();
             setModalOpen(false);
             setWeeklyOff("");
@@ -489,9 +493,9 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
             setFixedMonthlyWages(0);
             setMonthlyWages(0);
             setDailyWages(0);
+            setYearlyWages(0);
             setSelectedLabourIds([]);
-            setSelectedLabourWorkingHours("")
-    
+            setSelectedLabourWorkingHours("");
         } catch (error) {
             console.error("Error saving wages:", error);
             toast.error("Failed to save wages.");
@@ -540,33 +544,34 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     };
 
     
-    laboursSource.forEach((labour) => {
-        const labourProjectId = Number(labour.ProjectID);
-        const labourDepartmentId = Number(labour.DepartmentID);
-        const projectMatch =
-          allowedProjectIds.length > 0
-            ? allowedProjectIds.includes(labourProjectId)
-            : true;
-        const departmentMatch =
-          allowedDepartmentIds.length > 0
-            ? allowedDepartmentIds.includes(labourDepartmentId)
-            : true;
-        // For strict logging (both must match), you could use:
-        if (!projectMatch && !departmentMatch) {
-        //   console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
-        }
-      });
+//    laboursSource.forEach((labour) => {
+//         const labourProjectId = Number(labour.ProjectID);
+//         const labourDepartmentId = Number(labour.DepartmentID);
+//         const projectMatch =
+//           allowedProjectIds.length > 0
+//             ? allowedProjectIds.includes(labourProjectId)
+//             : true;
+//         const departmentMatch =
+//           allowedDepartmentIds.length > 0
+//             ? allowedDepartmentIds.includes(labourDepartmentId)
+//             : true;
+//         // For strict logging (both must match), you could use:
+//         if (!projectMatch && !departmentMatch) {
+//         //   console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
+//         }
+//       });
     
       // Strict filtering: record must match allowed project and department IDs, and status "Approved"
       const getFilteredLaboursForTable = () => {
-        // let baseLabours = [...laboursSource];
-        let baseLabours = rowsPerPage > 0
-          ? (searchResults.length > 0
-              ? searchResults
-              : (filteredIconLabours.length > 0
-                  ? filteredIconLabours
-                  : [...labours]))
-          : [];
+        let baseLabours = searchResults.length > 0 ? [...searchResults] : [...laboursSource];
+        // console.log("baseLabours : ", JSON.stringify(baseLabours));
+        // let baseLabours = rowsPerPage > 0
+        //   ? (searchResults.length > 0
+        //       ? searchResults
+        //       : (filteredIconLabours.length > 0
+        //           ? filteredIconLabours
+        //           : [...labours]))
+        //   : [];
        
         baseLabours = baseLabours.filter((labour) => {
           const labourProjectId = Number(labour.ProjectID);
@@ -585,8 +590,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
         });
         // Ensure that only records with status "Approved" are included.
         // baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
-        // console.log('Filtered Labours For Table:', baseLabours);
-        return baseLabours;
+        console.log('Filtered Labours For Table:', JSON.stringify(baseLabours));
+        return baseLabours || [];
       };
     
       // Helper: Get project description
@@ -607,21 +612,21 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
       const filteredLaboursForTable = getFilteredLaboursForTable();
 
       // Reset page if current page is out of range after filtering
-      useEffect(() => {
-        if (page * rowsPerPage >= filteredLaboursForTable.length) {
-          setPage(0);
-        }
-      }, [filteredLaboursForTable, page, rowsPerPage]);
+    //   useEffect(() => {
+    //     if (page * rowsPerPage >= filteredLaboursForTable.length) {
+    //       setPage(0);
+    //     }
+    //   }, [filteredLaboursForTable, page, rowsPerPage]);
     
-      const paginatedLabours = filteredLaboursForTable.slice(
-        page * rowsPerPage,
-        rowsPerPage === -1
-          ? filteredLaboursForTable.length
-          : (page + 1) * rowsPerPage
-      );
+    //   const paginatedLabours = filteredLaboursForTable.slice(
+    //     page * rowsPerPage,
+    //     rowsPerPage === -1
+    //       ? filteredLaboursForTable.length
+    //       : (page + 1) * rowsPerPage
+    //   );
     //   console.log('Paginated Labours:', paginatedLabours);
     
-      const displayedLabours = paginatedLabours.filter((labour) => {
+      const displayedLabours = filteredLaboursForTable.filter((labour) => {
         return (
           getProjectDescription(labour.ProjectID) !== 'Unknown' &&
           getDepartmentDescription(labour.DepartmentID) !== 'Unknown'
@@ -630,8 +635,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     //   console.log('Displayed Labours:', displayedLabours);
     
       const isAllSelected =
-        paginatedLabours.length > 0 &&
-        paginatedLabours.every((labour) => selectedLabourIds.includes(labour.LabourID));
+        filteredLaboursForTable.length > 0 &&
+        filteredLaboursForTable.every((labour) => selectedLabourIds.includes(labour.LabourID));
     
       // Handlers
       const handleSelectRow = (event, labourId, workingHours) => {
@@ -645,13 +650,13 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     
       const handleSelectAllRows = (event) => {
         if (event.target.checked) {
-          const newSelected = paginatedLabours.map((labour) => labour.LabourID);
+          const newSelected = filteredLaboursForTable.map((labour) => labour.LabourID);
           setSelectedLabourIds((prev) => [
             ...prev,
             ...newSelected.filter((id) => !prev.includes(id)),
           ]);
         } else {
-          const newSelected = paginatedLabours.map((labour) => labour.LabourID);
+          const newSelected = filteredLaboursForTable.map((labour) => labour.LabourID);
           setSelectedLabourIds((prev) =>
             prev.filter((id) => !newSelected.includes(id))
           );
@@ -713,67 +718,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 <ExportWagesReport departments={departments} projectNames={projectNames}/>
                 <ImportWagesReport handleToast={handleToast} onboardName={user.name || null}  modalOpens={modalOpens} setModalOpens={setModalOpens}/>
 
-                {/* <Box display="flex" alignItems="flex-end" gap={2}>
-                    <Select
-                        value={selectedBusinessUnit}
-                        onChange={handleBusinessUnitChange}
-                        displayEmpty
-                        sx={{ width: '200px' }}
-                    >
-                        <MenuItem value="" disabled>
-                            Select Business Unit
-                        </MenuItem>
-                        {businessUnits.length > 0 ? (
-                            businessUnits.map((unit) => (
-                                <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
-                                    {unit.BusinessUnit}
-                                </MenuItem>
-                            ))
-                        ) : (
-                            <MenuItem value="" disabled>
-                                No Business Units Available
-                            </MenuItem>
-                        )}
-                    </Select>
-                    <TextField
-                        label="Start Date"
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{
-                            padding: '4px 4px 1px 4px',
-                            '& .MuiInputBase-input': {
-                                padding: '8px 8px',
-                            },
-                        }}
-                    />
-                    <TextField
-                        label="End Date"
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{
-                            padding: '4px 4px 1px 4px',
-                            '& .MuiInputBase-input': {
-                                padding: '8px 8px',
-                            },
-                        }}
-                    />
-                    <Button variant="contained" onClick={handleExport} sx={{
-                        fontSize: { xs: '10px', sm: '13px', md: '15px' },
-                        height: { xs: '40px', sm: '38px', md: '38px', lg: '38px' },
-                        width: { xs: '100%', sm: 'auto' },
-                        backgroundColor: 'rgb(229, 255, 225)',
-                        color: 'rgb(43, 217, 144)',
-                        '&:hover': {
-                            backgroundColor: 'rgb(229, 255, 225)',
-                        },
-                    }}>
-                        Export
-                    </Button>
-                </Box> */}
+             
 
                 <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
                     Filter
@@ -785,19 +730,9 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 )}
 
 
-                {/* <IconButton onClick={() => setFilterModalOpen(true)} aria-label="Select Filter">
-  <FilterListIcon />
-</IconButton>
-{selectedLabourIds.length > 0 && (
-  <IconButton onClick={() => setModalOpen(true)} aria-label="Edit Wages">
-    <EditIcon />
-  </IconButton>
-)} */}
-
-
                 <TablePagination
                     className="custom-pagination"
-                    rowsPerPageOptions={[25, 100, 900, { label: 'All', value: -1 }]}
+                    rowsPerPageOptions={[25, 100, 900, { label: 'All', value: displayedLabours.length }]}
                     // rowsPerPageOptions={[ 100, { label: 'All', value: -1 }]}
                     // count={labours.length}
                     count={displayedLabours.length}
@@ -871,8 +806,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {/* {paginatedLabours.map((labour, index) => ( */}
-                            {displayedLabours.map((labour, index) => (
+                            {displayedLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            .map((labour, index) => (
                                 <TableRow key={labour.LabourID}>
                                     {/* <TableCell padding="checkbox">
                                         <Checkbox
@@ -1032,26 +967,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                         </Select>
                     </Box>
 
-                    {/* Employee Filter Section */}
-                    {/* <Box sx={{ mb: 2 }}>
-      <FormControl component="fieldset">
-        <FormLabel component="legend">Employee Filter</FormLabel>
-        <RadioGroup row value={employeeToggle} onChange={(e) => setEmployeeToggle(e.target.value)}>
-          <FormControlLabel value="all" control={<Radio />} label="All" />
-          <FormControlLabel value="single" control={<Radio />} label="Single" />
-        </RadioGroup>
-      </FormControl>
-      {employeeToggle === 'single' && (
-        <TextField
-          fullWidth
-          label="Employee ID"
-          value={selectedEmployee}
-          onChange={(e) => setSelectedEmployee(e.target.value)}
-          sx={{ mt: 1 }}
-        />
-      )}
-    </Box> */}
-
                     {/* Modal Action Buttons */}
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                         <Button variant="outlined" color="secondary" onClick={handleResetFilter}>
@@ -1073,170 +988,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 </Box>
             </Modal>
 
-
-            {/* Modal */}
-            {/* <Modal
-                open={modalOpen}
-                onClose={handleCancel}
-                aria-labelledby="modal-title"
-                aria-describedby="modal-description"
-            >
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 500,
-                        bgcolor: 'background.paper',
-                        boxShadow: 24,
-                        p: 4,
-                        borderRadius: 2,
-                    }}
-                >
-                    <h2 id="modal-title">Edit Pay Structure</h2>
-
-                    <Select
-                        fullWidth
-                        value={payStructure}
-                        onChange={(e) => setPayStructure(e.target.value)}
-                        displayEmpty
-                        sx={{ mb: 2 }}
-                    >
-                        <MenuItem value="" disabled>
-                            Select Pay Structure
-                        </MenuItem>
-                        <MenuItem value="Daily Wages">Daily Wages</MenuItem>
-                        <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
-                    </Select>
-
-                    <TextField
-                        label="Effective Date"
-                        type="date"
-                        fullWidth
-                        value={effectiveDate}
-                        onChange={(e) => setEffectiveDate(e.target.value)}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                        sx={{ mb: 2 }}
-                        required
-                    />
-
-                    {payStructure === 'Daily Wages' && (
-                        <>
-                            <TextField
-                                label="Daily Wages"
-                                type="number"
-                                fullWidth
-                                value={dailyWages || ""} // Display an empty string if the value is 0 or null
-                                onChange={(e) => {
-                                    const value = e.target.value === "" ? null : parseFloat(e.target.value); // Set null for empty input, otherwise parse the number
-                                    setDailyWages(value);
-                                    if (value !== null) {
-                                        setMonthlyWages(value * 30); // Assuming 30 days in a month
-                                        setYearlyWages(value * 30 * 12); // Assuming 12 months in a year
-                                    } else {
-                                        setMonthlyWages(null); // Reset Monthly Wages if Daily Wages is null
-                                        setYearlyWages(null); // Reset Yearly Wages if Daily Wages is null
-                                    }
-                                }}
-                                sx={{ mb: 2 }}
-                            />
-
-                            <TextField
-                                label="Per Hours Wages"
-                                type="number"
-                                fullWidth
-                                value={dailyWages / 8 || 0} // Assuming 8 hours in a workday
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Monthly Wages"
-                                type="number"
-                                fullWidth
-                                value={monthlyWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Yearly Wages"
-                                type="number"
-                                fullWidth
-                                value={yearlyWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                        </>
-                    )}
-
-                    {payStructure === 'Fixed Monthly Wages' && (
-                        <>
-                            <Select
-                                label="Weekly Off"
-                                fullWidth
-                                value={weeklyOff || ""}
-                                onChange={(e) => {
-                                    const selectedValue = e.target.value;
-                                    if (selectedValue === "") {
-                                        // Reset related state if needed
-                                        setWeeklyOff("");
-                                        setMonthlyWages(0); // Reset monthly wages or other dependent fields if required
-                                    } else {
-                                        setWeeklyOff(selectedValue);
-                                    }
-                                }}
-                                displayEmpty
-                                sx={{ mb: 2 }}
-                            >
-                                <MenuItem value="" disabled>
-                                    Select Weekly Off
-                                </MenuItem>
-                                <MenuItem value="1">1</MenuItem>
-                                <MenuItem value="2">2</MenuItem>
-                                <MenuItem value="3">3</MenuItem>
-                                <MenuItem value="4">4</MenuItem>
-                            </Select>
-
-                            <TextField
-                                label="Fixed Monthly Wages"
-                                type="number"
-                                fullWidth
-                                value={fixedMonthlyWages || ""} // Display an empty string if the value is 0 or null
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setFixedMonthlyWages(value === "" ? null : parseFloat(value)); // Set null for empty input, otherwise parse the number
-                                }}
-                                sx={{ mb: 2 }}
-                            />
-                        </>
-                    )}
-
-                    <Box display="flex" justifyContent="space-between" mt={2}>
-                        <Button variant="contained" sx={{
-                            backgroundColor: "#fce4ec",
-                            color: "rgb(255, 100, 100)",
-                            width: "100px",
-                            "&:hover": {
-                                backgroundColor: "#f8bbd0",
-                            },
-                        }} onClick={handleCancel}>
-                            Close
-                        </Button>
-                        <Button variant="contained" sx={{
-                            backgroundColor: "rgb(229, 255, 225)",
-                            color: "rgb(43, 217, 144)",
-                            width: "100px",
-                            "&:hover": {
-                                backgroundColor: "rgb(229, 255, 225)",
-                            },
-                        }} onClick={handleSave} disabled={!payStructure || !effectiveDate}>
-                            Save
-                        </Button>
-                    </Box>
-                </Box>
-            </Modal> */}
             {/* Modal for Batch (or Individual) Wage Update */}
             <Modal
                 open={modalOpen}
@@ -1415,6 +1166,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                             }}
                             onClick={handleSave}
                             disabled={!payStructure || !effectiveDate}
+                            startIcon={saveLoader && <CircularProgress size={30} />}
                         >
                             Save
                         </Button>

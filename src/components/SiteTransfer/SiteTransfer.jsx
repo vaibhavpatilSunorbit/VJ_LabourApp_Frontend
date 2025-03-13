@@ -368,6 +368,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             ? companyNamesRes.data
             : [companyNamesRes.data];
   
+            console.log("companyData ::",companyData)
           setCompanyNames(companyData);
   
           // Auto-set companyName if empty
@@ -452,8 +453,8 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
   const selectedProject = projectNames.find((p) => p.Id === selectedProjectId);
 
   if (selectedProject) {
-    console.log("🚀 Selected Project:", selectedProject);
-    console.log("📌 Selected Project ID:", selectedProject.Id);
+    // console.log("🚀 Selected Project:", selectedProject);
+    // console.log("📌 Selected Project ID:", selectedProject.Id);
     
     // Update formData with projectId & reset companyName
     setFormData((prev) => ({
@@ -541,8 +542,8 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             setSelectedLabourIds([]); // clear the selection
           } else {
             toast.error(
-              `Failed to transfer labour(s). ${
-                response.data.message || "Unexpected error occurred."
+              `${
+                response.data.message || "Failed to transfer labour(s). Unexpected error occurred."
               }`
             );
             setSelectedLabourIds([]);
@@ -804,7 +805,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     );
   });
   // console.log('Displayed Labours:SiteTransfer', displayedLabours);
-  // console.log('Displayed Labours:SiteTransfer', displayedLabours);
+  // console.log('Displayed Labours:SiteTransfer', JSON.stringify(displayedLabours));
 
   const isAllSelected =
     paginatedLabours.length > 0 &&
@@ -904,19 +905,19 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
        </Button>
         )}
 
-        {selectedLabourIds.length > 0 && (
+        {/* {selectedLabourIds.length > 0 && (
          <Button
          variant="outlined"
          color="secondary"
          startIcon={<EditIcon />}
          onClick={() => {
-           setIsCompanyTransfer(true); // Company Transfer
+           setIsCompanyTransfer(true); // Company Transferx
            handleOpenModal();
          }}
        >
          Company Transfer ({selectedLabourIds.length})
        </Button>
-        )}
+        )} */}
 
 
         <TablePagination
@@ -1014,7 +1015,8 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{labour.LabourID}</TableCell>
                   <TableCell>{labour.name || '-'}</TableCell>
-                  <TableCell>{getProjectDescription(labour.projectName)}</TableCell>
+                  {/* <TableCell>{getProjectDescription(labour.projectName)}</TableCell> */}
+                  <TableCell>{labour.businessUnit}</TableCell>
                   <TableCell>
                     {(() => {
                       return statusesSite[labour.LabourID]?.currentSiteName || '-';
@@ -1178,7 +1180,12 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             <Button
               variant="contained"
               color="primary"
-              onClick={handleModalTransfer}
+              onClick={() => {setModalOpen(false);
+                setOpenDialogSite(true);}}
+              // onClick={() => {
+              //   setIsCompanyTransfer(false); // Site Transfer
+              //   handleOpenModal();
+              // }}
               sx={{
                 backgroundColor: "rgb(229, 255, 225)",
                 color: "rgb(43, 217, 144)",
@@ -1241,7 +1248,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
         </DialogActions>
       </Dialog>
 
-
+{/* 
       <Dialog open={openDialogCompany} onClose={() => setOpenDialogSite(false)}>
         <DialogTitle>Confirm Company Transfer</DialogTitle>
         <DialogContent>
@@ -1286,7 +1293,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             Confirm Transfer
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
       {/* ------------------------------------------------------------------------------------------- */}
       {/* ===== FILTER MODAL ===== */}
