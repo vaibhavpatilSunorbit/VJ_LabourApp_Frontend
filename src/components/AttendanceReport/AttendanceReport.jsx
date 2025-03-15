@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchBar';
+import SearchBar from '../SarchBar/SearchRegister';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import "./attendanceReport.css";
@@ -321,6 +321,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
             overtimemanually: day.overtimemanually || "",
             remark: day.remark || "",
             attendanceStatus: day.status || "",
+            isFinalPayAvailable: day.isFinalPayAvailable || "",
         });
         setEditManualDialogOpen(true);
     };
@@ -334,7 +335,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
         try {
 
             if (manualEditData.overtimeManually > manualEditData.overtime ||  Number(manualEditData.overtimeManually) > 4) {
-                toast.error("Overtime manually cannot exceed 4 hours or Not greater than system overtime.");
+                toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
                 return;
             }
             const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
@@ -517,6 +518,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
             setSearchResults(response.data);
+            setPage(0);
         } catch (error) {
             setError('Error searching. Please try again.');
         }
@@ -612,6 +614,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                     attendanceId: attendanceRecord?.AttendanceId || '-',
                     ApprovalStatus: attendanceRecord?.ApprovalStatus || '-',
                     TotalOvertimeHoursManually: attendanceRecord?.TotalOvertimeHoursManually || '-',
+                    isFinalPayAvailable: attendanceRecord?.isFinalPayAvailable,
                 };
             });
             // console.log('attendanceRecord+++', fullMonthAttendance)
@@ -1250,7 +1253,10 @@ function formatConvertedOvertimemanually(Overtimemanually) {
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
             <ToastContainer />
-            <Box ml={-1.5}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Attendance Report
+                </Typography>
                 <SearchBar
                     //  handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
@@ -1814,7 +1820,9 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                                             },
                                                         }}
                                                         onClick={() => handleManualEditDialogOpen(day)}
+                                                        disabled = {day.isFinalPayAvailable}
                                                     >
+
                                                         Edit
                                                     </Button>
                                                 </TableCell>
@@ -1933,7 +1941,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                                     : null
                                         }
                                         onChange={(newValue) =>
-                                            setManualEditData({ ...manualEditData, punchIn: newValue })
+                                            setManualEditData({ ...manualEditData, punchIn: newValue ? newValue.format('HH:mm:ss') : null })
                                         }
                                         views={['hours', 'minutes', 'seconds']}
                                         ampm={false}
@@ -1982,7 +1990,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                 label="Remark"
                                 variant="outlined"
                                 fullWidth
-                                value={manualEditData.remark}
+                                value={manualEditData.remark || ""}
                                 onChange={(e) =>
                                     setManualEditData({ ...manualEditData, remark: e.target.value })
                                 }
@@ -2004,7 +2012,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                             px: 2,
                             gap: 0,
                         }}
-                    >
+                    >                        
                         <Button
                             onClick={handleManualEditDialogClose}
                             sx={{
@@ -2029,6 +2037,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                     backgroundColor: 'rgb(229, 255, 225)',
                                 },
                             }}
+                            disabled={manualEditData.remark === "" || manualEditData.remark === null || manualEditData.remark === undefined || manualEditData.remark === "-"}
                         >
                             Save
                         </Button>

@@ -125,6 +125,7 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
     try {
       const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromAttendanceApproval?q=${searchQuery}`);
       setSearchResults(response.data);
+      setPage(0);
     } catch (error) {
       setError('Error searching. Please try again.');
     }
@@ -220,7 +221,7 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
     }
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/attendance/reject`, null, {
+      const response = await axios.put(`${API_BASE_URL}/labours/attendance/rejectFromAdmin`, null, {
         params: { AttendanceId, rejectReason },
       });
 
@@ -361,7 +362,7 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
         }
   
         // Reject the labour
-        const response = await axios.put(`${API_BASE_URL}/labours/attendance/reject`, {
+        const response = await axios.put(`${API_BASE_URL}/labours/attendance/rejectFromAdmin`, {
           params: { 
             id: labourObj.id, 
             rejectReason: rejectReason 

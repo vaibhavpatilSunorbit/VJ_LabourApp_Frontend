@@ -122,6 +122,7 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     try {
       const response = await axios.get(`${API_BASE_URL}/insentive/searchFromSiteTransferApproval?q=${searchQuery}`);
       setSearchResults(response.data);
+      setPage(0);
     } catch (error) {
       setError('Error searching. Please try again.');
     }

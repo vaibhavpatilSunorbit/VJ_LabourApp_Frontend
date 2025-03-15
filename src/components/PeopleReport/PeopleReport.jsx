@@ -33,7 +33,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import "./peoplereport.css";
 import { useNavigate, useLocation } from 'react-router-dom';
-import SearchBar from '../SarchBar/SearchBar';
+import SearchBar from '../SarchBar/SearchRegister';
 import ViewDetails from '../ViewDetails/ViewDetails';
 import Loading from "../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
@@ -122,6 +122,7 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromSiteTransfer?q=${searchQuery}`);
             setSearchResults(response.data);
+            setPage(0);
         } catch (error) {
             setError('Error searching. Please try again.');
         }
@@ -571,11 +572,11 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
-            {/* <Typography variant="h6" sx={{marginLeft:'8px'}} >
-        People
-      </Typography> */}
-
-            <Box ml={-1.5}>
+          
+<Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Peoples
+                </Typography>
                 <SearchBar
                     handleSubmit={handleSubmit}
                     searchQuery={searchQuery}

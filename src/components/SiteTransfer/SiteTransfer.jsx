@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchWages';
+import SearchBar from '../SarchBar/SearchRegister';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
@@ -241,15 +241,15 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
   const handleSearch = async (e) => {
     e.preventDefault();
     if (searchQuery.trim() === '') {
-      await fetchLabours();
+      setSearchResults([]);
       return;
     }
     setLoading(true);
     try {
       const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromSiteTransfer?q=${searchQuery}`);
-      setLabours(response.data);
+      setSearchResults(response.data);
+      setPage(0);
     } catch (error) {
-      console.error('Error searching:', error);
       toast.error('Search failed');
     } finally {
       setLoading(false);
@@ -855,9 +855,12 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
       <ToastContainer />
-      <Box ml={-1.5}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Site Transfer
+                </Typography>
         <SearchBar
-          // handleSubmit={handleSubmit}
+          handleSubmit={handleSubmit}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}

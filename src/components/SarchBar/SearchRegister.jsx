@@ -88,7 +88,7 @@ const SearchRegister = ({
         <input
           id="search"
           type="search"
-          placeholder="Search By Name.."
+          placeholder="Search By Name, Labour ID.."
           value={searchQuery}
           autoFocus
           required
@@ -109,7 +109,7 @@ const SearchRegister = ({
             {searchResults.map((result) => (
               <li key={result.id} className="search-register__result-item">
                 <span className="search-register__result-info">
-                  {result.LabourID} - {result.name} - {result.companyName} - {result.payAddedBy} - {result.departmentName} - {result.PayStructure}
+                  {result.LabourID} - {result.name} - {result.aadhaarNumber} - {result.OnboardName} - {result.workingHours}- {result.companyName} - {result.payAddedBy} - {result.departmentName} - {result.PayStructure}
                 </span>
                 <button 
                   onClick={() => handleSelectLabour(result)} 

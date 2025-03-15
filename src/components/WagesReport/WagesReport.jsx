@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchWages';
+import SearchBar from '../SarchBar/SearchRegister';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
@@ -532,6 +532,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromWages?q=${searchQuery}`);
             setSearchResults(response.data);
+            setPage(0);
         } catch (error) {
             console.error('Error searching:', error);
             toast.error('Search failed');
@@ -684,7 +685,10 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
-            <Box ml={-1.5}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Wages Report
+                </Typography>
                 <SearchBar
                     // handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
@@ -794,7 +798,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                 <TableCell>Name</TableCell>
                                 <TableCell>Business Unit</TableCell>
                                 <TableCell>Department</TableCell>
-                                <TableCell>From Date</TableCell>
+                                {/* <TableCell>From Date</TableCell> */}
+                                <TableCell>Effective From</TableCell>
                                 <TableCell>Pay Structure</TableCell>
                                 <TableCell>Daily Wages</TableCell>
                                 <TableCell>Fixed Monthly Wages</TableCell>
@@ -821,7 +826,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                     <TableCell>{labour.name || '-'}</TableCell>
                                     <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell>
                                     <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
-                                    <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell>
+                                    {/* <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell> */}
+                                    <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString() : '-'}</TableCell>
                                     <TableCell>{labour.PayStructure || '-'}</TableCell>
                                     <TableCell>{labour.DailyWages || '-'}</TableCell>
                                     <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>

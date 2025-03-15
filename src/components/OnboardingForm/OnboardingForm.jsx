@@ -803,6 +803,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     try {
       const response = await axios.get(API_BASE_URL + `/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
+      // setPage(0);
     } catch (error) {
       console.error('Error searching:', error);
       toast.error('Error searching. Please try again.');

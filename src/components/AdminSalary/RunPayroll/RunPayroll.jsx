@@ -205,7 +205,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     fullResponse: labour
                 };
             });
-console.log('ShowSalaryGeneration for month',ShowSalaryGeneration)
+console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
@@ -402,18 +402,32 @@ console.log('ShowSalaryGeneration for month',ShowSalaryGeneration)
         }
     };
 
+    function searchLabourData(data, searchQuery) {
+        if (!searchQuery) return data; // Return original data if search query is empty
+    
+        searchQuery = searchQuery.toLowerCase(); // Convert query to lowercase for case-insensitive search
+    
+        return data.filter(item => 
+            item.name.toLowerCase().includes(searchQuery) || 
+            item.LabourID.toLowerCase().includes(searchQuery) ||
+            item.projectName.toLowerCase().includes(searchQuery) ||
+            item.department.toLowerCase().includes(searchQuery)
+        );
+    }
+
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
-            fetchSalaryGenerationForDateMonthAll();
+            setSearchResults([]);
             return;
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
-            setLabours(response.data);
+            // const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
+            const data = searchLabourData(labours, searchQuery);
+            setSearchResults(data);
+            setPage(0);
         } catch (error) {
-            console.error('Error searching:', error);
             toast.error('Search failed');
         } finally {
             setLoading(false);
@@ -458,7 +472,7 @@ console.log('ShowSalaryGeneration for month',ShowSalaryGeneration)
         setOpenModal(true);
     };
 
-    const filteredLabours = getLatestLabourData(labours);
+    const filteredLabours = getLatestLabourData(searchResults.length > 0 ? searchResults : labours);
     const paginatedLabours = filteredLabours.slice(
         page * rowsPerPage,
         (page + 1) * rowsPerPage

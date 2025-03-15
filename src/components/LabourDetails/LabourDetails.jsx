@@ -33,7 +33,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import "./LabourDetails.css";
 import { useNavigate, useLocation } from 'react-router-dom';
-import SearchBar from '../SarchBar/SearchBar';
+import SearchBar from '../SarchBar/SearchRegister';
 import ViewDetails from '../ViewDetails/ViewDetails';
 import Loading from "../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
@@ -118,7 +118,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
   const laboursToDisplay = (
     // If you have search or additional filters, you can integrate them here.
-    labours
+    searchResults.length > 0 ? searchResults : labours
   )
     .filter((labour) => {
       // Filter based on tab status (Pending, Approved, etc.)
@@ -150,12 +150,13 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       if (searchQuery.trim() === '') {
         // Clear any search results and fetch all labours
         setSearchResults([]);
-        await fetchLabours();
+        // await fetchLabours();
         return; // Stop execution if the search query is empty
       }
       try {
         const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
-        setLabours(response.data);
+        setSearchResults(response.data);
+        setPage(0);
       } catch (error) {
         setError('Error searching. Please try again.');
       }
@@ -2480,19 +2481,20 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
-      {/* <Typography variant="h5" >
-        Labour Details
-      </Typography> */}
 
-      <Box ml={-1.5}>
+
+<Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Labour Details
+                </Typography>
         <SearchBar
           handleSubmit={handleSubmit}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
           // handleSearch={() => {}}
-            setSearchResults={setSearchResults} 
-          searchResults={searchResults}
+            searchResults={searchResults}
+            setSearchResults={setSearchResults}   
           handleSelectLabour={handleSelectLabour}
           showResults={false}
           className="search-bar"

@@ -126,6 +126,7 @@ const VariableInputApproval = ({ onApprove, departments, projectNames, labour, l
     try {
       const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
       setSearchResults(response.data);
+      setPage(0);
     } catch (error) {
       setError('Error searching. Please try again.');
     }

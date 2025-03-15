@@ -461,15 +461,16 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
-            fetchSalaryGenerationForDateMonthAll();
+            setSearchResults([]);
+            // fetchSalaryGenerationForDateMonthAll();
             return;
         }
         setLoading(true);
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
-            setLabours(response.data);
+            setSearchResults(response.data);
+            setPage(0);
         } catch (error) {
-            console.error('Error searching:', error);
             toast.error('Search failed');
         } finally {
             setLoading(false);
@@ -545,7 +546,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         setOpenModal(true);
     };
 
-    const filteredLabours = getLatestLabourData(labours);
+    const filteredLabours = getLatestLabourData(searchResults.length > 0 ? searchResults : labours);
     const paginatedLabours = rowsPerPage > 0
         ? filteredLabours.slice(page * rowsPerPage, (page + 1) * rowsPerPage)
         : filteredLabours;
@@ -754,8 +755,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
             const labourDetails = response.data;
-            const projectName = getProjectDescription(labourDetails.projectName);
-            const department = getDepartmentDescription(labourDetails.department);
+            const projectName = labourDetails.businessUnit;
+            const department = labourDetails.departmentName;
 
             setSelectedLabour({
                 ...labourDetails,

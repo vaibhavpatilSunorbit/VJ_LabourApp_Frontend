@@ -129,6 +129,7 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
     try {
       const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromWagesApproval?q=${searchQuery}`);
       setSearchResults(response.data);
+      setPage(0);
     } catch (error) {
       setError('Error searching. Please try again.');
     }
