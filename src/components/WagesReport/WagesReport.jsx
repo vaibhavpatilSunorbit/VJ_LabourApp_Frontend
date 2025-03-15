@@ -813,14 +813,16 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                         <TableBody>
                             {displayedLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((labour, index) => (
-                                <TableRow key={labour.LabourID}>
-                                    {/* <TableCell padding="checkbox">
-                                        <Checkbox
-                                            checked={selectedLabourIds.includes(labour.LabourID)}
-                                            onChange={(e) => handleSelectRow(e, labour.LabourID, labour.workingHours)}
-                                            inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
-                                        />
-                                    </TableCell> */}
+                                <TableRow key={labour.LabourID}
+                                  sx={{
+                                    backgroundColor:
+                                    labour?.ApprovalStatusWages === 'Pending'
+                                        ? '#ffe6e6' // Light red for Pending
+                                        : labour?.ApprovalStatusWages === 'Approved'
+                                        ? '#dcfff0' // Light green for Approved
+                                        : 'inherit',
+                                  }}
+                                >
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     <TableCell>{labour.LabourID}</TableCell>
                                     <TableCell>{labour.name || '-'}</TableCell>

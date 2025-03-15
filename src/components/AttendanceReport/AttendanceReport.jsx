@@ -333,6 +333,31 @@ function formatConvertedOvertimemanually(Overtimemanually) {
 
     const handleSaveManualEdit = async () => {
         try {
+            if (manualEditData.status === 'weeklyOff') {
+                const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`);
+                const wagesData = wagesResponse.data;
+    
+                
+                if (!wagesData || wagesData.length === 0) {
+                    toast.error("Add the wages for that labour then add mark as weeklyOff");
+                    return;
+                }
+    
+                const labourWageRecord = wagesData.find(record => record.LabourID === selectedDay.labourId);
+    
+                // If no wage record exists for that labour
+                if (!labourWageRecord) {
+                    toast.error("Add the wages for that labour then add mark as weeklyOff");
+                    return;
+                }
+    
+                // If the wage record exists and the PayStructure is DAILY WAGES
+                if (labourWageRecord.PayStructure === "DAILY WAGES") {
+                    toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
+                    return;
+                }
+            }
+
 
             if (manualEditData.overtimeManually > manualEditData.overtime ||  Number(manualEditData.overtimeManually) > 4) {
                 toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");

@@ -132,12 +132,12 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
 
     const fetchSalaryGenerationForDateMonthAll = async () => {
-        setLoading(true);
         if (!selectedMonth || !selectedYear) {
             toast.warning('Please select a valid month and year.');
-            setLoading(false);
             return;
         }
+        setLoading(true);
+
         const params = { month: selectedMonth, year: selectedYear };
         if (!fetchForAll) {
             params.labourIds = labourId;
@@ -217,14 +217,14 @@ console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration
         }
     };
 
-    // useEffect(() => {
-    //     if (selectedMonth && selectedYear) {
-    //         fetchSalaryGenerationForDateMonthAll();
-    //     }
-    // }, [selectedMonth, selectedYear]);
     useEffect(() => {
+        if (!selectedMonth && !selectedYear) {
             fetchSalaryGenerationForDateMonthAll();
-    },[]);
+        }
+    }, [selectedMonth, selectedYear]);
+    // useEffect(() => {
+    //         fetchSalaryGenerationForDateMonthAll();
+    // },[]);
 
 
 
@@ -714,7 +714,7 @@ console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    {/* Back Button */}
+                <Box sx= {{display:'flex', alignItems:'center', gap:2}}>
                     <IconButton
                         sx={{ marginRight: 2 }}
                         onClick={navigateToSalaryGeneration} disabled={navigating}
@@ -726,7 +726,7 @@ console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration
                     <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
                         Reports | Run PayRoll
                     </Typography>
-
+</Box>
                     <SearchBar
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
