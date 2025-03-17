@@ -125,7 +125,10 @@ const VariableInputApproval = ({ onApprove, departments, projectNames, labour, l
     }
     try {
       const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
-      setSearchResults(response.data);
+      setSearchResults(response.data.map(labour => ({
+        ...labour,
+        IsApproveDisable: labour.IsApproveDisable === "true" || labour.IsApproveDisable === true,
+      })));
       setPage(0);
     } catch (error) {
       setError('Error searching. Please try again.');
@@ -425,7 +428,10 @@ const VariableInputApproval = ({ onApprove, departments, projectNames, labour, l
     try {
       const response = await axios.get(`${API_BASE_URL}/insentive/admin/getVariablePayAdminApprovals`);
       // console.log('API Response:', response.data);
-      setLabours(response.data);
+      setLabours(response.data.map(labour => ({
+        ...labour,
+        IsApproveDisable: labour.IsApproveDisable === "true" || labour.IsApproveDisable === true,
+      })));
       const pendingVariablePay = response.data.filter((labour) => labour.ApprovalStatusPay === "AdminPending").length;
       const approvedVariablePay = response.data.filter((labour) => labour.ApprovalStatusPay === "Approved").length;
       const rejectedVariablePay = response.data.filter((labour) => labour.ApprovalStatusPay === "Rejected").length;
@@ -1011,6 +1017,7 @@ Approve/Reject ({selectedLabourIds.length})
                               },
                             }}
                             onClick={() => handleApproveConfirmOpen(labour)}
+                            disabled={labour.IsApproveDisable}
                           >
                             Approve
                           </Button>

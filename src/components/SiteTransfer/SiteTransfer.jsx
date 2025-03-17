@@ -508,47 +508,71 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
                 siteTransferBy: user.name || null,
               };
             });
-    
-          // Send them all in one request (adapt as needed for your API)
-          const response = await axios.post(
-            `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
-            {
-              labours: selectedLaboursData,
+           
+                 // Send them all in one request (adapt as needed for your API)
+            const response = await axios.post(
+              `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
+              {
+                labours: selectedLaboursData,
+              }
+            );
+      
+            if (response.status === 201) {
+              // Update local state for all selected labours
+              const transferSiteName =
+                projectNames.find((p) => p.Id === Number(newSite))?.Business_Unit ||
+                "Unknown";
+      
+              setLabours((prev) =>
+                prev.map((labour) => {
+                  if (selectedLabourIds.includes(labour.LabourID)) {
+                    return {
+                      ...labour,
+                      projectName: newSite,
+                      Business_Unit: transferSiteName,
+                    };
+                  }
+                  return labour;
+                })
+              );
+
+              setFormData({
+                projectName: "",
+                projectId: null,
+                companyName: "",
+              });
+              setTransferDate("");
+              setNewSite(null);
+              toast.success(
+                `Site transfer send ${selectedLabourIds.length} labour(s) for Admin Approval.`
+              );
+              setSelectedLabourIds([]); // clear the selection
+                  
+            
+            } else {
+              setFormData({
+                projectName: "",
+                projectId: null,
+                companyName: "",
+              });
+              setTransferDate("");
+              setNewSite(null);
+              toast.error(
+                `${
+                  response.data.message || "Failed to transfer labour(s). Unexpected error occurred."
+                }`
+              );
+              setSelectedLabourIds([]);
             }
-          );
-    
-          if (response.status === 201) {
-            // Update local state for all selected labours
-            const transferSiteName =
-              projectNames.find((p) => p.Id === Number(newSite))?.Business_Unit ||
-              "Unknown";
-    
-            setLabours((prev) =>
-              prev.map((labour) => {
-                if (selectedLabourIds.includes(labour.LabourID)) {
-                  return {
-                    ...labour,
-                    projectName: newSite,
-                    Business_Unit: transferSiteName,
-                  };
-                }
-                return labour;
-              })
-            );
-    
-            toast.success(
-              `Site transfer send ${selectedLabourIds.length} labour(s) for Admin Approval.`
-            );
-            setSelectedLabourIds([]); // clear the selection
-          } else {
-            toast.error(
-              `${
-                response.data.message || "Failed to transfer labour(s). Unexpected error occurred."
-              }`
-            );
-            setSelectedLabourIds([]);
-          }
+                                 
         } catch (error) {
+          setFormData({
+            projectName: "",
+            projectId: null,
+            companyName: "",
+          });
+          setTransferDate("");
+          setNewSite(null);
           console.error("Error during site transfer:", error);
           toast.error("Failed to transfer labour(s).");
         }
@@ -925,7 +949,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
 
         <TablePagination
           className="custom-pagination"
-          rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
+          rowsPerPageOptions={[25, 100, 200, { label: 'All', value: labours.length }]}
           count={labours.length}
           rowsPerPage={rowsPerPage}
           page={page}
@@ -1168,7 +1192,15 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
 
           <Box display="flex" justifyContent="space-between">
             <Button
-              onClick={() => setModalOpen(false)}
+              onClick={() => {setModalOpen(false)
+                setFormData({
+                  projectName: "",
+                  projectId: null,
+                  companyName: "",
+                });
+                setTransferDate("");
+                setNewSite(null);
+              }}
               sx={{
                 backgroundColor: "#fce4ec",
                 color: "rgb(255, 100, 100)",

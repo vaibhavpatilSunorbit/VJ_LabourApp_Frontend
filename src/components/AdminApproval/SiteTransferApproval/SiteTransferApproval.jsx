@@ -121,7 +121,10 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     }
     try {
       const response = await axios.get(`${API_BASE_URL}/insentive/searchFromSiteTransferApproval?q=${searchQuery}`);
-      setSearchResults(response.data);
+      setSearchResults(response.data.map(labour => ({
+        ...labour,
+        IsApproveDisable: labour.IsApproveDisable === "true" || labour.IsApproveDisable === true,
+      })));
       setPage(0);
     } catch (error) {
       setError('Error searching. Please try again.');
@@ -421,7 +424,10 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     try {
       const response = await axios.get(`${API_BASE_URL}/api/getAdminSiteTransferApproval`);
       // console.log('API Response:', response.data);
-      setLabours(response.data);
+      setLabours(response.data.map(labour => ({
+        ...labour,
+        IsApproveDisable: labour.IsApproveDisable === "true" || labour.IsApproveDisable === true,
+      })));
       const pendingSiteTransfer = response.data.filter((labour) => labour.adminStatus === "Pending").length;
       const approvedSiteTransfer = response.data.filter((labour) => labour.adminStatus === "Approved").length;
       const rejectedSiteTransfer = response.data.filter((labour) => labour.adminStatus === "Rejected").length;
@@ -998,6 +1004,7 @@ Approve/Reject ({selectedLabourIds.length})
                               },
                             }}
                             onClick={() => handleApproveConfirmOpen(labour)}
+                            disabled={labour.IsApproveDisable}
                           >
                             Approve
                           </Button>

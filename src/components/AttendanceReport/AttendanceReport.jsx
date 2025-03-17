@@ -365,11 +365,11 @@ function formatConvertedOvertimemanually(Overtimemanually) {
             }
             const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
 
-            const formattedPunchIn = manualEditData.punchIn && dayjs.isDayjs(manualEditData.punchIn)
+            const formattedPunchIn = manualEditData.punchIn !== "" && dayjs.isDayjs(manualEditData.punchIn)
                 ? manualEditData.punchIn.format('HH:mm:ss')
                 : defaultTime;
 
-            const formattedPunchOut = manualEditData.punchOut && dayjs.isDayjs(manualEditData.punchOut)
+            const formattedPunchOut = manualEditData.punchOut !== "" && dayjs.isDayjs(manualEditData.punchOut)
                 ? manualEditData.punchOut.format('HH:mm:ss')
                 : defaultTime;
 
@@ -385,7 +385,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
             const onboardName = user.name || null;
             const workingHours = manualEditData.workingHours || selectedDay.workingHours;
             const AttendanceStatus = manualEditData.attendanceStatus || null;
-         
+         console.log("formattedPunchIn ==",formattedPunchIn)
             const payload = {
                 labourId: selectedDay.labourId,
                 date: selectedDay.date,
@@ -400,7 +400,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
             };
 
 
-            const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+            // const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
@@ -418,17 +418,17 @@ function formatConvertedOvertimemanually(Overtimemanually) {
 
             setAttendanceData(updatedAttendanceData);
 
-            toast.success(response.data.message || 'Attendance updated successfully!');
+            // toast.success(response.data.message || 'Attendance updated successfully!');
             handleManualEditDialogClose();
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
-            console.error('Error saving attendance:', errorMessage);
+            // const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
+            // console.error('Error saving attendance:', errorMessage);
 
-            if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
-                toast.info('The date is a holiday. You cannot modify punch times or overtime.');
-            } else {
-                toast.error(errorMessage);
-            }
+            // if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
+            //     toast.info('The date is a holiday. You cannot modify punch times or overtime.');
+            // } else {
+            //     toast.error(errorMessage);
+            // }
         }
     };
 
@@ -620,6 +620,14 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                 const attendanceRecord = attendanceList.find(
                     (record) => new Date(record.Date).toDateString() === date.toDateString()
                 );
+
+                // setManualEditData({
+                //     status: attendanceRecord ? attendanceRecord.Status : 'NA',
+                //     punchIn: attendanceRecord?.FirstPunch || '-',
+                //     punchOut: attendanceRecord?.LastPunch || '-',
+                //     overtime: attendanceRecord?.Overtime || '0.0',
+                //     remark: attendanceRecord?.RemarkManually || '-',
+                // });
 
                 return {
                     // date: date.toISOString().split('T')[0], // Format: yyyy-mm-dd
@@ -1767,7 +1775,8 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                               }}
                                             >
                                                 <TableCell>{index + 1}</TableCell>
-                                                <TableCell>{day.date}</TableCell>
+                                                <TableCell>{day.date? new Date(day.date).toLocaleDateString('en-GB') : '-'}</TableCell>
+                                                
                                                 <TableCell>
                                                     <Box
                                                         sx={{
@@ -1959,14 +1968,14 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                     <TimePicker
                                         label="Punch In (Manually)"
                                         value={
-                                            manualEditData?.punchIn
+                                            manualEditData?.punchIn !== ""
                                                 ? dayjs(manualEditData.punchIn, 'HH:mm:ss')
-                                                : selectedDay?.firstPunch
-                                                    ? dayjs(selectedDay.firstPunch, 'HH:mm:ss')
+                                                // : selectedDay?.firstPunch
+                                                //     ? dayjs(selectedDay.firstPunch, 'HH:mm:ss')
                                                     : null
                                         }
                                         onChange={(newValue) =>
-                                            setManualEditData({ ...manualEditData, punchIn: newValue ? newValue.format('HH:mm:ss') : null })
+                                            setManualEditData({ ...manualEditData, punchIn: newValue})
                                         }
                                         views={['hours', 'minutes', 'seconds']}
                                         ampm={false}
@@ -1979,10 +1988,10 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                     <TimePicker
                                         label="Punch Out (Manually)"
                                         value={
-                                            manualEditData?.punchOut
+                                            manualEditData?.punchOut !== ""
                                                 ? dayjs(manualEditData.punchOut, 'HH:mm:ss')
-                                                : selectedDay?.lastPunch
-                                                    ? dayjs(selectedDay.lastPunch, 'HH:mm:ss')
+                                                // : selectedDay?.lastPunch
+                                                //     ? dayjs(selectedDay.lastPunch, 'HH:mm:ss')
                                                     : null
                                         }
                                         onChange={(newValue) =>

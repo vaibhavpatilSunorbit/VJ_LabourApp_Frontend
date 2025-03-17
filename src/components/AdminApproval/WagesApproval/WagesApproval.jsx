@@ -128,7 +128,10 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
     }
     try {
       const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromWagesApproval?q=${searchQuery}`);
-      setSearchResults(response.data);
+      setSearchResults(response.data.map(labour => ({
+        ...labour,
+        IsApproveDisable: labour.IsApproveDisable === "true" || labour.IsApproveDisable === true,
+      })));
       setPage(0);
     } catch (error) {
       setError('Error searching. Please try again.');
@@ -402,7 +405,10 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
     try {
       const response = await axios.get(`${API_BASE_URL}/labours/wages/adminApprovals`);
       // console.log('API Response:', response.data);
-      setLabours(response.data);
+      setLabours(response.data.map(labour => ({
+        ...labour,
+        IsApproveDisable: labour.IsApproveDisable === "true" || labour.IsApproveDisable === true,
+      })));
       const pendingWagesCount = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
       const approvedWagesCount = response.data.filter((labour) => labour.ApprovalStatus === "Approved").length;
       const rejectedWagesCount = response.data.filter((labour) => labour.ApprovalStatus === "Rejected").length;
@@ -957,6 +963,7 @@ Approve/Reject ({selectedLabourIds.length})
                               },
                             }}
                             onClick={() => handleApproveConfirmOpen(labour)}
+                            disabled={labour.IsApproveDisable}
                           >
                             Approve
                           </Button>
