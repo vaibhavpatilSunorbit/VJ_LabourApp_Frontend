@@ -66,6 +66,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
         punchOut: "",
         overtime: "",
         remark: "",
+        shift:""
     });
     const [error, setError] = useState(null);
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
@@ -79,6 +80,9 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
     const [projectName, setProjectName] = useState('');
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+    const [isOvertimeDisable, setIsOvertimeDisable] = useState(false);
+    const [isOvertimeError, setIsOvertimeError] = useState(false);
+
     // const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
 
     const getDepartmentDescription = (departmentId) => {
@@ -98,10 +102,6 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
         }
 
         const project = projectNames.find(proj => proj.Id === Number(projectId));
-
-        // console.log('Project Names:', projectNames);
-        // console.log('Searching for Project ID:', projectId);
-        // console.log('Found Project:', project);
 
         return project ? project.Business_Unit : 'Unknown';
     };
@@ -309,6 +309,44 @@ function formatConvertedOvertimemanually(Overtimemanually) {
         return hours + (minutes / 60);
     };
 
+    useEffect(() => {
+        if (manualEditData) {
+          const shiftHours =
+            manualEditData.shift === "FLEXI SHIFT - 9 HRS" ? 9 : 8;
+      
+          const commonDate = manualEditData.date;
+      
+          const getPunchTime = (punch, dateStr) => {
+            let timeString = "";
+            if (typeof punch === "string") {
+              // For simple time strings, use them directly.
+              timeString = punch;
+            } else if (typeof punch === "object" && punch.$d) {
+              // For objects with a $d property, extract hours, minutes and seconds.
+              const d = new Date(punch.$d);
+              const hours = d.getHours().toString().padStart(2, "0");
+              const minutes = d.getMinutes().toString().padStart(2, "0");
+              const seconds = d.getSeconds().toString().padStart(2, "0");
+              timeString = `${hours}:${minutes}:${seconds}`;
+            }
+            // Construct a new Date using the common date and the extracted time.
+            return new Date(`${dateStr}T${timeString}`);
+          };
+      
+          const firstPunchTime = getPunchTime(manualEditData.punchIn, commonDate);
+          const lastPunchTime = getPunchTime(manualEditData.punchOut, commonDate);
+      
+      
+          const todaysHrs =
+            (lastPunchTime.getTime() - firstPunchTime.getTime()) /
+            (1000 * 60 * 60);
+      
+          setIsOvertimeDisable(todaysHrs < shiftHours);
+          const totalGetOvertime = todaysHrs - shiftHours;
+          setIsOvertimeError(totalGetOvertime > manualEditData.overtimemanually);
+        }
+      }, [manualEditData]);      
+
 
     const handleManualEditDialogOpen = (day) => {
         setSelectedDay(day);
@@ -322,8 +360,17 @@ function formatConvertedOvertimemanually(Overtimemanually) {
             remark: day.remark || "",
             attendanceStatus: day.status || "",
             isFinalPayAvailable: day.isFinalPayAvailable || "",
+            shift: day.Shift || ""
         });
         setEditManualDialogOpen(true);
+
+        // const shiftHours = day.Shift === 'FLEXI SHIFT - 9 HRS' ? 9 : 8;
+        // const firstPunchTime = new Date(`${day.date}T${day.firstPunch}`);
+        //             const lastPunchTime = new Date(`${day.date}T${day.lastPunch}`);
+        //             const todaysHrs = (lastPunchTime - firstPunchTime) / (1000 * 60 * 60);                          
+        //     setIsOvertimeDisable(todaysHrs < shiftHours);  
+        //     const totalGetOvertime = todaysHrs - shiftHours;
+        //     setIsOvertimeError(totalGetOvertime > day.overtimemanually)      
     };
 
     const handleManualEditDialogClose = () => {
@@ -365,13 +412,16 @@ function formatConvertedOvertimemanually(Overtimemanually) {
             }
             const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
 
-            const formattedPunchIn = manualEditData.punchIn !== "" && dayjs.isDayjs(manualEditData.punchIn)
-                ? manualEditData.punchIn.format('HH:mm:ss')
-                : defaultTime;
+            const formattedPunchInDayFormat = dayjs(manualEditData.punchIn, 'HH:mm:ss');
+            const formattedPunchOutDayFormat = dayjs(manualEditData.punchOut, 'HH:mm:ss');
+            
+            const formattedPunchIn = defaultTime ? defaultTime : manualEditData.punchIn !== "" && formattedPunchInDayFormat.isValid()
+            ? formattedPunchInDayFormat.format('HH:mm:ss')
+            : defaultTime;
 
-            const formattedPunchOut = manualEditData.punchOut !== "" && dayjs.isDayjs(manualEditData.punchOut)
-                ? manualEditData.punchOut.format('HH:mm:ss')
-                : defaultTime;
+            const formattedPunchOut = defaultTime ? defaultTime : manualEditData.punchOut !== "" && formattedPunchOutDayFormat.isValid()
+            ? formattedPunchOutDayFormat.format('HH:mm:ss')
+            : defaultTime;
 
             const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
             const hasOvertime = overtime !== '';
@@ -385,7 +435,6 @@ function formatConvertedOvertimemanually(Overtimemanually) {
             const onboardName = user.name || null;
             const workingHours = manualEditData.workingHours || selectedDay.workingHours;
             const AttendanceStatus = manualEditData.attendanceStatus || null;
-         console.log("formattedPunchIn ==",formattedPunchIn)
             const payload = {
                 labourId: selectedDay.labourId,
                 date: selectedDay.date,
@@ -400,7 +449,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
             };
 
 
-            // const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+            const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
@@ -418,17 +467,17 @@ function formatConvertedOvertimemanually(Overtimemanually) {
 
             setAttendanceData(updatedAttendanceData);
 
-            // toast.success(response.data.message || 'Attendance updated successfully!');
+            toast.success(response.data.message || 'Attendance updated successfully!');
             handleManualEditDialogClose();
         } catch (error) {
-            // const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
-            // console.error('Error saving attendance:', errorMessage);
+            const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
+            console.error('Error saving attendance:', errorMessage);
 
-            // if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
-            //     toast.info('The date is a holiday. You cannot modify punch times or overtime.');
-            // } else {
-            //     toast.error(errorMessage);
-            // }
+            if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
+                toast.info('The date is a holiday. You cannot modify punch times or overtime.');
+            } else {
+                toast.error(errorMessage);
+            }
         }
     };
 
@@ -621,14 +670,6 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                     (record) => new Date(record.Date).toDateString() === date.toDateString()
                 );
 
-                // setManualEditData({
-                //     status: attendanceRecord ? attendanceRecord.Status : 'NA',
-                //     punchIn: attendanceRecord?.FirstPunch || '-',
-                //     punchOut: attendanceRecord?.LastPunch || '-',
-                //     overtime: attendanceRecord?.Overtime || '0.0',
-                //     remark: attendanceRecord?.RemarkManually || '-',
-                // });
-
                 return {
                     // date: date.toISOString().split('T')[0], // Format: yyyy-mm-dd
                     date: attendanceRecord?.Date.split('T')[0] || date.toISOString().split('T')[0],
@@ -648,16 +689,10 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                     ApprovalStatus: attendanceRecord?.ApprovalStatus || '-',
                     TotalOvertimeHoursManually: attendanceRecord?.TotalOvertimeHoursManually || '-',
                     isFinalPayAvailable: attendanceRecord?.isFinalPayAvailable,
+                    Shift: attendanceRecord?.Shift,
                 };
             });
-            // console.log('attendanceRecord+++', fullMonthAttendance)
             setAttendanceData(fullMonthAttendance);
-            // function calculateTotalOverTime(fullMonthAttendance) { 
-            //     return fullMonthAttendance.reduce((totalOvertime, day) => totalOvertime + (day.overtime || 0), 0);
-            // }
-            // let datatotalovertime=calculateTotalOverTime(fullMonthAttendance);
-            // setTotalOvertime(datatotalovertime)
-
             
         } catch (error) {
             console.error('Error fetching attendance data:', error);
@@ -2003,17 +2038,18 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                         renderInput={(params) => <TextField {...params} fullWidth />}
                                     />
                                 </Box>
-
-                                <TextField
+                            {!isOvertimeDisable &&  <TextField
                                     label="Overtime (Manually)"
                                     type="number"
                                     variant="outlined"
                                     fullWidth
                                     value={manualEditData.overtimeManually}
+                                    error={isOvertimeError}
+                                    helperText={isOvertimeError ? `Add Overtime Upto ${formatConvertedOverTime(manualEditData.overtime).hours} hours and ${formatConvertedOverTime(manualEditData.overtime).minutes} minutes` : ""}
                                     onChange={(e) =>
                                         setManualEditData({ ...manualEditData, overtimeManually: e.target.value })
                                     }
-                                />
+                                />}                               
                             </>
                         )}
 

@@ -717,7 +717,7 @@ const closeVariablePayModal = () => {
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
            <ToastContainer />
-
+           {loading && <Loading />}
            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
                 <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
                     Admin | Attendance Approval
@@ -735,7 +735,7 @@ const closeVariablePayModal = () => {
           className="search-bar"
         />
       </Box>
-      {loading && <Loading />}
+  
 
 
       <Box
@@ -1258,16 +1258,16 @@ Approve/Reject ({selectedLabourIds.length})
           toast.error('Labour data or ID is missing.');
           return;
         }
+        handleApproveConfirmClose(); 
         setLoading(true);  // Start loading
         try {
           await approveLabour(labourToApprove.AttendanceId);
-          // You can also include additional logic here after approval succeeds.
         } catch (error) {
           console.error(error);
           toast.error('Approval failed.');
         } finally {
           setLoading(false); // End loading
-          handleApproveConfirmClose(); // Optionally close dialog after process.
+          
         }
       }}
       sx={{

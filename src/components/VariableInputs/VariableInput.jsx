@@ -397,13 +397,10 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
         );
     
         if (wagesResponse.status === 200 && wagesResponse.data.length > 0) {
-          const { MonthlyWages, FixedMonthlyWages } = wagesResponse.data[0];
-    console.log("MonthlyWages", MonthlyWages)
-    console.log("FixedMonthlyWages", FixedMonthlyWages)
-    
+          const { MonthlyWages, FixedMonthlyWages } = wagesResponse.data[0];    
           if (
             modalPayData.payStructure === "Incentive" &&
-           (MonthlyWages !== 0 && modalPayData.variablePay > 0.1 * MonthlyWages || FixedMonthlyWages !== 0 && modalPayData.variablePay > 0.1 * FixedMonthlyWages)
+           ((MonthlyWages > 0 && Number(modalPayData.variablePay) > 0.1 * MonthlyWages) || (FixedMonthlyWages > 0 && Number(modalPayData.variablePay) > 0.1 * FixedMonthlyWages))
           ) {
             toast.error("Variable Pay cannot be greater than 10% of Monthly Wages.");
             return;
