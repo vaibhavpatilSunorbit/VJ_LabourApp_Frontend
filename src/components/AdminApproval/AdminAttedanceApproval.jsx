@@ -471,8 +471,7 @@ const AdminAttedanceApproval = ({ onApprove, departments, projectNames, labour, 
       const response = await axios.get(`${API_BASE_URL}/labours/LabourAttendanceApproval`);
       // console.log('API Response:', response.data);
       setLabours(response.data.map(labour => ({
-        ...labour,
-        IsApproveDisable: labour.IsApproveDisable === "true" || labour.IsApproveDisable === true,
+        ...labour
       })));
       const pendingAttendance = response.data.filter((labour) => labour.ApprovalStatus === "Pending").length;
       const approvedAttendance = response.data.filter((labour) => labour.ApprovalStatus === "Approved").length;
@@ -1081,7 +1080,7 @@ Approve/Reject ({selectedLabourIds.length})
                               },
                             }}
                             onClick={() => handleApproveConfirmOpen(labour)}
-                            disabled={labour.IsApproveDisable}
+                            disabled={labour.IsApproveDisable === "true"}
                           >
                             Approve
                           </Button>

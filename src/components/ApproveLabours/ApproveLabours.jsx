@@ -227,7 +227,7 @@ const ApproveLabours = () => {
 
   // Filter out already selected projects
   const availableProjectNames = projectNames.filter(
-    project => !selectedProjects.includes(project.id)
+    project => !selectedProjects.includes(project.Id)
   );
 
   return (
@@ -370,7 +370,7 @@ const ApproveLabours = () => {
               required
             >
               {availableProjectNames.map((project) => (
-                <MenuItem key={project.id} value={project.id}>{project.Business_Unit}</MenuItem>
+                <MenuItem key={project.Id} value={project.Id}>{project.Business_Unit}</MenuItem>
               ))}
             </Select>
             <InputLabel id="new-device-name-label" style={inputLabelStyle}>

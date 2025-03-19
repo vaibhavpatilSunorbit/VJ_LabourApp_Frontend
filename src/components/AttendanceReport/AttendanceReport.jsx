@@ -726,7 +726,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
             const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
 
             const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
-                const date = new Date(selectedYear, selectedMonth - 1, i + 1)
+                const date = new Date(Date.UTC(selectedYear, selectedMonth - 1, i + 1))
                     .toISOString()
                     .split('T')[0];
                 const record = response.data.find((att) => att.Date.split('T')[0] === date);
@@ -735,7 +735,6 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                     status: record ? record.Status : 'NA',
                 };
             });
-
             setAttendanceData(fullMonthAttendance);
         } catch (error) {
             console.error('Error fetching attendance:', error);
@@ -1276,7 +1275,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                 }
             }
             calendar.push(week);
-            if (dayCounter > daysInMonth) break;
+            if (dayCounter >= daysInMonth) break;
         }
         return calendar;
     };
