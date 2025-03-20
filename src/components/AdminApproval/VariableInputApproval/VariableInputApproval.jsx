@@ -867,7 +867,7 @@ Approve/Reject ({selectedLabourIds.length})
                 <TableCell>Pay Remark</TableCell>
                 <TableCell>Pay Effective Date</TableCell>
                 <TableCell>Site Transfer By</TableCell>
-                <TableCell>Status</TableCell>
+                {/* <TableCell>Status</TableCell> */}
                 {tabValue === 0 && <TableCell>Send Approval Date</TableCell>}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
@@ -926,7 +926,7 @@ Approve/Reject ({selectedLabourIds.length})
                   <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                   <TableCell>{labour.payAddedBy}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
-                  <TableCell sx={{ position: 'relative' }}>
+                  {/* <TableCell sx={{ position: 'relative' }}>
                     <Box
                       sx={{
                         position: 'relative',
@@ -953,7 +953,7 @@ Approve/Reject ({selectedLabourIds.length})
                       {labour.ApprovalStatusPay}
 
                     </Box>
-                  </TableCell>
+                  </TableCell> */}
                   {tabValue === 0 && (
                     <>
                       <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString('en-GB') : '-'}</TableCell>

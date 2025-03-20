@@ -187,7 +187,7 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
 
   const approveLabour = async (ApprovalID) => {
     if (!ApprovalID) {
-      toast.error('Attendance ID is missing.');
+      toast.error('Wages ID is missing.');
       return;
     }
 
@@ -202,14 +202,14 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
             labour.ApprovalID === ApprovalID ? { ...labour, ApprovalStatus: 'Approved' } : labour
           )
         );
-        toast.success('Attendance approved successfully.');
+        toast.success('Wages approved successfully.');
         setIsApproveConfirmOpen(false);
       } else {
-        toast.error('Failed to approve attendance. Please try again.');
+        toast.error('Failed to approve Wages. Please try again.');
       }
     } catch (error) {
-      console.error('Error approving attendance:', error);
-      toast.error('Error approving attendance. Please try again.');
+      console.error('Error approving Wages:', error);
+      toast.error('Error approving Wages. Please try again.');
     }
   };
 
@@ -253,7 +253,7 @@ const WagesApproval = ({ onApprove, departments, projectNames, labour, labourlis
   
         if (!response.data.success) {
           // Optionally handle partial failures
-          toast.error(`Failed to approve labour with ApprovalID ${labourObj.ApprovalID}`);
+          toast.error(`Failed to Wages labour with ApprovalID ${labourObj.ApprovalID}`);
         }
       }
   
@@ -812,7 +812,7 @@ Approve/Reject ({selectedLabourIds.length})
                 <TableCell>FixedMonthlyWages</TableCell>
                 <TableCell>WeeklyOff</TableCell>
                 <TableCell>Attendance Edit By</TableCell>
-                <TableCell>Status</TableCell>
+                {/* <TableCell>Status</TableCell> */}
                 {tabValue === 0 && <TableCell>Send Approval Date</TableCell>}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
@@ -872,7 +872,7 @@ Approve/Reject ({selectedLabourIds.length})
                   <TableCell>{labour.WeeklyOff || '-'}</TableCell>
                   <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
-                  <TableCell sx={{ position: 'relative' }}>
+                  {/* <TableCell sx={{ position: 'relative' }}>
                     <Box
                       sx={{
                         position: 'relative',
@@ -899,7 +899,7 @@ Approve/Reject ({selectedLabourIds.length})
                       {labour.ApprovalStatus}
 
                     </Box>
-                  </TableCell>
+                  </TableCell> */}
                   {tabValue === 0 && (
                     <>
                       <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString('en-GB') : '-'}</TableCell>
@@ -1101,7 +1101,7 @@ Approve/Reject ({selectedLabourIds.length})
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="approve-confirm-dialog-description">
-            Are you sure you want to approve attendance for this labour?
+            Are you sure you want to approve Wages for this labour?
           </DialogContentText>
         </DialogContent>
         <DialogActions>

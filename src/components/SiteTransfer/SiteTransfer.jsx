@@ -1007,7 +1007,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell>Project</TableCell>
+                {/* <TableCell>Project</TableCell> */}
                 <TableCell>Previous Site</TableCell>
                 <TableCell>New Site</TableCell>
                 <TableCell>Transfer Date</TableCell>
@@ -1043,7 +1043,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
                   <TableCell>{labour.LabourID}</TableCell>
                   <TableCell>{labour.name || '-'}</TableCell>
                   {/* <TableCell>{getProjectDescription(labour.projectName)}</TableCell> */}
-                  <TableCell>{labour.businessUnit}</TableCell>
+                  {/* <TableCell>{labour.businessUnit}</TableCell> */}
                   <TableCell>
                     {(() => {
                       return statusesSite[labour.LabourID]?.currentSiteName || '-';

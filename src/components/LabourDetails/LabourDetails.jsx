@@ -1973,9 +1973,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   };
 
 
-  // const API_BASE_URL = 'http://localhost:4000'; 
-  // const API_BASE_URL = "https://laboursandbox.vjerp.com"; 
-  // const API_BASE_URL = "https://vjlabour.vjerp.com"; 
 
   const handleSubmit = async (e) => {
     e.preventDefault();

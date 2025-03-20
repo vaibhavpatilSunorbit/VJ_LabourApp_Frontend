@@ -329,6 +329,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
     // -------------------------------------   SHOW ATTENDACNE ----------------------
    
     const deletePayrollData = async (labourIds = []) => {
+        setIsApproveConfirmOpen(false);
         if (!selectedMonth || !selectedYear) {
             toast.warning("Please select both Month and Year.");
             return;
@@ -354,7 +355,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
             setSalaryData((prev) => prev.filter((lab) => !requestData.labourIds.includes(lab.LabourID)));
             setSelectedLabourIds([]);
     
-            // Show success toast only once after all deletions are completed
             toast.success(response.data.message || "Payroll records deleted successfully.");
     
         } catch (error) {

@@ -45,9 +45,9 @@ const AdminApproval = ({ onFormSubmit }) => {
   const [approvedWagesCount, setApprovedWagesCount] = useState(0);
   const [rejectedWagesCount, setRejectedWagesCount] = useState(0);
 
-  const [pendingCompanyTransfer, setPendingCompanyTransfer] = useState(0);
-  const [approvedCompanyTransfer, setApprovedCompanyTransfer] = useState(0);
-  const [rejectedCompanyTransfer, setRejectedCompanyTransfer] = useState(0);
+  // const [pendingCompanyTransfer, setPendingCompanyTransfer] = useState(0);
+  // const [approvedCompanyTransfer, setApprovedCompanyTransfer] = useState(0);
+  // const [rejectedCompanyTransfer, setRejectedCompanyTransfer] = useState(0);
 
   useEffect(() => {
     // Get counts from localStorage
@@ -99,17 +99,17 @@ const AdminApproval = ({ onFormSubmit }) => {
   }, []);
 
 
-  useEffect(() => {
-    // Get counts from localStorage
-    const pending = localStorage.getItem('pendingCompanyTransfer');
-    const approved = localStorage.getItem('approvedCompanyTransfer');
-    const rejected = localStorage.getItem('rejectedCompanyTransfer');
+  // useEffect(() => {
+  //   // Get counts from localStorage
+  //   const pending = localStorage.getItem('pendingCompanyTransfer');
+  //   const approved = localStorage.getItem('approvedCompanyTransfer');
+  //   const rejected = localStorage.getItem('rejectedCompanyTransfer');
 
-    // Update state with the retrieved values
-    setPendingCompanyTransfer(pending || 0);
-    setApprovedCompanyTransfer(approved || 0);
-    setRejectedCompanyTransfer(rejected || 0);
-  }, []);
+  //   // Update state with the retrieved values
+  //   setPendingCompanyTransfer(pending || 0);
+  //   setApprovedCompanyTransfer(approved || 0);
+  //   setRejectedCompanyTransfer(rejected || 0);
+  // }, []);
 
   return (
     <Grid container spacing={8} sx={{ mt: 0, px: 8 }}>
@@ -260,7 +260,7 @@ const AdminApproval = ({ onFormSubmit }) => {
           </Card>
         </Link>
       </Grid>
-      
+{/*       
       <Grid item xs={12} sm={6} md={4}>
         <Link to={'/adminApproval/CompanyTransferApproval'} style={{ textDecoration: 'none' }}>
           <Card
@@ -296,7 +296,7 @@ const AdminApproval = ({ onFormSubmit }) => {
             </CardContent>
           </Card>
         </Link>
-      </Grid>
+      </Grid> */}
     </Grid>
   );
 };

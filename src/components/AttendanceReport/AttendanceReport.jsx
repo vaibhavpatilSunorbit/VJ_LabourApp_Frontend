@@ -381,25 +381,26 @@ function formatConvertedOvertimemanually(Overtimemanually) {
     const handleSaveManualEdit = async () => {
         try {
             if (manualEditData.status === 'weeklyOff') {
-                const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`);
+                const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
+                    params: { labourId: selectedDay.labourId }  // Fetch wages for a specific labour
+                });
                 const wagesData = wagesResponse.data;
+                console.log("wagesData", wagesData);
     
-                
                 if (!wagesData || wagesData.length === 0) {
                     toast.error("Add the wages for that labour then add mark as weeklyOff");
                     return;
                 }
+                const latestLabourWageRecord = wagesData
+                    .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)) // Sort by latest date
+                    [0]; // Get the most recent record
     
-                const labourWageRecord = wagesData.find(record => record.LabourID === selectedDay.labourId);
-    
-                // If no wage record exists for that labour
-                if (!labourWageRecord) {
+                if (!latestLabourWageRecord) {
                     toast.error("Add the wages for that labour then add mark as weeklyOff");
                     return;
                 }
     
-                // If the wage record exists and the PayStructure is DAILY WAGES
-                if (labourWageRecord.PayStructure === "DAILY WAGES") {
+                if (latestLabourWageRecord.PayStructure === "DAILY WAGES") {
                     toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
                     return;
                 }
@@ -1789,25 +1790,27 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                 </TableHead>
                                 <TableBody>
                                     {attendanceData.length > 0 ? (
-                                        attendanceData.map((day, index) => (
-                                            <TableRow key={index}
-                                            sx={{
-                                                backgroundColor:
-                                                  new Date(day.date).getDay() === 0
-                                                    ? '#e6e6fa' // light purple for Sunday
-                                                    : day?.ApprovalStatus === 'Pending'
-                                                    ? '#ffe6e6'
-                                                    : day?.ApprovalStatus === 'Approved'
-                                                    ? '#dcfff0'
-                                                    : 'inherit',
-                                                outline:
-                                                  new Date(day.date).getDay() === 0
-                                                    ? '1px solid red'
-                                                    : !day.remark
-                                                    ? '1px solid purple'
-                                                    : 'none',
-                                              }}
-                                            >
+                                            attendanceData.map((day, index) => (
+                                                <TableRow key={index}
+                                                    sx={{
+                                                        backgroundColor:
+                                                            new Date(day.date).getDay() === 0
+                                                                ? '#e6e6fa' // light purple for Sunday
+                                                                : day?.ApprovalStatus === 'Pending'
+                                                                    ? '#ffe6e6'
+                                                                    : day?.ApprovalStatus === 'Approved'
+                                                                        ? '#dcfff0'
+                                                                        : day?.ApprovalStatus === 'Rejected'
+                                                                            ? '#ffcccc' // light red for Rejected
+                                                                            : 'inherit',
+                                                        outline:
+                                                            new Date(day.date).getDay() === 0
+                                                                ? '1px solid red'
+                                                                : !day.remark
+                                                                    ? '1px solid purple'
+                                                                    : 'none',
+                                                    }}
+                                                >
                                                 <TableCell>{index + 1}</TableCell>
                                                 <TableCell>{day.date? new Date(day.date).toLocaleDateString('en-GB') : '-'}</TableCell>
                                                 

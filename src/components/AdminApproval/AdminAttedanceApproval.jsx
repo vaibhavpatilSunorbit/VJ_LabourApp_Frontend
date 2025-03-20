@@ -910,7 +910,7 @@ Approve/Reject ({selectedLabourIds.length})
                 <TableCell>Overtime Manually</TableCell>
                 <TableCell>Remark</TableCell>
                 <TableCell>Attendance Edit By</TableCell>
-                <TableCell>Status</TableCell>
+                {/* <TableCell>Status</TableCell> */}
                 {tabValue !== 2 && <TableCell>Send Approval Date</TableCell>}
                 {/* {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>} */}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
@@ -969,7 +969,7 @@ Approve/Reject ({selectedLabourIds.length})
                   <TableCell>{labour.RemarkManually}</TableCell>
                   <TableCell>{labour.OnboardName}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
-                  <TableCell sx={{ position: 'relative' }}>
+                  {/* <TableCell sx={{ position: 'relative' }}>
                     <Box
                       sx={{
                         position: 'relative',
@@ -996,7 +996,7 @@ Approve/Reject ({selectedLabourIds.length})
                       {labour.ApprovalStatus}
 
                     </Box>
-                  </TableCell>
+                  </TableCell> */}
                   {tabValue === 0 && (
                     <>
                       <TableCell>{labour.LastUpdatedDate ? new Date(labour.LastUpdatedDate).toLocaleDateString('en-GB') : '-'}</TableCell>

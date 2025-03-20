@@ -854,7 +854,7 @@ Approve/Reject ({selectedLabourIds.length})
                 <TableCell>Transfer Date</TableCell>
                 {tabValue === 2 && <TableCell>Remark</TableCell>}
                 <TableCell>Site Transfer By</TableCell>
-                <TableCell>Status</TableCell>
+                {/* <TableCell>Status</TableCell> */}
                 {tabValue === 0 && <TableCell>Send Approval Date</TableCell>}
                 {/* {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>} */}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
@@ -913,7 +913,7 @@ Approve/Reject ({selectedLabourIds.length})
                   {tabValue === 2 && <TableCell>{labour.rejectionReason}</TableCell>}
                   <TableCell>{labour.siteTransferBy}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
-                  <TableCell sx={{ position: 'relative' }}>
+                  {/* <TableCell sx={{ position: 'relative' }}>
                     <Box
                       sx={{
                         position: 'relative',
@@ -940,7 +940,7 @@ Approve/Reject ({selectedLabourIds.length})
                       {labour.adminStatus}
 
                     </Box>
-                  </TableCell>
+                  </TableCell> */}
                   {tabValue === 0 && (
                     <>
                       <TableCell>{labour.createdAt ? new Date(labour.createdAt).toLocaleDateString('en-GB') : '-'}</TableCell>

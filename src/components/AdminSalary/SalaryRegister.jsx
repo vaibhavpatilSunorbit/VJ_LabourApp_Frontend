@@ -768,7 +768,7 @@ const SalaryRegister = ({ departments, projectNames, labour }) => {
                             }}
                         >
                             
-                            <Button
+                            {/* <Button
                         variant="contained"
                         sx={{
                             fontSize: { xs: "10px", sm: "13px" },
@@ -785,7 +785,7 @@ const SalaryRegister = ({ departments, projectNames, labour }) => {
                         startIcon={navigating && <CircularProgress size={20} />}
                     >
                         {navigating ? 'Navigating...' : 'Run Salary Generation'}
-                    </Button>
+                    </Button> */}
 
                             <TablePagination
                                 className="custom-pagination"

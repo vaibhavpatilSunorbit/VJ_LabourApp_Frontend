@@ -27,6 +27,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import SearchBar from '../../SarchBar/SearchRegister.jsx';
+import * as XLSX from 'xlsx';
 // import Loading from "../../Loading/Loading.jsx";
 import TableSkeletonLoading from "../../Loading/TableSkeletonLoading.jsx";
 import { API_BASE_URL } from "../../../Data.js";
@@ -205,7 +206,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     fullResponse: labour
                 };
             });
-console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
+// console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
@@ -226,6 +227,59 @@ console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration
     //         fetchSalaryGenerationForDateMonthAll();
     // },[]);
 
+
+    const exportPayrollData = async (data) => {
+        setLoading(true);
+        console.log("data ", JSON.stringify(data));
+        try {
+
+            const selectiveData = data.map(item => ({
+                Month: months.find(m => item.month === m.value)?.label || '',
+                Year: item.year,
+                Labour_ID: item.LabourID,
+                Name: item.name,
+                Project_Name: item.projectName,
+                Department: item.department,
+                Attendance_Count: item.attendanceCount,
+                Wage_Type: item.wageType,
+                DailyWage_Rate: item.dailyWageRate,
+                FixedMonthly_Rate: item.fixedMonthlyWage,
+                TotalOvertimeHours: item.totalOvertimeHours,
+                Overtime_Pay: item.overtimePay,
+                WeeklyOff_Pay: item.weeklyOffPay,
+                Gross_Pay: item.grossPay,
+                Bonuses: item.bonuses,
+                Total_Deductions: item.totalDeductions,
+                Net_Pay: item.netPay,
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(selectiveData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "PayrollData");
+    
+            // Generate Excel file as an array buffer
+            const workbookOutput = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+            const blob = new Blob([workbookOutput], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+              });
+        
+              const fileName = ` Export Provisional PayRoll_${selectedMonth}_${selectedYear}.xlsx`;
+        
+              const link = document.createElement('a');
+              link.href = window.URL.createObjectURL(blob);
+              link.setAttribute('download', fileName);
+              document.body.appendChild(link);
+              link.click();
+              link.parentNode.removeChild(link);
+              toast.success(`Salary Data Exported successfully`)
+        } catch (error) {
+            console.error('Error saving final payroll data:', error);
+            toast.error(error.message || "Error Salary Data Exported. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
     const saveFinalPayrollData = async () => {
@@ -248,6 +302,7 @@ console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration
 
 
     const saveFinalizePayrollData = async () => {
+        setIsApproveConfirmOpen(false);
         if (!selectedMonth || !selectedYear) {
             toast.warning("Please select both Month and Year.");
             return;
@@ -265,7 +320,7 @@ console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration
                 month: selectedMonth,
                 year: selectedYear,
             });
-
+          
             toast.success(response.data.message || "Payroll generated successfully.");
         } catch (error) {
             console.error('Error saving payroll data:', error);
@@ -1494,6 +1549,25 @@ console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration
                         <Button
                             variant="contained"
                             // onClick={saveFinalizePayrollData}
+                            onClick={() => exportPayrollData(salaryData)}
+                            sx={{
+                                fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
+                                height: "40px",
+                                width: "100%", // Button width to match other inputs
+                                backgroundColor: "#EFE6F7",
+                                color: "#8236BC",
+                                '&:hover': {
+                                    backgroundColor: "#EFE6F7",
+                                },
+                                marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
+                            }}
+                        >
+                            Export PayRoll
+                        </Button>
+
+                        <Button
+                            variant="contained"
+                            // onClick={saveFinalizePayrollData}
                             onClick={() => handleApproveConfirmOpen()}
                             sx={{
                                 fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
@@ -1547,28 +1621,28 @@ console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration
             Are you sure you want to Finalize PayRoll this labours?
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
-            Cancel
-          </Button>
-          <Button
-                                variant="contained"
-                                onClick={saveFinalizePayrollData} 
-                                sx={{
-                                    backgroundColor: 'rgb(229, 255, 225)',
-            color: 'rgb(43, 217, 144)',
-            width: 'auto',
-            marginRight: '10px',
-            marginBottom: '3px',
-            '&:hover': {
-              backgroundColor: 'rgb(229, 255, 225)',
-            },
-          }} autoFocus
-                            >
-                                Finalize PayRoll
-                            </Button>
-        </DialogActions>
-      </Dialog>
+                <DialogActions>
+                    <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={saveFinalizePayrollData}
+                        sx={{
+                            backgroundColor: 'rgb(229, 255, 225)',
+                            color: 'rgb(43, 217, 144)',
+                            width: 'auto',
+                            marginRight: '10px',
+                            marginBottom: '3px',
+                            '&:hover': {
+                                backgroundColor: 'rgb(229, 255, 225)',
+                            },
+                        }} autoFocus
+                    >
+                        Finalize PayRoll
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
                 <Box

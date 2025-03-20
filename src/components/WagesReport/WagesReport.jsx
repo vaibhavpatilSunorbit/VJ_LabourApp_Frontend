@@ -14,7 +14,7 @@ import {
     TextField,
     TablePagination,
     Select,CircularProgress,
-    MenuItem, Modal, Typography, IconButton
+    MenuItem, Modal, Typography, IconButton,Tabs, Tab
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -320,7 +320,10 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     //     fetchBusinessUnits();
     // }, []);
 
-
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+        setPage(0);
+      };
 
 
     const handleBusinessUnitChange = async (event) => {
@@ -633,7 +636,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
           getDepartmentDescription(labour.DepartmentID) !== 'Unknown'
         );
       });
-    //   console.log('Displayed Labours:', displayedLabours);
+      console.log('Displayed Labours:', displayedLabours);
     
       const isAllSelected =
         filteredLaboursForTable.length > 0 &&
@@ -681,6 +684,15 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
         setPage(0);
       };  
         
+      const pendingCount = displayedLabours.filter(labour => 
+        labour?.ApprovalStatusWages === 'Pending' || 
+        labour?.ApprovalStatusWages === null || 
+        labour?.ApprovalStatusWages === ""
+    ).length;
+    
+    const approvedCount = displayedLabours.filter(labour => 
+        labour?.ApprovalStatusWages === 'Approved'
+    ).length;
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
@@ -719,6 +731,55 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     flexWrap: "wrap",
                 }}
             >
+
+<Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          aria-label="tabs example"
+          sx={{
+            ".MuiTabs-indicator": {
+              display: "none",
+            },
+            minHeight: "auto",
+          }}
+        >
+          <Tab
+            label="Pending"
+            style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
+            sx={{
+              color: tabValue === 0 ? "white" : "black",
+              bgcolor: tabValue === 0 ? "#EFE6F7" : "transparent",
+              borderRadius: 1,
+              textTransform: "none",
+              fontWeight: "bold",
+              mr: 1,
+              minHeight: "auto",
+              minWidth: "auto",
+              // padding: "6px 12px",
+              "&:hover": {
+                bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
+              },
+            }}
+          />
+          <Tab
+            label="Approved"
+            style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
+            sx={{
+              color: tabValue === 1 ? "white" : "black",
+              bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "transparent",
+              borderRadius: 1,
+              textTransform: "none",
+              mr: 1,
+              fontWeight: "bold",
+              minHeight: "auto",
+              minWidth: "auto",
+              // padding: "6px 12px",
+              "&:hover": {
+                bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
+              },
+            }}
+          /> </Tabs>
+
                 <ExportWagesReport departments={departments} projectNames={projectNames}/>
                 <ImportWagesReport handleToast={handleToast} onboardName={user.name || null}  modalOpens={modalOpens} setModalOpens={setModalOpens}/>
 
@@ -737,9 +798,11 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 <TablePagination
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 900, { label: 'All', value: displayedLabours.length }]}
-                    // rowsPerPageOptions={[ 100, { label: 'All', value: -1 }]}
-                    // count={labours.length}
-                    count={displayedLabours.length}
+                    count={tabValue === 0 ? pendingCount : approvedCount}
+                    // rowsPerPageOptions={[25, 100, 900, { label: 'All', value: displayedLabours.length }]}
+                    // // rowsPerPageOptions={[ 100, { label: 'All', value: -1 }]}
+                    // // count={labours.length}
+                    // count={displayedLabours.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handlePageChange}
@@ -811,12 +874,20 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {displayedLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            .map((labour, index) => (
-                                <TableRow key={labour.LabourID}
-                                  sx={{
-                                    backgroundColor:
-                                    labour?.ApprovalStatusWages === 'Pending'
+                            {displayedLabours
+                                .filter(labour =>
+                                    (tabValue === 0 && 
+                                        (labour?.ApprovalStatusWages === 'Pending' || 
+                                         labour?.ApprovalStatusWages === null || 
+                                         labour?.ApprovalStatusWages === "" || labour?.ApprovalStatusWages === "Rejected")) ||
+                                    (tabValue === 1 && labour?.ApprovalStatusWages === 'Approved')
+                                )
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((labour, index) => (
+                                    <TableRow key={labour.LabourID}
+                                        sx={{
+                                            backgroundColor:
+                                                labour?.ApprovalStatusWages === 'Pending'
                                         ? '#ffe6e6' // Light red for Pending
                                         : labour?.ApprovalStatusWages === 'Approved'
                                         ? '#dcfff0' // Light green for Approved
@@ -844,7 +915,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                             <VisibilityIcon />
                                         </IconButton>
                                     </TableCell>
-                                    <TableCell>
+                                     <TableCell>
                                         <Button
                                             variant="contained"
                                             sx={{
