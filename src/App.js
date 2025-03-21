@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OnboardingForm from './components/OnboardingForm/OnboardingForm';
@@ -32,6 +32,17 @@ import ViewMonthlyPayroll from './components/AdminSalary/ViewMonthlyPayroll/View
 import { useUser } from './UserContext/UserContext';
 import LabourIdCard from './PaySlip/LabourIdCard';
 import CompanyTransferApproval from './components/AdminApproval/CompanyTransferApproval/CompanyTransferApproval';
+import { initGA, logPageView } from './utils/analytics.js';
+
+const GAListener = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    logPageView(location.pathname + location.search);
+  }, [location]);
+
+  return null;
+};
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
@@ -89,6 +100,10 @@ console.log('projectsRes',projectsRes.data)
     fetchDepartmentsAndProjects();
   }, [user]);
 
+  useEffect(() => {
+    initGA(); // ✅ Initialize GA once on app load
+  }, []);
+
   const handleApprove = () => {
     setRefresh(prev => !prev);
   };
@@ -109,6 +124,7 @@ console.log('projectsRes',projectsRes.data)
 
   return (
     <Router>
+      <GAListener />
       <div className='grid-container'>
         <Routes>
           {/* Route for Login */}

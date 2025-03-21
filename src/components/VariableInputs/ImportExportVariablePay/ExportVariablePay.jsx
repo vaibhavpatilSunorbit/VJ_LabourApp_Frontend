@@ -94,13 +94,24 @@ const ExportVariablePay = () => {
 
             toast.success('Variable Pay exported successfully!');
         } catch (error) {
-            console.error('Error exporting data:', error);
-
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(`Export Error: ${error.response.data.message}`);
-            } else {
-                toast.error('Error exporting data. Please try again later.');
-            }
+            if (
+                error.response &&
+                error.response.status === 404 &&
+                error.response.data instanceof Blob
+              ) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  try {
+                    const errorData = JSON.parse(reader.result);
+                    toast.error(errorData.message); // Show in UI
+                  } catch (e) {
+                    console.error('Failed to parse blob error message');
+                  }
+                };
+                reader.readAsText(error.response.data);
+              } else {
+                toast.error('Unexpected error:', error.message);
+              }
         }
     };
 

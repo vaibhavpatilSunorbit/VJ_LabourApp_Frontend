@@ -29,6 +29,7 @@ import ExportAttendance from './ImportExportAttendance/ExportAttendance';
 import CloseIcon from '@mui/icons-material/Close'
 import SyncIcon from '@mui/icons-material/Sync';
 import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
 
 const AttendanceReport = (departments, projectNames, labour, labourlist) => {
     const theme = useTheme();
@@ -821,6 +822,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                     roundOffTotalOvertime: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
                     TotalOvertimeHoursManually: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
                     shift: labour.Shift,
+                    InApprovalStatus: labour.InApprovalStatus,
                 };
             });
 
@@ -1596,7 +1598,15 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                     const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
 
                                     return (
-                                        <TableRow key={labour.LabourID}>
+                                        <TableRow key={labour.LabourID}
+                                        // sx={{
+                                        //     backgroundColor: labourAttendance?.InApprovalStatus === true
+                                        //       ? '#ffe6e6'
+                                        //       : labourAttendance?.InApprovalStatus === false
+                                        //       ? 'inherit'
+                                        //       : 'inherit',
+                                        //   }}
+                                        >
                                             <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                             <TableCell><CalendarTodayIcon onClick={() => handleModalOpenCalenderAttendance(labour)} style={{ cursor: 'pointer' }} /> </TableCell>
                                             <TableCell>{labour.LabourID}</TableCell>
@@ -1623,7 +1633,7 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                                 ) : "0h"}
                                             </TableCell>
                                             <TableCell>
-                                                <Button
+                                                {/* <Button
                                                     onClick={() => handleModalOpen(labour, labourAttendance.totalOvertimeHours, labourAttendance.TotalOvertimeHoursManually)}
                                                     sx={{
                                                         backgroundColor: 'rgb(229, 255, 225)',
@@ -1634,7 +1644,34 @@ function formatConvertedOvertimemanually(Overtimemanually) {
                                                     }}
                                                 >
                                                     View
-                                                </Button>
+                                                </Button> */}
+
+                                                <Badge
+                                                    anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                                                    overlap="rectangular"
+                                                    color="error"
+                                                    variant="dot"
+                                                    invisible={!labourAttendance?.InApprovalStatus}
+                                                >
+                                                    <Button
+                                                        onClick={() =>
+                                                            handleModalOpen(
+                                                                labour,
+                                                                labourAttendance.totalOvertimeHours,
+                                                                labourAttendance.TotalOvertimeHoursManually
+                                                            )
+                                                        }
+                                                        sx={{
+                                                            backgroundColor: 'rgb(229, 255, 225)',
+                                                            color: 'rgb(43, 217, 144)',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgb(229, 255, 225)',
+                                                            },
+                                                        }}
+                                                    >
+                                                        View
+                                                    </Button>
+                                                </Badge>
                                             </TableCell>
                                         </TableRow>
                                     );

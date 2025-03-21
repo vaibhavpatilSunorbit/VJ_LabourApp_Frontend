@@ -240,6 +240,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                 Name: item.name,
                 Project_Name: item.projectName,
                 Department: item.department,
+                AadhaarNumber: item.aadhaarNumber,
+                AccountNumber: item.accountNumber,
                 Attendance_Count: item.attendanceCount,
                 Wage_Type: item.wageType,
                 DailyWage_Rate: item.dailyWageRate,
