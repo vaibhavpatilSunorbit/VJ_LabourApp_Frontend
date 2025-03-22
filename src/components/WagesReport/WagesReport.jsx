@@ -13,8 +13,8 @@ import {
     Box,
     TextField,
     TablePagination,
-    Select,CircularProgress,
-    MenuItem, Modal, Typography, IconButton,Tabs, Tab
+    Select, CircularProgress,
+    MenuItem, Modal, Typography, IconButton, Tabs, Tab
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -32,7 +32,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
 import './wagesReport.css'
 
-const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
+const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -74,7 +74,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const [tabValue, setTabValue] = useState(0);
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
     const [modalOpens, setModalOpens] = useState(true);
-    const [perHourWages, setPerHourWages] = useState(null); 
+    const [perHourWages, setPerHourWages] = useState(null);
 
     const workingHoursString = labours?.workingHours || "FLEXI SHIFT - 9 HRS";
     const workingHours = parseInt(workingHoursString.match(/\d+/)?.[0], 10) || 8;
@@ -97,14 +97,14 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     };
 
     const allowedProjectIds =
-    user && user.projectIds ? JSON.parse(user.projectIds) : [];
-  const allowedDepartmentIds =
-    user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
-    console.log('allowedProjectIds:', allowedProjectIds);
-    console.log('allowedDepartmentIds:', allowedDepartmentIds);
-  // Use labourlist prop if available, otherwise use state labours
-  const laboursSource =
-    labourlist && labourlist.length > 0 ? labourlist : labours;
+        user && user.projectIds ? JSON.parse(user.projectIds) : [];
+    const allowedDepartmentIds =
+        user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+    // console.log('allowedProjectIds wages report:', allowedProjectIds);
+    // console.log('allowedDepartmentIds wages report:', allowedDepartmentIds);
+    // Use labourlist prop if available, otherwise use state labours
+    const laboursSource =
+        labourlist && labourlist.length > 0 ? labourlist : labours;
 
     // const getProjectDescription = (projectId) => {
     //     if (!Array.isArray(projectNames) || projectNames.length === 0) {
@@ -159,7 +159,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 }
             );
             setLabours(response.data);
-            console.log('response.data wages r',response.data)
+            // console.log('response.data wages r', response.data)
 
         } catch (error) {
             console.error('Error fetching labours:', error);
@@ -274,7 +274,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     };
     const handleCancel = () => {
         setModalOpen(false); // Close the modal without saving
-        setPayStructure ({})
+        setPayStructure({})
     };
     // const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
@@ -323,7 +323,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
         setPage(0);
-      };
+    };
 
 
     const handleBusinessUnitChange = async (event) => {
@@ -438,15 +438,15 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
         setSaveLoader(true);
         try {
             const onboardName = user.name || null;
-    
+
             if (!payStructure || !effectiveDate) {
                 toast.error("Please fill in all required fields.");
                 return;
             }
-    
+
             // Store promises for API calls
             const apiPromises = [];
-    
+
             // Loop through each selected labour ID
             for (const labourId of selectedLabourIds) {
                 const wageData = {
@@ -462,20 +462,20 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     weeklyOff: payStructure === 'FIXED MONTHLY WAGES' ? weeklyOff || null : null,
                     wagesEditedBy: onboardName,
                 };
-    
+
                 try {
                     // **Run upsertLabourMonthlyWages API and wait for WageID**
                     const upsertResponse = await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-                    
+
                     if (upsertResponse.data && upsertResponse.data.WageID) {
                         wageData.wageId = upsertResponse.data.WageID; // Assign WageID
-    
+
                         // **Run sendWagesForApproval API using the received WageID**
                         apiPromises.push(axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData));
 
-                         // **Wait for all sendWagesForApproval API calls to complete**
+                        // **Wait for all sendWagesForApproval API calls to complete**
                         await Promise.all(apiPromises);
-    
+
                         // Show success message after all API calls complete
                         toast.info("Wages sent for admin approval.");
                     } else {
@@ -487,8 +487,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 }
             }
             setSaveLoader(false);
-        handleCancel();
-    
+            handleCancel();
+
             fetchLabours();
             setModalOpen(false);
             setWeeklyOff("");
@@ -504,7 +504,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
             toast.error("Failed to save wages.");
         }
     };
-    
+
     const handleEdit = (labour) => {
         setSelectedLabour(labour);
         setPayStructure('');
@@ -547,26 +547,26 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
         setSelectedLabour(selectedLabour);
     };
 
-    
-//    laboursSource.forEach((labour) => {
-//         const labourProjectId = Number(labour.ProjectID);
-//         const labourDepartmentId = Number(labour.DepartmentID);
-//         const projectMatch =
-//           allowedProjectIds.length > 0
-//             ? allowedProjectIds.includes(labourProjectId)
-//             : true;
-//         const departmentMatch =
-//           allowedDepartmentIds.length > 0
-//             ? allowedDepartmentIds.includes(labourDepartmentId)
-//             : true;
-//         // For strict logging (both must match), you could use:
-//         if (!projectMatch && !departmentMatch) {
-//         //   console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
-//         }
-//       });
-    
-      // Strict filtering: record must match allowed project and department IDs, and status "Approved"
-      const getFilteredLaboursForTable = () => {
+
+    //    laboursSource.forEach((labour) => {
+    //         const labourProjectId = Number(labour.ProjectID);
+    //         const labourDepartmentId = Number(labour.DepartmentID);
+    //         const projectMatch =
+    //           allowedProjectIds.length > 0
+    //             ? allowedProjectIds.includes(labourProjectId)
+    //             : true;
+    //         const departmentMatch =
+    //           allowedDepartmentIds.length > 0
+    //             ? allowedDepartmentIds.includes(labourDepartmentId)
+    //             : true;
+    //         // For strict logging (both must match), you could use:
+    //         if (!projectMatch && !departmentMatch) {
+    //         //   console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
+    //         }
+    //       });
+
+    // Strict filtering: record must match allowed project and department IDs, and status "Approved"
+    const getFilteredLaboursForTable = () => {
         let baseLabours = searchResults.length > 0 ? [...searchResults] : [...laboursSource];
         // console.log("baseLabours : ", JSON.stringify(baseLabours));
         // let baseLabours = rowsPerPage > 0
@@ -576,52 +576,52 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
         //           ? filteredIconLabours
         //           : [...labours]))
         //   : [];
-       
+
         baseLabours = baseLabours.filter((labour) => {
-          const labourProjectId = Number(labour.ProjectID);
-          const labourDepartmentId = Number(labour.DepartmentID);
-          const projectMatch =
-            allowedProjectIds.length > 0
-              ? allowedProjectIds.includes(labourProjectId)
-              : true;
-          const departmentMatch =
-            allowedDepartmentIds.length > 0
-              ? allowedDepartmentIds.includes(labourDepartmentId)
-              : true;
-        //   console.log('projectMatch', projectMatch, 'departmentMatch', departmentMatch);
-          // Return true if either matches
-          return projectMatch || departmentMatch;
+            const labourProjectId = Number(labour.ProjectID);
+            const labourDepartmentId = Number(labour.DepartmentID);
+            const projectMatch =
+                allowedProjectIds.length > 0
+                    ? allowedProjectIds.includes(labourProjectId)
+                    : true;
+            const departmentMatch =
+                allowedDepartmentIds.length > 0
+                    ? allowedDepartmentIds.includes(labourDepartmentId)
+                    : true;
+            //   console.log('projectMatch', projectMatch, 'departmentMatch', departmentMatch);
+            // Return true if either matches
+            return projectMatch || departmentMatch;
         });
         // Ensure that only records with status "Approved" are included.
         // baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
-        console.log('Filtered Labours For Table:', JSON.stringify(baseLabours));
+        // console.log('Filtered Labours For Table:', JSON.stringify(baseLabours));
         return baseLabours || [];
-      };
-    
-      // Helper: Get project description
-      const getProjectDescription = (ProjectID) => {
+    };
+
+    // Helper: Get project description
+    const getProjectDescription = (ProjectID) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
         if (ProjectID === undefined || ProjectID === null || ProjectID === '') return 'Unknown';
         const project = projectNames.find((proj) => proj.Id === Number(ProjectID));
         return project ? project.Business_Unit : 'Unknown';
-      };
-    
-      // Helper: Get department description
-      const getDepartmentDescription = (departmentId) => {
+    };
+
+    // Helper: Get department description
+    const getDepartmentDescription = (departmentId) => {
         if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
         const department = departments.find((dept) => dept.Id === Number(departmentId));
         return department ? department.Description : 'Unknown';
-      };
-    
-      const filteredLaboursForTable = getFilteredLaboursForTable();
+    };
 
-      // Reset page if current page is out of range after filtering
+    const filteredLaboursForTable = getFilteredLaboursForTable();
+
+    // Reset page if current page is out of range after filtering
     //   useEffect(() => {
     //     if (page * rowsPerPage >= filteredLaboursForTable.length) {
     //       setPage(0);
     //     }
     //   }, [filteredLaboursForTable, page, rowsPerPage]);
-    
+
     //   const paginatedLabours = filteredLaboursForTable.slice(
     //     page * rowsPerPage,
     //     rowsPerPage === -1
@@ -629,68 +629,68 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
     //       : (page + 1) * rowsPerPage
     //   );
     //   console.log('Paginated Labours:', paginatedLabours);
-    
+    // const displayedLabours = filteredLaboursForTable
       const displayedLabours = filteredLaboursForTable.filter((labour) => {
         return (
           getProjectDescription(labour.ProjectID) !== 'Unknown' &&
           getDepartmentDescription(labour.DepartmentID) !== 'Unknown'
         );
       });
-      console.log('Displayed Labours:', displayedLabours);
-    
-      const isAllSelected =
+
+    const isAllSelected =
         filteredLaboursForTable.length > 0 &&
         filteredLaboursForTable.every((labour) => selectedLabourIds.includes(labour.LabourID));
-    
-      // Handlers
-      const handleSelectRow = (event, labourId, workingHours) => {
+
+    // Handlers
+    const handleSelectRow = (event, labourId, workingHours) => {
         if (event.target.checked) {
-          setSelectedLabourIds((prev) => [...prev, labourId]);
-          setSelectedLabourWorkingHours( workingHours);
+            setSelectedLabourIds((prev) => [...prev, labourId]);
+            setSelectedLabourWorkingHours(workingHours);
         } else {
-          setSelectedLabourIds((prev) => prev.filter((id) => id !== labourId));
+            setSelectedLabourIds((prev) => prev.filter((id) => id !== labourId));
         }
-      };
-    
-      const handleSelectAllRows = (event) => {
+    };
+
+    const handleSelectAllRows = (event) => {
         if (event.target.checked) {
-          const newSelected = filteredLaboursForTable.map((labour) => labour.LabourID);
-          setSelectedLabourIds((prev) => [
-            ...prev,
-            ...newSelected.filter((id) => !prev.includes(id)),
-          ]);
+            const newSelected = filteredLaboursForTable.map((labour) => labour.LabourID);
+            setSelectedLabourIds((prev) => [
+                ...prev,
+                ...newSelected.filter((id) => !prev.includes(id)),
+            ]);
         } else {
-          const newSelected = filteredLaboursForTable.map((labour) => labour.LabourID);
-          setSelectedLabourIds((prev) =>
-            prev.filter((id) => !newSelected.includes(id))
-          );
+            const newSelected = filteredLaboursForTable.map((labour) => labour.LabourID);
+            setSelectedLabourIds((prev) =>
+                prev.filter((id) => !newSelected.includes(id))
+            );
         }
-      };
-    
-      const handleViewHistory = (labourID) => {
+    };
+
+    const handleViewHistory = (labourID) => {
         const history = labours.filter((labour) => labour.LabourID === labourID);
-        console.log('history',history)
+        // console.log('history', history)
         setSelectedHistory(history);
         setOpenModal(true);
-      };
-    
-      const handlePageChange = (event, newPage) => {
+    };
+
+    const handlePageChange = (event, newPage) => {
         setPage(newPage);
-      };
-    
-      const handleRowsPerPageChange = (event) => {
+    };
+
+    const handleRowsPerPageChange = (event) => {
         const newRows = parseInt(event.target.value, 10);
         setRowsPerPage(newRows);
         setPage(0);
-      };  
-        
-      const pendingCount = displayedLabours.filter(labour => 
-        labour?.ApprovalStatusWages === 'Pending' || 
-        labour?.ApprovalStatusWages === null || 
+    };
+
+    const pendingCount = displayedLabours.filter(labour =>
+        labour?.ApprovalStatusWages === "null" ||
+        labour?.ApprovalStatusWages === 'Pending' ||
+        labour?.ApprovalStatusWages === null ||
         labour?.ApprovalStatusWages === ""
     ).length;
-    
-    const approvedCount = displayedLabours.filter(labour => 
+
+    const approvedCount = displayedLabours.filter(labour =>
         labour?.ApprovalStatusWages === 'Approved'
     ).length;
 
@@ -732,58 +732,58 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                 }}
             >
 
-<Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          aria-label="tabs example"
-          sx={{
-            ".MuiTabs-indicator": {
-              display: "none",
-            },
-            minHeight: "auto",
-          }}
-        >
-          <Tab
-            label="Pending"
-            style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
-            sx={{
-              color: tabValue === 0 ? "white" : "black",
-              bgcolor: tabValue === 0 ? "#EFE6F7" : "transparent",
-              borderRadius: 1,
-              textTransform: "none",
-              fontWeight: "bold",
-              mr: 1,
-              minHeight: "auto",
-              minWidth: "auto",
-              // padding: "6px 12px",
-              "&:hover": {
-                bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
-              },
-            }}
-          />
-          <Tab
-            label="Approved"
-            style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
-            sx={{
-              color: tabValue === 1 ? "white" : "black",
-              bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "transparent",
-              borderRadius: 1,
-              textTransform: "none",
-              mr: 1,
-              fontWeight: "bold",
-              minHeight: "auto",
-              minWidth: "auto",
-              // padding: "6px 12px",
-              "&:hover": {
-                bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
-              },
-            }}
-          /> </Tabs>
+                <Tabs
+                    value={tabValue}
+                    onChange={handleTabChange}
+                    aria-label="tabs example"
+                    sx={{
+                        ".MuiTabs-indicator": {
+                            display: "none",
+                        },
+                        minHeight: "auto",
+                    }}
+                >
+                    <Tab
+                        label="Pending"
+                        style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
+                        sx={{
+                            color: tabValue === 0 ? "white" : "black",
+                            bgcolor: tabValue === 0 ? "#EFE6F7" : "transparent",
+                            borderRadius: 1,
+                            textTransform: "none",
+                            fontWeight: "bold",
+                            mr: 1,
+                            minHeight: "auto",
+                            minWidth: "auto",
+                            // padding: "6px 12px",
+                            "&:hover": {
+                                bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
+                            },
+                        }}
+                    />
+                    <Tab
+                        label="Approved"
+                        style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
+                        sx={{
+                            color: tabValue === 1 ? "white" : "black",
+                            bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "transparent",
+                            borderRadius: 1,
+                            textTransform: "none",
+                            mr: 1,
+                            fontWeight: "bold",
+                            minHeight: "auto",
+                            minWidth: "auto",
+                            // padding: "6px 12px",
+                            "&:hover": {
+                                bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
+                            },
+                        }}
+                    /> </Tabs>
 
-                <ExportWagesReport departments={departments} projectNames={projectNames}/>
-                <ImportWagesReport handleToast={handleToast} onboardName={user.name || null}  modalOpens={modalOpens} setModalOpens={setModalOpens}/>
+                <ExportWagesReport departments={departments} projectNames={projectNames} />
+                <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} modalOpens={modalOpens} setModalOpens={setModalOpens} />
 
-             
+
 
                 <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
                     Filter
@@ -876,10 +876,10 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                         <TableBody>
                             {displayedLabours
                                 .filter(labour =>
-                                    (tabValue === 0 && 
-                                        (labour?.ApprovalStatusWages === 'Pending' || 
-                                         labour?.ApprovalStatusWages === null || 
-                                         labour?.ApprovalStatusWages === "" || labour?.ApprovalStatusWages === "Rejected")) ||
+                                    (tabValue === 0 &&
+                                        (labour?.ApprovalStatusWages === 'Pending' ||
+                                            labour?.ApprovalStatusWages === null ||
+                                            labour?.ApprovalStatusWages === "" || labour?.ApprovalStatusWages === "Rejected")) ||
                                     (tabValue === 1 && labour?.ApprovalStatusWages === 'Approved')
                                 )
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -888,55 +888,56 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                                         sx={{
                                             backgroundColor:
                                                 labour?.ApprovalStatusWages === 'Pending'
-                                        ? '#ffe6e6' // Light red for Pending
-                                        : labour?.ApprovalStatusWages === 'Approved'
-                                        ? '#dcfff0' // Light green for Approved
-                                        : 'inherit',
-                                  }}
-                                >
-                                    <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                    <TableCell>{labour.LabourID}</TableCell>
-                                    <TableCell>{labour.name || '-'}</TableCell>
-                                    <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell>
-                                    <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
-                                    {/* <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell> */}
-                                    <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString() : '-'}</TableCell>
-                                    <TableCell>{labour.PayStructure || '-'}</TableCell>
-                                    <TableCell>{labour.DailyWages || '-'}</TableCell>
-                                    <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
-                                    <TableCell>{labour.WeeklyOff || '-'}</TableCell>
-                                    <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
-                                    <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            color='rgb(239,230,247)'
-                                            onClick={() => handleViewHistory(labour.LabourID)}
-                                        >
-                                            <VisibilityIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                     <TableCell>
-                                        <Button
-                                            variant="contained"
-                                            sx={{
-                                                backgroundColor: 'rgb(239,230,247)',
-                                                color: 'rgb(130,54,188)',
-                                                '&:hover': { backgroundColor: 'rgb(239,230,247)' },
-                                            }}
-                                            onClick={() => {
-                                                // For individual edit, you can add this labour to the selection and open the modal.
-                                                if (!selectedLabourIds.includes(labour.LabourID)) {
-                                                    setSelectedLabourIds([...selectedLabourIds, labour.LabourID]);
-                                                    setSelectedLabourWorkingHours(labour.workingHours);
-                                                }
-                                                setModalOpen(true);
-                                            }}
-                                        >
-                                            Edit
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                                                    ? '#ffe6e6' // Light red for Pending
+                                                    : labour?.ApprovalStatusWages === 'Approved'
+                                                        ? '#dcfff0' // Light green for Approved
+                                                        : 'inherit',
+                                        }}
+                                    >
+                                        <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                        <TableCell>{labour.LabourID}</TableCell>
+                                        <TableCell>{labour.name || '-'}</TableCell>
+                                        {/* <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell> */}
+                                        <TableCell>{labour.businessUnit || '-'}</TableCell>
+                                        <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
+                                        {/* <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell> */}
+                                        <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString() : '-'}</TableCell>
+                                        <TableCell>{labour.PayStructure || '-'}</TableCell>
+                                        <TableCell>{labour.DailyWages || '-'}</TableCell>
+                                        <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
+                                        <TableCell>{labour.WeeklyOff || '-'}</TableCell>
+                                        <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
+                                        <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
+                                        <TableCell>
+                                            <IconButton
+                                                color='rgb(239,230,247)'
+                                                onClick={() => handleViewHistory(labour.LabourID)}
+                                            >
+                                                <VisibilityIcon />
+                                            </IconButton>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button
+                                                variant="contained"
+                                                sx={{
+                                                    backgroundColor: 'rgb(239,230,247)',
+                                                    color: 'rgb(130,54,188)',
+                                                    '&:hover': { backgroundColor: 'rgb(239,230,247)' },
+                                                }}
+                                                onClick={() => {
+                                                    // For individual edit, you can add this labour to the selection and open the modal.
+                                                    if (!selectedLabourIds.includes(labour.LabourID)) {
+                                                        setSelectedLabourIds([...selectedLabourIds, labour.LabourID]);
+                                                        setSelectedLabourWorkingHours(labour.workingHours);
+                                                    }
+                                                    setModalOpen(true);
+                                                }}
+                                            >
+                                                Edit
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
                         </TableBody>
                     </Table>
                 </Box>
@@ -1088,13 +1089,13 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     }}
                 >
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Box display="flex" flexDirection="column" justifyContent="flex-start" alignItems="flex-start" mb={2}>
-                        <Typography id="modal-title" variant="h6">
-                            {selectedLabourIds.length > 1
-                                ? 'Update Wages for Selected Labour'
-                                : 'Edit Pay Structure'}
-                        </Typography>
-                        <Typography>Shift:  <strong>{selectedLabourWorkingHours}</strong></Typography>
+                        <Box display="flex" flexDirection="column" justifyContent="flex-start" alignItems="flex-start" mb={2}>
+                            <Typography id="modal-title" variant="h6">
+                                {selectedLabourIds.length > 1
+                                    ? 'Update Wages for Selected Labour'
+                                    : 'Edit Pay Structure'}
+                            </Typography>
+                            <Typography>Shift:  <strong>{selectedLabourWorkingHours}</strong></Typography>
                         </Box>
                         <IconButton onClick={handleCancel}>
                             <CloseIcon />
@@ -1131,29 +1132,29 @@ const AttendanceReport = ({ departments, projectNames, labourlist  }) => {
                     {/* Dynamic Fields based on Pay Structure */}
                     {payStructure === 'DAILY WAGES' && (
                         <>
-                           <TextField
-                            label="Daily Wages"
-                            type="number"
-                            fullWidth
-                            value={dailyWages || ""}
-                            onChange={(e) => {
-                                const value = e.target.value === "" ? null : parseFloat(e.target.value);
-                                setDailyWages(value);
+                            <TextField
+                                label="Daily Wages"
+                                type="number"
+                                fullWidth
+                                value={dailyWages || ""}
+                                onChange={(e) => {
+                                    const value = e.target.value === "" ? null : parseFloat(e.target.value);
+                                    setDailyWages(value);
 
-                                console.log("selectedLabourIds.workingHours",selectedLabourWorkingHours)
-                                if (value !== null) {
-                                    setMonthlyWages(value * 30); // Assuming 30 days/month
-                                    setYearlyWages(value * 30 * 12); // Assuming 12 months/year
-                                    if(selectedLabourWorkingHours=== 'FLEXI SHIFT - 8 HRS'){ setPerHourWages(8); } else { setPerHourWages(9); }
+                                    // console.log("selectedLabourIds.workingHours", selectedLabourWorkingHours)
+                                    if (value !== null) {
+                                        setMonthlyWages(value * 30); // Assuming 30 days/month
+                                        setYearlyWages(value * 30 * 12); // Assuming 12 months/year
+                                        if (selectedLabourWorkingHours === 'FLEXI SHIFT - 8 HRS') { setPerHourWages(8); } else { setPerHourWages(9); }
 
-                                } else {
-                                    setMonthlyWages(null);
-                                    setYearlyWages(null);
-                                    setPerHourWages(null);
-                                }
-                            }}
-                            sx={{ mb: 2 }}
-                        />
+                                    } else {
+                                        setMonthlyWages(null);
+                                        setYearlyWages(null);
+                                        setPerHourWages(null);
+                                    }
+                                }}
+                                sx={{ mb: 2 }}
+                            />
                             <TextField
                                 label="Per Hours Wages"
                                 type="number"

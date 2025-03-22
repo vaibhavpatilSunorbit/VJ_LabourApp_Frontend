@@ -18,7 +18,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions, FormControl, InputLabel
+    DialogActions, FormControl, InputLabel, Tabs, Tab
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -77,7 +77,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
         variablePayRemark: "",
         effectiveDate: new Date().toISOString().split("T")[0],
       });
-      const [filteredIconLabours, setFilteredIconLabours] = useState([]);
+      const [tabValue, setTabValue] = useState(0);
 
     
     // const getProjectDescription = (projectId) => {
@@ -244,7 +244,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
         setLoading(true);
         try {
             // const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
-            const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromVariableInput?q=${searchQuery}`);
             setSearchResults(response.data);
             setPage(0);
         } catch (error) {
@@ -748,7 +748,21 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
       //   paginatedLabours.length > 0 &&
       //   paginatedLabours.every((labour) => selectedLabourIds.includes(labour.LabourID));
     
-     
+      const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+        setPage(0);
+      };
+
+      const pendingCount = displayedLabours.filter(labour => 
+        labour?.ApprovalStatusPay === 'AdminPending' || 
+        labour?.ApprovalStatusPay === null || 
+        labour?.ApprovalStatusPay === ""
+    ).length;
+    
+    const approvedCount = displayedLabours.filter(labour => 
+        labour?.ApprovalStatusPay === 'Approved'
+    ).length;
+
     
     
       const handleViewHistory = (labourID) => {
@@ -804,6 +818,56 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
                     flexWrap: "wrap",
                 }}
             >
+
+              
+<Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          aria-label="tabs example"
+          sx={{
+            ".MuiTabs-indicator": {
+              display: "none",
+            },
+            minHeight: "auto",
+          }}
+        >
+          <Tab
+            label="Pending"
+            style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
+            sx={{
+              color: tabValue === 0 ? "white" : "black",
+              bgcolor: tabValue === 0 ? "#EFE6F7" : "transparent",
+              borderRadius: 1,
+              textTransform: "none",
+              fontWeight: "bold",
+              mr: 1,
+              minHeight: "auto",
+              minWidth: "auto",
+              // padding: "6px 12px",
+              "&:hover": {
+                bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
+              },
+            }}
+          />
+          <Tab
+            label="Approved"
+            style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
+            sx={{
+              color: tabValue === 1 ? "white" : "black",
+              bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "transparent",
+              borderRadius: 1,
+              textTransform: "none",
+              mr: 1,
+              fontWeight: "bold",
+              minHeight: "auto",
+              minWidth: "auto",
+              // padding: "6px 12px",
+              "&:hover": {
+                bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
+              },
+            }}
+          /> </Tabs>
+
                 <ExportVariablePay />
                 <ImportVariablePay handleToast={handleToast} onboardName={user?.name || null} />
 
@@ -820,7 +884,8 @@ Edit ({selectedLabourIds.length})
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 900, { label: 'All', value: displayedLabours.length}]}
                     // count={labours.length}
-                    count={displayedLabours.length}
+                    // count={displayedLabours.length}
+                    count={tabValue === 0 ? pendingCount : approvedCount}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handlePageChange}
@@ -893,9 +958,26 @@ Edit ({selectedLabourIds.length})
                         >
                             {/* {(rowsPerPage > 0 ? paginatedLabours : filteredLabours).map((labour, index) => ( */}
                             {/* {paginatedLabours.map((labour, index) => ( */}
-                            {displayedLabours.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            {displayedLabours
+                            .filter(labour =>
+                              (tabValue === 0 && 
+                                  (labour?.ApprovalStatusPay === 'AdminPending' || 
+                                   labour?.ApprovalStatusPay === null || 
+                                   labour?.ApprovalStatusPay === "" || labour?.ApprovalStatusPay === "Rejected")) ||
+                              (tabValue === 1 && labour?.ApprovalStatusPay === 'Approved')
+                          )
+                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((labour, index) => (
-                                <TableRow key={labour.LabourID}>
+                                <TableRow key={labour.LabourID}
+                                sx={{
+                                  backgroundColor:
+                                      labour?.ApprovalStatusPay === 'AdminPending'
+                              ? '#ffe6e6' // Light red for Pending
+                              : labour?.ApprovalStatusPay === 'Approved'
+                              ? '#dcfff0' // Light green for Approved
+                              : 'inherit',
+                                }}
+                                >
                                      {/* <TableCell padding="checkbox">
                     <Checkbox
                       checked={selectedLabourIds.includes(labour.LabourID)}
@@ -906,7 +988,8 @@ Edit ({selectedLabourIds.length})
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     <TableCell>{labour.LabourID}</TableCell>
                                     <TableCell>{labour.name || '-'}</TableCell>
-                                    <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell>
+                                    {/* <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell> */}
+                                    <TableCell>{labour.businessUnit || '-'}</TableCell>
                                     <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
 
                                     {/* <TableCell>

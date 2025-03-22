@@ -162,8 +162,8 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
     user && user.projectIds ? JSON.parse(user.projectIds) : [];
   const allowedDepartmentIds =
     user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
-    console.log('allowedProjectIds: SiteTransfer', allowedProjectIds);
-    console.log('allowedDepartmentIds:SiteTransfer', allowedDepartmentIds);
+    // console.log('allowedProjectIds: SiteTransfer', allowedProjectIds);
+    // console.log('allowedDepartmentIds:SiteTransfer', allowedDepartmentIds);
   // Use labourlist prop if available, otherwise use state labours
   const laboursSource =
     labourlist && labourlist.length > 0 ? labourlist : labours;
@@ -781,7 +781,7 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
                                 {tabValue !== 3 && <TableCell>Labour ID</TableCell>}
                                 <TableCell>Name of Labour</TableCell>
                                 <TableCell>Status</TableCell>
-                                {((user.userType === 'admin') || (tabValue !== 6 && user.userType === 'user')) && <TableCell>Action</TableCell>}
+                                {/* {((user.userType === 'admin') || (tabValue !== 6 && user.userType === 'user')) && <TableCell>Action</TableCell>} */}
                                 <TableCell>Action</TableCell>
                                 <TableCell>Details</TableCell>
                             </TableRow>
