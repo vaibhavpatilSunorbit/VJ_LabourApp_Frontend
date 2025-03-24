@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OnboardingForm from './components/OnboardingForm/OnboardingForm';
@@ -29,11 +29,26 @@ import SalaryGeneration from './components/AdminSalary/SalaryGeneration/SalaryGe
 import PaySlipPage from './PaySlip/PaySlipPage';
 import RunPayroll from './components/AdminSalary/RunPayroll/RunPayroll';
 import ViewMonthlyPayroll from './components/AdminSalary/ViewMonthlyPayroll/ViewMonthlyPayroll';
+import { useUser } from './UserContext/UserContext';
+import LabourIdCard from './PaySlip/LabourIdCard';
+import CompanyTransferApproval from './components/AdminApproval/CompanyTransferApproval/CompanyTransferApproval';
+import { initGA, logPageView } from './utils/analytics.js';
+
+const GAListener = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    logPageView(location.pathname + location.search);
+  }, [location]);
+
+  return null;
+};
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
   const [approvedLabours, setApprovedLabours] = useState([]);
   const [refresh, setRefresh] = useState(false);
+  const { user } = useUser();
   const [formStatus, setFormStatus] = useState({
     kyc: false,
     personal: false,
@@ -47,18 +62,46 @@ function App() {
   useEffect(() => {
     const fetchDepartmentsAndProjects = async () => {
       try {
-        const departmentsRes = await axios.get(API_BASE_URL + '/api/departments');
+        const departmentsRes = await axios.get(API_BASE_URL + "/api/departments");
+        const projectsRes = await axios.get(API_BASE_URL + "/api/project-names");
+console.log('projectsRes',projectsRes.data)
         setDepartments(departmentsRes.data);
-      
-
-        const projectsRes = await axios.get(API_BASE_URL + '/api/project-names');
         setProjectNames(projectsRes.data);
+
+        // **Ensure the API user data exists before filtering**
+        if (user && user.departmentIds && user.projectIds) {
+          // **Parse department & project IDs from string to array**
+          const departmentIdsArray = JSON.parse(user.departmentIds);
+          const projectIdsArray = JSON.parse(user.projectIds);
+
+          console.log("Parsed Department IDs:", departmentIdsArray);
+          console.log("Parsed Project IDs:", projectIdsArray);
+
+          // **Filter departments and projects based on parsed IDs**
+          const filteredDepartments = departmentsRes.data.filter((dept) =>
+            departmentIdsArray.includes(dept.Id)
+          );
+
+          const filteredProjects = projectsRes.data.filter((proj) =>
+            projectIdsArray.includes(proj.Id)
+          );
+
+          console.log("Filtered Departments:", filteredDepartments);
+          console.log("Filtered Projects:", filteredProjects);
+
+          setDepartments(filteredDepartments);
+          setProjectNames(filteredProjects);
+        }
       } catch (err) {
-        console.error('Error fetching departments or projects:', err);
+        console.error("Error fetching departments or projects:", err);
       }
     };
 
     fetchDepartmentsAndProjects();
+  }, [user]);
+
+  useEffect(() => {
+    initGA(); // ✅ Initialize GA once on app load
   }, []);
 
   const handleApprove = () => {
@@ -81,6 +124,7 @@ function App() {
 
   return (
     <Router>
+      <GAListener />
       <div className='grid-container'>
         <Routes>
           {/* Route for Login */}
@@ -121,8 +165,11 @@ function App() {
                     <Route path="/SalaryGeneration" element={<SalaryGeneration onFormSubmit={handleFormSubmit} />} />
                     <Route path="/RunPayroll" element={<RunPayroll onFormSubmit={handleFormSubmit} />} />
                     <Route path="/ViewMonthlyPayroll" element={<ViewMonthlyPayroll onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/adminApproval/CompanyTransferApproval" element={<CompanyTransferApproval  departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} />} />
+
                
                     <Route path="/Payslip" element={<PaySlipPage onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/LabourIdCard" element={<LabourIdCard  />} />
                   </Routes>
                 </>
               }

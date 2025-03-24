@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    Table, IconButton, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Tab, Typography,
+    Table, IconButton, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Tab, Typography, TableFooter,
     InputAdornment,
     Modal,
     Grid
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchBar';
+import SearchBar from '../SarchBar/SearchRegister';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import "./attendanceReport.css";
@@ -29,11 +29,12 @@ import ExportAttendance from './ImportExportAttendance/ExportAttendance';
 import CloseIcon from '@mui/icons-material/Close'
 import SyncIcon from '@mui/icons-material/Sync';
 import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
 
-const AttendanceReport = () => {
+const AttendanceReport = (departments, projectNames, labour, labourlist) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const [labours, setLabours] = useState([]);
+    const [labours, setLabours] = useState(labourlist || []);
     const [attendanceData, setAttendanceData] = useState([]);
     const [selectedLabour, setSelectedLabour] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -48,7 +49,11 @@ const AttendanceReport = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [totalDays, setTotalDays] = useState(0);
     const [presentDays, setPresentDays] = useState(0);
-    const [totalOvertime, setTotalOvertime] = useState(0);
+    const [totalOvertimehours, setTotalOvertimehours] = useState(0);
+    const [totalOvertimeminute, setTotalOvertimeminute] = useState(0);
+
+    const [totalOvertimehoursManually, setTotalOvertimehoursManually] = useState(0);
+    const [totalOvertimeminuteManually, setTotalOvertimeminuteManually] = useState(0);
     const [tabValue, setTabValue] = useState(0);
     const [selectedLabourId, setSelectedLabourId] = useState('');
     const [editManualDialogOpen, setEditManualDialogOpen] = useState(false);
@@ -62,6 +67,7 @@ const AttendanceReport = () => {
         punchOut: "",
         overtime: "",
         remark: "",
+        shift:""
     });
     const [error, setError] = useState(null);
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
@@ -75,12 +81,93 @@ const AttendanceReport = () => {
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
     const [projectName, setProjectName] = useState('');
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+    const [isOvertimeDisable, setIsOvertimeDisable] = useState(false);
+    const [isOvertimeError, setIsOvertimeError] = useState(false);
+
     // const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
 
+    const getDepartmentDescription = (departmentId) => {
+        if (!departments || departments.length === 0) {
+            return 'Unknown';
+        }
+        const department = departments.find(dept => dept.Id === Number(departmentId));
+        return department ? department.Description : 'Unknown';
+    };
+
+    const getProjectDescription = (projectId) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) {
+            return 'Unknown';
+        }
+        if (projectId === undefined || projectId === null || projectId === '') {
+            return 'Unknown';
+        }
+
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+
+        return project ? project.Business_Unit : 'Unknown';
+    };
+
+
+    const allowedProjectIds = user && user.projectIds ? JSON.parse(user.projectIds) : [];
+    const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+
+    const laboursToDisplay = (
+        // If you have search or additional filters, you can integrate them here.
+        labours
+    )
+        .filter((labour) => {
+            // Filter based on tab status (Pending, Approved, etc.)
+            if (tabValue === 0) return labour.status === 'Pending';
+            if (tabValue === 1) return labour.status === 'Approved';
+            if (tabValue === 2)
+                return (
+                    labour.status === 'Rejected' ||
+                    labour.status === 'Resubmitted' ||
+                    labour.status === 'Disable'
+                );
+            return true;
+        })
+        .filter((labour) => {
+            // Convert fields to numbers if they aren’t already.
+            // Assuming labour.projectName holds the project ID and labour.department holds the department ID.
+            const labourProjectId = Number(labour.projectName);
+            const labourDepartmentId = Number(labour.department);
+            return (
+                allowedProjectIds.includes(labourProjectId) &&
+                allowedDepartmentIds.includes(labourDepartmentId)
+            );
+        })
+        .sort((a, b) => b.labourID - a.labourID);
+
+    //   function formatOvertime(Overtime) {
+    //     // console.log("inside Function: Overtime", Overtime);
+    //     if (isNaN(Overtime) || Overtime === null || Overtime === undefined) {
+    //         console.error("Invalid input detected: Overtime", Overtime);
+    //         return 0;
+    //     }
+    //     Overtime = Math.min(Overtime, 4);
+
+    //     let hours = Math.floor(Overtime);
+    //     let minutes = Math.floor((Overtime - hours) * 60);
+    // console.log('hours',hours, 'minutes',minutes)
+    //     if (minutes < 15) {
+    //         minutes = 0;
+    //     } else if (minutes < 45) {
+    //         minutes = 30;  // 15 to 44 minutes, considered as 30 minutes
+    //     } else {
+    //         minutes = 0;  // More than 45 minutes, round to the next hour
+    //         hours += 1;  // Increase hour by one
+    //     }
+
+    //     // console.log('hours + (minutes / 60)h',hours + (minutes / 60));
+    //     return hours + (minutes / 60);
+    // }
+
     function formatOvertime(Overtime) {
+        Overtime = Overtime ?? 0;
         let hours = Math.floor(Overtime);  // Changed from 'const' to 'let' to allow modification
         let minutes = Math.floor((Overtime - hours) * 60);
-    
+
         if (minutes < 15) {
             minutes = 0;
         } else if (minutes < 45) {
@@ -89,14 +176,32 @@ const AttendanceReport = () => {
             minutes = 0;  // More than 45 minutes, round to the next hour
             hours += 1;  // Increase hour by one
         }
-    
         return { hours, minutes };
     }
-    
+
+    function formatConvertedOverTime(Overtime) {
+    Overtime = Overtime ?? 0;
+    let hours = Math.floor(Overtime); // Extract whole hours
+    let minutes = Math.round((Overtime - hours) * 60); 
+
+    return { hours, minutes };
+}
+
+function formatConvertedOvertimemanually(Overtimemanually) {
+    Overtimemanually = Overtimemanually ?? 0;
+    let hours = Math.floor(Overtimemanually); // Extract whole hours
+    let minutes = Math.round((Overtimemanually - hours) * 60); 
+
+    return { hours, minutes };
+}
+
+
+
     function formatTotalHours(TotalHours) {
+        TotalHours = TotalHours ?? 0;
         let hours = Math.floor(TotalHours);  // Changed from 'const' to 'let' to allow modification
         let minutes = Math.floor((TotalHours - hours) * 60);
-    
+
         if (minutes < 15) {
             minutes = 0;
         } else if (minutes < 45) {
@@ -105,27 +210,145 @@ const AttendanceReport = () => {
             minutes = 0;  // More than 45 minutes, round to the next hour
             hours += 1;  // Increase hour by one
         }
-    
+
         return { hours, minutes };
     }
+
+    function formatOvertimeManually(Overtimemanually) {
+        Overtimemanually = Overtimemanually ?? 0;
+        let hours = Math.floor(Overtimemanually);  // Changed from 'const' to 'let' to allow modification
+        let minutes = Math.floor((Overtimemanually - hours) * 60);
+
+        if (minutes < 15) {
+            minutes = 0;
+        } else if (minutes < 45) {
+            minutes = 30;  // 15 to 44 minutes, considered as 30 minutes
+        } else {
+            minutes = 0;  // More than 45 minutes, round to the next hour
+            hours += 1;  // Increase hour by one
+        }
+        return { hours, minutes };
+    }
+
 
     function formatTotalOvertime(TotalOvertimeHours) {
         let hours = Math.floor(TotalOvertimeHours);
         let minutes = Math.floor((TotalOvertimeHours - hours) * 60);
-    
+
         if (minutes < 15) {
-            minutes = 0; 
+            minutes = 0;
         } else if (minutes < 45) {
             minutes = 30; // 15 to 44 minutes, consider as 30 minutes
         } else {
             minutes = 0; // More than 45 minutes, round to next hour
             hours += 1; // Increase hour by one
         }
-    
+
         return { hours, minutes };
     };
-    
-    
+
+    function formatRoundOffTotalOvertime(TotalOvertimeHoursManually) {
+        let hours = Math.floor(TotalOvertimeHoursManually);
+        let minutes = Math.floor((TotalOvertimeHoursManually - hours) * 60);
+
+        if (minutes < 15) {
+            minutes = 0;
+        } else if (minutes < 45) {
+            minutes = 30; // 15 to 44 minutes, consider as 30 minutes
+        } else {
+            minutes = 0; // More than 45 minutes, round to next hour
+            hours += 1; // Increase hour by one
+        }
+
+        return { hours, minutes };
+    };
+
+
+    // function formatTotalOvertime(TotalOvertimeHours) {
+    //     console.log("inside Function:", TotalOvertimeHours);
+
+    //     // Ensure the input is a valid number, default to 0 if undefined or null
+    //     if (isNaN(TotalOvertimeHours) || TotalOvertimeHours === null || TotalOvertimeHours === undefined) {
+    //         console.error("Invalid input detected:", TotalOvertimeHours);
+    //         return 0;
+    //     }
+
+    //     // Cap TotalOvertimeHours at 4 hours maximum
+    //     TotalOvertimeHours = Math.min(TotalOvertimeHours, 120);
+
+    //     let hours = Math.floor(TotalOvertimeHours);
+    //     let minutes = Math.round((TotalOvertimeHours - hours) * 60); // Convert decimal to minutes
+
+    //     if (minutes < 15) {
+    //         minutes = 0;
+    //     } else if (minutes < 45) {
+    //         minutes = 30; // 15 to 44 minutes → round to 30 minutes
+    //     } else {
+    //         minutes = 0; // More than 45 minutes → round up to next hour
+    //         hours += 1; // Increase hour by one
+    //     }
+
+    //     // Convert final hours and minutes into decimal format
+    //     return hours + (minutes / 60);
+    // }
+
+
+    function formatovertimemanually(overtimemanually) {
+        overtimemanually = overtimemanually ?? 0;
+        let hours = Math.floor(overtimemanually);
+        let minutes = Math.floor((overtimemanually - hours) * 60);
+
+        if (minutes < 15) {
+            minutes = 0;
+        } else if (minutes < 45) {
+            minutes = 30; // 15 to 44 minutes, consider as 30 minutes
+        } else {
+            minutes = 0; // More than 45 minutes, round to next hour
+            hours += 1; // Increase hour by one
+        }
+
+        return hours + (minutes / 60);
+    };
+
+    useEffect(() => {
+        if (manualEditData) {
+          const shiftHours =
+            manualEditData.shift === "FLEXI SHIFT - 9 HRS" ? 9 : 8;
+      
+          const commonDate = manualEditData.date;
+      
+          const getPunchTime = (punch, dateStr) => {
+            let timeString = "";
+            if (typeof punch === "string") {
+              // For simple time strings, use them directly.
+              timeString = punch;
+            } else if (typeof punch === "object" && punch.$d) {
+              // For objects with a $d property, extract hours, minutes and seconds.
+              const d = new Date(punch.$d);
+              const hours = d.getHours().toString().padStart(2, "0");
+              const minutes = d.getMinutes().toString().padStart(2, "0");
+              const seconds = d.getSeconds().toString().padStart(2, "0");
+              timeString = `${hours}:${minutes}:${seconds}`;
+            }
+            // Construct a new Date using the common date and the extracted time.
+            return new Date(`${dateStr}T${timeString}`);
+          };
+      
+          const firstPunchTime = getPunchTime(manualEditData.punchIn, commonDate);
+          const lastPunchTime = getPunchTime(manualEditData.punchOut, commonDate);
+      
+      
+          const todaysHrs =
+            (lastPunchTime.getTime() - firstPunchTime.getTime()) /
+            (1000 * 60 * 60);
+      
+          setIsOvertimeDisable(todaysHrs < shiftHours);
+          const totalGetOvertime = todaysHrs - shiftHours;
+          setIsOvertimeError(totalGetOvertime > manualEditData.overtimemanually);
+        }
+      }, [manualEditData]);      
+
+
     const handleManualEditDialogOpen = (day) => {
         setSelectedDay(day);
         setManualEditData({
@@ -137,8 +360,18 @@ const AttendanceReport = () => {
             overtimemanually: day.overtimemanually || "",
             remark: day.remark || "",
             attendanceStatus: day.status || "",
+            isFinalPayAvailable: day.isFinalPayAvailable || "",
+            shift: day.Shift || ""
         });
         setEditManualDialogOpen(true);
+
+        // const shiftHours = day.Shift === 'FLEXI SHIFT - 9 HRS' ? 9 : 8;
+        // const firstPunchTime = new Date(`${day.date}T${day.firstPunch}`);
+        //             const lastPunchTime = new Date(`${day.date}T${day.lastPunch}`);
+        //             const todaysHrs = (lastPunchTime - firstPunchTime) / (1000 * 60 * 60);                          
+        //     setIsOvertimeDisable(todaysHrs < shiftHours);  
+        //     const totalGetOvertime = todaysHrs - shiftHours;
+        //     setIsOvertimeError(totalGetOvertime > day.overtimemanually)      
     };
 
     const handleManualEditDialogClose = () => {
@@ -148,15 +381,49 @@ const AttendanceReport = () => {
 
     const handleSaveManualEdit = async () => {
         try {
-            const defaultTime = manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff' ? '00:00:00' : null;
+            if (manualEditData.status === 'weeklyOff') {
+                const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
+                    params: { labourId: selectedDay.labourId }  // Fetch wages for a specific labour
+                });
+                const wagesData = wagesResponse.data;
+                console.log("wagesData", wagesData);
+    
+                if (!wagesData || wagesData.length === 0) {
+                    toast.error("Add the wages for that labour then add mark as weeklyOff");
+                    return;
+                }
+                const latestLabourWageRecord = wagesData
+                    .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)) // Sort by latest date
+                    [0]; // Get the most recent record
+    
+                if (!latestLabourWageRecord) {
+                    toast.error("Add the wages for that labour then add mark as weeklyOff");
+                    return;
+                }
+    
+                if (latestLabourWageRecord.PayStructure === "DAILY WAGES") {
+                    toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
+                    return;
+                }
+            }
 
-            const formattedPunchIn = manualEditData.punchIn && dayjs.isDayjs(manualEditData.punchIn)
-                ? manualEditData.punchIn.format('HH:mm:ss')
-                : defaultTime;
 
-            const formattedPunchOut = manualEditData.punchOut && dayjs.isDayjs(manualEditData.punchOut)
-                ? manualEditData.punchOut.format('HH:mm:ss')
-                : defaultTime;
+            if (manualEditData.overtimeManually > manualEditData.overtime ||  Number(manualEditData.overtimeManually) > 4) {
+                toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
+                return;
+            }
+            const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
+
+            const formattedPunchInDayFormat = dayjs(manualEditData.punchIn, 'HH:mm:ss');
+            const formattedPunchOutDayFormat = dayjs(manualEditData.punchOut, 'HH:mm:ss');
+            
+            const formattedPunchIn = defaultTime ? defaultTime : manualEditData.punchIn !== "" && formattedPunchInDayFormat.isValid()
+            ? formattedPunchInDayFormat.format('HH:mm:ss')
+            : defaultTime;
+
+            const formattedPunchOut = defaultTime ? defaultTime : manualEditData.punchOut !== "" && formattedPunchOutDayFormat.isValid()
+            ? formattedPunchOutDayFormat.format('HH:mm:ss')
+            : defaultTime;
 
             const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
             const hasOvertime = overtime !== '';
@@ -170,7 +437,6 @@ const AttendanceReport = () => {
             const onboardName = user.name || null;
             const workingHours = manualEditData.workingHours || selectedDay.workingHours;
             const AttendanceStatus = manualEditData.attendanceStatus || null;
-console.log('AttendanceStatus', AttendanceStatus)
             const payload = {
                 labourId: selectedDay.labourId,
                 date: selectedDay.date,
@@ -179,12 +445,11 @@ console.log('AttendanceStatus', AttendanceStatus)
                 ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
                 ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually }),
                 ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
-                workingHours, 
+                workingHours,
                 ...(onboardName && { onboardName }), AttendanceStatus,
                 markWeeklyOff: manualEditData.status === 'weeklyOff',
             };
 
-            console.log('Request payload +++++:', payload);
 
             const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
 
@@ -196,7 +461,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                         ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
                         ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually || 0 }),
                         ...(manualEditData.remark && { remark: manualEditData.remark }),
-                        workingHours, AttendanceStatus, 
+                        workingHours, AttendanceStatus,
                         markWeeklyOff: manualEditData.status === 'weeklyOff',
                     }
                     : day
@@ -218,7 +483,93 @@ console.log('AttendanceStatus', AttendanceStatus)
         }
     };
 
-
+    // const handleSaveManualEdit = async () => {
+    //     try {
+    //         // Check if manual overtime provided exceeds 4 hours
+    //         if (manualEditData.overtimeManually && Number(manualEditData.overtimeManually) > 4) {
+    //             toast.error("Overtime manually cannot exceed 4 hours.");
+    //             return;
+    //         }
+    
+    //         // Determine default time based on status
+    //         const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') 
+    //             ? '00:00:00' 
+    //             : null;
+    
+    //         // Format Punch In/Out if they are provided as dayjs objects; otherwise, use defaultTime
+    //         const formattedPunchIn = manualEditData.punchIn && dayjs.isDayjs(manualEditData.punchIn)
+    //             ? manualEditData.punchIn.format('HH:mm:ss')
+    //             : defaultTime;
+    
+    //         const formattedPunchOut = manualEditData.punchOut && dayjs.isDayjs(manualEditData.punchOut)
+    //             ? manualEditData.punchOut.format('HH:mm:ss')
+    //             : defaultTime;
+    
+    //         // For overtime, if provided, trim and convert to string
+    //         const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
+    //         const hasOvertime = overtime !== '';
+    //         const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
+    
+    //         if (!hasOvertime && !hasPunchInOrOut) {
+    //             toast.error('At least provide Overtime or Punch In/Out details to save.');
+    //             return;
+    //         }
+    
+    //         const onboardName = user.name || null;
+    //         const workingHours = manualEditData.workingHours || selectedDay.workingHours;
+    //         const AttendanceStatus = manualEditData.attendanceStatus || null;
+    //         console.log('AttendanceStatus', AttendanceStatus);
+    
+    //         const payload = {
+    //             labourId: selectedDay.labourId,
+    //             date: selectedDay.date,
+    //             AttendanceId: manualEditData.AttendanceId || "",
+    //             ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
+    //             ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
+    //             // Note: If the frontend passes overtimeManually (which is validated to be <= 4), use that.
+    //             ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually }),
+    //             ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
+    //             workingHours,
+    //             ...(onboardName && { onboardName }),
+    //             AttendanceStatus,
+    //             markWeeklyOff: manualEditData.status === 'weeklyOff',
+    //         };
+    
+    //         console.log('Request payload +++++:', payload);
+    
+    //         const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+    
+    //         // Update attendance data in state accordingly
+    //         const updatedAttendanceData = attendanceData.map((day) =>
+    //             day.date === selectedDay.date
+    //                 ? {
+    //                       ...day,
+    //                       ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
+    //                       ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
+    //                       ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually || 0 }),
+    //                       ...(manualEditData.remark && { remark: manualEditData.remark }),
+    //                       workingHours,
+    //                       AttendanceStatus,
+    //                       markWeeklyOff: manualEditData.status === 'weeklyOff',
+    //                   }
+    //                 : day
+    //         );
+    
+    //         setAttendanceData(updatedAttendanceData);
+    //         toast.success(response.data.message || 'Attendance updated successfully!');
+    //         handleManualEditDialogClose();
+    //     } catch (error) {
+    //         const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
+    //         console.error('Error saving attendance:', errorMessage);
+    
+    //         if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
+    //             toast.info('The date is a holiday. You cannot modify punch times or overtime.');
+    //         } else {
+    //             toast.error(errorMessage);
+    //         }
+    //     }
+    // };
+    
     const months = [
         { value: 1, label: 'January' },
         { value: 2, label: 'February' },
@@ -243,6 +594,7 @@ console.log('AttendanceStatus', AttendanceStatus)
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
             setSearchResults(response.data);
+            setPage(0);
         } catch (error) {
             setError('Error searching. Please try again.');
         }
@@ -272,10 +624,14 @@ console.log('AttendanceStatus', AttendanceStatus)
         }
     }, [modalOpen]);
 
-    const handleModalOpen = (labour) => {
+    const handleModalOpen = (labour , totalOvertimeHours ,TotalOvertimeHoursManually) => {
         if (labour && labour.LabourID) {
             setSelectedLabour(labour);
             setSelectedLabourId(labour.LabourID);
+            setTotalOvertimehours(totalOvertimeHours.hours)
+            setTotalOvertimeminute(totalOvertimeHours.minutes)
+            setTotalOvertimehoursManually(TotalOvertimeHoursManually.hours)
+            setTotalOvertimeminuteManually(TotalOvertimeHoursManually.minutes)
             setModalOpen(true);
             fetchAttendanceForMonth();
             // fetchAttendanceData(labour.LabourID, startDate, endDate);
@@ -308,7 +664,6 @@ console.log('AttendanceStatus', AttendanceStatus)
             });
 
             const attendanceList = response.data;
-            console.log('response.data for the labour 16-12-24', response.data)
 
             const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
             const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
@@ -324,18 +679,23 @@ console.log('AttendanceStatus', AttendanceStatus)
                     firstPunch: attendanceRecord?.FirstPunch || '-',
                     lastPunch: attendanceRecord?.LastPunch || '-',
                     // totalHours: attendanceRecord?.TotalHours || '0.00',
-                    // overtime: attendanceRecord?.Overtime || '0.0',
-                    totalHours: formatTotalHours(attendanceRecord?.TotalHours || 0),
-                    overtime: formatOvertime(attendanceRecord?.Overtime || 0),
+                    overtime: attendanceRecord?.Overtime || '0.0',
+                    totalHours: formatTotalHours(attendanceRecord?.TotalHours ?? 0),
+                    // overtime: formatOvertime(attendanceRecord?.Overtime ?? 0),
                     isHoliday: attendanceRecord?.Status === 'H',
                     labourId: attendanceRecord?.LabourId || 'NA',
-                    overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
+                    // overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
+                    overtimemanually: formatovertimemanually(attendanceRecord?.OvertimeManually ?? 0),
                     remark: attendanceRecord?.RemarkManually || '-',
                     attendanceId: attendanceRecord?.AttendanceId || '-',
+                    ApprovalStatus: attendanceRecord?.ApprovalStatus || '-',
+                    TotalOvertimeHoursManually: attendanceRecord?.TotalOvertimeHoursManually || '-',
+                    isFinalPayAvailable: attendanceRecord?.isFinalPayAvailable,
+                    Shift: attendanceRecord?.Shift,
                 };
             });
-            console.log('attendanceRecord+++', fullMonthAttendance)
             setAttendanceData(fullMonthAttendance);
+            
         } catch (error) {
             console.error('Error fetching attendance data:', error);
 
@@ -368,7 +728,7 @@ console.log('AttendanceStatus', AttendanceStatus)
             const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
 
             const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
-                const date = new Date(selectedYear, selectedMonth - 1, i + 1)
+                const date = new Date(Date.UTC(selectedYear, selectedMonth - 1, i + 1))
                     .toISOString()
                     .split('T')[0];
                 const record = response.data.find((att) => att.Date.split('T')[0] === date);
@@ -377,7 +737,6 @@ console.log('AttendanceStatus', AttendanceStatus)
                     status: record ? record.Status : 'NA',
                 };
             });
-
             setAttendanceData(fullMonthAttendance);
         } catch (error) {
             console.error('Error fetching attendance:', error);
@@ -447,8 +806,8 @@ console.log('AttendanceStatus', AttendanceStatus)
             const attendanceList = response.data;
 
             const processedAttendance = attendanceList.map((labour, index) => {
-                const totalOvertime = labour.TotalOvertimeHours ?? 0;  
-    
+                const totalOvertime = labour.TotalOvertimeHours ?? 0;
+
                 return {
                     srNo: index + 1,
                     labourId: labour.LabourId,
@@ -460,7 +819,10 @@ console.log('AttendanceStatus', AttendanceStatus)
                     misspunchDays: labour.MissPunchDays,
                     // totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
                     totalOvertimeHours: formatTotalOvertime(labour.TotalOvertimeHours || 0),
+                    roundOffTotalOvertime: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
+                    TotalOvertimeHoursManually: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
                     shift: labour.Shift,
+                    InApprovalStatus: labour.InApprovalStatus,
                 };
             });
 
@@ -477,6 +839,33 @@ console.log('AttendanceStatus', AttendanceStatus)
             fetchAttendanceForMonthAll();
         }
     }, [selectedMonth, selectedYear]);
+
+
+
+    const getFilteredLaboursForTable = () => {
+        // Choose base data from searchResults, filteredIconLabours, or labours
+        let baseLabours = rowsPerPage > 0
+            ? (searchResults.length > 0
+                ? searchResults
+                : (filteredIconLabours.length > 0
+                    ? filteredIconLabours
+                    : [...labours]))
+            : [];
+
+        // First, filter by allowed project and department IDs.
+        baseLabours = baseLabours.filter((labour) => {
+            const labourProjectId = Number(labour.projectName);  // assuming labour.projectName holds the project id
+            const labourDepartmentId = Number(labour.department);  // assuming labour.department holds the department id
+            return (
+                allowedProjectIds.includes(labourProjectId) &&
+                allowedDepartmentIds.includes(labourDepartmentId)
+            );
+        });
+
+        // Then filter by labour status. Here we show only Approved labours.
+        baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
+        return baseLabours;
+    };
 
 
     const renderAttendanceForMonth = () => {
@@ -889,18 +1278,55 @@ console.log('AttendanceStatus', AttendanceStatus)
                 }
             }
             calendar.push(week);
-            if (dayCounter > daysInMonth) break;
+            if (dayCounter >= daysInMonth) break;
         }
         return calendar;
     };
 
     const calendar = generateCalendar(attendanceData, selectedYear, selectedMonth);
 
+    function convertToHoursMinutes(total) {
+        const hours = Math.floor(total);
+        const minutes = Math.round((total - hours) * 60);
+        return { hours, minutes };
+    }
+
+
+    const aggregateTotals = attendanceData.reduce((acc, day) => {
+       
+        const dayTotal =
+            (day.totalHours ? day.totalHours.hours : 0) +
+            (day.totalHours ? day.totalHours.minutes / 60 : 0);
+        const dayOvertime =
+            (day.overtime ? day.overtime.hours : 0) +
+            (day.overtime ? day.overtime.minutes / 60 : 0);
+            const dayManualOvertime =
+            day.overtimemanually?.hours || day.overtimemanually?.minutes
+                ? (day.overtimemanually.hours + (day.overtimemanually.minutes / 60))
+                : (day.overtime?.hours + (day.overtime?.minutes / 60) || 0);
+        
+
+        return {
+            totalHours: acc.totalHours + dayTotal,
+            overtime: acc.overtime + dayOvertime,
+            manualOvertime: acc.manualOvertime + dayManualOvertime
+        };
+    }, { totalHours: 0, overtime: 0, manualOvertime: 0 });
+
+    // Convert the totals to {hours, minutes} format
+    const formattedTotalHours = convertToHoursMinutes(aggregateTotals.totalHours);
+    const formattedOvertime = convertToHoursMinutes(aggregateTotals.overtime);
+    const formattedManualOvertime = convertToHoursMinutes(aggregateTotals.manualOvertime);
+
+
     const displayLabours = labours;
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
             <ToastContainer />
-            <Box ml={-1.5}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Attendance Report
+                </Typography>
                 <SearchBar
                     //  handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
@@ -953,7 +1379,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                     justifyContent: { xs: 'flex-start', sm: 'space-between' },
                 }}>
                     <Box sx={{
-                        width: { xs: '100%', sm: '40%' },
+                        width: { xs: '100%', sm: '33%' },
                         gap: '20px',
                         display: 'flex',
                         flexDirection: 'row', // Stack selectors vertically on all sizes
@@ -1004,11 +1430,12 @@ console.log('AttendanceStatus', AttendanceStatus)
                             onClick={fetchAttendanceForMonthAll}
                             disabled={loading}
                         >
-                           <SyncIcon/>
+                            <SyncIcon />
                         </Button>
                     </Box>
                     <Box sx={{
                         display: 'flex',
+                        width: '42vw',
                         marginRight: '20px',
                         flexDirection: { xs: 'row', sm: 'row' }
                     }}>
@@ -1019,13 +1446,16 @@ console.log('AttendanceStatus', AttendanceStatus)
                             gap: '20px',
                             alignItems: 'center',
                             justifyContent: 'space-evenly',
+                            marginRight: '3vw'
                         }}>
                             <ExportAttendance />
                             <ImportAttendance /></Box>
+
                         <TablePagination
                             className="custom-pagination"
-                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                            count={attendanceData.length > 0 ? attendanceData.length : labours.length}
+                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: getFilteredLaboursForTable().length }]}
+                            // count={attendanceData.length > 0 ? attendanceData.length : labours.length}
+                            count={getFilteredLaboursForTable().length}
                             rowsPerPage={rowsPerPage}
                             page={page}
                             onPageChange={handleChangePage}
@@ -1120,7 +1550,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                                         '@media (max-width: 600px)': {
                                             padding: '10px',
                                         },
-                                        backgroundColor: 'white', // Ensure the background color is set
+                                        backgroundColor: 'white',
                                         position: 'sticky',
                                         top: 0,
                                         zIndex: 1,
@@ -1144,12 +1574,13 @@ console.log('AttendanceStatus', AttendanceStatus)
                                 <TableCell>Absent Days</TableCell>
                                 <TableCell>MissPunch Days</TableCell>
                                 <TableCell>Overtime (Hours)</TableCell>
+                                <TableCell>RoundOffTotalOvertime (Hours)</TableCell>
                                 <TableCell>Actions</TableCell>
                             </TableRow>
                         </TableHead>
 
                         <TableBody>
-                            {(
+                            {/* {(
                                 rowsPerPage > 0
                                     ? (searchResults.length > 0
                                         ? searchResults
@@ -1160,11 +1591,22 @@ console.log('AttendanceStatus', AttendanceStatus)
                             )
                                 .filter((labour) => labour.status === 'Approved')
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((labour, index) => { */}
+                            {getFilteredLaboursForTable()
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((labour, index) => {
                                     const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
 
                                     return (
-                                        <TableRow key={labour.LabourID}>
+                                        <TableRow key={labour.LabourID}
+                                        // sx={{
+                                        //     backgroundColor: labourAttendance?.InApprovalStatus === true
+                                        //       ? '#ffe6e6'
+                                        //       : labourAttendance?.InApprovalStatus === false
+                                        //       ? 'inherit'
+                                        //       : 'inherit',
+                                        //   }}
+                                        >
                                             <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                             <TableCell><CalendarTodayIcon onClick={() => handleModalOpenCalenderAttendance(labour)} style={{ cursor: 'pointer' }} /> </TableCell>
                                             <TableCell>{labour.LabourID}</TableCell>
@@ -1177,15 +1619,22 @@ console.log('AttendanceStatus', AttendanceStatus)
                                             <TableCell>{labourAttendance ? labourAttendance.misspunchDays : '-'}</TableCell>
                                             {/* <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell> */}
                                             <TableCell>
-    {labourAttendance && labourAttendance.totalOvertimeHours ? (
-        <Tooltip title={`${labourAttendance.totalOvertimeHours.hours} hours ${labourAttendance.totalOvertimeHours.minutes} minutes`}>
-            <span>{`${labourAttendance.totalOvertimeHours.hours}h ${labourAttendance.totalOvertimeHours.minutes ? labourAttendance.totalOvertimeHours.minutes + 'm' : ''}`}</span>
-        </Tooltip>
-    ) : "0h"}
-</TableCell>
+                                                {labourAttendance && labourAttendance.totalOvertimeHours ? (
+                                                    <Tooltip title={`${labourAttendance.totalOvertimeHours.hours} hours ${labourAttendance.totalOvertimeHours.minutes} minutes`}>
+                                                        <span>{`${labourAttendance.totalOvertimeHours.hours}h ${labourAttendance.totalOvertimeHours.minutes ? labourAttendance.totalOvertimeHours.minutes + 'm' : ''}`}</span>
+                                                    </Tooltip>
+                                                ) : "0h"}
+                                            </TableCell>
                                             <TableCell>
-                                                <Button
-                                                    onClick={() => handleModalOpen(labour)}
+                                                {labourAttendance && labourAttendance.roundOffTotalOvertime ? (
+                                                    <Tooltip title={`${labourAttendance.roundOffTotalOvertime.hours} hours ${labourAttendance.roundOffTotalOvertime.minutes} minutes`}>
+                                                        <span>{`${labourAttendance.roundOffTotalOvertime.hours}h ${labourAttendance.roundOffTotalOvertime.minutes ? labourAttendance.roundOffTotalOvertime.minutes + 'm' : ''}`}</span>
+                                                    </Tooltip>
+                                                ) : "0h"}
+                                            </TableCell>
+                                            <TableCell>
+                                                {/* <Button
+                                                    onClick={() => handleModalOpen(labour, labourAttendance.totalOvertimeHours, labourAttendance.TotalOvertimeHoursManually)}
                                                     sx={{
                                                         backgroundColor: 'rgb(229, 255, 225)',
                                                         color: 'rgb(43, 217, 144)',
@@ -1195,7 +1644,34 @@ console.log('AttendanceStatus', AttendanceStatus)
                                                     }}
                                                 >
                                                     View
-                                                </Button>
+                                                </Button> */}
+
+                                                <Badge
+                                                    anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                                                    overlap="rectangular"
+                                                    color="error"
+                                                    variant="dot"
+                                                    invisible={!labourAttendance?.InApprovalStatus}
+                                                >
+                                                    <Button
+                                                        onClick={() =>
+                                                            handleModalOpen(
+                                                                labour,
+                                                                labourAttendance.totalOvertimeHours,
+                                                                labourAttendance.TotalOvertimeHoursManually
+                                                            )
+                                                        }
+                                                        sx={{
+                                                            backgroundColor: 'rgb(229, 255, 225)',
+                                                            color: 'rgb(43, 217, 144)',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgb(229, 255, 225)',
+                                                            },
+                                                        }}
+                                                    >
+                                                        View
+                                                    </Button>
+                                                </Badge>
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -1232,6 +1708,17 @@ console.log('AttendanceStatus', AttendanceStatus)
                         fontSize: { xs: "14px", sm: "16px" },
                     }}
                 >
+                    {/* <Box sx={{ display: 'flex', justifyContent: 'space-around', mb: 2 }}>
+        <Typography variant="subtitle1">
+            Total Hours: {formattedTotalHours.hours}h {formattedTotalHours.minutes}m
+        </Typography>
+        <Typography variant="subtitle1">
+            System Overtime: {formattedOvertime.hours}h {formattedOvertime.minutes}m
+        </Typography>
+        <Typography variant="subtitle1">
+            Manual Overtime: {formattedManualOvertime.hours}h {formattedManualOvertime.minutes}m
+        </Typography>
+    </Box> */}
                     <Box sx={{
                         display: "flex",
                         flexWrap: { xs: "wrap", sm: "nowrap" },
@@ -1283,7 +1770,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                                     },
                                 }}
                             >
-                                <SyncIcon/>
+                                <SyncIcon />
                             </Button>
                         </Box>
                         <Box
@@ -1308,7 +1795,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                         {isLoading ? (
                             <Loading />
                         ) : (
-                            <Table>
+                            <Table stickyHeader sx={{ minWidth: 800 }}>
                                 <TableHead>
                                     <TableRow>
                                         <TableCell>Sr. No</TableCell>
@@ -1316,9 +1803,23 @@ console.log('AttendanceStatus', AttendanceStatus)
                                         <TableCell>Status</TableCell>
                                         <TableCell>Punch In</TableCell>
                                         <TableCell>Punch Out</TableCell>
-                                        <TableCell>Total Hours</TableCell>
-                                        <TableCell>System Overtime</TableCell>
-                                        <TableCell>Manual Overtime</TableCell>
+                                        <TableCell>Total Hours <br></br>  ( {formattedTotalHours.hours}h {formattedTotalHours.minutes}m )</TableCell>
+                                        <TableCell>System Overtime <br></br> ( {totalOvertimehours}h {totalOvertimeminute}m )</TableCell>
+                                        {/* <TableCell>Manual Overtime <br></br> ( {totalOvertimehoursManually}h {totalOvertimeminuteManually}m )</TableCell> */}
+                                        <TableCell>
+  Manual Overtime <br />
+  (
+  { 
+    ((!totalOvertimehoursManually && totalOvertimehoursManually !== 0) ||
+     (totalOvertimehoursManually === 0 && !totalOvertimeminuteManually)) 
+      ? `${totalOvertimehours}h ${totalOvertimeminute}m`
+      : `${totalOvertimehoursManually}h ${totalOvertimeminuteManually}m`
+  }
+  )
+</TableCell>
+
+                                        {/* <TableCell>Manual Overtime <br></br> ({isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h  
+  {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m)</TableCell> */}
                                         {/* <TableCell>Holiday</TableCell> */}
                                         <TableCell>Remark</TableCell>
                                         <TableCell>Actions</TableCell>
@@ -1326,10 +1827,30 @@ console.log('AttendanceStatus', AttendanceStatus)
                                 </TableHead>
                                 <TableBody>
                                     {attendanceData.length > 0 ? (
-                                        attendanceData.map((day, index) => (
-                                            <TableRow key={index}>
+                                            attendanceData.map((day, index) => (
+                                                <TableRow key={index}
+                                                    sx={{
+                                                        backgroundColor:
+                                                            new Date(day.date).getDay() === 0
+                                                                ? '#e6e6fa' // light purple for Sunday
+                                                                : day?.ApprovalStatus === 'Pending'
+                                                                    ? '#ffe6e6'
+                                                                    : day?.ApprovalStatus === 'Approved'
+                                                                        ? '#dcfff0'
+                                                                        : day?.ApprovalStatus === 'Rejected'
+                                                                            ? '#ffcccc' // light red for Rejected
+                                                                            : 'inherit',
+                                                        outline:
+                                                            new Date(day.date).getDay() === 0
+                                                                ? '1px solid red'
+                                                                : !day.remark
+                                                                    ? '1px solid purple'
+                                                                    : 'none',
+                                                    }}
+                                                >
                                                 <TableCell>{index + 1}</TableCell>
-                                                <TableCell>{day.date}</TableCell>
+                                                <TableCell>{day.date? new Date(day.date).toLocaleDateString('en-GB') : '-'}</TableCell>
+                                                
                                                 <TableCell>
                                                     <Box
                                                         sx={{
@@ -1373,21 +1894,28 @@ console.log('AttendanceStatus', AttendanceStatus)
                                                 <TableCell>{day.lastPunch || "-"}</TableCell>
                                                 {/* <TableCell>{day.totalHours || "0.00"}</TableCell> */}
                                                 <TableCell>
-    {day.totalHours && (day.totalHours.hours > 0 || day.totalHours.minutes > 0) ? (
-        <Tooltip title={`${day.totalHours.hours} hours ${day.totalHours.minutes} minutes`}>
-            <span>{`${day.totalHours.hours}h ${day.totalHours.minutes}m`}</span>
-        </Tooltip>
-    ) : "0h"}
-</TableCell>
+                                                    {day.totalHours && (day.totalHours.hours > 0 || day.totalHours.minutes > 0) ? (
+                                                        <Tooltip title={`${day.totalHours.hours} hours ${day.totalHours.minutes} minutes`}>
+                                                            <span>{`${day.totalHours.hours}h ${day.totalHours.minutes}m`}</span>
+                                                        </Tooltip>
+                                                    ) : "0h"}
+                                                </TableCell>
                                                 {/* <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell> */}
                                                 <TableCell>
-    {day.overtime && (day.overtime.hours > 0 || day.overtime.minutes > 0) ? (
-        <Tooltip title={`${day.overtime.hours} hours ${day.overtime.minutes} minutes`}>
-            <span>{`${day.overtime.hours}h ${day.overtime.minutes}m`}</span>
-        </Tooltip>
-    ) : "0h"}
-</TableCell>
-                                                <TableCell>{day.overtimemanually || "-"}</TableCell>
+                                                    {day.overtime && (day.overtime) ? (
+                                                        <Tooltip title={`${formatConvertedOverTime(day.overtime).hours}hours ${formatConvertedOverTime(day.overtime).minutes}minutes`}>
+                                                          <span>{`${formatOvertime(day.overtime).hours}h ${formatOvertime(day.overtime).minutes}m`}</span>
+                                                        </Tooltip>
+                                                    ) : "0h"}
+                                                </TableCell>
+                                                {/* <TableCell>{day.overtimemanually || "-"}</TableCell> */}
+                                                <TableCell>
+                                                    {day.overtimemanually && (day.overtimemanually) ? (
+                                                        <Tooltip title={`${formatConvertedOvertimemanually(day.overtimemanually).hours}hours ${formatConvertedOvertimemanually(day.overtimemanually).minutes}minutes`}>
+                                                          <span>{`${formatOvertimeManually(day.overtimemanually).hours}h ${formatOvertimeManually(day.overtimemanually).minutes}m`}</span>
+                                                        </Tooltip>
+                                                    ) : "0h"}
+                                                </TableCell>
                                                 {/* <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell> */}
                                                 <TableCell>{day.remark || "-"}</TableCell>
                                                 <TableCell>
@@ -1400,7 +1928,9 @@ console.log('AttendanceStatus', AttendanceStatus)
                                                             },
                                                         }}
                                                         onClick={() => handleManualEditDialogOpen(day)}
+                                                        disabled = {day.isFinalPayAvailable}
                                                     >
+
                                                         Edit
                                                     </Button>
                                                 </TableCell>
@@ -1408,6 +1938,33 @@ console.log('AttendanceStatus', AttendanceStatus)
                                         ))
                                     ) : null}
                                 </TableBody>
+                                <TableFooter>
+                                    <TableRow>
+                                        {/* Merge first 5 columns for the Totals label */}
+                                        <TableCell colSpan={5} align="right">
+                                            <strong>Totals:</strong>
+                                        </TableCell>
+                                        <TableCell>
+                                            <strong>
+                                                {formattedTotalHours.hours}h {formattedTotalHours.minutes}m
+                                            </strong>
+                                        </TableCell>
+                                        <TableCell>
+                                            <strong>
+                                            {totalOvertimehours}h {totalOvertimeminute}m
+                                            </strong>
+                                        </TableCell>
+                                        <TableCell>
+                                            <strong>
+                                            {totalOvertimehoursManually}h {totalOvertimeminuteManually}m
+                                            {/* {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h
+                                            {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m */}
+                                            </strong> 
+                                        </TableCell>
+                                        {/* Last two columns empty */}
+                                        <TableCell colSpan={2} />
+                                    </TableRow>
+                                </TableFooter>
                             </Table>
                         )}
                     </Box>
@@ -1449,151 +2006,153 @@ console.log('AttendanceStatus', AttendanceStatus)
 
 
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Dialog
-                open={editManualDialogOpen}
-                onClose={handleManualEditDialogClose}
-                fullWidth
-                maxWidth="sm"
-            >
-                <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
-                    Edit Attendance for {manualEditData.date}
-                </DialogTitle>
-                <DialogContent
-                    sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2, paddingTop: 1 }}
+                <Dialog
+                    open={editManualDialogOpen}
+                    onClose={handleManualEditDialogClose}
+                    fullWidth
+                    maxWidth="sm"
                 >
-                    {/* Dropdown for Mark Attendance As */}
-                    <Box>
-                        <TextField
-                            select
-                            label="Mark Attendance As"
-                            value={manualEditData.status}
-                            onChange={(e) =>
-                                setManualEditData({ ...manualEditData, status: e.target.value })
-                            }
-                            fullWidth
-                        >
-                            <MenuItem value="present">Mark As Present</MenuItem>
-                            <MenuItem value="absent">Mark As Absent</MenuItem>
-                            <MenuItem value="weeklyOff">Mark As WeeklyOff</MenuItem>
-                        </TextField>
-                    </Box>
-
-                    {/* Conditionally render Punch In/Out and Overtime fields */}
-                    {(manualEditData.status === 'present') && (
-                        <>
-                            <Box>
-                                <TimePicker
-                                    label="Punch In (Manually)"
-                                    value={
-                                        manualEditData?.punchIn
-                                            ? dayjs(manualEditData.punchIn, 'HH:mm:ss')
-                                            : selectedDay?.firstPunch
-                                                ? dayjs(selectedDay.firstPunch, 'HH:mm:ss')
-                                                : null
-                                    }
-                                    onChange={(newValue) =>
-                                        setManualEditData({ ...manualEditData, punchIn: newValue })
-                                    }
-                                    views={['hours', 'minutes', 'seconds']}
-                                    ampm={false}
-                                    inputFormat="HH:mm:ss"
-                                    renderInput={(params) => <TextField {...params} fullWidth />}
-                                />
-                            </Box>
-
-                            <Box>
-                                <TimePicker
-                                    label="Punch Out (Manually)"
-                                    value={
-                                        manualEditData?.punchOut
-                                            ? dayjs(manualEditData.punchOut, 'HH:mm:ss')
-                                            : selectedDay?.lastPunch
-                                                ? dayjs(selectedDay.lastPunch, 'HH:mm:ss')
-                                                : null
-                                    }
-                                    onChange={(newValue) =>
-                                        setManualEditData({ ...manualEditData, punchOut: newValue })
-                                    }
-                                    views={['hours', 'minutes', 'seconds']}
-                                    ampm={false}
-                                    inputFormat="HH:mm:ss"
-                                    renderInput={(params) => <TextField {...params} fullWidth />}
-                                />
-                            </Box>
-
+                    <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+                        Edit Attendance for {manualEditData.date}
+                    </DialogTitle>
+                    <DialogContent
+                        sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2, paddingTop: 1 }}
+                    >
+                        {/* Dropdown for Mark Attendance As */}
+                        <Box>
                             <TextField
-                                label="Overtime (Manually)"
-                                type="number"
+                                select
+                                label="Mark Attendance As"
+                                value={manualEditData.status}
+                                onChange={(e) =>
+                                    setManualEditData({ ...manualEditData, status: e.target.value })
+                                }
+                                fullWidth
+                            >
+                                <MenuItem value="present">Mark As Present</MenuItem>
+                                <MenuItem value="absent">Mark As Absent</MenuItem>
+                                <MenuItem value="weeklyOff">Mark As WeeklyOff</MenuItem>
+                            </TextField>
+                        </Box>
+
+                        {/* Conditionally render Punch In/Out and Overtime fields */}
+                        {(manualEditData.status === 'present') && (
+                            <>
+                                <Box>
+                                    <TimePicker
+                                        label="Punch In (Manually)"
+                                        value={
+                                            manualEditData?.punchIn !== ""
+                                                ? dayjs(manualEditData.punchIn, 'HH:mm:ss')
+                                                // : selectedDay?.firstPunch
+                                                //     ? dayjs(selectedDay.firstPunch, 'HH:mm:ss')
+                                                    : null
+                                        }
+                                        onChange={(newValue) =>
+                                            setManualEditData({ ...manualEditData, punchIn: newValue})
+                                        }
+                                        views={['hours', 'minutes', 'seconds']}
+                                        ampm={false}
+                                        inputFormat="HH:mm:ss"
+                                        renderInput={(params) => <TextField {...params} fullWidth />}
+                                    />
+                                </Box>
+
+                                <Box>
+                                    <TimePicker
+                                        label="Punch Out (Manually)"
+                                        value={
+                                            manualEditData?.punchOut !== ""
+                                                ? dayjs(manualEditData.punchOut, 'HH:mm:ss')
+                                                // : selectedDay?.lastPunch
+                                                //     ? dayjs(selectedDay.lastPunch, 'HH:mm:ss')
+                                                    : null
+                                        }
+                                        onChange={(newValue) =>
+                                            setManualEditData({ ...manualEditData, punchOut: newValue })
+                                        }
+                                        views={['hours', 'minutes', 'seconds']}
+                                        ampm={false}
+                                        inputFormat="HH:mm:ss"
+                                        renderInput={(params) => <TextField {...params} fullWidth />}
+                                    />
+                                </Box>
+                            {!isOvertimeDisable &&  <TextField
+                                    label="Overtime (Manually)"
+                                    type="number"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={manualEditData.overtimeManually}
+                                    error={isOvertimeError}
+                                    helperText={isOvertimeError ? `Add Overtime Upto ${formatConvertedOverTime(manualEditData.overtime).hours} hours and ${formatConvertedOverTime(manualEditData.overtime).minutes} minutes` : ""}
+                                    onChange={(e) =>
+                                        setManualEditData({ ...manualEditData, overtimeManually: e.target.value })
+                                    }
+                                />}                               
+                            </>
+                        )}
+
+                        {/* Remark dropdown for Absent or WeeklyOff */}
+                        {(manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff' || manualEditData.status === 'present') && (
+                            <TextField
+                                select
+                                label="Remark"
                                 variant="outlined"
                                 fullWidth
-                                value={manualEditData.overtimeManually}
+                                value={manualEditData.remark || ""}
                                 onChange={(e) =>
-                                    setManualEditData({ ...manualEditData, overtimeManually: e.target.value })
+                                    setManualEditData({ ...manualEditData, remark: e.target.value })
                                 }
-                            />
-                        </>
-                    )}
-
-                    {/* Remark dropdown for Absent or WeeklyOff */}
-                    {(manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff' || manualEditData.status === 'present') && (
-                        <TextField
-                            select
-                            label="Remark"
-                            variant="outlined"
-                            fullWidth
-                            value={manualEditData.remark}
-                            onChange={(e) =>
-                                setManualEditData({ ...manualEditData, remark: e.target.value })
-                            }
+                            >
+                                <MenuItem value="Technical Error">Technical Error</MenuItem>
+                                <MenuItem value="Miss Punch">Miss Punch</MenuItem>
+                                <MenuItem value="Forge Punch">Forge Punch</MenuItem>
+                                <MenuItem value="Wrong Punch">Wrong Punch</MenuItem>
+                                <MenuItem value="Forgot To Punch">Forgot To Punch</MenuItem>
+                                <MenuItem value="Weekly Off">Weekly Off</MenuItem>
+                            </TextField>
+                        )}
+                    </DialogContent>
+                    <DialogActions
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            mt: 2,
+                            px: 2,
+                            gap: 0,
+                        }}
+                    >                        
+                        <Button
+                            onClick={handleManualEditDialogClose}
+                            sx={{
+                                backgroundColor: '#fce4ec',
+                                color: 'rgb(255, 100, 100)',
+                                width: '100px',
+                                '&:hover': {
+                                    backgroundColor: '#f8bbd0',
+                                },
+                            }}
                         >
-                            <MenuItem value="Technical Error">Technical Error</MenuItem>
-                            <MenuItem value="Miss Punch">Miss Punch</MenuItem>
-                            <MenuItem value="Forge Punch">Forge Punch</MenuItem>
-                            <MenuItem value="Wrong Punch">Wrong Punch</MenuItem>
-                            <MenuItem value="Forgot To Punch">Forgot To Punch</MenuItem>
-                            <MenuItem value="Weekly Off">Weekly Off</MenuItem>
-                        </TextField>
-                    )}
-                </DialogContent>
-                <DialogActions
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        mt: 2,
-                        px: 2,
-                        gap: 0,
-                    }}
-                >
-                    <Button
-                        onClick={handleManualEditDialogClose}
-                        sx={{
-                            backgroundColor: '#fce4ec',
-                            color: 'rgb(255, 100, 100)',
-                            width: '100px',
-                            '&:hover': {
-                                backgroundColor: '#f8bbd0',
-                            },
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleSaveManualEdit}
-                        sx={{
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            width: '100px',
-                            '&:hover': {
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={handleSaveManualEdit}
+                            sx={{
                                 backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                        }}
-                    >
-                        Save
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </LocalizationProvider>
+                                color: 'rgb(43, 217, 144)',
+                                width: '100px',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}
+                            disabled={manualEditData.remark === "" || manualEditData.remark === null || manualEditData.remark === undefined || manualEditData.remark === "-"}
+                        >
+                            Save
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </LocalizationProvider>
 
             <Modal open={open} onClose={handleModalCloseCalender}>
                 <Box

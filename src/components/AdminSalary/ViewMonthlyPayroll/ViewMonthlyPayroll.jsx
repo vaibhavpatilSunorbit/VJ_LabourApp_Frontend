@@ -42,7 +42,7 @@ import { ArrowBack } from '@mui/icons-material';
 import logo from "../../../images/VJlogo-1-removebg.png";
 import NoData from "../../../images/NoData.jpg";
 
-const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
+const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
@@ -329,6 +329,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
     // -------------------------------------   SHOW ATTENDACNE ----------------------
    
     const deletePayrollData = async (labourIds = []) => {
+        setIsApproveConfirmOpen(false);
         if (!selectedMonth || !selectedYear) {
             toast.warning("Please select both Month and Year.");
             return;
@@ -354,7 +355,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
             setSalaryData((prev) => prev.filter((lab) => !requestData.labourIds.includes(lab.LabourID)));
             setSelectedLabourIds([]);
     
-            // Show success toast only once after all deletions are completed
             toast.success(response.data.message || "Payroll records deleted successfully.");
     
         } catch (error) {
@@ -461,15 +461,16 @@ const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
-            fetchSalaryGenerationForDateMonthAll();
+            setSearchResults([]);
+            // fetchSalaryGenerationForDateMonthAll();
             return;
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/searchFromViewMonthlyPayroll?q=${searchQuery}`);
-            setLabours(response.data);
+            const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
+            setSearchResults(response.data);
+            setPage(0);
         } catch (error) {
-            console.error('Error searching:', error);
             toast.error('Search failed');
         } finally {
             setLoading(false);
@@ -545,7 +546,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
         setOpenModal(true);
     };
 
-    const filteredLabours = getLatestLabourData(labours);
+    const filteredLabours = getLatestLabourData(searchResults.length > 0 ? searchResults : labours);
     const paginatedLabours = rowsPerPage > 0
         ? filteredLabours.slice(page * rowsPerPage, (page + 1) * rowsPerPage)
         : filteredLabours;
@@ -555,21 +556,21 @@ const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
 
     const getProjectDescription = (projectId) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) {
-            console.error('Projects array is empty or invalid:', projectNames);
-            return 'Unknown';
+          return 'Unknown';
         }
-
-        if (projectId === undefined || projectId === null) {
-            console.error('Project ID is undefined or null:', projectId);
-            return 'Unknown';
+      
+        if (projectId === undefined || projectId === null || projectId === '') {
+          return 'Unknown';
         }
-
-        const project = projectNames.find(
-            (proj) => proj.id === Number(projectId)
-        );
-
-        return project ? project.Business_Unit : 'Unknown';
-    };
+      
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+      
+        // console.log('Project Names:', projectNames);
+        // console.log('Searching for Project ID:', projectId);
+        // console.log('Found Project:', project);
+      
+        return project ? project.projectName : 'Unknown';
+      };
 
 
     const getDepartmentDescription = (departmentId) => {
@@ -754,8 +755,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
             const labourDetails = response.data;
-            const projectName = getProjectDescription(labourDetails.projectName);
-            const department = getDepartmentDescription(labourDetails.department);
+            const projectName = labourDetails.businessUnit;
+            const department = labourDetails.departmentName;
 
             setSelectedLabour({
                 ...labourDetails,
@@ -789,7 +790,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    {/* Back Button */}
+                <Box sx= {{display:'flex', alignItems:'center', gap:2}}>
                     <IconButton
                         sx={{ marginRight: 2 }}
                         onClick={navigateToSalaryGeneration} disabled={navigating}
@@ -801,7 +802,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames = [], labour }) => {
                     <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
                         Reports | View PayRoll
                     </Typography>
-
+</Box>
                     <SearchBar
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}

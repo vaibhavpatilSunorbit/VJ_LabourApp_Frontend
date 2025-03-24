@@ -43,7 +43,7 @@ import NoData from "../../images/NoData.jpg";
 import TableSkeletonLoading from "../Loading/TableSkeletonLoading.jsx";
 
 
-const SalaryRegister = ({ departments, projectNames = [], labour }) => {
+const SalaryRegister = ({ departments, projectNames, labour }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
@@ -349,7 +349,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
             setLabours(response.data);
         } catch (error) {
             toast.error('Search failed');
@@ -408,21 +408,21 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
 
     const getProjectDescription = (projectId) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) {
-            console.error('Projects array is empty or invalid:', projectNames);
-            return 'Unknown';
+          return 'Unknown';
         }
-
-        if (projectId === undefined || projectId === null) {
-            console.error('Project ID is undefined or null:', projectId);
-            return 'Unknown';
+      
+        if (projectId === undefined || projectId === null || projectId === '') {
+          return 'Unknown';
         }
-
-        const project = projectNames.find(
-            (proj) => proj.id === Number(projectId)
-        );
-
-        return project ? project.Business_Unit : 'Unknown';
-    };
+      
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+      
+        // console.log('Project Names:', projectNames);
+        // console.log('Searching for Project ID:', projectId);
+        // console.log('Found Project:', project);
+      
+        return project ? project.projectName : 'Unknown';
+      };
 
 
     const getDepartmentDescription = (departmentId) => {
@@ -768,7 +768,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                             }}
                         >
                             
-                            <Button
+                            {/* <Button
                         variant="contained"
                         sx={{
                             fontSize: { xs: "10px", sm: "13px" },
@@ -785,7 +785,7 @@ const SalaryRegister = ({ departments, projectNames = [], labour }) => {
                         startIcon={navigating && <CircularProgress size={20} />}
                     >
                         {navigating ? 'Navigating...' : 'Run Salary Generation'}
-                    </Button>
+                    </Button> */}
 
                             <TablePagination
                                 className="custom-pagination"

@@ -184,7 +184,6 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
         }
     }, [selectedMonth, selectedYear]);
 
-
     // -------------------------------------   SHOW ATTENDACNE ----------------------
     const handleOpenModal = (labour) => {
         setSelectedLabour(labour);
@@ -287,6 +286,7 @@ const handleCloseModalDetails = () => {
         try {
             const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
             setLabours(response.data);
+            setPage(0);
         } catch (error) {
             console.error('Error searching:', error);
             toast.error('Search failed');
@@ -341,21 +341,21 @@ const handleCloseModalDetails = () => {
 
     const getProjectDescription = (projectId) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) {
-            console.error('Projects array is empty or invalid:', projectNames);
-            return 'Unknown';
+          return 'Unknown';
         }
-
-        if (projectId === undefined || projectId === null) {
-            console.error('Project ID is undefined or null:', projectId);
-            return 'Unknown';
+      
+        if (projectId === undefined || projectId === null || projectId === '') {
+          return 'Unknown';
         }
-
-        const project = projectNames.find(
-            (proj) => proj.id === Number(projectId)
-        );
-
-        return project ? project.Business_Unit : 'Unknown';
-    };
+      
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+      
+        // console.log('Project Names:', projectNames);
+        // console.log('Searching for Project ID:', projectId);
+        // console.log('Found Project:', project);
+      
+        return project ? project.projectName : 'Unknown';
+      };
 
 
     const getDepartmentDescription = (departmentId) => {

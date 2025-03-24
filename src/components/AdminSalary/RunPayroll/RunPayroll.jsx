@@ -27,6 +27,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import SearchBar from '../../SarchBar/SearchRegister.jsx';
+import * as XLSX from 'xlsx';
 // import Loading from "../../Loading/Loading.jsx";
 import TableSkeletonLoading from "../../Loading/TableSkeletonLoading.jsx";
 import { API_BASE_URL } from "../../../Data.js";
@@ -132,12 +133,12 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
 
     const fetchSalaryGenerationForDateMonthAll = async () => {
-        setLoading(true);
         if (!selectedMonth || !selectedYear) {
             toast.warning('Please select a valid month and year.');
-            setLoading(false);
             return;
         }
+        setLoading(true);
+
         const params = { month: selectedMonth, year: selectedYear };
         if (!fetchForAll) {
             params.labourIds = labourId;
@@ -205,7 +206,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     fullResponse: labour
                 };
             });
-
+// console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
@@ -218,11 +219,69 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     };
 
     useEffect(() => {
-        if (selectedMonth && selectedYear) {
+        if (!selectedMonth && !selectedYear) {
             fetchSalaryGenerationForDateMonthAll();
         }
     }, [selectedMonth, selectedYear]);
+    // useEffect(() => {
+    //         fetchSalaryGenerationForDateMonthAll();
+    // },[]);
 
+
+    const exportPayrollData = async (data) => {
+        setLoading(true);
+        console.log("data ", JSON.stringify(data));
+        try {
+
+            const selectiveData = data.map(item => ({
+                Month: months.find(m => item.month === m.value)?.label || '',
+                Year: item.year,
+                Labour_ID: item.LabourID,
+                Name: item.name,
+                Project_Name: item.projectName,
+                Department: item.department,
+                AadhaarNumber: item.aadhaarNumber,
+                AccountNumber: item.accountNumber,
+                Attendance_Count: item.attendanceCount,
+                Wage_Type: item.wageType,
+                DailyWage_Rate: item.dailyWageRate,
+                FixedMonthly_Rate: item.fixedMonthlyWage,
+                TotalOvertimeHours: item.totalOvertimeHours,
+                Overtime_Pay: item.overtimePay,
+                WeeklyOff_Pay: item.weeklyOffPay,
+                Gross_Pay: item.grossPay,
+                Bonuses: item.bonuses,
+                Total_Deductions: item.totalDeductions,
+                Net_Pay: item.netPay,
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(selectiveData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "PayrollData");
+    
+            // Generate Excel file as an array buffer
+            const workbookOutput = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+            const blob = new Blob([workbookOutput], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+              });
+        
+              const fileName = ` Export Provisional PayRoll_${selectedMonth}_${selectedYear}.xlsx`;
+        
+              const link = document.createElement('a');
+              link.href = window.URL.createObjectURL(blob);
+              link.setAttribute('download', fileName);
+              document.body.appendChild(link);
+              link.click();
+              link.parentNode.removeChild(link);
+              toast.success(`Salary Data Exported successfully`)
+        } catch (error) {
+            console.error('Error saving final payroll data:', error);
+            toast.error(error.message || "Error Salary Data Exported. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
     const saveFinalPayrollData = async () => {
@@ -245,6 +304,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
 
     const saveFinalizePayrollData = async () => {
+        setIsApproveConfirmOpen(false);
         if (!selectedMonth || !selectedYear) {
             toast.warning("Please select both Month and Year.");
             return;
@@ -262,7 +322,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                 month: selectedMonth,
                 year: selectedYear,
             });
-
+          
             toast.success(response.data.message || "Payroll generated successfully.");
         } catch (error) {
             console.error('Error saving payroll data:', error);
@@ -399,18 +459,32 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
         }
     };
 
+    function searchLabourData(data, searchQuery) {
+        if (!searchQuery) return data; // Return original data if search query is empty
+    
+        searchQuery = searchQuery.toLowerCase(); // Convert query to lowercase for case-insensitive search
+    
+        return data.filter(item => 
+            item.name.toLowerCase().includes(searchQuery) || 
+            item.LabourID.toLowerCase().includes(searchQuery) ||
+            item.projectName.toLowerCase().includes(searchQuery) ||
+            item.department.toLowerCase().includes(searchQuery)
+        );
+    }
+
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
-            fetchSalaryGenerationForDateMonthAll();
+            setSearchResults([]);
             return;
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
-            setLabours(response.data);
+            // const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
+            const data = searchLabourData(labours, searchQuery);
+            setSearchResults(data);
+            setPage(0);
         } catch (error) {
-            console.error('Error searching:', error);
             toast.error('Search failed');
         } finally {
             setLoading(false);
@@ -455,7 +529,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
         setOpenModal(true);
     };
 
-    const filteredLabours = getLatestLabourData(labours);
+    const filteredLabours = getLatestLabourData(searchResults.length > 0 ? searchResults : labours);
     const paginatedLabours = filteredLabours.slice(
         page * rowsPerPage,
         (page + 1) * rowsPerPage
@@ -463,21 +537,21 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
     const getProjectDescription = (projectId) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) {
-            console.error('Projects array is empty or invalid:', projectNames);
-            return 'Unknown';
+          return 'Unknown';
         }
-
-        if (projectId === undefined || projectId === null) {
-            console.error('Project ID is undefined or null:', projectId);
-            return 'Unknown';
+      
+        if (projectId === undefined || projectId === null || projectId === '') {
+          return 'Unknown';
         }
-
-        const project = projectNames.find(
-            (proj) => proj.id === Number(projectId)
-        );
-
-        return project ? project.Business_Unit : 'Unknown';
-    };
+      
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+      
+        // console.log('Project Names:', projectNames);
+        // console.log('Searching for Project ID:', projectId);
+        // console.log('Found Project:', project);
+      
+        return project ? project.projectName : 'Unknown';
+      };
 
 
     const getDepartmentDescription = (departmentId) => {
@@ -697,7 +771,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    {/* Back Button */}
+                <Box sx= {{display:'flex', alignItems:'center', gap:2}}>
                     <IconButton
                         sx={{ marginRight: 2 }}
                         onClick={navigateToSalaryGeneration} disabled={navigating}
@@ -709,7 +783,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
                         Reports | Run PayRoll
                     </Typography>
-
+</Box>
                     <SearchBar
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
@@ -1477,6 +1551,25 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Button
                             variant="contained"
                             // onClick={saveFinalizePayrollData}
+                            onClick={() => exportPayrollData(salaryData)}
+                            sx={{
+                                fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
+                                height: "40px",
+                                width: "100%", // Button width to match other inputs
+                                backgroundColor: "#EFE6F7",
+                                color: "#8236BC",
+                                '&:hover': {
+                                    backgroundColor: "#EFE6F7",
+                                },
+                                marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
+                            }}
+                        >
+                            Export PayRoll
+                        </Button>
+
+                        <Button
+                            variant="contained"
+                            // onClick={saveFinalizePayrollData}
                             onClick={() => handleApproveConfirmOpen()}
                             sx={{
                                 fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
@@ -1530,28 +1623,28 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             Are you sure you want to Finalize PayRoll this labours?
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
-            Cancel
-          </Button>
-          <Button
-                                variant="contained"
-                                onClick={saveFinalizePayrollData} 
-                                sx={{
-                                    backgroundColor: 'rgb(229, 255, 225)',
-            color: 'rgb(43, 217, 144)',
-            width: 'auto',
-            marginRight: '10px',
-            marginBottom: '3px',
-            '&:hover': {
-              backgroundColor: 'rgb(229, 255, 225)',
-            },
-          }} autoFocus
-                            >
-                                Finalize PayRoll
-                            </Button>
-        </DialogActions>
-      </Dialog>
+                <DialogActions>
+                    <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={saveFinalizePayrollData}
+                        sx={{
+                            backgroundColor: 'rgb(229, 255, 225)',
+                            color: 'rgb(43, 217, 144)',
+                            width: 'auto',
+                            marginRight: '10px',
+                            marginBottom: '3px',
+                            '&:hover': {
+                                backgroundColor: 'rgb(229, 255, 225)',
+                            },
+                        }} autoFocus
+                    >
+                        Finalize PayRoll
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
                 <Box

@@ -14,13 +14,15 @@ import {
 // import 'react-toastify/dist/ReactToastify.css';
 import PropTypes from 'prop-types';
 
-const ImportWages = ({ handleToast = (type, message) => console[type]?.(message), onboardName  }) => {
+const ImportWages = ({ handleToast = (type, message) => console[type]?.(message), onboardName, modalOpens, setModalOpens  }) => {
     const [open, setOpen] = useState(false);
     const [file, setFile] = useState(null);
+    // const handleClosed = () => setModalOpen(false);
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
         setFile(null); // Reset the file input on modal close
+        setModalOpens(false);
         setOpen(false);
     };
 
@@ -61,10 +63,12 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
             const contentType = response.headers['content-type'];
             if (contentType.includes('application/json')) {
                 // Handle JSON response
-                const text = await response.data.text(); // Convert blob to text
+                const text = await new Response(response.data).text(); // Convert blob to text
                 const jsonResponse = JSON.parse(text);
                 if (jsonResponse.message) {
                     handleToast('success', jsonResponse.message);
+                    setModalOpens(false);
+                    setOpen(false);
                 }
             } else if (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
                 // Handle Excel file download for error rows
@@ -104,6 +108,8 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
         ImportWages.propTypes = {
             handleToast: PropTypes.func,
             onboardName: PropTypes.string,
+            modalOpens: PropTypes.bool,
+            setModalOpens: PropTypes.func,
         };
     };
  

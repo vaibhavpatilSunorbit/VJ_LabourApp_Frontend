@@ -33,7 +33,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import "./peoplereport.css";
 import { useNavigate, useLocation } from 'react-router-dom';
-import SearchBar from '../SarchBar/SearchBar';
+import SearchBar from '../SarchBar/SearchRegister';
 import ViewDetails from '../ViewDetails/ViewDetails';
 import Loading from "../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
@@ -52,7 +52,7 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import CircleIcon from '@mui/icons-material/Circle';
 
 
-const PeopleReport = ({ departments, projectNames, labour }) => {
+const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
     const { user } = useUser();
     const [labours, setLabours] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -92,7 +92,7 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
     // const { labourId } = location.state || {};
     const { hideResubmit, labourId } = location.state || {};
     const [labourDetails, setLabourDetails] = useState(null);
-
+    const [selectedLabourIds, setSelectedLabourIds] = useState([]);
     const [anchorEl, setAnchorEl] = useState(null); // For the dropdown menu
     const [filter, setFilter] = useState(""); // To store selected filter
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
@@ -120,8 +120,9 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromSiteTransfer?q=${searchQuery}`);
             setSearchResults(response.data);
+            setPage(0);
         } catch (error) {
             setError('Error searching. Please try again.');
         }
@@ -157,44 +158,20 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
         fetchAndSortLabours();
     }, [tabValue]);
 
-
+    const allowedProjectIds =
+    user && user.projectIds ? JSON.parse(user.projectIds) : [];
+  const allowedDepartmentIds =
+    user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+    // console.log('allowedProjectIds: SiteTransfer', allowedProjectIds);
+    // console.log('allowedDepartmentIds:SiteTransfer', allowedDepartmentIds);
+  // Use labourlist prop if available, otherwise use state labours
+  const laboursSource =
+    labourlist && labourlist.length > 0 ? labourlist : labours;
 
     // useEffect(() => {
     //   fetchLabours();
     // }, []);
 
-
-    const handleAccountNumberChange = (e) => {
-        let cleanedValue = e.target.value.replace(/\D/g, '');
-        if (cleanedValue.length > 16) {
-            cleanedValue = cleanedValue.slice(0, 16);
-        }
-        setFormData({ ...formData, accountNumber: cleanedValue });
-    };
-
-    const handleExpiryDateChange = (e) => {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length > 6) {
-            value = value.slice(0, 6);
-        }
-        if (value.length >= 2) {
-            value = value.slice(0, 2) + '-' + value.slice(2);
-        }
-        if (e.nativeEvent.inputType === 'deleteContentBackward' && value.length <= 3) {
-            value = value.slice(0, 2);
-        }
-        setFormData({ ...formData, expiryDate: value });
-    };
-
-
-    const handleClose = () => {
-        setOpen(false);
-    };
-
-
-    // const API_BASE_URL = 'http://localhost:4000'; 
-    // const API_BASE_URL = "https://laboursandbox.vjerp.com"; 
-    // const API_BASE_URL = "https://vjlabour.vjerp.com"; 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -241,39 +218,6 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
             return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
         }
     });
-
-    const getDepartmentDescription = (departmentId) => {
-        if (!departments || departments.length === 0) {
-            return 'Unknown';
-        }
-        const department = departments.find(dept => dept.Id === Number(departmentId));
-        return department ? department.Description : 'Unknown';
-    };
-
-
-
-
-    const getProjectDescription = (projectId) => {
-
-        if (!projectNames || projectNames.length === 0) {
-            // console.log('Projects array is empty or undefined');
-            return 'Unknown';
-        }
-
-        if (projectId === undefined || projectId === null) {
-            // console.log('Project ID is undefined or null');
-            return 'Unknown';
-        }
-
-        const project = projectNames.find(proj => {
-            // console.log(`Checking project: ${proj.id} === ${Number(projectId)} (Type: ${typeof proj.id})`);
-            return proj.id === Number(projectId);
-        });
-
-        // console.log('Found Project:', project);
-        return project ? project.Business_Unit : 'Unknown';
-    };
-
 
     const handleDownload = async () => {
         setLoadingExcel(true);
@@ -394,31 +338,6 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
         setAnchorEl(null); // Close dropdown
     };
 
-    // const getFilteredLaboursForTab = () => {
-    //     if (tabValue === 0) {
-    //         // Pending tab: Filter labours with "Pending" status
-    //         return filteredIconLabours.length > 0
-    //             ? filteredIconLabours.filter(labour => labour.status === 'Pending')
-    //             : labours.filter(labour => labour.status === 'Pending');
-    //     } else if (tabValue === 1) {
-    //         // Approved tab: Filter labours with "Approved" status
-    //         return filteredIconLabours.length > 0
-    //             ? filteredIconLabours.filter(labour => labour.status === 'Approved')
-    //             : labours.filter(labour => labour.status === 'Approved');
-    //     } else if (tabValue === 3) {
-    //         // Rejected tab: Filter labours with "Rejected" or "Resubmitted" status
-    //         return filteredIconLabours.length > 0
-    //             ? filteredIconLabours.filter(
-    //                 labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
-    //             )
-    //             : labours.filter(
-    //                 labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
-    //             );
-    //     }
-    //     // return filteredIconLabours.length > 0 ? filteredIconLabours : labours;
-    //     return filteredLabours.length > 0 ? filteredLabours : labours;
-    // };
-
 
     //////////////////////////  Site Transfer Code for labour  ////////////////////////////////////////////
     const getFilteredLaboursForTab = () => {
@@ -452,13 +371,6 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
         return filteredLabours.length > 0 ? filteredLabours : labours;
     };
 
-
-
-    const confirmTransfer = async () => {
-        setOpenDialogSite(false); // Close the dialog
-
-
-    };
     const closePopup = () => {
         setSelectedLabour(null);
         setIsPopupOpen(false);
@@ -496,15 +408,31 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
     };
 
     const labourCounts = useMemo(() => {
+        const filteredLabours = labours.filter((labour) => {
+          const labourProjectId = Number(labour.projectName);
+          const labourDepartmentId = Number(labour.departmentId);
+          return (
+            allowedProjectIds.includes(labourProjectId) &&
+            allowedDepartmentIds.includes(labourDepartmentId)
+          );
+        });
         return {
-            all: labours.filter(labour => labour.status === 'Approved').length,
-            employees: labours.filter(labour => labour.labourOwnership === 'VJ' && labour.status === 'Approved').length,
-            contractors: labours.filter(labour => labour.labourOwnership === 'CONTRACTOR' && labour.status === 'Approved').length,
-            rejected: labours.filter(labour =>
-                ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
-            ).length,
+          all: filteredLabours.filter((labour) => labour.status === 'Approved').length,
+          employees: filteredLabours.filter(
+            (labour) =>
+              labour.status === 'Approved' && labour.labourOwnership === 'VJ'
+          ).length,
+          contractors: filteredLabours.filter(
+            (labour) =>
+              labour.status === 'Approved' && labour.labourOwnership === 'CONTRACTOR'
+          ).length,
+          rejected: filteredLabours.filter((labour) =>
+            ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
+          ).length,
         };
-    }, [labours]);
+      }, [labours, allowedProjectIds, allowedDepartmentIds]);
+      
+      
     ///////////////////////////  Fetch Transfer labour from db Table  //////////////////////////////////////
 
 
@@ -530,13 +458,125 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
     const handleEditPeople = (labour) => {
         navigate(`/peopleEditDetails`, { state: { labourId: labour.id } }); // Pass labour.id in the state
     };
+
+  
+    laboursSource.forEach((labour) => {
+        const labourProjectId = Number(labour.projectName);
+        const labourDepartmentId = Number(labour.departmentId);
+        const projectMatch =
+          allowedProjectIds.length > 0
+            ? allowedProjectIds.includes(labourProjectId)
+            : true;
+        const departmentMatch =
+          allowedDepartmentIds.length > 0
+            ? allowedDepartmentIds.includes(labourDepartmentId)
+            : true;
+        // For strict logging (both must match), you could use:
+        if (!projectMatch && !departmentMatch) {
+          console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
+        }
+      });
+    
+      // Strict filtering: record must match allowed project and department IDs, and status "Approved"
+      const getFilteredLaboursForTable = () => {
+        // let baseLabours = [...laboursSource];
+        let baseLabours = rowsPerPage > 0
+      ? (searchResults.length > 0
+          ? searchResults
+          : (filteredIconLabours.length > 0
+              ? filteredIconLabours
+              : [...labours]))
+      : [];
+
+        baseLabours = baseLabours.filter((labour) => {
+          const labourProjectId = Number(labour.projectName);
+          const labourDepartmentId = Number(labour.departmentId);
+          return (
+            allowedProjectIds.includes(labourProjectId) &&
+            allowedDepartmentIds.includes(labourDepartmentId)
+          );
+        });
+      
+        // Further filter by tab selection if necessary
+        if (tabValue === 0) {
+          return baseLabours.filter(labour => labour.status === 'Approved');
+        } else if (tabValue === 1) {
+          return baseLabours.filter(labour => labour.status === 'Approved' && labour.labourOwnership === 'VJ');
+        } else if (tabValue === 2) {
+          return baseLabours.filter(labour => labour.status === 'Approved' && labour.labourOwnership === 'CONTRACTOR');
+        } else if (tabValue === 3) {
+          return baseLabours.filter(labour =>
+            ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
+          );
+        }
+        return baseLabours;
+      };
+      
+    
+      // Helper: Get project description
+      const getProjectDescription = (projectName) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
+        if (projectName === undefined || projectName === null || projectName === '') return 'Unknown';
+        const project = projectNames.find((proj) => proj.Id === Number(projectName));
+        return project ? project.Business_Unit : 'Unknown';
+      };
+    
+      // Helper: Get department description
+      const getDepartmentDescription = (departmentId) => {
+        if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
+        const department = departments.find((dept) => dept.Id === Number(departmentId));
+        return department ? department.Description : 'Unknown';
+      };
+    
+      const filteredLaboursForTable = getFilteredLaboursForTable();
+  console.log('filteredLaboursForTable}}SiteTransfer',filteredLaboursForTable)
+      // Reset page if current page is out of range after filtering
+      useEffect(() => {
+        if (page * rowsPerPage >= filteredLaboursForTable.length) {
+          setPage(0);
+        }
+      }, [filteredLaboursForTable, page, rowsPerPage]);
+      
+      const paginatedLabours = filteredLaboursForTable.slice(
+        page * rowsPerPage,
+        rowsPerPage === -1
+          ? filteredLaboursForTable.length
+          : (page + 1) * rowsPerPage
+      );
+    //   console.log('Paginated Labours:', paginatedLabours);
+    
+    const displayedLabours = paginatedLabours.filter((labour) => {
+        const labourProjectId = Number(labour.projectName);
+        const labourDepartmentId = Number(labour.departmentId);
+        return (
+          allowedProjectIds.includes(labourProjectId) &&
+          allowedDepartmentIds.includes(labourDepartmentId)
+        );
+      });
+      console.log('Displayed Labours:SiteTransfer', displayedLabours);
+
+
+      const handlePageChange = (event, newPage) => {
+        setPage(newPage);
+      };
+    
+      const handleRowsPerPageChange = (event) => {
+        const newRows = parseInt(event.target.value, 10);
+        setRowsPerPage(newRows);
+        setPage(0);
+      }; 
+  
+
+
+
+
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
-            {/* <Typography variant="h6" sx={{marginLeft:'8px'}} >
-        People
-      </Typography> */}
-
-            <Box ml={-1.5}>
+          
+<Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Peoples
+                </Typography>
                 <SearchBar
                     handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
@@ -683,43 +723,11 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
                 </Button>
 
 
-
-                {/* Filter Icon */}
-                {/* <Box display="flex" alignItems="center">
-                    <IconButton
-                        onClick={handleFilterClick}
-                        sx={{ marginLeft: "auto", color: "rgb(84, 198, 104)", background: "rgb(204 255 213 / 89%)", '&:hover': { color: "rgb(84, 198, 104)", backgroundColor: "rgb(162 241 176 / 89%)" } }}
-                    >
-                        <FilterAltIcon />
-                    </IconButton>
-                    {selectedFilter && (
-                        <Typography sx={{ marginLeft: 1, color: "black" }}>
-                            {selectedFilter}
-                        </Typography>
-                    )}
-                    <Menu
-                        anchorEl={anchorEl} // Menu opens anchored to the icon button
-                        open={Boolean(anchorEl)} // If anchorEl has a value, the menu is open
-                        onClose={handleCloseBtn} // Close the menu when clicking outside
-                    >
-                        <MenuItem onClick={() => handleFilterSelect("OnboardingForm")}>
-                            OnboardingForm
-                        </MenuItem>
-                        <MenuItem onClick={() => handleFilterSelect("Farvision")}>
-                            Farvision
-                        </MenuItem>
-                        <MenuItem onClick={() => handleFilterSelect("All")}>
-                            All
-                        </MenuItem>
-                    </Menu>
-                </Box> */}
-
-
                 <TablePagination
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                    count={getFilteredLaboursForTab().length}
-                    //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
+                    // count={getFilteredLaboursForTab().length}
+                    count={filteredLaboursForTable.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}
@@ -773,7 +781,7 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
                                 {tabValue !== 3 && <TableCell>Labour ID</TableCell>}
                                 <TableCell>Name of Labour</TableCell>
                                 <TableCell>Status</TableCell>
-                                {((user.userType === 'admin') || (tabValue !== 6 && user.userType === 'user')) && <TableCell>Action</TableCell>}
+                                {/* {((user.userType === 'admin') || (tabValue !== 6 && user.userType === 'user')) && <TableCell>Action</TableCell>} */}
                                 <TableCell>Action</TableCell>
                                 <TableCell>Details</TableCell>
                             </TableRow>
@@ -788,7 +796,7 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
                                 },
                             }}
                         >
-                            {(rowsPerPage > 0
+                            {/* {(rowsPerPage > 0
                                 ? (searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours]))
                                     .filter(labour => {
                                         if (tabValue === 0) return labour.status === 'Approved';
@@ -808,8 +816,9 @@ const PeopleReport = ({ departments, projectNames, labour }) => {
                                         return true; // fallback if no condition matches
                                     })
                                     .sort((a, b) => b.labourID - a.labourID)
-                            ).map((labour, index) => (
-                                <TableRow key={labour.id}>
+                            ).map((labour, index) => ( */}
+                            {displayedLabours.map((labour, index) => (
+                                <TableRow key={labour.LabourID}>
                                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                     {tabValue !== 3 && <TableCell>{labour.LabourID}</TableCell>}
                                     <TableCell>{labour.name}</TableCell>

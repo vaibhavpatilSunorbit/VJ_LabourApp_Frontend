@@ -25,14 +25,14 @@ import {
   DialogContentText,
   DialogTitle,
   InputLabel,
-  IconButton, Checkbox,
+  IconButton,
   Menu,
   MenuItem, Select, Badge
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate, useLocation } from 'react-router-dom';
-import SearchBar from '../../SarchBar/SearchRegister';
+import SearchBar from '../../SarchBar/SearchBar';
 import ViewDetails from '../../ViewDetails/ViewDetails';
 import Loading from "../../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
@@ -110,9 +110,6 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
   const [pendingCount, setPendingCount] = useState(0);
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
-  const [selectedLabourIds, setSelectedLabourIds] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [isMassModalOpen, setIsMassModalOpen] = useState(false);
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -123,7 +120,7 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
       return;
     }
     try {
-      const response = await axios.get(`${API_BASE_URL}/insentive/searchFromSiteTransferApproval?q=${searchQuery}`);
+      const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
     } catch (error) {
       setError('Error searching. Please try again.');
@@ -236,124 +233,6 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     }
   };
 
-
-  const openMassApproveRejectModal = () => {
-    if (selectedLabourIds.length === 0) {
-      toast.error('No labours selected!');
-      return;
-    }
-    setRejectReason('');  // Clear any old reason
-    setIsMassModalOpen(true);
-  };
-
-  const closeMassApproveRejectModal = () => {
-    setIsMassModalOpen(false);
-    setRejectReason('');
-  };
-
-  const handleMassApprove = async () => {
-    if (selectedLabourIds.length === 0) {
-      toast.error('No labours selected!');
-      return;
-    }
-  
-    try {
-      // For each selected "LabourID", find the labour object in state
-      for (const labourID of selectedLabourIds) {
-        const labourObj = labours.find((labour) => labour.LabourID === labourID);
-        if (!labourObj) {
-          console.warn(`No labour found with LabourID=${labourID}`);
-          continue;
-        }
-        if (!labourObj.id) {
-          console.warn(`No id found for LabourID=${labourID}`);
-          continue;
-        }
-  
-        // Call your existing endpoint with the labour's id
-        const response = await axios.put(`${API_BASE_URL}/api/admin/approveSiteTransferadmin`, null, {
-          params: { id: labourObj.id },
-        });
-  
-        if (response.data.success) {
-          toast.error(`Site transfer approved and processed successfully. ${labourObj.id}`);
-        }
-      }
-  
-      // After all requests are done: update local state
-      setLabours((prevLabours) =>
-        prevLabours.map((labour) =>
-          selectedLabourIds.includes(labour.LabourID)
-            ? { ...labour, ApprovalStatus: 'Approved' }
-            : labour
-        )
-      );
-  
-      toast.success(`${selectedLabourIds.length} labours approved successfully.`);
-    } catch (error) {
-      console.error('Error approving labours:', error);
-      toast.error('Error approving selected labours. Please try again.');
-    } finally {
-      // Clean up
-      setSelectedLabourIds([]);
-      setIsMassModalOpen(false);
-    }
-  };
-  
-  const handleMassReject = async () => {
-    if (selectedLabourIds.length === 0) {
-      toast.error('No labours selected!');
-      return;
-    }
-    if (!rejectReason.trim()) {
-      toast.error('Please provide a reason for rejection.');
-      return;
-    }
-  
-    try {
-      // For each selected "LabourID", find the labour object in state
-      for (const labourID of selectedLabourIds) {
-        const labourObj = labours.find((labour) => labour.LabourID === labourID);
-        if (!labourObj) {
-          console.log(`No labour found with LabourID=${labourID}`);
-          continue;
-        }
-        if (!labourObj.id) {
-          console.log(`No id found for LabourID=${labourID}`);
-          continue;
-        }
-  
-        // Reject the labour
-        const response = await axios.put(`${API_BASE_URL}/api/admin/rejectSiteTransferadmin`, {
-          params: { 
-            id: labourObj.id, 
-            rejectReason: rejectReason 
-          },
-        });
-  
-        if (!response.data.success) {
-          toast.error(`Failed to reject labour with id ${labourObj.id}`);
-        }
-      }
-  
-      // Update local state to mark them as Rejected
-      setLabours((prev) =>
-        prev.map((labour) =>
-          selectedLabourIds.includes(labour.LabourID)
-            ? { ...labour, ApprovalStatusPay: 'Rejected', rejectReason: rejectReason }
-            : labour
-        )
-      );
-  
-      toast.success(`${selectedLabourIds.length} labour(s) rejected successfully.`);
-    } catch (error) {
-      console.error('Error rejecting labours:', error);
-      toast.error('Error rejecting selected labours. Please try again.');
-    } finally {
-      setSelectedLabourIds([]);
-      setIsMassModalOpen(false);
-    }
-  };
 
   const handleEditLabour = async (labour) => {
     try {
@@ -569,9 +448,6 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
       return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
     }
   });
-  const isAllSelected =
-  filteredLabours.length > 0 &&
-  filteredLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
 
   const openPopup = async (labour) => {
     try {
@@ -651,39 +527,15 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     return filteredLabours.length > 0 ? filteredLabours : labours;
   };
 
-  
-   // Checkbox handling: select/deselect individual row
- const handleSelectRow = (event, labourId) => {
-  if (event.target.checked) {
-    setSelectedLabourIds(prev => [...prev, labourId]);
-  } else {
-    setSelectedLabourIds(prev => prev.filter(id => id !== labourId));
-  }
-};
-
-const handleSelectAllRows = (event) => {
-  if (event.target.checked) {
-    const newSelected = filteredLabours.map(labour => labour.LabourID);
-    setSelectedLabourIds(prev => [
-      ...prev,
-      ...newSelected.filter(id => !prev.includes(id)),
-    ]);
-  } else {
-    const newSelected = filteredLabours.map(labour => labour.LabourID);
-    setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
-  }
-};
-
 
 
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
-      <ToastContainer />
+      {/* <Typography variant="h5" >
+        Labour Details
+      </Typography> */}
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
-                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
-                    Admin | Site Transfer Approval
-                </Typography>
+      <Box ml={-1.5}>
         <SearchBar
           handleSubmit={handleSubmit}
           searchQuery={searchQuery}
@@ -799,11 +651,6 @@ const handleSelectAllRows = (event) => {
             }}
           />
         </Tabs>
-        {selectedLabourIds.length > 0 && (
-  <Button variant="outlined"  color="secondary" startIcon={<EditIcon />}  onClick={openMassApproveRejectModal}>
-Approve/Reject ({selectedLabourIds.length})
-  </Button>
-)}
 
         <TablePagination
           className="custom-pagination"
@@ -816,6 +663,8 @@ Approve/Reject ({selectedLabourIds.length})
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
+
+
 
       <TableContainer component={Paper} sx={{
         mb: isMobile ? 6 : 0,
@@ -857,12 +706,6 @@ Approve/Reject ({selectedLabourIds.length})
                   },
                 }}
               >
-                 {tabValue === 0 && <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={isAllSelected}
-                    onChange={handleSelectAllRows}
-                    inputProps={{ 'aria-label': 'select all labours' }}
-                  /></TableCell>}
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
                 <TableCell>Date</TableCell>
@@ -912,15 +755,6 @@ Approve/Reject ({selectedLabourIds.length})
                   .sort((a, b) => b.labourID - a.labourID)
               ).map((labour, index) => (
                 <TableRow key={labour.id}>
-                   {tabValue === 0 && (
-                    <><TableCell padding="checkbox">
-                    <Checkbox
-                      checked={selectedLabourIds.includes(labour.LabourID)}
-                      onChange={(e) => handleSelectRow(e, labour.LabourID)}
-                      inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
-                    />
-                  </TableCell> </>
-                  )}
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{labour.LabourID}</TableCell>
                   <TableCell>{labour.createdAt ? new Date(labour.createdAt).toLocaleDateString('en-GB') : '-'}</TableCell>
@@ -1332,67 +1166,6 @@ Approve/Reject ({selectedLabourIds.length})
         </DialogActions>
       </Dialog> */}
 
-<Dialog
-        open={isMassModalOpen}
-        onClose={closeMassApproveRejectModal}
-      >
-        <DialogTitle>Approve/Reject No. {selectedLabourIds.length} labours</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Do you want to approve or reject these selected labours? <br />
-            If Reject, please provide a reason below:
-          </DialogContentText>
-
-          <TextField
-            label="Reason for Rejection"
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            fullWidth
-            multiline
-            rows={3}
-            variant="outlined"
-            margin="normal"
-            placeholder="If rejecting, please provide a reason."
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={closeMassApproveRejectModal}
-            variant="outlined"
-            color="secondary"
-          >
-            Cancel
-          </Button>
-
-          {/* Reject Button */}
-          <Button
-            onClick={handleMassReject}
-            sx={{
-              backgroundColor: '#fce4ec',
-              color: 'rgb(255, 100, 100)',
-              '&:hover': {
-                backgroundColor: '#f8bbd0',
-              },
-            }}
-          >
-            Reject
-          </Button>
-
-          {/* Approve Button */}
-          <Button
-            onClick={handleMassApprove}
-            sx={{
-              backgroundColor: 'rgb(229, 255, 225)',
-              color: 'rgb(43, 217, 144)',
-              '&:hover': {
-                backgroundColor: 'rgb(229, 255, 225)',
-              },
-            }}
-          >
-            Approve
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <Dialog
         open={isEditLabourOpen}
@@ -1428,6 +1201,7 @@ Approve/Reject ({selectedLabourIds.length})
       </Dialog>
 
 
+      <ToastContainer />
     </Box>
 
   );

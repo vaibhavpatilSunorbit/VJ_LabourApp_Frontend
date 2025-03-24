@@ -13,11 +13,12 @@ import {
 } from '@mui/material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Loading from '../../Loading/Loading';
 
 const ImportAttendance = () => {
     const [open, setOpen] = useState(false);
     const [file, setFile] = useState(null);
-
+    const [loading, setLoading] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
         setFile(null); // Reset the file input on modal close
@@ -27,12 +28,16 @@ const ImportAttendance = () => {
   
     const handleImport = async () => {
         if (!file) {
-            alert('Please select an Excel file');
+            toast.error('Please select an Excel file');
             return;
         }
+        const selectedFile = file;
+        // Close the modal immediately when clicking Import.
+        handleClose();
 
+        setLoading(true);
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', selectedFile);
 
         try {
             const response = await axios.post(`${API_BASE_URL}/labours/import`, formData, {
@@ -57,12 +62,32 @@ const ImportAttendance = () => {
             } else {
                 console.error('Unexpected error:', error);
             }
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <>
-            {/* Trigger Button */}
+               {loading && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                zIndex: 1000,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Loading />
+                        </Box>
+                    )}
+
             <Button
             onClick={handleOpen}
             sx={{
@@ -170,6 +195,7 @@ const ImportAttendance = () => {
                                             backgroundColor: '#45a049',
                                         },
                                     }}
+                                    
                                 >
                                     Import
                                 </Button>

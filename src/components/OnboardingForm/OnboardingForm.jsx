@@ -698,8 +698,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         const departmentsRes = await axios.get(API_BASE_URL + `/api/departments`);
         const workingHoursRes = await axios.get(API_BASE_URL + `/api/working-hours`);
         setProjectNames(projectNamesRes.data);
+        console.log('dprojectNamesRes.data',projectNamesRes.data)
         setLabourCategories(labourCategoriesRes.data);
         setDepartments(departmentsRes.data);
+        console.log('departmentsRes.data',departmentsRes.data)
         setWorkingHours(workingHoursRes.data);
 
       } catch (err) {
@@ -713,6 +715,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   useEffect(() => {
     const fetchDesignations = async () => {
       if (formData.department) {
+        console.log('formData.department',formData.department)
         try {
           const designationsRes = await axios.get(API_BASE_URL + `/api/designations/${formData.department}`);
           setDesignations(designationsRes.data);
@@ -733,28 +736,61 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     fetchDesignations();
   }, [formData.department]);
 
+  // useEffect(() => {
+  //   const fetchCompanyNames = async () => {
+  //     if (formData.projectName) {
+  //       console.log('formData.projectName',formData.projectName)
+  //       try {
+  //         const companyNamesRes = await axios.get(API_BASE_URL + `/api/company-names/${formData.projectName}`);
+  //         console.log("companyNamesRes.data{{",companyNamesRes.data)
+  //         setCompanyNames(companyNamesRes.data);
+
+  //         if (companyNamesRes.data.length > 0 && !formData.companyName) {
+  //           setFormData(prevFormData => ({
+  //             ...prevFormData,
+  //             companyName: companyNamesRes.data[0].Company_Name
+  //           }));
+  //         }
+
+  //       } catch (err) {
+  //         console.error(err);
+  //       }
+  //     }
+  //   };
+
+  //   fetchCompanyNames();
+  // }, [formData.projectName]);
+
   useEffect(() => {
-    const fetchCompanyNames = async () => {
-      if (formData.projectName) {
-        try {
-          const companyNamesRes = await axios.get(API_BASE_URL + `/api/company-names/${formData.projectName}`);
-          setCompanyNames(companyNamesRes.data);
+  const fetchCompanyNames = async () => {
+    if (formData.projectName) {
+      console.log("Fetching company names for:", formData.projectName);
 
-          if (companyNamesRes.data.length > 0 && !formData.companyName) {
-            setFormData(prevFormData => ({
-              ...prevFormData,
-              companyName: companyNamesRes.data[0].Company_Name
-            }));
-          }
+      try {
+        const companyNamesRes = await axios.get(API_BASE_URL + `/api/company-names/${formData.projectName}`);
+        
+        console.log("API Response:", companyNamesRes.data);  // Debugging line
 
-        } catch (err) {
-          console.error(err);
+        // Ensure `companyNames` is always an array
+        const companyData = Array.isArray(companyNamesRes.data) ? companyNamesRes.data : [companyNamesRes.data];
+
+        setCompanyNames(companyData);
+
+        if (companyData.length > 0 && !formData.companyName) {
+          setFormData(prevFormData => ({
+            ...prevFormData,
+            companyName: companyData[0].Description
+          }));
         }
+      } catch (err) {
+        console.error("Error fetching company names:", err);
       }
-    };
+    }
+  };
 
-    fetchCompanyNames();
-  }, [formData.projectName]);
+  fetchCompanyNames();
+}, [formData.projectName]);
+
 
   // New changes end here ----------------------------------
 
@@ -767,6 +803,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     try {
       const response = await axios.get(API_BASE_URL + `/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
+      // setPage(0);
     } catch (error) {
       console.error('Error searching:', error);
       toast.error('Error searching. Please try again.');
@@ -1428,10 +1465,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
     if (name === "projectName") {
       const projectId = parseInt(value, 10); // Get the selected project's ID
-      const selectedProject = projectNames.find(project => project.id === projectId);
+      const selectedProject = projectNames.find(project => project.Id === projectId);
 
       if (selectedProject) {
-        const companyName = selectedProject.Company_Name; // Get the corresponding company name
+        const companyName = selectedProject.Business_Unit; // Get the corresponding company name
 
         setFormData((prevFormData) => ({
           ...prevFormData,
@@ -1497,7 +1534,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
   const openPreviewModal = () => {
-    const project = projectNames.find(project => project.id === parseInt(formData.projectName));
+    const project = projectNames.find(project => project.Id === parseInt(formData.projectName));
     const department = departments.find(dept => dept.Id === parseInt(formData.department));
 
     const processedData = {
@@ -2443,7 +2480,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 <option value="" >Select a project</option>
                                 {projectNames.map(project => (
                                   // <option key={project.id} value={project.Business_Unit}>{project.Business_Unit}</option>
-                                  <option key={project.id} value={project.id}>{project.Business_Unit}</option>
+                                  <option key={project.Id} value={project.Id}>{project.Business_Unit}</option>
                                 ))}
                               </select>
                             </div>
@@ -2463,9 +2500,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 style={getInputStyle('companyName')}
                               >
                                 {/* <option value="" >Select Company Name</option> */}
-                                {companyNames.map(company => (
+                                {/* {companyNames.map(company => (
                                   <option key={company.id} value={company.Company_Name}>{company.Company_Name}</option>
-                                ))}
+                                ))} */}
+                                {Array.isArray(companyNames) ? companyNames.map((company) => (
+    <option key={company.Company_Name} value={company.Company_Name}>
+      {company.Company_Name}
+    </option>
+  )) : null}
                               </select>
                             </div>
                           </div>
@@ -2481,7 +2523,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                             </InputLabel>
                             <div className="gender-input">
                               <select
-                                id="department"
+                                Id="department"
                                 name="department"
                                 value={formData.department}
                                 // onChange={(e) => setFormData({ ...formData, department: e.target.value })}
@@ -2512,8 +2554,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                               >
                                 <option value="" >Select a Trade</option>
                                 {designations.map(designation => (
-                                  <option key={designation.id} value={designation.Description} data-id={designation.id}>
-                                    {designation.Description}
+                                  <option key={designation.id} value={designation.farvision_description} data-id={designation.id}>
+                                    {designation.farvision_description}
                                   </option>
                                 ))}
                                 {/* {designations.map(designation => (
