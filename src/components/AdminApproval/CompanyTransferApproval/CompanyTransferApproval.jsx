@@ -23,9 +23,7 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle,
-  InputLabel,
-  IconButton, Checkbox,
+  DialogTitle, Checkbox,
   Menu,
   MenuItem, Select, Badge
 } from '@mui/material';
@@ -37,22 +35,18 @@ import ViewDetails from '../../ViewDetails/ViewDetails';
 import Loading from "../../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import EditIcon from '@mui/icons-material/Edit';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { API_BASE_URL } from "../../../Data";
 import InfoIcon from '@mui/icons-material/Info';
-import jsPDF from 'jspdf';
 import { useUser } from '../../../UserContext/UserContext';
 
-const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour, labourlist }) => {
+const CompanyTransferApproval = ({ departments, projectNames, labour, labourlist }) => {
   const { user } = useUser();
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [loadingExcel, setLoadingExcel] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedLabour, setSelectedLabour] = useState(null);
   const [page, setPage] = useState(0);
@@ -66,48 +60,25 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
   const [popupType, setPopupType] = useState('');
   const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false); // New state for confirmation dialog
   const [labourToApprove, setLabourToApprove] = useState(null);
-  const [disabledButtons, setDisabledButtons] = useState(new Set());
   const theme = useTheme();
-  const [resubmittedLabours, setResubmittedLabours] = useState(new Set());
   const navigate = useNavigate();
   const location = useLocation();
   const [formData, setFormData] = useState(null);
-  const [open, setOpen] = useState(false);
-  const [employeeId, setEmployeeId] = useState(null);
-  const [ledgerId, setLedgerId] = useState(null);
   const [isEditLabourOpen, setIsEditLabourOpen] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [IsApproved, setIsApproved] = useState(false);
-  // const [labourIds, setLabourIds] = useState([]);
-  const [isApproving, setIsApproving] = useState(false);
-  const [esslStatuses, setEsslStatuses] = useState({});
-  const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
-  // const { labourId } = location.state || {};
   const { hideResubmit, labourId } = location.state || {};
-
-  const [anchorEl, setAnchorEl] = useState(null); // For the dropdown menu
-  const [filter, setFilter] = useState(""); // To store selected filter
   const [filteredIconLabours, setFilteredIconLabours] = useState([]);
-  const [selectedFilter, setSelectedFilter] = useState("All");
-  const [statuses, setStatuses] = useState({});
   const hasFetchedStatuses = useRef(false);
   const [submittedLabourIds, setSubmittedLabourIds] = useState([]);
   const [approvingLabours, setApprovingLabours] = useState(() => JSON.parse(localStorage.getItem('approvingLabours')) || []);
   const [approvedLabours, setApprovedLabours] = useState(() => JSON.parse(localStorage.getItem('approvedLabours')) || []);
   const [labourIds, setLabourIds] = useState(() => JSON.parse(localStorage.getItem('labourIds')) || []);
-  const [processingLabours, setProcessingLabours] = useState(new Set());
   const [selectedSite, setSelectedSite] = useState({});
-  const [newSite, setNewSite] = useState(null);
-  const [openDialogSite, setOpenDialogSite] = useState(false);
   const [statusesSite, setStatusesSite] = useState({});
-  const [previousTabValue, setPreviousTabValue] = useState(tabValue);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isAllSelected, setIsAllSelected] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
   const [selectedLabourIds, setSelectedLabourIds] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
   const [isMassModalOpen, setIsMassModalOpen] = useState(false);
 
 
@@ -154,7 +125,7 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
     }
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/api/admin/rejectCompanyTransferadmin`,   { id, rejectReason });
+      const response = await axios.put(`${API_BASE_URL}/api/admin/rejectCompanyTransferadmin`, { id, rejectReason });
 
       if (response.data.success) {
         setLabours(prevLabours =>
@@ -225,7 +196,7 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
       toast.error('No labours selected!');
       return;
     }
-  
+
     try {
       // For each selected "LabourID", find the labour object in state
       for (const labourID of selectedLabourIds) {
@@ -238,17 +209,17 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
           console.warn(`No id found for LabourID=${labourID}`);
           continue;
         }
-  
+
         // Call your existing endpoint with the labour's id
         const response = await axios.put(`${API_BASE_URL}/api/admin/approveCompanyTransferadmin`, null, {
           params: { id: labourObj.id },
         });
-  
+
         if (response.data.success) {
           toast.error(`Site transfer approved and processed successfully. ${labourObj.id}`);
         }
       }
-  
+
       // After all requests are done: update local state
       setLabours((prevLabours) =>
         prevLabours.map((labour) =>
@@ -257,7 +228,7 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
             : labour
         )
       );
-  
+
       toast.success(`${selectedLabourIds.length} labours approved successfully.`);
     } catch (error) {
       console.error('Error approving labours:', error);
@@ -268,7 +239,7 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
       setIsMassModalOpen(false);
     }
   };
-  
+
   const handleMassReject = async () => {
     if (selectedLabourIds.length === 0) {
       toast.error('No labours selected!');
@@ -278,7 +249,7 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
       toast.error('Please provide a reason for rejection.');
       return;
     }
-  
+
     try {
       // For each selected "LabourID", find the labour object in state
       for (const labourID of selectedLabourIds) {
@@ -295,17 +266,17 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
         // Reject the labour
         console.log("hdcgjsdc ", labourID.id)
         const response = await axios.put(`${API_BASE_URL}/api/admin/rejectCompanyTransferadmin`, {
-        
-            id: labourObj.id, 
-            rejectReason: rejectReason 
-         
+
+          id: labourObj.id,
+          rejectReason: rejectReason
+
         });
-  
+
         if (!response.data.success) {
           toast.error(`Failed to reject labour with id ${labourObj}`);
         }
       }
-  
+
       // Update local state to mark them as Rejected
       setLabours((prev) =>
         prev.map((labour) =>
@@ -314,7 +285,7 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
             : labour
         )
       );
-  
+
       toast.success(`${selectedLabourIds.length} labour(s) rejected successfully.`);
     } catch (error) {
       console.error('Error rejecting labours:', error);
@@ -361,19 +332,9 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
     }
   };
 
-  const openRejectPopup = (labour) => {
-    setSelectedLabour(labour);
-    setIsRejectPopupOpen(true);
-  };
-
   const closeRejectPopup = () => {
     setSelectedLabour(null);
     setIsRejectPopupOpen(false);
-  };
-
-  const openRejectReasonPopup = (labour) => {
-    setSelectedLabour(labour);
-    setIsRejectReasonPopupOpen(true);
   };
 
   const closeRejectReasonPopup = () => {
@@ -399,22 +360,6 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
   const handleSelectLabour = (selectedLabour) => {
     setSelectedLabour(selectedLabour);
   };
-
-  // const handleEdit = (labour) => {
-  //   navigate('/edit-labour', { state: { labour } });
-  // };
-
-  const handleEdit = (labour) => {
-    setFormData(labour);
-    setOpen(true);
-  };
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-
-
 
   const fetchLabours = async () => {
     setLoading(true);
@@ -456,12 +401,6 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
   }, [tabValue]);
 
 
-
-  // useEffect(() => {
-  //   fetchLabours();
-  // }, []);
-
-
   const handleAccountNumberChange = (e) => {
     let cleanedValue = e.target.value.replace(/\D/g, '');
     if (cleanedValue.length > 16) {
@@ -484,15 +423,6 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
     setFormData({ ...formData, expiryDate: value });
   };
 
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-
-  // const API_BASE_URL = 'http://localhost:4000'; 
-  // const API_BASE_URL = "https://laboursandbox.vjerp.com"; 
-  // const API_BASE_URL = "https://vjlabour.vjerp.com"; 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -539,21 +469,6 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
       return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
     }
   });
-  // const isAllSelected =true
-  // filteredLabours.length > 0 &&
-  // filteredLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
-
-  const openPopup = async (labour) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
-      const labourDetails = response.data;
-
-      setIsPopupOpen(true);
-    } catch (error) {
-      console.error('Error fetching labour details:', error);
-      toast.error('Error fetching labour details. Please try again.');
-    }
-  };
 
   const closePopup = () => {
     setSelectedLabour(null);
@@ -593,22 +508,18 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
     );
     setPopupType('success');
     setSaved(true);
-    // await approveLabourQueue(id);
   };
 
   const getFilteredLaboursForTab = () => {
     if (tabValue === 0) {
-      // Pending tab: Filter labours with "Pending" status
       return filteredIconLabours.length > 0
         ? filteredIconLabours.filter(labour => labour.adminStatus === 'Pending')
         : labours.filter(labour => labour.adminStatus === 'Pending');
     } else if (tabValue === 1) {
-      // Approved tab: Filter labours with "Approved" status
       return filteredIconLabours.length > 0
         ? filteredIconLabours.filter(labour => labour.adminStatus === 'Approved')
         : labours.filter(labour => labour.adminStatus === 'Approved');
     } else if (tabValue === 2) {
-      // Rejected tab: Filter labours with "Rejected" or "Resubmitted" status
       return filteredIconLabours.length > 0
         ? filteredIconLabours.filter(
           labour => labour.adminStatus === 'Rejected' || labour.adminStatus === 'Resubmitted' || labour.adminStatus === 'Disable'
@@ -617,38 +528,36 @@ const CompanyTransferApproval = ({ onApprove, departments, projectNames, labour,
           labour => labour.adminStatus === 'Rejected' || labour.adminStatus === 'Resubmitted' || labour.adminStatus === 'Disable'
         );
     }
-    // return filteredIconLabours.length > 0 ? filteredIconLabours : labours;
     return filteredLabours.length > 0 ? filteredLabours : labours;
   };
 
-  
-   // Checkbox handling: select/deselect individual row
- const handleSelectRow = (event, labourId) => {
-  if (event.target.checked) {
-    setSelectedLabourIds(prev => [...prev, labourId]);
-  } else {
-    setSelectedLabourIds(prev => prev.filter(id => id !== labourId));
-  }
-};
 
-const handleSelectAllRows = (event) => {
-  if (event.target.checked) {
-    const newSelected = labours
-      ?.filter(labour => labour.adminStatus === "Pending")
-      .map(labour => labour.LabourID);
-    setSelectedLabourIds(prev => [
-      ...prev,
-      ...newSelected.filter(id => !prev.includes(id)),
-    ]);
-    setIsAllSelected(true);
-  } else {
-    const newSelected = labours
-      ?.filter(labour => labour.adminStatus === "Pending")
-      .map(labour => labour.LabourID);
-    setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
-    setIsAllSelected(false);
-  }
-};
+  const handleSelectRow = (event, labourId) => {
+    if (event.target.checked) {
+      setSelectedLabourIds(prev => [...prev, labourId]);
+    } else {
+      setSelectedLabourIds(prev => prev.filter(id => id !== labourId));
+    }
+  };
+
+  const handleSelectAllRows = (event) => {
+    if (event.target.checked) {
+      const newSelected = labours
+        ?.filter(labour => labour.adminStatus === "Pending")
+        .map(labour => labour.LabourID);
+      setSelectedLabourIds(prev => [
+        ...prev,
+        ...newSelected.filter(id => !prev.includes(id)),
+      ]);
+      setIsAllSelected(true);
+    } else {
+      const newSelected = labours
+        ?.filter(labour => labour.adminStatus === "Pending")
+        .map(labour => labour.LabourID);
+      setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+      setIsAllSelected(false);
+    }
+  };
 
 
 
@@ -658,9 +567,9 @@ const handleSelectAllRows = (event) => {
       <ToastContainer />
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
-                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
-                    Admin | Company Transfer Approval
-                </Typography>
+        <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+          Admin | Company Transfer Approval
+        </Typography>
         <SearchBar
           handleSubmit={handleSubmit}
           searchQuery={searchQuery}
@@ -706,12 +615,6 @@ const handleSelectAllRows = (event) => {
         >
           <Tab
             label={`Pending (${pendingCount})`}
-            //    label={
-            //     <Box sx={{display:'flex'}}>
-            //    <Box sx={{alignContent:'center'}}>Pending</Box>
-            //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{pendingCount}</Box>
-            //    </Box>
-            //   }
             style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
             sx={{
               color: tabValue === 0 ? "white" : "black",
@@ -722,7 +625,6 @@ const handleSelectAllRows = (event) => {
               mr: 1,
               minHeight: "auto",
               minWidth: "auto",
-              // padding: "6px 12px",
               "&:hover": {
                 bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
               },
@@ -730,12 +632,6 @@ const handleSelectAllRows = (event) => {
           />
           <Tab
             label={`Approved (${approvedCount})`}
-            //   label={
-            //     <Box sx={{display:'flex'}}>
-            //    <Box sx={{alignContent:'center'}}>Approved</Box>
-            //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{approvedCount}</Box>
-            //    </Box>
-            //   }
             style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
             sx={{
               color: tabValue === 1 ? "white" : "black",
@@ -746,7 +642,6 @@ const handleSelectAllRows = (event) => {
               fontWeight: "bold",
               minHeight: "auto",
               minWidth: "auto",
-              // padding: "6px 12px",
               "&:hover": {
                 bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
               },
@@ -754,12 +649,6 @@ const handleSelectAllRows = (event) => {
           />
           <Tab
             label={`Rejected (${rejectedCount})`}
-            //   label={
-            //     <Box sx={{display:'flex'}}>
-            //    <Box sx={{alignContent:'center'}}>Rejected</Box>
-            //    <Box sx={{p:'2px', borderRadius:'50%', fontSize:'15px', p:'5px'}}>{rejectedCount}</Box>
-            //    </Box>
-            //   }
             style={{ color: tabValue === 2 ? "rgb(255, 100, 100)" : "black" }}
             sx={{
               color: tabValue === 2 ? "white" : "black",
@@ -769,7 +658,6 @@ const handleSelectAllRows = (event) => {
               fontWeight: "bold",
               minHeight: "auto",
               minWidth: "auto",
-              // padding: "6px 12px",   
               "&:hover": {
                 bgcolor: tabValue === 2 ? "rgb(255, 229, 229)" : "rgb(255, 229, 229)",
               },
@@ -777,16 +665,15 @@ const handleSelectAllRows = (event) => {
           />
         </Tabs>
         {selectedLabourIds.length > 0 && (
-  <Button variant="outlined"  color="secondary" startIcon={<EditIcon />}  onClick={openMassApproveRejectModal}>
-Approve/Reject ({selectedLabourIds.length})
-  </Button>
-)}
+          <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={openMassApproveRejectModal}>
+            Approve/Reject ({selectedLabourIds.length})
+          </Button>
+        )}
 
         <TablePagination
           className="custom-pagination"
           rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
           count={getFilteredLaboursForTab().length}
-          //  count={filteredIconLabours.length > 0 ? filteredIconLabours.length : labours.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -821,20 +708,20 @@ Approve/Reject ({selectedLabourIds.length})
                     '@media (max-width: 600px)': {
                       padding: '10px',
                     },
-                    backgroundColor: 'white', // Ensure the background color is set
+                    backgroundColor: 'white',
                     position: 'sticky',
                     top: 0,
                     zIndex: 1,
                   },
                   '& td': {
-                    padding: '16px 9px', // Applying padding to all td elements
+                    padding: '16px 9px',
                     '@media (max-width: 600px)': {
-                      padding: '14px 8px', // Adjust padding for smaller screens if needed
+                      padding: '14px 8px',
                     },
                   },
                 }}
               >
-                 {tabValue === 0 && <TableCell padding="checkbox">
+                {tabValue === 0 && <TableCell padding="checkbox">
                   <Checkbox
                     checked={isAllSelected}
                     onChange={handleSelectAllRows}
@@ -850,7 +737,6 @@ Approve/Reject ({selectedLabourIds.length})
                 <TableCell>Company Transfer By</TableCell>
                 <TableCell>Status</TableCell>
                 {tabValue === 0 && <TableCell>Send Approval Date</TableCell>}
-                {/* {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>} */}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
                 {tabValue === 1 && <TableCell>Approve Date</TableCell>}
                 {tabValue !== 0 && tabValue !== 1 && <TableCell>Rejected Date</TableCell>}
@@ -889,14 +775,14 @@ Approve/Reject ({selectedLabourIds.length})
                   .sort((a, b) => b.labourID - a.labourID)
               ).map((labour, index) => (
                 <TableRow key={labour.id}>
-                   {tabValue === 0 && (
+                  {tabValue === 0 && (
                     <><TableCell padding="checkbox">
-                    <Checkbox
-                      checked={selectedLabourIds.includes(labour.id)}
-                      onChange={(e) => handleSelectRow(e, labour.id)}
-                      inputProps={{ 'aria-label': `select labour ${labour.id}` }}
-                    />
-                  </TableCell> </>
+                      <Checkbox
+                        checked={selectedLabourIds.includes(labour.id)}
+                        onChange={(e) => handleSelectRow(e, labour.id)}
+                        inputProps={{ 'aria-label': `select labour ${labour.id}` }}
+                      />
+                    </TableCell> </>
                   )}
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{labour.LabourID}</TableCell>
@@ -906,7 +792,6 @@ Approve/Reject ({selectedLabourIds.length})
                   <TableCell>{labour.transferDate ? new Date(labour.transferDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                   {tabValue === 2 && <TableCell>{labour.rejectionReason}</TableCell>}
                   <TableCell>{labour.siteTransferBy}</TableCell>
-                  {/* <TableCell>{labour.status}</TableCell> */}
                   <TableCell sx={{ position: 'relative' }}>
                     <Box
                       sx={{
@@ -961,26 +846,6 @@ Approve/Reject ({selectedLabourIds.length})
                       </Box>
                     </TableCell>
                   )}
-
-                  {/* {tabValue === 0 && (
-                    <TableCell>
-                      {(user.userType === 'user' && labour.adminStatus === 'Pending') && (
-                        <IconButton
-                          onClick={() => handleEditLabourOpen(labour)} // Add your function here
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      )}
-                      {(user.userType === 'admin' || user.userType === 'superadmin' && labour.adminStatus === 'Pending') && (
-                        <IconButton
-                          onClick={() => handleEditLabourOpen(labour)} // Add your function here
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      )}
-                    </TableCell>
-                  )} */}
-
                   {user.userType === 'admin' || user.userType === 'superadmin' && (
                     <TableCell>
                       {labour.adminStatus === 'Pending' && !approvedLabours.includes(labour.id) && !approvingLabours.includes(labour.id) && (
@@ -1020,30 +885,8 @@ Approve/Reject ({selectedLabourIds.length})
                           </Button>
                         </>
                       )}
-                      {/* {labour.adminStatus === 'Approved' && (
-                        <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
-                              backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                          }}
-                          onClick={() => handleEdit(labour)}
-                        >
-                          Edit
-                        </Button>
-                      )} */}
-
-
                     </TableCell>
                   )}
-                  {/* 
-                  <TableCell>
-                    <RemoveRedEyeIcon onClick={() => openPopup(labour)} style={{ cursor: 'pointer' }} />
-                  </TableCell> */}
-
                   {user.userType === 'admin' && tabValue !== 0 && tabValue !== 2 && tabValue !== 1 && <TableCell>
                     <Select
                       value={selectedSite[labour.LabourID] || ''}
@@ -1080,8 +923,6 @@ Approve/Reject ({selectedLabourIds.length})
         open={isPopupOpen}
         onClose={closePopup}
         closeAfterTransition
-      // BackdropComponent={Backdrop}
-      // BackdropProps={{ timeout: 500 }}
       >
         <Fade in={isPopupOpen}>
           <div className="modal">
@@ -1231,86 +1072,9 @@ Approve/Reject ({selectedLabourIds.length})
           </div>
         </>
       )}
-      {/* 
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Edit Labour Details</DialogTitle>
-        <DialogContent >
-          {formData && (
-            <Box
-              component="form"
-              onSubmit={handleSubmit}
-              sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: isMobile ? '220px' : '400px', padding: 2 }}
-            >
-              <TextField
-                label="Labour Name"
-                name="labourName"
-                value={formData.name}
-                InputProps={{
-                  readOnly: true,
-                }}
-                sx={{ width: '100%' }}
-              />
-              <div className="bankDetails-field">
-                <InputLabel id="account-number-label" sx={{ color: "black" }}>
-                  Account Number
-                </InputLabel>
-                <input
-                  type="text"
-                  id="accountNumber"
-                  name="accountNumber"
-                  required
-                  value={formData.accountNumber || ''}
-                  onChange={handleAccountNumberChange}
-                  style={{ padding: '18px 10px', borderRadius: '4px', border: '1px solid #ccc', width: '95%', fontSize: '17px' }}
-                  maxLength={16}
-                  onKeyDown={(e) => {
-                    if (
-                      !(
-                        (e.key >= '0' && e.key <= '9') || // Allow numbers
-                        e.key === 'Backspace' ||
-                        e.key === 'Delete' ||
-                        e.key === 'ArrowLeft' ||
-                        e.key === 'ArrowRight' ||
-                        e.key === 'Tab'
-                      )
-                    ) {
-                      e.preventDefault();
-                    }
-                  }}
-                />
-              </div>
-              <div className="expiryDate-field">
-                <InputLabel id="expiry-date-label" sx={{ color: "black" }}>
-                  Expiry Date
-                </InputLabel>
-                <input
-                  type="text"
-                  id="expiryDate"
-                  name="expiryDate"
-                  required
-                  value={formData.expiryDate || ''}
-                  onChange={handleExpiryDateChange}
-                  placeholder="MM-YYYY"
-                  style={{ padding: '18px 10px', borderRadius: '4px', border: '1px solid #ccc', width: '95%', fontSize: '17px' }}
-                  maxLength={7}
-                />
-              </div>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} variant="outlined" color="secondary">Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" sx={{
-            backgroundColor: 'rgb(229, 255, 225)',
-            color: 'rgb(43, 217, 144)',
-            '&:hover': {
-              backgroundColor: 'rgb(229, 255, 225)',
-            },
-          }}>Update</Button>
-        </DialogActions>
-      </Dialog> */}
 
-<Dialog
+
+      <Dialog
         open={isMassModalOpen}
         onClose={closeMassApproveRejectModal}
       >
@@ -1356,7 +1120,6 @@ Approve/Reject ({selectedLabourIds.length})
             Reject
           </Button>
 
-          {/* Approve Button */}
           <Button
             onClick={handleMassApprove}
             sx={{

@@ -226,19 +226,14 @@ const AddUser = () => {
     if (edit && user) {
       console.log("user : ", user)
       setUserData(user);
-      // setSelectedValues(
-      //   Array.isArray(user.accessPages) ? user.accessPages : []
-      // );
       setSelectedValues(
         user.accessPages ? JSON.parse(user.accessPages) : []
       );
 
-      // Parse assigned department and project IDs from string to array
       const assignedDepts = user.assigned_departments ? JSON.parse(user.assigned_departments) : [];
       const assignedProjs = user.assigned_projects ? JSON.parse(user.assigned_projects) : [];
       // const assignedAccessPages = user.accessPages ? JSON.parse(user.accessPages) : [];
 
-      // Find matching objects to display names in Autocomplete
       const selectedDeptObjects = departments.filter((dept) => assignedDepts.includes(dept.Id));
       const selectedProjObjects = projectNames.filter((proj) => assignedProjs.includes(proj.Id));
       // const selectedAcessPages = accessPagesAdd.filter((acc) => assignedAccessPages.includes([]));
@@ -470,7 +465,6 @@ const AddUser = () => {
                 helperText={errors.pasword}
               />
 
-              {/* Autocomplete for Departments */}
               <Autocomplete
                 multiple
                 style={{margin:'25px 0px'}}
@@ -493,7 +487,6 @@ const AddUser = () => {
                 )}
               />
 
-              {/* Autocomplete for Projects */}
               <Autocomplete
                 multiple
                 options={projectNames}
