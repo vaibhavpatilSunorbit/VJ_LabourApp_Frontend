@@ -166,6 +166,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     name: labour.name || "-",
                     projectName: labour.businessUnit || "-",
                     department: labour.departmentName || "-",
+                    aadhaarNumber: labour.aadhaarNumber || "-",
+                    accountNumber: labour.accountNumber || "-",
                     attendanceCount: labour.attendanceCount || 0,
                     presentDays: labour.attendance?.presentDays || 0,
                     absentDays: labour.attendance?.absentDays || 0,
