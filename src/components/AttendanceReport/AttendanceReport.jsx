@@ -26,7 +26,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import Tooltip from '@mui/material/Tooltip';
 import Badge from '@mui/material/Badge';
 
-const AttendanceReport = (departments, projectNames, labour, labourlist) => {
+const AttendanceReport = (departments, labour, labourlist) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState(labourlist || []);
@@ -44,7 +44,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
     const [searchResults, setSearchResults] = useState([]);
     const [totalOvertimehours, setTotalOvertimehours] = useState(0);
     const [totalOvertimeminute, setTotalOvertimeminute] = useState(0);
-
+    const [projectNames, setProjectNames] = useState([]);
     const [totalOvertimehoursManually, setTotalOvertimehoursManually] = useState(0);
     const [totalOvertimeminuteManually, setTotalOvertimeminuteManually] = useState(0);
     const [tabValue, setTabValue] = useState(0);
@@ -435,6 +435,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
 
     useEffect(() => {
         if (modalOpen) {
+            fetchProjectNames();
             fetchAttendanceForMonth();
         }
     }, [modalOpen]);
@@ -500,6 +501,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
                     TotalOvertimeHoursManually: attendanceRecord?.TotalOvertimeHoursManually || '-',
                     isFinalPayAvailable: attendanceRecord?.isFinalPayAvailable,
                     Shift: attendanceRecord?.Shift,
+                    projectName: attendanceRecord?.projectName,
                 };
             });
             setAttendanceData(fullMonthAttendance);
@@ -854,79 +856,30 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
         </Box>
     );
 
-    const handleExport = async () => {
-        if (!selectedBusinessUnit || !projectName || !startDate || !endDate) {
-            toast.error('Please select a Business Unit, Start Date, and End Date.');
-            return;
-        }
+  
+    const fetchProjectNames = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/export`, {
-                params: { projectName, startDate, endDate },
-                responseType: 'blob',
-            });
-
-            const blob = new Blob([response.data], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            });
-
-            const fileName = `Attendance_${selectedBusinessUnit}_${startDate}_${endDate}.xlsx`;
-
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-
-            link.parentNode.removeChild(link);
-
-            toast.success('Attendance exported successfully!');
+          const response = await axios.get(API_BASE_URL + "/api/project-names");
+          // Expecting response.data to be an array of projects with properties "Id" and "Business_Unit"
+          setProjectNames(response.data);
         } catch (error) {
-            console.error('Error exporting data:', error);
-
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(`Export Error: ${error.response.data.message}`);
-            } else {
-                toast.error('Error exporting data. Please try again later.');
-            }
+          console.error('Error fetching project names:', error);
+          toast.error('Error fetching project names.');
         }
-    };
-
-    const handleImport = async () => {
-        if (!file) {
-            alert('Please select an Excel file');
-            return;
+      };
+    
+      // Lookup function to get Business_Unit name based on project id
+      const getProjectDescription = (projectId) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) {
+          return 'Unknown';
         }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const response = await axios.post(`${API_BASE_URL}/labours/import`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            toast.message(response.data.message);
-        } catch (error) {
-            if (error.response && error.response.data) {
-                const { message, invalidRows } = error.response.data;
-
-                if (invalidRows && invalidRows.length > 0) {
-                    console.error('Invalid rows:', invalidRows);
-
-                    const errorMessage = invalidRows
-                        .map((row) => `Row ${row.index + 1}: ${JSON.stringify(row.row)}`)
-                        .join('\n');
-
-                    console.log(`Error: ${message}\n\nInvalid Rows:\n${errorMessage}`);
-                } else {
-                    toast.message(`Error: ${message}`);
-                }
-            } else {
-                console.error('Unexpected error:', error);
-            }
+        if (projectId === undefined || projectId === null || projectId === '') {
+          return 'Unknown';
         }
-    };
-
-    const renderInput = (params) => <TextField {...params} fullWidth />;
+        // Convert projectId to a number if necessary and find the matching project
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+        return project ? project.Business_Unit : 'Unknown';
+      };
 
     const fetchBusinessUnits = async () => {
         try {
@@ -1465,6 +1418,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
   {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m)</TableCell> */}
                                         {/* <TableCell>Holiday</TableCell> */}
                                         <TableCell>Remark</TableCell>
+                                        <TableCell>Project Name</TableCell>
                                         <TableCell>Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -1561,6 +1515,7 @@ const AttendanceReport = (departments, projectNames, labour, labourlist) => {
                                                 </TableCell>
                                                 {/* <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell> */}
                                                 <TableCell>{day.remark || "-"}</TableCell>
+                                                <TableCell>{getProjectDescription(day.projectName)}</TableCell>
                                                 <TableCell>
                                                     <Button
                                                         sx={{
