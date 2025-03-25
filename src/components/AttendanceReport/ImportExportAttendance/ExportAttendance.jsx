@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Tab, Typography,
-    InputAdornment, IconButton, Modal, Grid
+    Button, Box, TextField, Select, MenuItem, Typography, Modal, Grid
 } from '@mui/material';
 import { API_BASE_URL } from "../../../Data";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import CloseIcon from '@mui/icons-material/Close';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 
@@ -36,27 +34,6 @@ const ExportAttendance = () => {
     useEffect(() => {
         fetchBusinessUnits();
     }, []);
-
-    const handleBusinessUnitChange = async (event) => {
-        const selectedUnit = event.target.value;
-        setSelectedBusinessUnit(selectedUnit);
-
-        const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
-        if (selectedProject) {
-            setProjectName(selectedProject.ProjectID);
-
-            try {
-                const response = await axios.get(`${API_BASE_URL}/labours`, {
-                    params: { projectName: selectedProject.ProjectID },
-                });
-                setLabours(response.data);
-            } catch (error) {
-                console.error('Error fetching labours for project:', error);
-                toast.error('Error fetching labours for the selected project.');
-            }
-        }
-    };
-
     const handleExport = async () => {
         if (!selectedBusinessUnit || !projectName || !startDate || !endDate) {
             toast.error('Please select a Business Unit, Start Date, and End Date.');
@@ -99,29 +76,27 @@ const ExportAttendance = () => {
 
     return (
         <>
-            {/* Trigger Button */}
             <Button
-            onClick={handleOpen}
-            sx={{
-                background: 'none',
-                color: 'rgb(43, 217, 144)',
-                fontSize: '14px',
-                textTransform: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px', // Space between the icon and text
-                '&:hover': {
+                onClick={handleOpen}
+                sx={{
                     background: 'none',
-                    textDecoration: 'underline', // Optional hover effect
-                },
-                padding: 0, // Remove padding for text-only appearance
-            }}
-        >
-            <FileDownloadOutlinedIcon /> {/* Export Icon */}
-            <Typography variant="body2">Export</Typography>
-        </Button>
+                    color: 'rgb(43, 217, 144)',
+                    fontSize: '14px',
+                    textTransform: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    '&:hover': {
+                        background: 'none',
+                        textDecoration: 'underline',
+                    },
+                    padding: 0,
+                }}
+            >
+                <FileDownloadOutlinedIcon />
+                <Typography variant="body2">Export</Typography>
+            </Button>
 
-            {/* Modal */}
             <Modal
                 open={open}
                 onClose={handleClose}
@@ -138,11 +113,10 @@ const ExportAttendance = () => {
                         boxShadow: 24,
                         borderRadius: '12px',
                         p: 4,
-                        width: { xs: '90%', sm: '400px' }, // Responsive width
+                        width: { xs: '90%', sm: '400px' },
                         outline: 'none',
                     }}
                 >
-                    {/* Modal Title */}
                     <Typography
                         id="export-attendance-title"
                         variant="h6"
@@ -152,9 +126,7 @@ const ExportAttendance = () => {
                         Export Attendance Data
                     </Typography>
 
-                    {/* Form Fields */}
                     <Box component="form" display="flex" flexDirection="column" gap={2}>
-                        {/* Business Unit Dropdown */}
                         <Box>
                             <Typography
                                 component="label"
@@ -196,7 +168,6 @@ const ExportAttendance = () => {
                             </Select>
                         </Box>
 
-                        {/* Start Date */}
                         <Box>
                             <Typography
                                 component="label"
@@ -214,13 +185,12 @@ const ExportAttendance = () => {
                                 variant="outlined"
                                 sx={{
                                     '& .MuiInputBase-input': {
-                                        paddingBottom: '12px', // Adjust the padding inside the input
+                                        paddingBottom: '12px',
                                     },
                                 }}
                             />
                         </Box>
 
-                        {/* End Date */}
                         <Box>
                             <Typography
                                 component="label"
@@ -238,14 +208,13 @@ const ExportAttendance = () => {
                                 variant="outlined"
                                 sx={{
                                     '& .MuiInputBase-input': {
-                                        paddingBottom: '12px', // Adjust the padding inside the input
+                                        paddingBottom: '12px',
                                     },
                                 }}
                             />
                         </Box>
 
 
-                        {/* Buttons */}
                         <Grid container spacing={2} justifyContent="flex-end">
                             <Grid item>
                                 <Button

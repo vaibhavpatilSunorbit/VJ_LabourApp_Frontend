@@ -467,7 +467,7 @@ const AddUser = () => {
 
               <Autocomplete
                 multiple
-                style={{margin:'25px 0px'}}
+                style={{ margin: '25px 0px' }}
                 options={departments}
                 getOptionLabel={(option) => option.Description} // Display department names
                 value={departments.filter((dept) => selectedDeparmentsIds.includes(dept.Id))} // Prefill selected IDs

@@ -21,18 +21,17 @@ const ImportAttendance = () => {
     const [loading, setLoading] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
-        setFile(null); // Reset the file input on modal close
+        setFile(null);
         setOpen(false);
     };
 
-  
+
     const handleImport = async () => {
         if (!file) {
             toast.error('Please select an Excel file');
             return;
         }
         const selectedFile = file;
-        // Close the modal immediately when clicking Import.
         handleClose();
 
         setLoading(true);
@@ -69,46 +68,45 @@ const ImportAttendance = () => {
 
     return (
         <>
-               {loading && (
-                        <Box
-                            sx={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                                zIndex: 1000,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Loading />
-                        </Box>
-                    )}
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        zIndex: 1000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Loading />
+                </Box>
+            )}
 
             <Button
-            onClick={handleOpen}
-            sx={{
-                background: 'none',
-                color: 'rgb(43, 217, 144)',
-                fontSize: '14px',
-                textTransform: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px', // Space between the icon and text
-                '&:hover': {
+                onClick={handleOpen}
+                sx={{
                     background: 'none',
-                    textDecoration: 'underline', // Optional hover effect
-                },
-            }}
-        >
-            <FileUploadOutlinedIcon /> {/* Import Icon */}
-            <Typography variant="body2">Import</Typography>
-        </Button>
+                    color: 'rgb(43, 217, 144)',
+                    fontSize: '14px',
+                    textTransform: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    '&:hover': {
+                        background: 'none',
+                        textDecoration: 'underline',
+                    },
+                }}
+            >
+                <FileUploadOutlinedIcon />
+                <Typography variant="body2">Import</Typography>
+            </Button>
 
-            {/* Modal */}
             <Modal
                 open={open}
                 onClose={handleClose}
@@ -129,7 +127,6 @@ const ImportAttendance = () => {
                         outline: 'none',
                     }}
                 >
-                    {/* Modal Title */}
                     <Typography
                         id="import-attendance-title"
                         variant="h6"
@@ -139,11 +136,9 @@ const ImportAttendance = () => {
                         Import Attendance Data
                     </Typography>
 
-                    {/* Modal Content */}
                     <Box display="flex" flexDirection="column" gap={3}>
                         <ToastContainer />
 
-                        {/* File Input */}
                         <Box>
                             <Typography
                                 component="label"
@@ -165,8 +160,6 @@ const ImportAttendance = () => {
                                 }}
                             />
                         </Box>
-
-                        {/* Buttons */}
                         <Grid container spacing={2} justifyContent="flex-end">
                             <Grid item>
                                 <Button
@@ -195,7 +188,7 @@ const ImportAttendance = () => {
                                             backgroundColor: '#45a049',
                                         },
                                     }}
-                                    
+
                                 >
                                     Import
                                 </Button>

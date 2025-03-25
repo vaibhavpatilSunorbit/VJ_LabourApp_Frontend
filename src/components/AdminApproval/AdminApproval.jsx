@@ -1,31 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  CircularProgress,
   Grid,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchBar';
-import Loading from "../Loading/Loading";
-import { API_BASE_URL } from "../../Data";
-import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import CircleIcon from '@mui/icons-material/Circle';
-import SearchIcon from '@mui/icons-material/Search';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { useUser } from '../../UserContext/UserContext';
-import dayjs from 'dayjs';
-// import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
-// toast.configure();
+import axios from 'axios';
+import { API_BASE_URL } from '../../Data';
 
 const AdminApproval = ({ onFormSubmit }) => {
   const location = useLocation();
@@ -45,71 +30,101 @@ const AdminApproval = ({ onFormSubmit }) => {
   const [approvedWagesCount, setApprovedWagesCount] = useState(0);
   const [rejectedWagesCount, setRejectedWagesCount] = useState(0);
 
-  // const [pendingCompanyTransfer, setPendingCompanyTransfer] = useState(0);
-  // const [approvedCompanyTransfer, setApprovedCompanyTransfer] = useState(0);
-  // const [rejectedCompanyTransfer, setRejectedCompanyTransfer] = useState(0);
+  const [error, setError] = useState('');
+   // Fetch Attendance Approval counts
+   const fetchAttendance = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/labours/LabourAttendanceApproval`);
+      const pending = response.data.filter(labour => labour.ApprovalStatus === "Pending").length;
+      const approved = response.data.filter(labour => labour.ApprovalStatus === "Approved").length;
+      const rejected = response.data.filter(labour => labour.ApprovalStatus === "Rejected").length;
+      setPendingAttendance(pending);
+      setApprovedAttendance(approved);
+      setRejectedAttendance(rejected);
+    } catch (err) {
+      setError('Error fetching attendance approvals.');
+    }
+  };
 
+  // Fetch Wages Approval counts
+  const fetchWages = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/labours/wages/adminApprovals`);
+      const pending = response.data.filter(labour => labour.ApprovalStatus === "Pending").length;
+      const approved = response.data.filter(labour => labour.ApprovalStatus === "Approved").length;
+      const rejected = response.data.filter(labour => labour.ApprovalStatus === "Rejected").length;
+      setPendingWagesCount(pending);
+      setApprovedWagesCount(approved);
+      setRejectedWagesCount(rejected);
+    } catch (err) {
+      setError('Error fetching wages approvals.');
+    }
+  };
+
+  // Fetch Variable Pay Approval counts
+  const fetchVariablePay = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/insentive/admin/getVariablePayAdminApprovals`);
+      const pending = response.data.filter(labour => labour.ApprovalStatusPay === "AdminPending").length;
+      const approved = response.data.filter(labour => labour.ApprovalStatusPay === "Approved").length;
+      const rejected = response.data.filter(labour => labour.ApprovalStatusPay === "Rejected").length;
+      setPendingVariablePay(pending);
+      setApprovedVariablePay(approved);
+      setRejectedVariablePay(rejected);
+    } catch (err) {
+      setError('Error fetching variable pay approvals.');
+    }
+  };
+
+  // Fetch Site Transfer Approval counts
+  const fetchSiteTransfer = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/getAdminSiteTransferApproval`);
+      const pending = response.data.filter(labour => labour.adminStatus === "Pending").length;
+      const approved = response.data.filter(labour => labour.adminStatus === "Approved").length;
+      const rejected = response.data.filter(labour => labour.adminStatus === "Rejected").length;
+      setPendingSiteTransfer(pending);
+      setApprovedSiteTransfer(approved);
+      setRejectedSiteTransfer(rejected);
+    } catch (err) {
+      setError('Error fetching site transfer approvals.');
+    }
+  };
+
+  // Use a single useEffect to fetch all data when component mounts
   useEffect(() => {
-    // Get counts from localStorage
-    const pending = localStorage.getItem('pendingSiteTransfer');
-    const approved = localStorage.getItem('approvedSiteTransfer');
-    const rejected = localStorage.getItem('rejectedSiteTransfer');
-
-    // Update state with the retrieved values
-    setPendingSiteTransfer(pending || 0);
-    setApprovedSiteTransfer(approved || 0);
-    setRejectedSiteTransfer(rejected || 0);
+    fetchAttendance();
+    fetchWages();
+    fetchVariablePay();
+    fetchSiteTransfer();
   }, []);
-
-  useEffect(() => {
-    // Get counts from localStorage
-    const pending = localStorage.getItem('pendingAttendance');
-    const approved = localStorage.getItem('approvedAttendance');
-    const rejected = localStorage.getItem('rejectedAttendance');
-
-    // Update state with the retrieved values
-    setPendingAttendance(pending || 0);
-    setApprovedAttendance(approved || 0);
-    setRejectedAttendance(rejected || 0);
-  }, []);
-
-  useEffect(() => {
-    // Get counts from localStorage
-    const pending = localStorage.getItem('pendingVariablePay');
-    const approved = localStorage.getItem('approvedVariablePay');
-    const rejected = localStorage.getItem('rejectedVariablePay');
-
-    // Update state with the retrieved values
-    setPendingVariablePay(pending || 0);
-    setApprovedVariablePay(approved || 0);
-    setRejectedVariablePay(rejected || 0);
-  }, []);
-
-
-  useEffect(() => {
-    // Get counts from localStorage
-    const pending = localStorage.getItem('pendingWagesCount');
-    const approved = localStorage.getItem('approvedWagesCount');
-    const rejected = localStorage.getItem('rejectedWagesCount');
-
-    // Update state with the retrieved values
-    setPendingWagesCount(pending || 0);
-    setApprovedWagesCount(approved || 0);
-    setRejectedWagesCount(rejected || 0);
-  }, []);
-
 
   // useEffect(() => {
   //   // Get counts from localStorage
-  //   const pending = localStorage.getItem('pendingCompanyTransfer');
-  //   const approved = localStorage.getItem('approvedCompanyTransfer');
-  //   const rejected = localStorage.getItem('rejectedCompanyTransfer');
+  //   const pending = localStorage.getItem('pendingSiteTransfer');
+  //   const approved = localStorage.getItem('approvedSiteTransfer');
+  //   const rejected = localStorage.getItem('rejectedSiteTransfer');
 
   //   // Update state with the retrieved values
-  //   setPendingCompanyTransfer(pending || 0);
-  //   setApprovedCompanyTransfer(approved || 0);
-  //   setRejectedCompanyTransfer(rejected || 0);
+  //   setPendingSiteTransfer(pending || 0);
+  //   setApprovedSiteTransfer(approved || 0);
+  //   setRejectedSiteTransfer(rejected || 0);
   // }, []);
+
+  // useEffect(() => {
+  //   // Get counts from localStorage
+  //   const pending = localStorage.getItem('pendingAttendance');
+  //   const approved = localStorage.getItem('approvedAttendance');
+  //   const rejected = localStorage.getItem('rejectedAttendance');
+
+  //   // Update state with the retrieved values
+  //   setPendingAttendance(pending || 0);
+  //   setApprovedAttendance(approved || 0);
+  //   setRejectedAttendance(rejected || 0);
+  // }, []);
+
+
+
 
   return (
     <Grid container spacing={8} sx={{ mt: 0, px: 8 }}>
@@ -260,43 +275,7 @@ const AdminApproval = ({ onFormSubmit }) => {
           </Card>
         </Link>
       </Grid>
-{/*       
-      <Grid item xs={12} sm={6} md={4}>
-        <Link to={'/adminApproval/CompanyTransferApproval'} style={{ textDecoration: 'none' }}>
-          <Card
-            sx={{
-              backgroundColor: '#e6eefa',
-              boxShadow: 'none',
-              minHeight: '220px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              '&:hover': {
-                transform: 'scale(1.03)',
-                transition: 'transform 0.3s, box-shadow 0.3s',
-              },
-            }}
-          >
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" component="div" sx={{ color: '#10294c' }}>
-              Company Transfer Approval
-              </Typography>
-              <Box
-                variant="body2"
-                sx={{
-                  fontSize: { xs: '25px', md: '45px' },
-                  color: '#10294c',
-                  fontWeight: "600"
-                }}
-              >
-                <Typography>Pending: {pendingCompanyTransfer}</Typography>
-                <Typography>Approved: {approvedCompanyTransfer}</Typography>
-                <Typography>Rejected: {rejectedCompanyTransfer}</Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Link>
-      </Grid> */}
+      
     </Grid>
   );
 };

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Tab, Typography,
-    InputAdornment, IconButton, Modal, Grid
+    Button, Box, Select, MenuItem, Typography, Modal, Grid
 } from '@mui/material';
 import { API_BASE_URL } from "../../../Data";
 import { ToastContainer, toast } from 'react-toastify';
@@ -19,8 +18,6 @@ const ExportMonthlyPayroll = () => {
     const [businessUnits, setBusinessUnits] = useState([]);
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
     const [projectName, setProjectName] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
     // const [selectedMonth, setMonth] = useState('');
@@ -81,33 +78,33 @@ const ExportMonthlyPayroll = () => {
             toast.error('Please select a Month.');
             return;
         }
-        
+
         try {
             const response = await axios.get(`${API_BASE_URL}/insentive/exportMonthlyPayrollExcel`, {
-                params: { projectName, month: selectedMonth, year: selectedYear  },
+                params: { projectName, month: selectedMonth, year: selectedYear },
                 responseType: 'blob',
             });
-    
+
             const blob = new Blob([response.data], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             });
-    
+
             const fileName = projectName === "all"
                 ? `Approved_Labours_${selectedMonth}_${selectedYear}.xlsx`
                 : `MonthlyPayroll_${projectName}_${selectedMonth}_${selectedYear}.xlsx`;
-    
+
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
             link.setAttribute('download', fileName);
             document.body.appendChild(link);
             link.click();
-    
+
             link.parentNode.removeChild(link);
-    
+
             toast.success('Monthly Payroll exported successfully!');
         } catch (error) {
             console.error('Error exporting data:', error);
-    
+
             if (error.response && error.response.data && error.response.data.message) {
                 toast.error(`Export Error: ${error.response.data.message}`);
             } else {
@@ -115,7 +112,7 @@ const ExportMonthlyPayroll = () => {
             }
         }
     };
-    
+
 
 
     const handleOpen = () => setOpen(true);
@@ -123,7 +120,6 @@ const ExportMonthlyPayroll = () => {
 
     return (
         <>
-            {/* Trigger Button */}
             <Button
                 onClick={handleOpen}
                 sx={{
@@ -145,7 +141,6 @@ const ExportMonthlyPayroll = () => {
                 <Typography variant="body2">Export</Typography>
             </Button>
 
-            {/* Modal */}
             <Modal
                 open={open}
                 onClose={handleClose}
@@ -166,7 +161,6 @@ const ExportMonthlyPayroll = () => {
                         outline: 'none',
                     }}
                 >
-                    {/* Modal Title */}
                     <Typography
                         id="export-wages-title"
                         variant="h6"
@@ -176,9 +170,7 @@ const ExportMonthlyPayroll = () => {
                         Export Wages Data
                     </Typography>
 
-                    {/* Form Fields */}
                     <Box component="form" display="flex" flexDirection="column" gap={2}>
-                        {/* Business Unit Dropdown */}
                         <Box>
                             <Typography
                                 component="label"
@@ -203,7 +195,7 @@ const ExportMonthlyPayroll = () => {
                                 <MenuItem value="" disabled>
                                     Select Business Unit
                                 </MenuItem>
-                                <MenuItem value="all">All Projects</MenuItem> {/* Add "All Projects" Option */}
+                                <MenuItem value="all">All Projects</MenuItem>
                                 {businessUnits.map((unit) => (
                                     <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
                                         {unit.BusinessUnit}
@@ -211,8 +203,6 @@ const ExportMonthlyPayroll = () => {
                                 ))}
                             </Select>
                         </Box>
-
-                        {/* Month Selector */}
                         <Box>
                             <Typography
                                 component="label"
@@ -234,7 +224,7 @@ const ExportMonthlyPayroll = () => {
                                     paddingBottom: '2px',
                                 }}
                             >
-                                 <MenuItem value="" disabled>
+                                <MenuItem value="" disabled>
                                     Select Month
                                 </MenuItem>
                                 {months.map((month) => (
@@ -245,8 +235,8 @@ const ExportMonthlyPayroll = () => {
                             </Select>
 
                             <Select
-                                 value={selectedYear}
-                                 onChange={(e) => setSelectedYear(e.target.value)}
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(e.target.value)}
                                 displayEmpty
                                 fullWidth
                                 variant="outlined"
@@ -256,7 +246,7 @@ const ExportMonthlyPayroll = () => {
                                     paddingBottom: '2px',
                                 }}
                             >
-                                 <MenuItem value="" disabled>
+                                <MenuItem value="" disabled>
                                     Select Year
                                 </MenuItem>
                                 {[2024, 2025].map((year) => (
@@ -267,7 +257,6 @@ const ExportMonthlyPayroll = () => {
                             </Select>
                         </Box>
 
-                        {/* Buttons */}
                         <Grid container spacing={2} justifyContent="flex-end">
                             <Grid item>
                                 <Button

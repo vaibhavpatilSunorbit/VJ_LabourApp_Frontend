@@ -12,7 +12,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions,IconButton, Select,MenuItem
+    DialogActions, IconButton, Select, MenuItem
 } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -123,27 +123,27 @@ const PeopleEditDetails = () => {
 
 
     const handleOpenModal = (url) => {
-      setModalImageSrc(url);
-      setOpenModal(true);
+        setModalImageSrc(url);
+        setOpenModal(true);
     };
-  
+
     const handleCloseModal = () => {
-      setOpenModal(false);
-      setModalImageSrc('');
+        setOpenModal(false);
+        setModalImageSrc('');
     };
-  
+
     const formData = {
         "Upload Induction Document": labourDetails.uploadInductionDoc ? (
-          <Button color="primary" onClick={() => handleOpenModal(labourDetails.uploadInductionDoc)}>View Induction Photo</Button>
+            <Button color="primary" onClick={() => handleOpenModal(labourDetails.uploadInductionDoc)}>View Induction Photo</Button>
         ) : "N/A",
         "Upload AadhaarFront Document": labourDetails.uploadAadhaarFront ? (
-          <Button color="primary" onClick={() => handleOpenModal(labourDetails.uploadAadhaarFront)}>View Aadhaar Photo</Button>
+            <Button color="primary" onClick={() => handleOpenModal(labourDetails.uploadAadhaarFront)}>View Aadhaar Photo</Button>
         ) : "N/A",
         "Upload IdProof Document": labourDetails.uploadIdProof ? (
-          <Button color="primary" onClick={() => handleOpenModal(labourDetails.uploadIdProof)}>View Id Proof Photo</Button>
+            <Button color="primary" onClick={() => handleOpenModal(labourDetails.uploadIdProof)}>View Id Proof Photo</Button>
         ) : "N/A",
         "Upload AadhaarBack Document": labourDetails.uploadAadhaarBack ? (
-          <Button color="primary" onClick={() => handleOpenModal(labourDetails.uploadAadhaarBack)}>View Aadhaar Photo</Button>
+            <Button color="primary" onClick={() => handleOpenModal(labourDetails.uploadAadhaarBack)}>View Aadhaar Photo</Button>
         ) : "N/A",
     };
 
@@ -235,107 +235,107 @@ const PeopleEditDetails = () => {
     };
 
 
- 
 
 
-     // Fetch attendance data based on selected labour, month, and year
-     const fetchAttendance = async () => {
+
+    // Fetch attendance data based on selected labour, month, and year
+    const fetchAttendance = async () => {
         // if (!selectedLabourId || !selectedMonth || !selectedYear) return;
-    
+
         setLoading(true);
         try {
-          const response = await axios.get(
-            `${API_BASE_URL}/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
-            { params: { month: selectedMonth, year: selectedYear } }
-          );
-    
-          const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-          const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
-            const date = new Date(selectedYear, selectedMonth - 1, i + 1)
-              .toISOString()
-              .split("T")[0];
-            const record = response.data.find(
-              (att) => att.Date.split("T")[0] === date
+            const response = await axios.get(
+                `${API_BASE_URL}/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
+                { params: { month: selectedMonth, year: selectedYear } }
             );
-            return {
-              date,
-              status: record ? record.Status : "NA",
-            };
-          });
-    
-          setAttendanceData(fullMonthAttendance);
-          setLoading(false);
+
+            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+            const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
+                const date = new Date(selectedYear, selectedMonth - 1, i + 1)
+                    .toISOString()
+                    .split("T")[0];
+                const record = response.data.find(
+                    (att) => att.Date.split("T")[0] === date
+                );
+                return {
+                    date,
+                    status: record ? record.Status : "NA",
+                };
+            });
+
+            setAttendanceData(fullMonthAttendance);
+            setLoading(false);
         } catch (error) {
-          console.error("Error fetching attendance:", error);
-          setLoading(false);
+            console.error("Error fetching attendance:", error);
+            setLoading(false);
         }
-      };
+    };
 
 
     const generateCalendar = (attendanceData, year, month) => {
         const daysInMonth = new Date(year, month, 0).getDate();
         const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
-    
+
         const calendar = [];
         let dayCounter = 1;
-    
+
         for (let row = 0; row < 6; row++) {
-          const week = [];
-          for (let col = 0; col < 7; col++) {
-            if (row === 0 && col < firstDayOfWeek) {
-              week.push({ day: null, status: null });
-            } else if (dayCounter > daysInMonth) {
-              week.push({ day: null, status: null });
-            } else {
-              const currentDay = attendanceData.find(
-                (data) => new Date(data.date).getDate() === dayCounter
-              );
-              week.push({ day: dayCounter, status: currentDay ? currentDay.status : "NA" });
-              dayCounter++;
+            const week = [];
+            for (let col = 0; col < 7; col++) {
+                if (row === 0 && col < firstDayOfWeek) {
+                    week.push({ day: null, status: null });
+                } else if (dayCounter > daysInMonth) {
+                    week.push({ day: null, status: null });
+                } else {
+                    const currentDay = attendanceData.find(
+                        (data) => new Date(data.date).getDate() === dayCounter
+                    );
+                    week.push({ day: dayCounter, status: currentDay ? currentDay.status : "NA" });
+                    dayCounter++;
+                }
             }
-          }
-          calendar.push(week);
-          if (dayCounter > daysInMonth) break;
+            calendar.push(week);
+            if (dayCounter > daysInMonth) break;
         }
         return calendar;
-      };
+    };
 
     const calendar = generateCalendar(attendanceData, selectedYear, selectedMonth);
-      const handleModalClose = () => setOpen(false);
+    const handleModalClose = () => setOpen(false);
 
     const handleModalCloseCalender = () => {
         setOpen(false)
         setAttendanceData([]);
     };
 
-    
+
     const handleModalOpenCalenderAttendance = (selectedLabourId) => {
         if (selectedLabourId && selectedLabourId) {
-          setSelectedLabourId(selectedLabourId);
-          setOpen(true);
-          fetchAttendance();
+            setSelectedLabourId(selectedLabourId);
+            setOpen(true);
+            fetchAttendance();
         } else {
-          console.error("LabourID is null or undefined for the selected labour.");
+            console.error("LabourID is null or undefined for the selected labour.");
         }
-      };
-
-    //   const [modalOpenNetpay, setModalOpenNetpay] = useState(false);
-      const handleModalOpenPayslip = (labourID) => {
-        if (labourID) {
-          setSelectedLabourId(labourID);
-          setShowMonthYearModal(true);
-        } else {
-          console.error("LabourID is null or undefined for the selected labour.");
-        }
-      };
-
-      const handleProceedToPayslip = () => {
-        setShowMonthYearModal(false); // Close selection modal
-        setModalOpenNetpay(true); 
-        
     };
 
-      const handleSidebarClick = (label) => {
+    //   const [modalOpenNetpay, setModalOpenNetpay] = useState(false);
+    const handleModalOpenPayslip = (labourID) => {
+        if (labourID) {
+            setSelectedLabourId(labourID);
+            setShowMonthYearModal(true);
+        } else {
+            console.error("LabourID is null or undefined for the selected labour.");
+        }
+    };
+
+    const handleProceedToPayslip = () => {
+        setShowMonthYearModal(false); // Close selection modal
+        setModalOpenNetpay(true);
+
+    };
+
+    const handleSidebarClick = (label) => {
         switch (label) {
             case "Generate Document":
                 setIsDialogOpen(true); // Open the modal when the "Generate Document" button is clicked
@@ -366,7 +366,7 @@ const PeopleEditDetails = () => {
     const handleClosePaySlip = () => {
         setSelectedLabourId(null);
         setOpen(false)
-      };
+    };
     const LegendItem = ({ color, text }) => {
         return (
             <Box display="flex" alignItems="center" mx={1} mb={1}>
@@ -404,7 +404,7 @@ const PeopleEditDetails = () => {
             {day || ''}
         </Box>
     );
- 
+
 
     return (
         <Box sx={{ display: "flex", height: "100vh" }}>
@@ -893,7 +893,6 @@ const PeopleEditDetails = () => {
                             </Typography>
                         </Box>
                         <Box>
-                            {/* Inline SVG Icon */}
                             <svg
                                 width="19"
                                 height="16"
@@ -909,14 +908,12 @@ const PeopleEditDetails = () => {
                         </Box>
                     </Box>
                 ))}
-                {/* Conditional rendering of the selected component */}
                 {selectedComponent && (
                     <Box sx={{ flexGrow: 1, padding: 4 }}>
                         <Typography variant="h6">{selectedComponent}</Typography>
                     </Box>
                 )}
 
-                {/* Dialog for Generate Document */}
                 <Dialog
                     open={isDialogOpen}
                     onClose={handleDialogClose}
@@ -955,327 +952,233 @@ const PeopleEditDetails = () => {
                 </Dialog>
 
 
-                {/* <Box sx={{ display: "flex", height: "100vh" }}>
-      <ToastContainer />
-      <Box
-        sx={{
-          flex: 3,
-          overflowY: "auto", // Enable scrolling
-          padding: 3,
-          bgcolor: "#f9f9f9", // Light background
-          borderRight: "1px solid #ddd", // Border for separation
-          height: "84vh", // Full-height scrolling container
-        }}
-      >
-        <FormControl>
-          <InputLabel>Month</InputLabel>
-          <Select
-            value={selectedMonth}
-            onChange={handleMonthChange}
-            label="Month"
-          >
-            {Array.from({ length: 12 }, (_, index) => (
-              <MenuItem key={index} value={index + 1}>
-                {new Date(0, index).toLocaleString("default", { month: "long" })}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl>
-          <InputLabel>Year</InputLabel>
-          <Select
-            value={selectedYear}
-            onChange={handleYearChange}
-            label="Year"
-          >
-            {Array.from({ length: 10 }, (_, index) => (
-              <MenuItem key={index} value={new Date().getFullYear() - index}>
-                {new Date().getFullYear() - index}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <Button onClick={handleModalOpenCalenderAttendance}>View Attendance</Button>
-
-        <Dialog open={openModal} onClose={handleCloseModal}>
-          <DialogTitle>
-            <IconButton
-              aria-label="close"
-              onClick={handleCloseModal}
-              style={{ position: "absolute", right: 8, top: 8 }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent>
-            {loading ? (
-              <CircularProgress />
-            ) : (
-              <Grid container justifyContent="center" spacing={1}>
-                {calendar.map((week, rowIndex) => (
-                  <Grid container justifyContent="center" key={rowIndex}>
-                    {week.map((day, colIndex) => (
-                      <Box
-                        key={colIndex}
-                        sx={{
-                          backgroundColor: statusColors[day.status] || "#E0E0E0",
-                          color: day.status ? "#fff" : "#000",
-                          margin: "6px",
-                          padding: "4px",
-                          width: 40,
-                          height: 40,
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          borderRadius: "8px",
-                          fontWeight: "bold",
-                          boxSizing: "border-box",
-                        }}
-                      >
-                        {day.day || ""}
-                      </Box>
-                    ))}
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </DialogContent>
-        </Dialog>
-      </Box>
-    </Box> */}
 
                 <Box sx={{ flex: 3, overflowY: "auto", padding: 3, bgcolor: "#f9f9f9", borderRight: "1px solid #ddd", height: "84vh" }}>
-                <Modal open={open} onClose={handleModalCloseCalender}>
-                <Box
-                    sx={{
-                        width: 500,
-                        margin: '5% auto',
-                        padding: 3,
-                        backgroundColor: '#FFFFFF',
-                        borderRadius: '12px',
-                        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
-                        textAlign: 'center',
-                        position: 'relative',
-                    }}
-                >
-                    <IconButton
-                        aria-label="close"
-                        onClick={handleModalCloseCalender}
-                        sx={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 8,
-                            color: '#FFF',
-                            backgroundColor: '#ff0000b5',
-                            borderRadius: '20%',
-                            padding: '5px',
-                            '&:hover': {
-                                backgroundColor: '#ff0000de',
-                            },
-                        }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                    <Typography variant="h6" mb={0} fontWeight="bold">
-                        Attendance for Labour ID: {selectedLabourId}
-                    </Typography>
+                    <Modal open={open} onClose={handleModalCloseCalender}>
+                        <Box
+                            sx={{
+                                width: 500,
+                                margin: '5% auto',
+                                padding: 3,
+                                backgroundColor: '#FFFFFF',
+                                borderRadius: '12px',
+                                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
+                                textAlign: 'center',
+                                position: 'relative',
+                            }}
+                        >
+                            <IconButton
+                                aria-label="close"
+                                onClick={handleModalCloseCalender}
+                                sx={{
+                                    position: 'absolute',
+                                    top: 8,
+                                    right: 8,
+                                    color: '#FFF',
+                                    backgroundColor: '#ff0000b5',
+                                    borderRadius: '20%',
+                                    padding: '5px',
+                                    '&:hover': {
+                                        backgroundColor: '#ff0000de',
+                                    },
+                                }}
+                            >
+                                <CloseIcon />
+                            </IconButton>
+                            <Typography variant="h6" mb={0} fontWeight="bold">
+                                Attendance for Labour ID: {selectedLabourId}
+                            </Typography>
 
-                    <Box>
-                        <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-                            {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' })} {selectedYear}
-                        </Typography>
+                            <Box>
+                                <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+                                    {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' })} {selectedYear}
+                                </Typography>
 
-                        <Grid container justifyContent="center" spacing={0} mb={1}>
-                            {weekdays.map((day, index) => (
-                                <CalendarBox key={index} day={day} status={null} margin="4px" padding="0" />
-                            ))}
-                        </Grid>
-                        <Grid container justifyContent="center">
-                            {calendar.map((week, rowIndex) => (
-                                <Grid container justifyContent="center" key={rowIndex}>
-                                    {week.map((day, colIndex) => (
-                                        <CalendarBox key={colIndex} day={day.day} status={day.status || 'NA'} />
+                                <Grid container justifyContent="center" spacing={0} mb={1}>
+                                    {weekdays.map((day, index) => (
+                                        <CalendarBox key={index} day={day} status={null} margin="4px" padding="0" />
                                     ))}
                                 </Grid>
-                            ))}
-                        </Grid>
-                    </Box>
-                    <Box mt={2}>
-                        <Typography variant="subtitle2" fontWeight="bold" mb={1}>
-                            Legend:
-                        </Typography>
-                        <Grid container justifyContent="center" spacing={1}>
-                            <LegendItem color="#4CAF50" text="P - Present" />
-                            <LegendItem color="#FF6F00" text="A - Absent" />
-                            <LegendItem color="#8236BC" text="H - Holiday" />
-                            <LegendItem color="#F44336" text="HD - Half Day" />
-                            <LegendItem color="#005cff" text="MP - Miss Punch" />
-                            <LegendItem color="#E0E0E0" text="NA - No Data" />
-                        </Grid>
-                    </Box>
+                                <Grid container justifyContent="center">
+                                    {calendar.map((week, rowIndex) => (
+                                        <Grid container justifyContent="center" key={rowIndex}>
+                                            {week.map((day, colIndex) => (
+                                                <CalendarBox key={colIndex} day={day.day} status={day.status || 'NA'} />
+                                            ))}
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            </Box>
+                            <Box mt={2}>
+                                <Typography variant="subtitle2" fontWeight="bold" mb={1}>
+                                    Legend:
+                                </Typography>
+                                <Grid container justifyContent="center" spacing={1}>
+                                    <LegendItem color="#4CAF50" text="P - Present" />
+                                    <LegendItem color="#FF6F00" text="A - Absent" />
+                                    <LegendItem color="#8236BC" text="H - Holiday" />
+                                    <LegendItem color="#F44336" text="HD - Half Day" />
+                                    <LegendItem color="#005cff" text="MP - Miss Punch" />
+                                    <LegendItem color="#E0E0E0" text="NA - No Data" />
+                                </Grid>
+                            </Box>
+                        </Box>
+                    </Modal>
                 </Box>
-            </Modal>
-            </Box>
             </Box>
 
 
             <Box>
-      {/* Sidebar */}
-      {/* <Button onClick={() => handleSidebarClick("View Documents")}>View Documents</Button> */}
 
+                <Modal open={showMonthYearModal} onClose={() => setShowMonthYearModal(false)}>
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            bgcolor: "white",
+                            boxShadow: 24,
+                            p: 4,
+                            borderRadius: 2,
+                            width: 300,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                        }}
+                    >
+                        <Typography variant="h6">Select Month & Year</Typography>
 
- {/* Month & Year Selection Modal */}
- <Modal open={showMonthYearModal} onClose={() => setShowMonthYearModal(false)}>
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        bgcolor: "white",
-                        boxShadow: 24,
-                        p: 4,
-                        borderRadius: 2,
-                        width: 300,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 2,
-                    }}
+                        <Select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled>
+                                Select Month
+                            </MenuItem>
+                            {[...Array(12)].map((_, i) => (
+                                <MenuItem key={i + 1} value={i + 1}>
+                                    {new Date(0, i).toLocaleString("default", { month: "long" })}
+                                </MenuItem>
+                            ))}
+                        </Select>
+
+                        <Select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled>
+                                Select Year
+                            </MenuItem>
+                            {[2023, 2024, 2025].map((year) => (
+                                <MenuItem key={year} value={year}>
+                                    {year}
+                                </MenuItem>
+                            ))}
+                        </Select>
+
+                        <Button variant="contained" onClick={handleProceedToPayslip}>
+                            Proceed to Payslip
+                        </Button>
+                    </Box>
+                </Modal>
+                {modalOpenNetpay && (
+                    <ViewPaySlip
+                        open={modalOpenNetpay}
+                        labourID={selectedLabourId}
+                        selectedMonth={selectedMonth}
+                        setSelectedMonth={setSelectedMonth}
+                        selectedYear={selectedYear}
+                        setSelectedYear={setSelectedYear}
+                        onClose={handleClosePaySlip}
+                    />
+                )}
+
+                <Modal
+                    modalOpenNetpay={showDocuments}
+                    onClose={() => setShowDocuments(false)}
+                    aria-labelledby="view-documents-modal"
                 >
-                    <Typography variant="h6">Select Month & Year</Typography>
-
-                    <Select
-                        value={selectedMonth}
-                        onChange={(e) => setSelectedMonth(e.target.value)}
-                        displayEmpty
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            width: {
+                                xs: "90%", // Mobile screens
+                                sm: "60%", // Tablet screens
+                                md: "60%", // Laptop screens
+                                lg: "50%", // Large screens
+                            },
+                            bgcolor: "background.paper",
+                            borderRadius: 2,
+                            boxShadow: 24,
+                            p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
+                            maxHeight: "85vh",
+                            overflowY: "auto",
+                            "&::-webkit-scrollbar": {
+                                width: "8px",
+                            },
+                            "&::-webkit-scrollbar-track": {
+                                backgroundColor: "#f1f1f1",
+                            },
+                            "&::-webkit-scrollbar-thumb": {
+                                backgroundColor: "#888",
+                                borderRadius: "4px",
+                            },
+                        }}
                     >
-                        <MenuItem value="" disabled>
-                            Select Month
-                        </MenuItem>
-                        {[...Array(12)].map((_, i) => (
-                            <MenuItem key={i + 1} value={i + 1}>
-                                {new Date(0, i).toLocaleString("default", { month: "long" })}
-                            </MenuItem>
+                        {/* Close Icon */}
+                        <IconButton
+                            onClick={() => setShowDocuments(false)}
+                            sx={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                color: "gray",
+                            }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                        <Typography variant="h6">Documents</Typography>
+                        {Object.keys(formData).map((key) => (
+                            <Box key={key} mb={1.5} sx={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                            }}>
+                                <Typography variant="body1">{key}:</Typography>
+                                <Box>{formData[key]}</Box>
+                            </Box>
                         ))}
-                    </Select>
+                    </Box>
+                </Modal>
 
-                    <Select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        displayEmpty
-                    >
-                        <MenuItem value="" disabled>
-                            Select Year
-                        </MenuItem>
-                        {[2023, 2024, 2025].map((year) => (
-                            <MenuItem key={year} value={year}>
-                                {year}
-                            </MenuItem>
-                        ))}
-                    </Select>
-
-                    <Button variant="contained" onClick={handleProceedToPayslip}>
-                        Proceed to Payslip
-                    </Button>
-                </Box>
-            </Modal>
-        {modalOpenNetpay && (
-          <ViewPaySlip
-          open={modalOpenNetpay}
-          labourID={selectedLabourId}
-          selectedMonth={selectedMonth}
-          setSelectedMonth={setSelectedMonth}
-          selectedYear={selectedYear}
-          setSelectedYear={setSelectedYear}
-          onClose={handleClosePaySlip}
-          />
-        )}
-
-      <Modal
-        modalOpenNetpay={showDocuments}
-        onClose={() => setShowDocuments(false)}
-        aria-labelledby="view-documents-modal"
-      >
-        <Box
-           sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: {
-                xs: "90%", // Mobile screens
-                sm: "60%", // Tablet screens
-                md: "60%", // Laptop screens
-                lg: "50%", // Large screens
-            },
-            bgcolor: "background.paper",
-            borderRadius: 2,
-            boxShadow: 24,
-            p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
-            maxHeight: "85vh",
-            overflowY: "auto",
-            "&::-webkit-scrollbar": {
-                width: "8px",
-            },
-            "&::-webkit-scrollbar-track": {
-                backgroundColor: "#f1f1f1",
-            },
-            "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "#888",
-                borderRadius: "4px",
-            },
-        }}
-    >
-        {/* Close Icon */}
-        <IconButton
-            onClick={() => setShowDocuments(false)}
-            sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                color: "gray",
-            }}
-        >
-            <CloseIcon />
-        </IconButton>
-          <Typography variant="h6">Documents</Typography>
-          {Object.keys(formData).map((key) => (
-            <Box key={key} mb={1.5} sx={{
-                display:'flex', justifyContent:'space-between', alignItems:'center'
-            }}>
-              <Typography variant="body1">{key}:</Typography>
-              <Box>{formData[key]}</Box>
+                {/* Dialog to show the clicked document */}
+                <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
+                    <DialogTitle>
+                        <IconButton
+                            aria-label="close"
+                            onClick={handleCloseModal}
+                            style={{ position: "absolute", right: 8, top: 8 }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </DialogTitle>
+                    <DialogContent>
+                        {modalImageSrc && (
+                            <Box display="flex" justifyContent="center">
+                                <img
+                                    src={modalImageSrc}
+                                    alt="Document"
+                                    style={{ maxWidth: "100%", maxHeight: "80vh" }}
+                                />
+                            </Box>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </Box>
-          ))}
-        </Box>
-      </Modal>
-
-      {/* Dialog to show the clicked document */}
-      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseModal}
-            style={{ position: "absolute", right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          {modalImageSrc && (
-            <Box display="flex" justifyContent="center">
-              <img
-                src={modalImageSrc}
-                alt="Document"
-                style={{ maxWidth: "100%", maxHeight: "80vh" }}
-              />
-            </Box>
-          )}
-        </DialogContent>
-      </Dialog>
-    </Box>
 
 
 

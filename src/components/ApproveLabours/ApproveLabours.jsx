@@ -77,7 +77,6 @@ const ApproveLabours = () => {
 
         if (projectDeviceStatusRes.status === 200) {
           setProjectDeviceStatus(projectDeviceStatusRes.data);
-          // Set selected projects based on fetched data
           setSelectedProjects(projectDeviceStatusRes.data.map(item => item.ProjectID));
         } else {
           console.error('Failed to fetch project device status:', projectDeviceStatusRes.status);
@@ -102,7 +101,6 @@ const ApproveLabours = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // console.log('FormData before sending:', formData);
       const response = await axios.post(`${API_BASE_URL}/api/approveLabour`, formData);
       if (response.status === 200) {
         toast.success('Data submitted successfully');
@@ -191,7 +189,7 @@ const ApproveLabours = () => {
   };
 
   const getInputStyle = () => {
-    return { 
+    return {
       fontWeight: 400,
       fontSize: '16px',
       marginBottom: '8px',
@@ -221,11 +219,10 @@ const ApproveLabours = () => {
     transition: 'color 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms, transform 200ms cubic-bezier(0.0, 0, 0.2, 1) 0ms',
     color: 'rgba(0, 0, 0, 0.6)'
   };
-  
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Filter out already selected projects
   const availableProjectNames = projectNames.filter(
     project => !selectedProjects.includes(project.Id)
   );
@@ -274,14 +271,14 @@ const ApproveLabours = () => {
             </select>
           </div>
         </div>
-        <Button type="submit" variant="contained"  sx={{
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
-                              backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                            mt: isMobile ? 0 : 3
-                          }} className="submit-button" >
+        <Button type="submit" variant="contained" sx={{
+          backgroundColor: 'rgb(229, 255, 225)',
+          color: 'rgb(43, 217, 144)',
+          '&:hover': {
+            backgroundColor: 'rgb(229, 255, 225)',
+          },
+          mt: isMobile ? 0 : 3
+        }} className="submit-button" >
           Submit
         </Button>
       </form>
@@ -299,7 +296,7 @@ const ApproveLabours = () => {
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
-              <TableCell>Sr. No.</TableCell>
+                <TableCell>Sr. No.</TableCell>
                 <TableCell>Business Unit</TableCell>
                 <TableCell>Device Name</TableCell>
                 <TableCell>Device Location</TableCell>
@@ -314,9 +311,9 @@ const ApproveLabours = () => {
                   key={row.DeviceID}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
-                       <TableCell component="th" scope="row">
-              {(page * rowsPerPage) + index + 1}
-            </TableCell>
+                  <TableCell component="th" scope="row">
+                    {(page * rowsPerPage) + index + 1}
+                  </TableCell>
                   <TableCell component="th" scope="row">
                     {row.BusinessUnit}
                   </TableCell>
@@ -345,18 +342,17 @@ const ApproveLabours = () => {
         aria-describedby="modal-modal-description"
       >
         <Box sx={{ ...modalStyle, position: 'relative' }}>
-    {/* Close Button */}
-    <IconButton
-      aria-label="close"
-      onClick={handleCloseModal}
-      sx={{
-        position: 'absolute',
-        top: 8,
-        right: 8,
-      }}
-    >
-      <CloseIcon />
-    </IconButton>
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseModal}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
           <form onSubmit={handleModalSubmit}>
             <InputLabel id="new-project-name-label" style={inputLabelStyle}>
               Project Name{renderRequiredAsterisk(true)}
@@ -388,7 +384,7 @@ const ApproveLabours = () => {
                 <MenuItem key={device.DeviceId} value={device.DeviceId}>{device.DeviceSName}</MenuItem>
               ))}
             </Select>
-            <Button type="submit" variant="contained" color="primary" className="submit-button" sx={{mt:3}}>
+            <Button type="submit" variant="contained" color="primary" className="submit-button" sx={{ mt: 3 }}>
               Update
             </Button>
           </form>

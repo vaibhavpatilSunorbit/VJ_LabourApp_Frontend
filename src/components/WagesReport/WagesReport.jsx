@@ -72,7 +72,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     const [selectedLabourIds, setSelectedLabourIds] = useState([]);
     const [selectedLabourWorkingHours, setSelectedLabourWorkingHours] = useState("");
     const [tabValue, setTabValue] = useState(0);
-    const [filteredIconLabours, setFilteredIconLabours] = useState([]);
     const [modalOpens, setModalOpens] = useState(true);
     const [perHourWages, setPerHourWages] = useState(null);
 
@@ -100,66 +99,20 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         user && user.projectIds ? JSON.parse(user.projectIds) : [];
     const allowedDepartmentIds =
         user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
-    // console.log('allowedProjectIds wages report:', allowedProjectIds);
-    // console.log('allowedDepartmentIds wages report:', allowedDepartmentIds);
-    // Use labourlist prop if available, otherwise use state labours
     const laboursSource =
         labourlist && labourlist.length > 0 ? labourlist : labours;
 
-    // const getProjectDescription = (projectId) => {
-    //     if (!Array.isArray(projectNames) || projectNames.length === 0) {
-    //         console.error('Projects array is empty or invalid:', projectNames);
-    //         return 'Unknown';
-    //     }
-    //     if (projectId === undefined || projectId === null) {
-    //         console.error('Project ID is undefined or null:', projectId);
-    //         return 'Unknown';
-    //     }
-    //     const project = projectNames.find(
-    //         (proj) => proj.id === Number(projectId)
-    //     );
-    //     return project ? project.Business_Unit : 'Unknown';
-    // };
 
-    // const getProjectDescription = (ProjectID) => {
-    //     if (!Array.isArray(projectNames) || projectNames.length === 0) {
-    //       console.log('projectNames empty');
-    //       return 'Unknown';
-    //     }
-    //     if (ProjectID === undefined || ProjectID === null || ProjectID === '') {
-    //       console.log('ProjectID invalid:', ProjectID);
-    //       return 'Unknown';
-    //     }
-    //     const project = projectNames.find(
-    //       (proj) => proj.Id === Number(ProjectID)
-    //     );
-    //     console.log(`For ProjectID ${ProjectID}, found project:`, project);
-    //     return project ? project.Business_Unit : 'Unknown';
-    //   };
-
-    // // Helper function to get the Department description
-    // const getDepartmentDescription = (departmentId) => {
-    //     if (!Array.isArray(departments) || departments.length === 0) {
-    //         return 'Unknown';
-    //     }
-    //     const department = departments.find(
-    //         (dept) => dept.Id === Number(departmentId)
-    //     );
-    //     return department ? department.Description : 'Unknown';
-    // };
-
-    // Function to fetch labours from API with optional filters
     const fetchLabours = async (filters = {}) => {
         setLoading(true);
         try {
             const response = await axios.get(
                 `${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`,
                 {
-                    params: filters, // e.g., { ProjectID: selectedBusinessUnit, DepartmentID: selectedDepartment }
+                    params: filters,
                 }
             );
             setLabours(response.data);
-            // console.log('response.data wages r', response.data)
 
         } catch (error) {
             console.error('Error fetching labours:', error);
@@ -174,7 +127,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     }, []);
 
     const handleApplyFilter = async () => {
-        // Build filter query parameters (only add filters with values)
         const params = {};
         if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
         if (selectedDepartment) params.department = selectedDepartment;
@@ -184,7 +136,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         }
     }
     const handleResetFilter = () => {
-        // Reset all filter fields and refetch the complete data set
         setSelectedBusinessUnit('');
         setSelectedDepartment('');
         setSelectedPayStructure('');
@@ -214,14 +165,12 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
 
 
     const handleWageChange = (labourId, value) => {
-        const daysInMonth = getDaysInMonth(); // Check number of days in the current month
-        const hoursPerShift = 8; // Assuming 8 hours per shift
+        const daysInMonth = getDaysInMonth();
+        const hoursPerShift = 8;
 
-        // Set daily wage
         setDailyWages(prev => ({ ...prev, [labourId]: value }));
         setPerDayWages(prev => ({ ...prev, [labourId]: value / hoursPerShift }));
 
-        // Calculate monthly and yearly wages based on days in the current month
         const monthly = value * daysInMonth;
         const yearly = monthly * 12;
 
@@ -229,45 +178,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         setYearlyWages(prev => ({ ...prev, [labourId]: yearly }));
     };
 
-    const handleOvertimeChange = (labourId, value) => {
-        const overtimeRate = perDayWages[labourId] || 0; // Calculate hourly overtime rate
-        const overtimeWages = overtimeRate * value; // Total overtime pay
 
-        setOvertime(prev => ({ ...prev, [labourId]: value }));
-        setTotalOvertimeWages(prev => ({ ...prev, [labourId]: overtimeWages }));
-    };
-
-    const handlePayStructureChange = (labourId, structure) => {
-        setPayStructure(prev => ({ ...prev, [labourId]: structure }));
-    };
-
-    const handleWeakelyOffChange = (labourId, value) => {
-        setWeakelyOff(prev => ({ ...prev, [labourId]: value }));
-    };
-
-    // const handleSubmit = async () => {
-    //     const formData = paginatedLabours.map(labour => ({
-    //         labourId: labour.LabourID,
-    //         payStructure: payStructure[labour.LabourID],
-    //         dailyWages: dailyWages[labour.LabourID],
-    //         perDayWages: perDayWages[labour.LabourID],
-    //         monthlyWages: monthlyWages[labour.LabourID],
-    //         yearlyWages: yearlyWages[labour.LabourID],
-    //         overtime: overtime[labour.LabourID],
-    //         totalOvertimeWages: totalOvertimeWages[labour.LabourID],
-    //         weakelyOff: weakelyOff[labour.LabourID],
-    //     }));
-
-    //     try {
-    //         await axios.post(`${API_BASE_URL}/labours/submitWages`, formData);
-    //         alert("Data submitted successfully!");
-    //     } catch (error) {
-    //         console.error("Error submitting data:", error);
-    //         alert("Failed to submit data.");
-    //     }
-    // };
-
-    // Utility function to get the number of days in the current month
     const getDaysInMonth = () => {
         const today = new Date();
         return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
@@ -291,34 +202,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         fetchBusinessUnits();
     }, []);
 
-    // const fetchBusinessUnits = async () => {
-    //     try {
-    //         const response = await fetch(`https://api.vjerp.com/api/businessUnit`, {
-    //             method: 'GET',
-    //             headers: {
-    //                 Authorization: `Bearer 20a763e266308b35fc75feca4b053d5ce8ea540dbdaa77ee13b1a5e7ce8aadcf`,
-    //             },
-    // mode: 'no-cors',
 
-    //         });
-
-    //         console.log('Response:', response); // Log response to debug
-
-    //         if (!response.ok) {
-    //             throw new Error(`HTTP error! status: ${response.status}, message: ${response.statusText}`);
-    //         }
-
-    //         const data = await response.json();
-    //         console.log('Business Units fetched:', data);
-    //         setBusinessUnits(data);
-    //     } catch (error) {
-    //         console.error('Error fetching business units:', error);
-    //         toast.error('Error fetching business units.');
-    //     }
-    // };
-    // useEffect(() => {
-    //     fetchBusinessUnits();
-    // }, []);
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
@@ -383,56 +267,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         }
     };
 
-    // const handleSave = async () => {
-    //     try {
-    //         const onboardName = user.name || null;
-    //         if (!payStructure || !effectiveDate) {
-    //             toast.error("Please fill in all required fields.");
-    //             return;
-    //         }
-    //         // Loop through each selected labour ID
-    //         for (const labourId of selectedLabourIds) {
-    //             const wageData = {
-    //                 labourId,
-    //                 payStructure,
-    //                 effectiveDate,
-    //                 // Only pass wage values for Daily Wages; otherwise, set them to null.
-    //                 dailyWages: payStructure === 'Daily Wages' ? (dailyWages || null) : null,
-    //                 monthlyWages: payStructure === 'Daily Wages' ? (monthlyWages || null) : null,
-    //                 yearlyWages: payStructure === 'Daily Wages' ? (yearlyWages || null) : null,
-    //                 overtime: payStructure === 'Daily Wages' ? (overtime || null) : null,
-    //                 totalOvertimeWages: payStructure === 'Daily Wages' ? (totalOvertimeWages || null) : null,
-    //                 // For Fixed Monthly Wages, pass fixedMonthlyWages and weeklyOff; others set to null.
-    //                 fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? (fixedMonthlyWages || null) : null,
-    //                 weeklyOff: payStructure === 'Fixed Monthly Wages' ? (weeklyOff || null) : null,
-    //                 wagesEditedBy: onboardName,
-    //             };
 
-    //             // Check if wages already exist for the current labour
-    //             const updateResponse =  await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData,
-    //                 { params: { labourId } }
-    //             );
-
-    //             if (updateResponse.status === 200) {
-    //                 toast.success('Labour details updated successfully.');
-    //               } else {
-    //                 toast.error('Failed to update labour details. Please try again.');
-    //               }
-    //             };
-    //         // Refresh the data, close the modal, and reset fields & selections
-    //         fetchLabours();
-    //         setModalOpen(false);
-    //         setWeeklyOff("");
-    //         setEffectiveDate("");
-    //         setFixedMonthlyWages(0);
-    //         setMonthlyWages(0);
-    //         setDailyWages(0);
-    //         setSelectedLabourIds([]);
-    //     } catch (error) {
-    //         console.error("Error saving wages:", error);
-    //         toast.error("Failed to save wages.");
-    //     }
-    // };
 
     const handleSave = async () => {
         setSaveLoader(true);
@@ -444,10 +279,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                 return;
             }
 
-            // Store promises for API calls
             const apiPromises = [];
 
-            // Loop through each selected labour ID
             for (const labourId of selectedLabourIds) {
                 const wageData = {
                     labourId,
@@ -464,19 +297,16 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                 };
 
                 try {
-                    // **Run upsertLabourMonthlyWages API and wait for WageID**
                     const upsertResponse = await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
 
                     if (upsertResponse.data && upsertResponse.data.WageID) {
                         wageData.wageId = upsertResponse.data.WageID; // Assign WageID
 
-                        // **Run sendWagesForApproval API using the received WageID**
                         apiPromises.push(axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData));
 
                         // **Wait for all sendWagesForApproval API calls to complete**
                         await Promise.all(apiPromises);
 
-                        // Show success message after all API calls complete
                         toast.info("Wages sent for admin approval.");
                     } else {
                         console.error(`Failed to get WageID for LabourID ${labourId}`);
@@ -548,35 +378,9 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     };
 
 
-    //    laboursSource.forEach((labour) => {
-    //         const labourProjectId = Number(labour.ProjectID);
-    //         const labourDepartmentId = Number(labour.DepartmentID);
-    //         const projectMatch =
-    //           allowedProjectIds.length > 0
-    //             ? allowedProjectIds.includes(labourProjectId)
-    //             : true;
-    //         const departmentMatch =
-    //           allowedDepartmentIds.length > 0
-    //             ? allowedDepartmentIds.includes(labourDepartmentId)
-    //             : true;
-    //         // For strict logging (both must match), you could use:
-    //         if (!projectMatch && !departmentMatch) {
-    //         //   console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
-    //         }
-    //       });
 
-    // Strict filtering: record must match allowed project and department IDs, and status "Approved"
     const getFilteredLaboursForTable = () => {
         let baseLabours = searchResults.length > 0 ? [...searchResults] : [...laboursSource];
-        // console.log("baseLabours : ", JSON.stringify(baseLabours));
-        // let baseLabours = rowsPerPage > 0
-        //   ? (searchResults.length > 0
-        //       ? searchResults
-        //       : (filteredIconLabours.length > 0
-        //           ? filteredIconLabours
-        //           : [...labours]))
-        //   : [];
-
         baseLabours = baseLabours.filter((labour) => {
             const labourProjectId = Number(labour.ProjectID);
             const labourDepartmentId = Number(labour.DepartmentID);
@@ -588,17 +392,11 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                 allowedDepartmentIds.length > 0
                     ? allowedDepartmentIds.includes(labourDepartmentId)
                     : true;
-            //   console.log('projectMatch', projectMatch, 'departmentMatch', departmentMatch);
-            // Return true if either matches
             return projectMatch || departmentMatch;
         });
-        // Ensure that only records with status "Approved" are included.
-        // baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
-        // console.log('Filtered Labours For Table:', JSON.stringify(baseLabours));
         return baseLabours || [];
     };
 
-    // Helper: Get project description
     const getProjectDescription = (ProjectID) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
         if (ProjectID === undefined || ProjectID === null || ProjectID === '') return 'Unknown';
@@ -606,7 +404,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         return project ? project.Business_Unit : 'Unknown';
     };
 
-    // Helper: Get department description
     const getDepartmentDescription = (departmentId) => {
         if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
         const department = departments.find((dept) => dept.Id === Number(departmentId));
@@ -615,33 +412,18 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
 
     const filteredLaboursForTable = getFilteredLaboursForTable();
 
-    // Reset page if current page is out of range after filtering
-    //   useEffect(() => {
-    //     if (page * rowsPerPage >= filteredLaboursForTable.length) {
-    //       setPage(0);
-    //     }
-    //   }, [filteredLaboursForTable, page, rowsPerPage]);
 
-    //   const paginatedLabours = filteredLaboursForTable.slice(
-    //     page * rowsPerPage,
-    //     rowsPerPage === -1
-    //       ? filteredLaboursForTable.length
-    //       : (page + 1) * rowsPerPage
-    //   );
-    //   console.log('Paginated Labours:', paginatedLabours);
-    // const displayedLabours = filteredLaboursForTable
-      const displayedLabours = filteredLaboursForTable.filter((labour) => {
+    const displayedLabours = filteredLaboursForTable.filter((labour) => {
         return (
-          getProjectDescription(labour.ProjectID) !== 'Unknown' &&
-          getDepartmentDescription(labour.DepartmentID) !== 'Unknown'
+            getProjectDescription(labour.ProjectID) !== 'Unknown' &&
+            getDepartmentDescription(labour.DepartmentID) !== 'Unknown'
         );
-      });
+    });
 
     const isAllSelected =
         filteredLaboursForTable.length > 0 &&
         filteredLaboursForTable.every((labour) => selectedLabourIds.includes(labour.LabourID));
 
-    // Handlers
     const handleSelectRow = (event, labourId, workingHours) => {
         if (event.target.checked) {
             setSelectedLabourIds((prev) => [...prev, labourId]);
@@ -799,10 +581,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                     className="custom-pagination"
                     rowsPerPageOptions={[25, 100, 900, { label: 'All', value: displayedLabours.length }]}
                     count={tabValue === 0 ? pendingCount : approvedCount}
-                    // rowsPerPageOptions={[25, 100, 900, { label: 'All', value: displayedLabours.length }]}
-                    // // rowsPerPageOptions={[ 100, { label: 'All', value: -1 }]}
-                    // // count={labours.length}
-                    // count={displayedLabours.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handlePageChange}
@@ -1129,7 +907,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         required
                     />
 
-                    {/* Dynamic Fields based on Pay Structure */}
                     {payStructure === 'DAILY WAGES' && (
                         <>
                             <TextField

@@ -159,14 +159,14 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
     }, [tabValue]);
 
     const allowedProjectIds =
-    user && user.projectIds ? JSON.parse(user.projectIds) : [];
-  const allowedDepartmentIds =
-    user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+        user && user.projectIds ? JSON.parse(user.projectIds) : [];
+    const allowedDepartmentIds =
+        user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
     // console.log('allowedProjectIds: SiteTransfer', allowedProjectIds);
     // console.log('allowedDepartmentIds:SiteTransfer', allowedDepartmentIds);
-  // Use labourlist prop if available, otherwise use state labours
-  const laboursSource =
-    labourlist && labourlist.length > 0 ? labourlist : labours;
+    // Use labourlist prop if available, otherwise use state labours
+    const laboursSource =
+        labourlist && labourlist.length > 0 ? labourlist : labours;
 
     // useEffect(() => {
     //   fetchLabours();
@@ -409,30 +409,30 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
 
     const labourCounts = useMemo(() => {
         const filteredLabours = labours.filter((labour) => {
-          const labourProjectId = Number(labour.projectName);
-          const labourDepartmentId = Number(labour.departmentId);
-          return (
-            allowedProjectIds.includes(labourProjectId) &&
-            allowedDepartmentIds.includes(labourDepartmentId)
-          );
+            const labourProjectId = Number(labour.projectName);
+            const labourDepartmentId = Number(labour.departmentId);
+            return (
+                allowedProjectIds.includes(labourProjectId) &&
+                allowedDepartmentIds.includes(labourDepartmentId)
+            );
         });
         return {
-          all: filteredLabours.filter((labour) => labour.status === 'Approved').length,
-          employees: filteredLabours.filter(
-            (labour) =>
-              labour.status === 'Approved' && labour.labourOwnership === 'VJ'
-          ).length,
-          contractors: filteredLabours.filter(
-            (labour) =>
-              labour.status === 'Approved' && labour.labourOwnership === 'CONTRACTOR'
-          ).length,
-          rejected: filteredLabours.filter((labour) =>
-            ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
-          ).length,
+            all: filteredLabours.filter((labour) => labour.status === 'Approved').length,
+            employees: filteredLabours.filter(
+                (labour) =>
+                    labour.status === 'Approved' && labour.labourOwnership === 'VJ'
+            ).length,
+            contractors: filteredLabours.filter(
+                (labour) =>
+                    labour.status === 'Approved' && labour.labourOwnership === 'CONTRACTOR'
+            ).length,
+            rejected: filteredLabours.filter((labour) =>
+                ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
+            ).length,
         };
-      }, [labours, allowedProjectIds, allowedDepartmentIds]);
-      
-      
+    }, [labours, allowedProjectIds, allowedDepartmentIds]);
+
+
     ///////////////////////////  Fetch Transfer labour from db Table  //////////////////////////////////////
 
 
@@ -459,121 +459,121 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
         navigate(`/peopleEditDetails`, { state: { labourId: labour.id } }); // Pass labour.id in the state
     };
 
-  
+
     laboursSource.forEach((labour) => {
         const labourProjectId = Number(labour.projectName);
         const labourDepartmentId = Number(labour.departmentId);
         const projectMatch =
-          allowedProjectIds.length > 0
-            ? allowedProjectIds.includes(labourProjectId)
-            : true;
+            allowedProjectIds.length > 0
+                ? allowedProjectIds.includes(labourProjectId)
+                : true;
         const departmentMatch =
-          allowedDepartmentIds.length > 0
-            ? allowedDepartmentIds.includes(labourDepartmentId)
-            : true;
+            allowedDepartmentIds.length > 0
+                ? allowedDepartmentIds.includes(labourDepartmentId)
+                : true;
         // For strict logging (both must match), you could use:
         if (!projectMatch && !departmentMatch) {
-          console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
+            console.log(`Record ${labour.LabourID} filtered out: ProjectID ${labourProjectId}, DepartmentID ${labourDepartmentId}`);
         }
-      });
-    
-      // Strict filtering: record must match allowed project and department IDs, and status "Approved"
-      const getFilteredLaboursForTable = () => {
+    });
+
+    // Strict filtering: record must match allowed project and department IDs, and status "Approved"
+    const getFilteredLaboursForTable = () => {
         // let baseLabours = [...laboursSource];
         let baseLabours = rowsPerPage > 0
-      ? (searchResults.length > 0
-          ? searchResults
-          : (filteredIconLabours.length > 0
-              ? filteredIconLabours
-              : [...labours]))
-      : [];
+            ? (searchResults.length > 0
+                ? searchResults
+                : (filteredIconLabours.length > 0
+                    ? filteredIconLabours
+                    : [...labours]))
+            : [];
 
         baseLabours = baseLabours.filter((labour) => {
-          const labourProjectId = Number(labour.projectName);
-          const labourDepartmentId = Number(labour.departmentId);
-          return (
-            allowedProjectIds.includes(labourProjectId) &&
-            allowedDepartmentIds.includes(labourDepartmentId)
-          );
+            const labourProjectId = Number(labour.projectName);
+            const labourDepartmentId = Number(labour.departmentId);
+            return (
+                allowedProjectIds.includes(labourProjectId) &&
+                allowedDepartmentIds.includes(labourDepartmentId)
+            );
         });
-      
+
         // Further filter by tab selection if necessary
         if (tabValue === 0) {
-          return baseLabours.filter(labour => labour.status === 'Approved');
+            return baseLabours.filter(labour => labour.status === 'Approved');
         } else if (tabValue === 1) {
-          return baseLabours.filter(labour => labour.status === 'Approved' && labour.labourOwnership === 'VJ');
+            return baseLabours.filter(labour => labour.status === 'Approved' && labour.labourOwnership === 'VJ');
         } else if (tabValue === 2) {
-          return baseLabours.filter(labour => labour.status === 'Approved' && labour.labourOwnership === 'CONTRACTOR');
+            return baseLabours.filter(labour => labour.status === 'Approved' && labour.labourOwnership === 'CONTRACTOR');
         } else if (tabValue === 3) {
-          return baseLabours.filter(labour =>
-            ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
-          );
+            return baseLabours.filter(labour =>
+                ['Rejected', 'Resubmit', 'Disable'].includes(labour.status)
+            );
         }
         return baseLabours;
-      };
-      
-    
-      // Helper: Get project description
-      const getProjectDescription = (projectName) => {
+    };
+
+
+    // Helper: Get project description
+    const getProjectDescription = (projectName) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
         if (projectName === undefined || projectName === null || projectName === '') return 'Unknown';
         const project = projectNames.find((proj) => proj.Id === Number(projectName));
         return project ? project.Business_Unit : 'Unknown';
-      };
-    
-      // Helper: Get department description
-      const getDepartmentDescription = (departmentId) => {
+    };
+
+    // Helper: Get department description
+    const getDepartmentDescription = (departmentId) => {
         if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
         const department = departments.find((dept) => dept.Id === Number(departmentId));
         return department ? department.Description : 'Unknown';
-      };
-    
-      const filteredLaboursForTable = getFilteredLaboursForTable();
-  console.log('filteredLaboursForTable}}SiteTransfer',filteredLaboursForTable)
-      // Reset page if current page is out of range after filtering
-      useEffect(() => {
+    };
+
+    const filteredLaboursForTable = getFilteredLaboursForTable();
+    console.log('filteredLaboursForTable}}SiteTransfer', filteredLaboursForTable)
+    // Reset page if current page is out of range after filtering
+    useEffect(() => {
         if (page * rowsPerPage >= filteredLaboursForTable.length) {
-          setPage(0);
+            setPage(0);
         }
-      }, [filteredLaboursForTable, page, rowsPerPage]);
-      
-      const paginatedLabours = filteredLaboursForTable.slice(
+    }, [filteredLaboursForTable, page, rowsPerPage]);
+
+    const paginatedLabours = filteredLaboursForTable.slice(
         page * rowsPerPage,
         rowsPerPage === -1
-          ? filteredLaboursForTable.length
-          : (page + 1) * rowsPerPage
-      );
+            ? filteredLaboursForTable.length
+            : (page + 1) * rowsPerPage
+    );
     //   console.log('Paginated Labours:', paginatedLabours);
-    
+
     const displayedLabours = paginatedLabours.filter((labour) => {
         const labourProjectId = Number(labour.projectName);
         const labourDepartmentId = Number(labour.departmentId);
         return (
-          allowedProjectIds.includes(labourProjectId) &&
-          allowedDepartmentIds.includes(labourDepartmentId)
+            allowedProjectIds.includes(labourProjectId) &&
+            allowedDepartmentIds.includes(labourDepartmentId)
         );
-      });
-      console.log('Displayed Labours:SiteTransfer', displayedLabours);
+    });
+    console.log('Displayed Labours:SiteTransfer', displayedLabours);
 
 
-      const handlePageChange = (event, newPage) => {
+    const handlePageChange = (event, newPage) => {
         setPage(newPage);
-      };
-    
-      const handleRowsPerPageChange = (event) => {
+    };
+
+    const handleRowsPerPageChange = (event) => {
         const newRows = parseInt(event.target.value, 10);
         setRowsPerPage(newRows);
         setPage(0);
-      }; 
-  
+    };
+
 
 
 
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
-          
-<Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
                 <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
                     User | Peoples
                 </Typography>

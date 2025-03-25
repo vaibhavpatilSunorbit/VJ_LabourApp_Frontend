@@ -11,14 +11,13 @@ import {
     Paper,
     Button,
     Box,
-    TextField,
     TablePagination,
     Select,
     MenuItem, Modal, Typography, IconButton, Dialog,
     DialogTitle,
     DialogContent,
     DialogContentText, Checkbox,
-    DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, Fade, FormControlLabel, Switch
+    DialogActions, Tabs, Grid, Divider, Fade,
 } from '@mui/material';
 import { modalStyle } from '../modalStyles.js';
 import { StyleForPayslip } from '../modalStyles.js';
@@ -27,7 +26,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import SearchBar from '../../SarchBar/SearchRegister.jsx';
-import Loading from "../../Loading/Loading.jsx";
 import TableSkeletonLoading from "../../Loading/TableSkeletonLoading.jsx";
 import { API_BASE_URL } from "../../../Data.js";
 import { ToastContainer, toast } from 'react-toastify';
@@ -35,7 +33,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../../UserContext/UserContext.js';
 import ExportMonthlyPayroll from '../ViewMonthlyPayroll/ExportMonthlyPayroll.jsx'
 import ViewDetails from '../../ViewDetails/ViewDetails.jsx';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
 import { parse } from "fast-xml-parser";
 import { ArrowBack } from '@mui/icons-material';
@@ -61,18 +58,14 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
     const [selectedLabour, setSelectedLabour] = useState(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
-    const [attendanceData, setAttendanceData] = useState([]);
     const { user } = useUser();
     const [openModal, setOpenModal] = useState(false);
     const [selectedHistory, setSelectedHistory] = useState([]);
-    const currentDate = new Date();
-    // const currentMonth = (currentDate.getMonth() + 1).toString();
     const [selectedMonth, setSelectedMonth] = useState('');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [openDialogSite, setOpenDialogSite] = useState(false);
     const [statusesSite, setStatusesSite] = useState({});
     const [navigating, setNavigating] = useState(false);
-    const location = useLocation();
     const navigate = useNavigate();
     const [fetchForAll, setFetchForAll] = useState(true);
     const [labourId, setLabourId] = useState('');
@@ -80,40 +73,15 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
     const [noDataAvailable, setNoDataAvailable] = useState(false);
     const [selectedLabourIds, setSelectedLabourIds] = useState([]);
 
-    const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false); 
+    const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false);
     const handleApproveConfirmOpen = () => {
         setIsApproveConfirmOpen(true);
-      };
-    
-      const handleApproveConfirmClose = () => {
+    };
+
+    const handleApproveConfirmClose = () => {
         setIsApproveConfirmOpen(false);
-      };
+    };
 
-
-    // Extract selectedMonth and selectedYear from navigation state
-    // const { selectedMonth, selectedYear } = location.state || {};
-
-    // const fetchLabours = async () => {
-    //     setLoading(true);
-    //     try {
-    //         const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`, {
-    //             params: { month: selectedMonth, year: selectedYear },
-    //         });
-    //         setLabours(response.data);
-    //         console.log("response.data .", response.data)
-    //     } catch (error) {
-    //         console.error('Error fetching labours:', error);
-    //         toast.error('Failed to fetch data');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     if (selectedMonth && selectedYear) {
-    //         fetchLabours();
-    //     }
-    // }, [selectedMonth, selectedYear]);
 
     const months = [
         { value: 1, label: 'January' },
@@ -131,7 +99,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
     ];
 
     useEffect(() => {
-        setTimeout(() => setLoading(false), 2000); // Simulate API loading
+        setTimeout(() => setLoading(false), 2000);
     }, []);
 
     const fetchSalaryGenerationForDateMonthAll = async () => {
@@ -154,21 +122,19 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
 
             console.log('Fetched Data from API:', fetchedData);
 
-            // Check if data is in expected format
             if (!fetchedData || !Array.isArray(fetchedData.data)) {
                 throw new Error('Unexpected data format received from the API.');
             }
 
             if (fetchedData.data.length === 0) {
-                setLabours([]); // Clear previous data
+                setLabours([]);
                 setSalaryData([]);
-                setNoDataAvailable(true); // Set flag to show no data image
+                setNoDataAvailable(true);
                 return;
             }
 
-            setNoDataAvailable(false); // Reset flag if data is available
+            setNoDataAvailable(false);
 
-            // Mapping API response fields to frontend expected structure
             const mappedSalaryData = fetchedData.data.map((labour, index) => {
                 return {
                     srNo: index + 1,
@@ -217,9 +183,9 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
 
         } catch (error) {
             console.error('Error fetching salary generation data:', error);
-            setLabours([]); // Clear previous data
+            setLabours([]);
             setSalaryData([]);
-            setNoDataAvailable(true); // Show no data image
+            setNoDataAvailable(true);
             toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
         } finally {
             setLoading(false);
@@ -234,100 +200,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         }
     }, [selectedMonth, selectedYear]);
 
-
-
-    const saveFinalPayrollData = async () => {
-        setLoading(true);
-        try {
-            if (salaryData.length === 0) {
-                toast.warning("No salary data available to save.");
-                setLoading(false);
-                return;
-            }
-            const response = await axios.post(`${API_BASE_URL}/insentive/insentive/generateMonthlyPayroll`, salaryData);
-            toast.success(response.data.message);
-        } catch (error) {
-            console.error('Error saving final payroll data:', error);
-            toast.error(error.response?.data?.message || "Error saving payroll data. Please try again later.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    const saveFinalizePayrollData = async () => {
-        if (!selectedMonth || !selectedYear) {
-            toast.warning("Please select both Month and Year.");
-            return;
-        }
-
-        setLoading(true);
-        try {
-            if (salaryData.length === 0) {
-                toast.warning("No salary data available to save.");
-                setLoading(false);
-                return;
-            }
-
-            const response = await axios.post(`${API_BASE_URL}/insentive/generateMonthlyPayroll`, {
-                month: selectedMonth,
-                year: selectedYear,
-            });
-
-            toast.success(response.data.message || "Payroll generated successfully.");
-        } catch (error) {
-            console.error('Error saving payroll data:', error);
-            toast.error(error.response?.data?.message || "Error generating payroll. Please try again later.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    // const deletePayrollData = async (labourIds = []) => {
-    //     if (!selectedMonth || !selectedYear) {
-    //         toast.warning("Please select both Month and Year.");
-    //         return;
-    //     }
-    //     if (selectedLabourIds.length === 0) {
-    //         toast.warning("No records selected for deletion.");
-    //         return;
-    //     }
-
-    //     setLoading(true);
-    //     try {
-    //         const requestData = {
-    //             month: selectedMonth,
-    //             year: selectedYear,
-    //             labourIds: selectedLabourIds,
-    //         };
-
-    //         if (labourIds.length > 0) {
-    //             requestData.labourIds = labourIds; // If deleting specific labourIds, add them to request
-    //         }
-    //         for (const labourId of selectedLabourIds) {
-    //             const foundLabour = labours.find((lab) => lab.LabourID === labourId);
-    //             if (!foundLabour) continue;
-
-    //             const response = await axios.post(`${API_BASE_URL}/insentive/payroll/deleteFinalPayrollData`, requestData);
-    //             setLabours((prev) => prev.filter((lab) => !selectedLabourIds.includes(lab.LabourID)));
-    //             setSalaryData((prev) => prev.filter((lab) => !selectedLabourIds.includes(lab.LabourID)));
-    //             setSelectedLabourIds([]); 
-    //             toast.success(response.data.message || "Payroll records deleted successfully.");
-    //         }
-    //     } catch (error) {
-    //         console.error("Error deleting payroll data:", error);
-    //         toast.error(error.response?.data?.message || "Error deleting payroll data. Please try again.");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-
-
-
     // -------------------------------------   SHOW ATTENDACNE ----------------------
-   
+
     const deletePayrollData = async (labourIds = []) => {
         setIsApproveConfirmOpen(false);
         if (!selectedMonth || !selectedYear) {
@@ -338,25 +212,22 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
             toast.warning("No records selected for deletion.");
             return;
         }
-    
+
         setLoading(true);
         try {
             const requestData = {
                 month: selectedMonth,
                 year: selectedYear,
-                labourIds: labourIds.length > 0 ? labourIds : selectedLabourIds, // Use provided labourIds or selectedLabourIds
+                labourIds: labourIds.length > 0 ? labourIds : selectedLabourIds,
             };
-    
-            // Send a single delete request for all selected LabourIDs
+
             const response = await axios.post(`${API_BASE_URL}/insentive/payroll/deleteFinalPayrollData`, requestData);
-    
-            // Update state only once after successful deletion
             setLabours((prev) => prev.filter((lab) => !requestData.labourIds.includes(lab.LabourID)));
             setSalaryData((prev) => prev.filter((lab) => !requestData.labourIds.includes(lab.LabourID)));
             setSelectedLabourIds([]);
-    
+
             toast.success(response.data.message || "Payroll records deleted successfully.");
-    
+
         } catch (error) {
             console.error("Error deleting payroll data:", error);
             toast.error(error.response?.data?.message || "Error deleting payroll data. Please try again.");
@@ -364,9 +235,9 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
             setLoading(false);
         }
     };
-    
-   
-   
+
+
+
     const handleOpenModal = (labour) => {
         setSelectedLabour(labour);
         setModalOpen(true);
@@ -406,24 +277,9 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         setSelectedLabour(null);
         setModalOpenNetpay(false);
     };
-    // -----------------------------------------------------------------------------
-    const handleOpenModalDetails = (labour) => {
-        setSelectedLabour(labour);
-        setModalOpen(true);
-    };
-
-    const handleCloseModalDetails = () => {
-        setSelectedLabour(null);
-        setModalOpen(false);
-    };
-
     //------------------------------------------------------------------
 
-    const handleCancel = () => {
-        setModalOpen(false);
-        setModalOpenBonus(false);
-        setModalOpenDeduction(false);
-    };
+
     const fetchBusinessUnits = async () => {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
@@ -438,31 +294,21 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
     }, []);
 
     const handleEdit = (labour) => {
-        setSelectedLabour(labour);  // Preserves all current details of the labour
+        setSelectedLabour(labour);
         setModalOpen(true);
         setModalOpenBonus(true);
         setModalOpenDeduction(true);
     };
 
     const handleApproved = (labour) => {
-        setSelectedLabour(labour);  // Preserves all current details of the labour
+        setSelectedLabour(labour);
         setOpenDialogSite(true);
-    };
-
-
-    const handleToast = (type, message) => {
-        if (type === 'success') {
-            toast.success(message);
-        } else if (type === 'error') {
-            toast.error(message);
-        }
     };
 
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
             setSearchResults([]);
-            // fetchSalaryGenerationForDateMonthAll();
             return;
         }
         setLoading(true);
@@ -495,7 +341,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         setSelectedLabour(selectedLabour);
     };
 
-    // Filter data to only include the latest entry per LabourID
     const getLatestLabourData = (labours) => {
         const latestEntries = {};
         labours.forEach((labour) => {
@@ -509,7 +354,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         return Object.values(latestEntries);
     };
 
-    // Checkbox handling: select/deselect individual row
     const handleSelectRow = (event, labourId) => {
         if (event.target.checked) {
             setSelectedLabourIds((prev) => [...prev, labourId]);
@@ -518,22 +362,9 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         }
     };
 
-    // const handleSelectAllRows = (event) => {
-    //     if (event.target.checked) {
-    //         const newSelected = paginatedLabours.map((lab) => lab.LabourID);
-    //         setSelectedLabourIds((prev) => [
-    //             ...prev,
-    //             ...newSelected.filter((id) => !prev.includes(id)),
-    //         ]);
-    //     } else {
-    //         const newSelected = paginatedLabours.map((lab) => lab.LabourID);
-    //         setSelectedLabourIds((prev) => prev.filter((id) => !newSelected.includes(id)));
-    //     }
-    // };
-
     const handleSelectAllRows = (event) => {
         if (event.target.checked) {
-            const allLabourIds = filteredLabours.map((lab) => lab.LabourID); // Select ALL rows from the dataset
+            const allLabourIds = filteredLabours.map((lab) => lab.LabourID);
             setSelectedLabourIds(allLabourIds);
         } else {
             setSelectedLabourIds([]); // Deselect all
@@ -554,32 +385,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
     // const isAllSelected = paginatedLabours.length > 0 && paginatedLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
     const isAllSelected = selectedLabourIds.length === filteredLabours.length && filteredLabours.length > 0;
 
-    const getProjectDescription = (projectId) => {
-        if (!Array.isArray(projectNames) || projectNames.length === 0) {
-          return 'Unknown';
-        }
-      
-        if (projectId === undefined || projectId === null || projectId === '') {
-          return 'Unknown';
-        }
-      
-        const project = projectNames.find(proj => proj.Id === Number(projectId));
-      
-        // console.log('Project Names:', projectNames);
-        // console.log('Searching for Project ID:', projectId);
-        // console.log('Found Project:', project);
-      
-        return project ? project.projectName : 'Unknown';
-      };
-
-
-    const getDepartmentDescription = (departmentId) => {
-        if (!departments || departments.length === 0) {
-            return 'Unknown';
-        }
-        const department = departments.find(dept => dept.Id === Number(departmentId));
-        return department ? department.Description : 'Unknown';
-    };
 
     const handleModalTransfer = () => {
         setSelectedLabour(labour);
@@ -595,8 +400,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         setOpenDialogSite(false);
 
         try {
-            // Fetch current and new site names for transfer
-            // const projectName = projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit || "Unknown";
 
             if (!payStructure || !variablePay) {
                 toast.error("Please fill in all required fields.");
@@ -620,7 +423,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
             const response = await axios.post(`${API_BASE_URL}/insentive/upsertVariablePay`, transferDataPayload);
 
             if (response.status === 200) {
-                // Update UI
                 setLabours((prevLabours) =>
                     prevLabours.map((labour) =>
                         labour.LabourID === selectedLabour.LabourID
@@ -669,81 +471,17 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                     return acc;
                 }, {});
                 setStatusesSite(mappedStatuses);
-                console.log('Mapped Statuses with Dates:', mappedStatuses); // Debug statuses
+                console.log('Mapped Statuses with Dates:', mappedStatuses);
             }
 
             setLoading(false);
         };
 
-        // if (labours.length > 0) fetchStatuses();
     }, [labours]);
-
-
-    const handlePayStructureChange = (e, labourID) => {
-        const newPayStructure = e.target.value;
-        const updatedLabours = labours.map(labour => {
-            if (labour.LabourID === labourID) {
-                return {
-                    ...labour,
-                    payStructure: newPayStructure,
-                    variablePayRemark: ''  // Reset remarks when pay structure changes
-                };
-            }
-            return labour;
-        });
-        setLabours(updatedLabours);
-    };
-
-    const handleRemarkChange = (e, labourID) => {
-        const newVariablePayRemark = e.target.value;
-        const updatedLabours = labours.map(labour => {
-            if (labour.LabourID === labourID) {
-                return {
-                    ...labour,
-                    variablePayRemark: newVariablePayRemark
-                };
-            }
-            return labour;
-        });
-        setLabours(updatedLabours);
-    };
-
-    const getRemarksOptions = (payStructure) => {
-        switch (payStructure) {
-            case "Advance":
-                return ["New Joinee", "Payment Delay"];
-            case "Debit":
-                return ["Gadget Mishandling", "Performance Issue"];
-            case "Incentive":
-                return ["Payment Arrears", "Outstanding Performance"];
-            default:
-                return [];
-        }
-    };
-
-    const handleVariablePayChange = (e, labourID) => {
-        const input = e.target.value;
-        // Parse the input as a float only if it is not empty and has 5 or fewer digits
-        const value = (input === '' || input.length > 5) ? null : parseFloat(input);
-
-        // Update labours state only if the input is valid (5 digits or fewer)
-        if (input === '' || input.length <= 5) {
-            const updatedLabours = labours.map(labour => {
-                if (labour.LabourID === labourID) {
-                    return { ...labour, variablePay: value };
-                }
-                return labour;
-            });
-            setLabours(updatedLabours);
-        }
-    };
 
     const navigateToSalaryGeneration = () => {
         setNavigating(true);
         navigate('/RunPayroll', { state: { selectedMonth, selectedYear } });
-        // setTimeout(() => {
-        //     navigate('/SalaryRejester');
-        // }, 1000);
     };
 
     const closePopup = () => {
@@ -778,36 +516,34 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
             <Box
                 sx={{
                     flex: 3,
-                    overflowY: "auto", // Enable scrolling
+                    overflowY: "auto",
                     padding: "0px 24px",
-                    bgcolor: "#f9f9f9", // Light background
-                    borderRight: "1px solid #ddd", // Border for separation
-                    height: "90vh", // Full-height scrolling container
-                    scrollbarWidth: "none", // Hide scrollbar (Firefox)
+                    bgcolor: "#f9f9f9",
+                    borderRight: "1px solid #ddd",
+                    height: "90vh",
+                    scrollbarWidth: "none",
                     "&::-webkit-scrollbar": {
-                        display: "none", // Hide scrollbar (Chrome, Safari, Edge)
+                        display: "none",
                     },
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx= {{display:'flex', alignItems:'center', gap:2}}>
-                    <IconButton
-                        sx={{ marginRight: 2 }}
-                        onClick={navigateToSalaryGeneration} disabled={navigating}
-                    >
-                        <ArrowBack />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <IconButton
+                            sx={{ marginRight: 2 }}
+                            onClick={navigateToSalaryGeneration} disabled={navigating}
+                        >
+                            <ArrowBack />
+                        </IconButton>
 
-                    {/* Title */}
-                    <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
-                        Reports | View PayRoll
-                    </Typography>
-</Box>
+                        <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                            Reports | View PayRoll
+                        </Typography>
+                    </Box>
                     <SearchBar
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
                         handleSearch={handleSearch}
-                        // handleSearch={() => {}}
                         searchResults={searchResults}
                         setSearchResults={setSearchResults}
                         handleSelectLabour={handleSelectLabour}
@@ -815,9 +551,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         className="search-bar"
                     />
                 </Box>
-                {/* {loading && <Loading />} */}
-                {/* {loading && <TableSkeleton rows={5} columns={13}  />} */}
-                {/* {loading ? <TableSkeleton rows={5} columns={13} /> : <ViewMonthlyPayroll />} */}
 
                 <Box
                     sx={{
@@ -832,7 +565,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        flexWrap: { xs: "wrap", sm: "nowrap" }, // Allows items to wrap on extra small devices
+                        flexWrap: { xs: "wrap", sm: "nowrap" },
                     }}
                 >
                     <Tabs
@@ -846,13 +579,12 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                             minHeight: "auto",
                         }}
                     >
-                        {/* Add Tab components here if needed */}
                     </Tabs>
 
                     <Box
                         sx={{
                             display: "flex",
-                            flexDirection: { xs: "column", sm: "row" }, // Stacks items vertically on small screens
+                            flexDirection: { xs: "column", sm: "row" },
                             alignItems: { xs: "stretch", sm: "center" },
                             gap: 2,
                             height: "auto",
@@ -865,10 +597,10 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                 width: "40%",
                                 gap: "20px",
                                 display: "flex",
-                                flexDirection: { xs: "column", sm: "row" }, // Stack selectors vertically on smaller screens, horizontally on larger
-                                alignItems: "center", // Center align items for better visual alignment
-                                justifyContent: "flex-start", // Align items to the start of the container
-                                padding: "20px", // Add some padding around the controls for spacing
+                                flexDirection: { xs: "column", sm: "row" },
+                                alignItems: "center",
+                                justifyContent: "flex-start",
+                                padding: "20px",
                             }}
                         >
                             <Select
@@ -877,8 +609,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                 displayEmpty
                                 sx={{
                                     marginTop: '-5px',
-                                    width: "100%", // Full width to fill the container space
-                                    marginBottom: { xs: "20px", sm: "0" } // Add bottom margin on small screens
+                                    width: "100%",
+                                    marginBottom: { xs: "20px", sm: "0" }
                                 }}
                             >
                                 <MenuItem value="" disabled>
@@ -897,8 +629,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                 displayEmpty
                                 sx={{
                                     marginTop: '-5px',
-                                    width: "100%", // Ensure this also takes full width
-                                    marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
+                                    width: "100%",
+                                    marginBottom: { xs: "20px", sm: "0" }
                                 }}
                             >
                                 <MenuItem value="" disabled>
@@ -910,50 +642,20 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                     </MenuItem>
                                 ))}
                             </Select>
-                            {/* 
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={fetchForAll}
-                                        onChange={(e) => setFetchForAll(e.target.checked)}
-                                        color="primary"
-                                    />
-                                }
-                                // label={fetchForAll ? 'Fetch All' : 'Fetch for Labour ID'}
-                                sx={{
-                                    marginBottom: { xs: "20px", sm: "0" }, // Margin bottom on small screens
-                                    // width: "100%", // Full width to align switch properly
-                                }}
-                            />
-
-
-                            {!fetchForAll && (
-                                <TextField
-                                    label="Labour ID"
-                                    variant="outlined"
-                                    size="small"
-                                    value={labourId}
-                                    onChange={(e) => setLabourId(e.target.value)}
-                                    sx={{
-                                        width: "100%", // Full width
-                                        marginBottom: { xs: "20px", sm: "0" }  // Bottom margin for spacing
-                                    }}
-                                />
-                            )} */}
 
                             <Button
                                 variant="contained"
                                 onClick={fetchSalaryGenerationForDateMonthAll}
                                 sx={{
-                                    fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
+                                    fontSize: { xs: "0.8rem", sm: "1rem" },
                                     height: "40px",
-                                    width: "100%", // Button width to match other inputs
+                                    width: "100%",
                                     backgroundColor: "rgb(229, 255, 225)",
                                     color: "rgb(43, 217, 144)",
                                     '&:hover': {
                                         backgroundColor: "rgb(229, 255, 225)",
                                     },
-                                    marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
+                                    marginBottom: { xs: "20px", sm: "0" }
                                 }}
                             >
                                 PayRoll
@@ -999,7 +701,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                     sx={{
                         mb: isMobile ? 6 : 0,
                         overflowX: 'auto',
-                        // overflowY: 'auto',
                         borderRadius: 2,
                         boxShadow: 3,
                         maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -1018,15 +719,15 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                             '@media (max-width: 600px)': {
                                                 padding: '10px',
                                             },
-                                            backgroundColor: 'white', // Ensure the background color is set
+                                            backgroundColor: 'white',
                                             position: 'sticky',
                                             top: 0,
                                             zIndex: 1,
                                         },
                                         '& td': {
-                                            padding: '16px 9px', // Applying padding to all td elements
+                                            padding: '16px 9px',
                                             '@media (max-width: 600px)': {
-                                                padding: '14px 8px', // Adjust padding for smaller screens if needed
+                                                padding: '14px 8px',
                                             },
                                         },
                                     }}
@@ -1054,13 +755,13 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                     },
                                 }}
                             >
-                                 {loading ? (
-                    <TableRow>
-                        <TableCell colSpan={8} align="center">
-                            <TableSkeletonLoading rows={7} columns={8} />
-                        </TableCell>
-                    </TableRow>
-                ) :  noDataAvailable ? (
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} align="center">
+                                            <TableSkeletonLoading rows={7} columns={8} />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : noDataAvailable ? (
                                     <TableRow>
                                         <TableCell colSpan={12} align="center">
                                             <img
@@ -1245,9 +946,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
 
                 <Modal open={modalOpenNetpay} onClose={handleCloseModalNetpay} aria-labelledby="attendance-details-modal">
                     <Box sx={modalStyle}>
-                        {/* Header */}
                         <Box display="flex" justifyContent="space-between" alignItems="center">
-                            {/* Logo with right-side clipPath */}
                             <Box sx={{
                                 width: '50%',
                                 backgroundColor: "#E4D3B5",
@@ -1260,13 +959,11 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                 <img src={logo} alt="SunOrbit" className="payslip-logo" style={{ width: "160px" }} />
                             </Box>
 
-                            {/* Payslip Text with left-top clipped style */}
                             <Box sx={{
                                 backgroundColor: "#E4D3B5",
                                 marginBottom: '20px',
                                 padding: "12px 30px",
                                 clipPath: "polygon(19% 0%, 100% 0%, 100% 100%, 0% 100%)",
-                                // clipPath: "polygon(100% 0%, 0% 0%, 15% 100%, 100% 100%)",
                                 borderRadius: "4px",
                                 display: "inline-block"
                             }}>
@@ -1292,7 +989,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                             </Box>
                         </Box>
 
-                        {/* Employee Details */}
                         <Box sx={StyleEmpInfo}>
                             <Grid container spacing={2}>
                                 <Grid item xs={6}>
@@ -1313,8 +1009,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Attendance Count (A)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
-                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -1340,8 +1036,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Wages Count (B)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
-                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -1365,8 +1061,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Gross Pay (C)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
-                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -1390,8 +1086,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Deductions (D)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
-                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -1418,12 +1114,12 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                             <Button variant="contained" color="primary">Download</Button>
                             {/* <Button variant="contained" color="secondary">View Details</Button> */}
                             <Button
-                            variant="contained"
-                            className="modal-close-button"
-                            onClick={handleCloseModalNetpay}
-                        >
-                            Close
-                        </Button>
+                                variant="contained"
+                                className="modal-close-button"
+                                onClick={handleCloseModalNetpay}
+                            >
+                                Close
+                            </Button>
                         </Box>
                     </Box>
                 </Modal>
@@ -1502,10 +1198,10 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                             width: "100%",
                             gap: "20px",
                             display: "flex",
-                            flexDirection: { xs: "column", sm: "column" }, // Stack selectors vertically on smaller screens, horizontally on larger
-                            alignItems: "center", // Center align items for better visual alignment
-                            justifyContent: "flex-start", // Align items to the start of the container
-                            padding: "20px", // Add some padding around the controls for spacing
+                            flexDirection: { xs: "column", sm: "column" },
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                            padding: "20px",
                         }}
                     >
                         <Select
@@ -1513,8 +1209,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                             onChange={(e) => setSelectedMonth(e.target.value)}
                             displayEmpty
                             sx={{
-                                width: "100%", // Full width to fill the container space
-                                marginBottom: { xs: "20px", sm: "0" } // Add bottom margin on small screens
+                                width: "100%",
+                                marginBottom: { xs: "20px", sm: "0" }
                             }}
                         >
                             <MenuItem value="" disabled>
@@ -1532,8 +1228,8 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                             onChange={(e) => setSelectedYear(e.target.value)}
                             displayEmpty
                             sx={{
-                                width: "100%", // Ensure this also takes full width
-                                marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
+                                width: "100%",
+                                marginBottom: { xs: "20px", sm: "0" }
                             }}
                         >
                             <MenuItem value="" disabled>
@@ -1549,44 +1245,26 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                             Finalize your payroll to view the required amount.
                         </Typography>
 
-                        {/* <Button
-                            variant="contained"
-                            // onClick={saveFinalPayrollData}
-                            onClick={saveFinalizePayrollData}
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
-                                height: "40px",
-                                width: "100%", // Button width to match other inputs
-                                backgroundColor: "rgb(229, 255, 225)",
-                                color: "rgb(43, 217, 144)",
-                                '&:hover': {
-                                    backgroundColor: "rgb(229, 255, 225)",
-                                },
-                                marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
-                            }}
-                        >
-                            Finalize PayRoll
-                        </Button> */}
 
                         {/* Delete Payroll Button */}
                         {/* {selectedLabourIds.length > 0 && ( */}
-                            <Button
-                                variant="contained"
-                                // onClick={deletePayrollData} 
-                                onClick={() => handleApproveConfirmOpen()}
-                                sx={{
-                                    fontSize: { xs: "0.8rem", sm: "1rem" },
-                                    height: "40px",
-                                    width: "100%",
-                                    backgroundColor: "rgb(255, 225, 225)",
-                                    color: "rgb(255, 43, 43)",
-                                    '&:hover': { backgroundColor: "rgb(255, 200, 200)" },
-                                    marginBottom: { xs: "20px", sm: "0" }
-                                }}
-                            >
-                                Delete Payroll  ({selectedLabourIds.length})
-                            </Button>
-                         {/* )} */}
+                        <Button
+                            variant="contained"
+                            // onClick={deletePayrollData} 
+                            onClick={() => handleApproveConfirmOpen()}
+                            sx={{
+                                fontSize: { xs: "0.8rem", sm: "1rem" },
+                                height: "40px",
+                                width: "100%",
+                                backgroundColor: "rgb(255, 225, 225)",
+                                color: "rgb(255, 43, 43)",
+                                '&:hover': { backgroundColor: "rgb(255, 200, 200)" },
+                                marginBottom: { xs: "20px", sm: "0" }
+                            }}
+                        >
+                            Delete Payroll  ({selectedLabourIds.length})
+                        </Button>
+                        {/* )} */}
                     </Box>
 
 
@@ -1595,40 +1273,40 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
             </Box>
 
             <Dialog
-        open={isApproveConfirmOpen}
-        onClose={handleApproveConfirmClose}
-        aria-labelledby="approve-confirm-dialog-title"
-        aria-describedby="approve-confirm-dialog-description"
-      >
-        <DialogTitle id="approve-confirm-dialog-title">
-        Delete Payroll
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="approve-confirm-dialog-description">
-            Are you sure you want to Delete Payroll this labours?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
-            Cancel
-          </Button>
-          <Button
-                                variant="contained"
-                                onClick={deletePayrollData} 
-                                sx={{
-                                    fontSize: { xs: "0.8rem", sm: "1rem" },
-                                    height: "40px",
-                                    width: "auto",
-                                    backgroundColor: "rgb(255, 225, 225)",
-                                    color: "rgb(255, 43, 43)",
-                                    '&:hover': { backgroundColor: "rgb(255, 200, 200)" },
-                                    marginBottom: { xs: "20px", sm: "0" }
-                                }}
-                            >
-                                Delete Payroll  ({selectedLabourIds.length})
-                            </Button>
-        </DialogActions>
-      </Dialog>
+                open={isApproveConfirmOpen}
+                onClose={handleApproveConfirmClose}
+                aria-labelledby="approve-confirm-dialog-title"
+                aria-describedby="approve-confirm-dialog-description"
+            >
+                <DialogTitle id="approve-confirm-dialog-title">
+                    Delete Payroll
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="approve-confirm-dialog-description">
+                        Are you sure you want to Delete Payroll this labours?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={deletePayrollData}
+                        sx={{
+                            fontSize: { xs: "0.8rem", sm: "1rem" },
+                            height: "40px",
+                            width: "auto",
+                            backgroundColor: "rgb(255, 225, 225)",
+                            color: "rgb(255, 43, 43)",
+                            '&:hover': { backgroundColor: "rgb(255, 200, 200)" },
+                            marginBottom: { xs: "20px", sm: "0" }
+                        }}
+                    >
+                        Delete Payroll  ({selectedLabourIds.length})
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
 
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
@@ -1647,7 +1325,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         bgcolor: "background.paper",
                         borderRadius: 2,
                         boxShadow: 24,
-                        p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
+                        p: { xs: 2, sm: 3, md: 4 },
                         maxHeight: "85vh",
                         overflowY: "auto",
                         "&::-webkit-scrollbar": {
@@ -1662,7 +1340,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         },
                     }}
                 >
-                    {/* Close Icon */}
                     <IconButton
                         onClick={() => setOpenModal(false)}
                         sx={{
@@ -1675,7 +1352,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         <CloseIcon />
                     </IconButton>
 
-                    {/* Modal Header */}
                     <Typography
                         variant="h6"
                         sx={{
@@ -1687,7 +1363,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                         Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
                     </Typography>
 
-                    {/* Modal Content */}
                     <Box
                         sx={{
                             display: "flex",
@@ -1708,7 +1383,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                     width: { xs: "100%", md: "70%" }, // Adjust width for responsiveness
                                 }}
                             >
-                                {/* Vertical Line */}
                                 <Box
                                     sx={{
                                         position: "absolute",
@@ -1721,7 +1395,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                     }}
                                 />
 
-                                {/* Dot for Edited On */}
                                 <Box
                                     sx={{
                                         width: 16,
@@ -1733,7 +1406,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                     }}
                                 ></Box>
 
-                                {/* Left Side - Edited On */}
                                 <Box
                                     sx={{
                                         flex: 1,
@@ -1752,11 +1424,10 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                                         {new Date(record.CreatedAt).toLocaleTimeString()}
                                     </Typography>
                                 </Box>
-                                {/* Right Side - Details */}
                                 <Box
                                     sx={{
                                         flex: 3,
-                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
                                     }}
                                 >
                                     <Typography variant="body2" sx={{ mb: 1 }}>
@@ -1794,8 +1465,6 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
                 open={isPopupOpen}
                 onClose={closePopup}
                 closeAfterTransition
-            // BackdropComponent={Backdrop}
-            // BackdropProps={{ timeout: 500 }}
             >
                 <Fade in={isPopupOpen}>
                     <div className="modal">

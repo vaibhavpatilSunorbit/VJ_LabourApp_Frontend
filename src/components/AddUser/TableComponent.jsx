@@ -23,17 +23,17 @@ const TableComponent = ({
 }) => {
   return (
     <Box py={1} >
-   <TablePagination
-          rowsPerPageOptions={[ 10, 25, 40]}
-          component="div"
-          count={users.length} 
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+      <TablePagination
+        rowsPerPageOptions={[10, 25, 40]}
+        component="div"
+        count={users.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
       <Paper sx={{ width: "100%", overflow: "hidden", boxShadow: 3, }}>
-     
+
         <TableContainer sx={{ height: '62vh' }}>
           <Table stickyHeader aria-label="sticky table">
             <TableHead>
@@ -72,14 +72,14 @@ const TableComponent = ({
                       >
                       {<EditIcon />}
                       </Button> */}
-                      <EditIcon onClick={() => handleEdit(user)}/>
+                      <EditIcon onClick={() => handleEdit(user)} />
                     </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
           </Table>
         </TableContainer>
-      
+
       </Paper>
     </Box>
   );

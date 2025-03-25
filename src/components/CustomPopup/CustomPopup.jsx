@@ -17,16 +17,16 @@ const classes = {
 const Root = styled('div')(({ theme }) => ({
   [`& .${classes.success}`]: {
     backgroundColor: theme.palette.success.main,
-    color: theme.palette.common.white, // Ensure text color is white for success
+    color: theme.palette.common.white,
     "& *": {
-      color: theme.palette.common.white, // Apply white color to all child elements
+      color: theme.palette.common.white,
     },
   },
   [`& .${classes.error}`]: {
     backgroundColor: theme.palette.error.main,
-    color: theme.palette.common.white, // Ensure text color is white for error
+    color: theme.palette.common.white,
     "& *": {
-      color: theme.palette.common.white, // Apply white color to all child elements
+      color: theme.palette.common.white,
     },
   },
   [`& .${classes.message}`]: {

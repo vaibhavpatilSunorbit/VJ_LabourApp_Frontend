@@ -39,20 +39,16 @@ import Loading from "../Loading/Loading";
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-import EditIcon from '@mui/icons-material/Edit';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { API_BASE_URL } from "../../Data";
 import InfoIcon from '@mui/icons-material/Info';
-import jsPDF from 'jspdf';
 import { useUser } from '../../UserContext/UserContext';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { format } from 'date-fns';
 import { ClipLoader } from 'react-spinners';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import CircleIcon from '@mui/icons-material/Circle';
-import LabourIdCard from '../../PaySlip/LabourIdCard'; // Import LabourIdCard component
+import LabourIdCard from '../../PaySlip/LabourIdCard';
 
-const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlist }) => {
+const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   const { user } = useUser();
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,27 +69,17 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const [popupType, setPopupType] = useState('');
   const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false); // New state for confirmation dialog
   const [labourToApprove, setLabourToApprove] = useState(null);
-  const [disabledButtons, setDisabledButtons] = useState(new Set());
   const theme = useTheme();
   const [resubmittedLabours, setResubmittedLabours] = useState(new Set());
   const navigate = useNavigate();
   const location = useLocation();
   const [formData, setFormData] = useState(null);
   const [open, setOpen] = useState(false);
-  const [employeeId, setEmployeeId] = useState(null);
-  const [ledgerId, setLedgerId] = useState(null);
   const [isEditLabourOpen, setIsEditLabourOpen] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [IsApproved, setIsApproved] = useState(false);
-  // const [labourIds, setLabourIds] = useState([]);
   const [isApproving, setIsApproving] = useState(false);
-  const [esslStatuses, setEsslStatuses] = useState({});
-  const [employeeMasterStatuses, setEmployeeMasterStatuses] = useState({});
-  // const { labourId } = location.state || {};
   const { hideResubmit, labourId } = location.state || {};
-
-  const [anchorEl, setAnchorEl] = useState(null); // For the dropdown menu
-  const [filter, setFilter] = useState(""); // To store selected filter
+  const [anchorEl, setAnchorEl] = useState(null);
   const [filteredIconLabours, setFilteredIconLabours] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [statuses, setStatuses] = useState({});
@@ -102,13 +88,11 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const [approvingLabours, setApprovingLabours] = useState(() => JSON.parse(localStorage.getItem('approvingLabours')) || []);
   const [approvedLabours, setApprovedLabours] = useState(() => JSON.parse(localStorage.getItem('approvedLabours')) || []);
   const [labourIds, setLabourIds] = useState(() => JSON.parse(localStorage.getItem('labourIds')) || []);
-  const [processingLabours, setProcessingLabours] = useState(new Set());
   const [selectedSite, setSelectedSite] = useState({});
   const [newSite, setNewSite] = useState(null);
   const [openDialogSite, setOpenDialogSite] = useState(false);
   const [statusesSite, setStatusesSite] = useState({});
   const [previousTabValue, setPreviousTabValue] = useState(tabValue);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isLabourCardOpen, setIsLabourCardOpen] = useState(false);
   const [selectedLabourData, setSelectedLabourData] = useState(null);
 
@@ -117,11 +101,9 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const allowedProjectIds = user && user.projectIds ? JSON.parse(user.projectIds) : [];
   const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
   const laboursToDisplay = (
-    // If you have search or additional filters, you can integrate them here.
     searchResults.length > 0 ? searchResults : labours
   )
     .filter((labour) => {
-      // Filter based on tab status (Pending, Approved, etc.)
       if (tabValue === 0) return labour.status === 'Pending';
       if (tabValue === 1) return labour.status === 'Approved';
       if (tabValue === 2)
@@ -133,8 +115,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       return true;
     })
     .filter((labour) => {
-      // Convert fields to numbers if they aren’t already.
-      // Assuming labour.projectName holds the project ID and labour.department holds the department ID.
       const labourProjectId = Number(labour.projectName);
       const labourDepartmentId = Number(labour.department);
       return (
@@ -145,23 +125,22 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     .sort((a, b) => b.labourID - a.labourID);
 
 
-    const handleSearch = async (e) => {
-      e.preventDefault();
-      if (searchQuery.trim() === '') {
-        // Clear any search results and fetch all labours
-        setSearchResults([]);
-        // await fetchLabours();
-        return; // Stop execution if the search query is empty
-      }
-      try {
-        const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
-        setSearchResults(response.data);
-        setPage(0);
-      } catch (error) {
-        setError('Error searching. Please try again.');
-      }
-    };
-    
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (searchQuery.trim() === '') {
+      setSearchResults([]);
+      // await fetchLabours();
+      return;
+    }
+    try {
+      const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+      setSearchResults(response.data);
+      setPage(0);
+    } catch (error) {
+      setError('Error searching. Please try again.');
+    }
+  };
+
 
   const handleApproveConfirmOpen = (labour) => {
     setLabourToApprove(labour);
@@ -213,7 +192,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       if (soapResponse.status === 200) {
         const commandId = soapResponse.data.CommandId;
 
-        // Step 5: Polling to check for status change
         const pollStatus = async () => {
           const { data: commandStatus } = await axios.get(`${API_BASE_URL}/labours/commandstatus/${commandId}`);
           return commandStatus.status;
@@ -224,7 +202,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
         const maxRetries = 30;
 
         while (status === 'Pending' && retries < maxRetries) {
-          await new Promise((resolve) => setTimeout(resolve, 8000));  // Wait for 5 seconds before polling again
+          await new Promise((resolve) => setTimeout(resolve, 8000));
           status = await pollStatus();
           retries++;
         }
@@ -244,7 +222,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
           const dynamicData = dynamicDataResponse.data;
 
-          // Construct employeeMasterPayload with dynamic labourID
           const employeeMasterPayload = {
             companyName: labour.companyName,
             company: {
@@ -752,45 +729,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             approvalToken: '0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw'
           };
 
-          // const employeeMasterResponse = await axios.post('https://vjerp.farvisioncloud.com/Payroll/odata/Employees', employeeMasterPayload, {
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //     'Accept': 'application/json',
-          //     'Authorization': 'apikey 8d1588e79eb31ed7cb57ff57325510572baa1008d575537615e295d3bbd7d558',
-          //   }
-          // });
 
-          // -------------------------------------------------------------------------------------------------------------------------------------------
-          // const employeeMasterResponse = await axios.post(`${API_BASE_URL}/employeeMasterPayloadUpdatepost`, employeeMasterPayload, {
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //   },
-          // });
-
-          // if (employeeMasterResponse.data.status) {
-          //   console.log('Employee master details updated successfully.');
-
-          //   const empData = {
-          //     empId: employeeMasterResponse.data.outputList.id
-          //   };
-
-          //   const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${labour.id}`, empData);
-          //   console.log(employeeDetails.status);
-
-          //   // Fetch dynamic data for organizationMasterPayload
-          //   const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
-          //     params: {
-          //       employeeId: employeeMasterResponse.data.outputList.id,
-          //       monthdesc: labour.Period,
-          //       gradeId: labour.labourCategoryId,
-          //       salarybudescription: labour.SalaryBu,
-          //       workbudesc: labour.WorkingBu,
-          //       ledgerId: employeeMasterResponse.data.outputList.ledgerId,
-          //       departmentId: labour.departmentId,
-          //       designationId: labour.designationId
-          //     }
-          //   });
-          //   const dynamicData2 = dynamicDataResponse2.data;
 
 
           const employeeMasterResponse = await axios.post(`${API_BASE_URL}/employeeMasterPayloadUpdatepost`, JSON.stringify(employeeMasterPayload), {
@@ -806,12 +745,11 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
             if (!empId) {
               console.error('Employee ID is missing in the response. Skipping further API calls.');
-              return; // Exit early if empId is missing
+              return;
             }
 
             const empData = { empId };
 
-            // Update employee ID
             const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${labour.id}`, empData);
 
             const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
@@ -828,7 +766,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             });
             const dynamicData2 = dynamicDataResponse2.data;
 
-            // Construct organizationMasterPayload with dynamic labourID
             const organizationMasterPayload = {
               locationName: dynamicData2.description,
               workLocationName: dynamicData2.payrollUnit.WorkingBu,
@@ -1452,13 +1389,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
               approvalToken: "0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw"
             };
 
-            // const orgMasterResponse = await axios.post('https://vjerp.farvisioncloud.com/Payroll/odata/Organisations', organizationMasterPayload, {
-            //   headers: {
-            //     'Content-Type': 'application/json',
-            //     'Accept': 'application/json',
-            //     'Authorization': 'apikey 8d1588e79eb31ed7cb57ff57325510572baa1008d575537615e295d3bbd7d558',
-            //   }
-            // });
+
             const orgMasterResponse = await axios.post(`${API_BASE_URL}/organizationMasterPayloadUpdatepost`, JSON.stringify(organizationMasterPayload), {
               headers: {
                 'Content-Type': 'application/json',
@@ -1467,7 +1398,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             if (orgMasterResponse.data.status) {
             }
 
-            // API call to save employeeMasterPayload and organizationMasterPayload
             await axios.post(`${API_BASE_URL}/saveApiResponsePayload`, {
               userId: labour.id,
               labourID: labourID,  // Use dynamic labourID here
@@ -1488,7 +1418,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             });
 
             await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID });
-            // setApprovingLabours((prev) => prev.filter((labourId) => labourId !== id)); // Remove from processing list
             setApprovedLabours((prev) => [...new Set([...prev, id])]);
             toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
           } else {
@@ -1503,7 +1432,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       console.error(`Error approving labour with ID ${id}:`, error);
       toast.error(`Error approving labour with ID ${labour.name}.`);
       setApprovedLabours([]);
-      // setApprovingLabours((prev) => prev.filter((labourId) => labourId !== id));
       throw error;
     }
   };
@@ -1544,7 +1472,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
         if (soapResponse.status === 200) {
 
-          // Approve the labour and update state
           await axios.put(`${API_BASE_URL}/labours/approveDisableLabour/${id}`, { labourID });
           setApprovedLabours((prev) => [...new Set([...prev, id])]);
           toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
@@ -1587,44 +1514,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     setIsApproving(false);
   }
 
-  // useEffect(() => {
-  //   const processLabourApprovals = async () => {
-  //     if (labourIds.length === 0 || isApproving) return; // Check if there are IDs to process and avoid duplicate executions
-
-  //     setIsApproving(true); // Mark as processing
-
-  //     const currentId = labourIds[0]; // Get the first labour ID in the queue
-
-  //     try {
-  //       // Fetch labour details
-  //       const { data: labour } = await axios.get(`${API_BASE_URL}/labours/${currentId}`); // Assuming `labour` is the response object
-  //       console.log('labour------====', labour)
-
-  //       if (labour.isResubmit && labour.LabourID) {
-  //         console.log(`Processing disabled labour: ${labour.name} with ID: ${labour.LabourID}`);
-  //         await disableApproveLabour(labour.id); // Call the disable-specific function
-  //       } else {
-  //         console.log(`Processing regular labour: ${labour.name}`);
-  //         await approveLabour(labour.id); // Call the regular approval function
-  //       }
-
-  //       // Remove the processed labour ID from the queue
-  //       setLabourIds((prev) => prev.slice(1));
-  //     } catch (error) {
-  //       console.error(`Error processing labour with ID ${currentId}:`, error);
-
-  //       // Remove the errored labour ID from the queue
-  //       setLabourIds((prev) => prev.slice(1));
-  //     } finally {
-  //       setIsApproving(false); // Mark as not processing
-  //     }
-  //   };
-
-  //   if (labourIds.length > 0 && !isApproving) {
-  //     processLabourApprovals();
-  //   }
-  // }, [labourIds, isApproving]);
-
 
 
   useEffect(() => {
@@ -1638,7 +1527,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       try {
         const success = await approveLabour(currentId);
         if (success) {
-          setLabourIds((prev) => prev.slice(1)); // Remove the first element after success
+          setLabourIds((prev) => prev.slice(1));
         }
       } catch (error) {
         console.log(`Skipping labour ${currentId} due to error.`);
@@ -1691,33 +1580,10 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   };
 
 
-  // useEffect(() => {
-  //   fetchAttendanceLabours(1); // Start fetching from page 1
-  // }, []);
-
-  // const fetchAttendanceLabours = async (currentPage) => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`, {
-  //       params: { page: currentPage, limit: 1000 } // Fetch 1000 labors per request
-  //     });
-
-  //     if (response.data.labors.length > 0) {
-  //       setLabours(prevLabours => [...prevLabours, ...response.data.labors]); // Append new labors to the list
-  //       setPage(currentPage + 1); // Increment the page for the next batch
-  //     } else {
-  //       setHasMore(false); 
-  //     }
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.error("Error fetching labours:", error);
-  //     setLoading(false);
-  //   }
-  // };
 
 
   useEffect(() => {
-    fetchAttendanceLabours(); // Start fetching cached labours
+    fetchAttendanceLabours();
   }, []);
 
   const fetchAttendanceLabours = async () => {
@@ -1726,7 +1592,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`);
 
       if (response.data.labours.length > 0) {
-        setLabours(response.data.labours);  // Set labours directly from the cached result
+        setLabours(response.data.labours);
       } else {
         setHasMore(false);
       }
@@ -1833,11 +1699,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     }
   };
 
-  const openRejectPopup = (labour) => {
-    setSelectedLabour(labour);
-    setIsRejectPopupOpen(true);
-  };
-
   const closeRejectPopup = () => {
     setSelectedLabour(null);
     setIsRejectPopupOpen(false);
@@ -1897,9 +1758,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     setSelectedLabour(selectedLabour);
   };
 
-  // const handleEdit = (labour) => {
-  //   navigate('/edit-labour', { state: { labour } });
-  // };
 
   const handleEdit = (labour) => {
     setFormData(labour);
@@ -1920,7 +1778,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       setLabours(response.data);
       setLoading(false);
     } catch (error) {
-      // console.error('Error fetching labours:', error);
       setError('Error fetching labours. Please try again.');
       setLoading(false);
     }
@@ -1937,13 +1794,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
     fetchAndSortLabours();
   }, [tabValue]);
-
-
-
-  // useEffect(() => {
-  //   fetchLabours();
-  // }, []);
-
 
   const handleAccountNumberChange = (e) => {
     let cleanedValue = e.target.value.replace(/\D/g, '');
@@ -1977,23 +1827,19 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate expiry date format
     if (!/^\d{2}-\d{4}$/.test(formData.expiryDate)) {
       toast.error('Invalid expiry date format. Please use MM-YYYY.');
       return;
     }
 
-    // Format the expiry date for sending to the backend
     const formattedExpiryDate = formData.expiryDate ? `${formData.expiryDate}` : null;
 
-    // Create the formatted data object to send to the backend
     const formattedFormData = {
       ...formData,
       expiryDate: formattedExpiryDate,
     };
 
     try {
-      // Directly send the PUT request to update the data in the table
       const updateResponse = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData);
 
       if (updateResponse.status === 200) {
@@ -2019,125 +1865,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       toast.error('Error generating PDF. Please try again.');
     }
   };
-
-  // const handleDownloadPDF = async (labourId) => {
-  //   try {
-  //     const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
-  //     const labour = response.data;
-  //     const doc = new jsPDF();
-  //     const logoUrl = `${process.env.PUBLIC_URL}/images/vjlogo.png`; // Use the public URL
-
-  //     // Verify that the logoUrl is correctly defined
-  //     if (!logoUrl) {
-  //       throw new Error('Logo URL is undefined');
-  //     }
-
-  //     // Load the logo image
-  //     const loadImage = (url) => {
-  //       return new Promise((resolve, reject) => {
-  //         const img = new Image();
-  //         img.crossOrigin = 'Anonymous';
-  //         img.onload = () => resolve(img);
-  //         img.onerror = (error) => {
-  //           console.error(`Failed to load image: ${url}`, error);
-  //           reject(new Error(`Failed to load image: ${url}`));
-  //         };
-  //         img.src = url;
-  //         console.log(`Attempting to load image from URL: ${url}`);
-  //       });
-  //     };
-
-  //     // Function to convert an image element to a data URL
-  //     const getDataUrl = (img) => {
-  //       const canvas = document.createElement('canvas');
-  //       canvas.width = img.width;
-  //       canvas.height = img.height;
-  //       const ctx = canvas.getContext('2d');
-  //       ctx.drawImage(img, 0, 0);
-  //       return canvas.toDataURL('image/png');
-  //     };
-
-  //     const logoImg = await loadImage(logoUrl);
-  //     const logoDataUrl = getDataUrl(logoImg);
-
-  //     // Add logo to PDF
-  //     doc.addImage(logoDataUrl, 'PNG', 10, 10, 50, 15);
-  //     doc.setFontSize(20);
-  //     doc.setFont("helvetica", "bold");
-  //     doc.text('LABOUR ID CARD', 70, 20);
-
-  //     // Check if labour photo is available
-  //     let labourPhotoDataUrl = null;
-  //     if (labour.photoSrc) {
-  //       try {
-  //         const labourPhoto = await loadImage(labour.photoSrc);
-  //         labourPhotoDataUrl = getDataUrl(labourPhoto);
-  //       } catch (error) {
-  //         console.warn('Labour photo could not be loaded:', error);
-  //       }
-  //     } else {
-  //       console.warn('Labour photo URL is undefined or missing');
-  //     }
-
-  //     // If labour photo is available, add to PDF
-  //     if (labourPhotoDataUrl) {
-  //       doc.addImage(labourPhotoDataUrl, 'PNG', 10, 30, 50, 70);
-  //       doc.setLineWidth(1); // Set line width for darker border
-  //       doc.setDrawColor(0, 0, 0); // Set border color to black
-  //       doc.rect(10, 30, 50, 70); // Add border around image
-  //     }
-
-  //     const formatDate = (dateString) => {
-  //       if (!dateString) return 'N/A';
-  //       const date = new Date(dateString);
-  //       const day = String(date.getDate()).padStart(2, '0');
-  //       const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-  //       const year = date.getFullYear();
-  //       return `${day}-${month}-${year}`;
-  //     };
-
-  //     doc.setFontSize(12);
-  //     doc.setFont("helvetica", "normal");
-  //     const lineHeight = 7;
-  //     const startX = 70;
-  //     const valueStartX = 120;
-  //     let startY = 32;
-
-  //     const addDetail = (label, value) => {
-  //       doc.text(`${label.toUpperCase()}`, startX, startY);
-  //       doc.text(`: ${value ? value.toUpperCase() : 'N/A'}`, valueStartX, startY);
-  //       startY += lineHeight;
-  //     };
-
-  //     const departmentDescription = getDepartmentDescription(labour.department);
-
-  //     addDetail('Name', labour.name);
-  //     addDetail('Location', labour.location);
-  //     addDetail('Date of Birth', formatDate(labour.dateOfBirth));
-  //     addDetail('Aadhaar No.', labour.aadhaarNumber);
-  //     addDetail('Department', departmentDescription);
-  //     addDetail('Designation', labour.designation);
-  //     addDetail('Emergency No.', labour.emergencyContact);
-  //     addDetail('Inducted by', labour.Inducted_By);
-  //     addDetail('Induction date', formatDate(labour.Induction_Date));
-  //     addDetail('Date Of joining', formatDate(labour.dateOfJoining));
-  //     addDetail('Valid till', formatDate(labour.ValidTill));
-
-  //     const cardX = 5;
-  //     const cardY = 3;
-  //     const cardWidth = 200;
-  //     const cardHeight = startY + 2;
-
-  //     doc.setLineWidth(1); // Set line width for the outer border
-  //     doc.setDrawColor(0, 0, 0); // Set outer border color to black
-  //     doc.rect(cardX, cardY, cardWidth, cardHeight);
-
-  //     doc.save(`labourID_${labour.labourID || labourId}.pdf`);
-  //   } catch (error) {
-  //     console.error('Error generating PDF:', error);
-  //     toast.error('Error generating PDF. Please try again.');
-  //   }
-  // };
 
 
 
@@ -2171,13 +1898,9 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     if (projectId === undefined || projectId === null || projectId === '') {
       return 'Unknown';
     }
-  
+
     const project = projectNames.find(proj => proj.Id === Number(projectId));
-  
-    // console.log('Project Names:', projectNames);
-    // console.log('Searching for Project ID:', projectId);
-    // console.log('Found Project:', project);
-  
+
     return project ? project.Business_Unit : 'Unknown';
   };
 
@@ -2187,14 +1910,13 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
     setLoadingExcel(true);
     try {
       const response = await axios.get(`${API_BASE_URL}/download-excel`, {
-        responseType: 'blob', // Important for handling binary data
+        responseType: 'blob',
       });
 
-      // Create a blob link to download
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       const today = new Date();
-      const date = today.toISOString().split('T')[0]; // Format the date as YYYY-MM-DD
+      const date = today.toISOString().split('T')[0];
       link.href = url;
       link.setAttribute('download', `labourOnboarding_data_${date}.xlsx`);
       document.body.appendChild(link);
@@ -2206,16 +1928,15 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       console.error('Error downloading the Excel file:', error);
       toast.error('Failed to download Excel file.');
     } finally {
-      setLoadingExcel(false); // Hide loader after download completes or fails
+      setLoadingExcel(false);
     }
   };
-
   // Show here to status of Employee master api and Essl api..............................
   useEffect(() => {
     const fetchStatuses = async (labourIds) => {
       try {
         const response = await axios.post(`${API_BASE_URL}/labours/getCombinedStatuses`, { labourIds });
-        return response.data;  // Return the entire list of statuses
+        return response.data;
       } catch (error) {
         console.error('Error fetching statuses:', error);
         return [];
@@ -2224,7 +1945,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
     const updateStatuses = async () => {
       const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
-      const labourIds = labourList.map(labour => labour.LabourID || labour.id); // Collect all labour IDs
+      const labourIds = labourList.map(labour => labour.LabourID || labour.id);
 
       if (labourIds.length > 0) {
         const statuses = await fetchStatuses(labourIds);
@@ -2237,30 +1958,28 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           };
         });
 
-        setStatuses(updatedStatuses); // Update state with the mapped statuses
+        setStatuses(updatedStatuses);
       }
     };
 
     if (!hasFetchedStatuses.current && labours.length > 0) {
       updateStatuses();
-      hasFetchedStatuses.current = true;  // Set to true after the first call
+      hasFetchedStatuses.current = true;
     }
   }, [searchResults, filteredIconLabours, labours]);
 
   // Filter icon with filter the labours for tha icon.....................
   const handleFilterClick = (event) => {
-    setAnchorEl(event.currentTarget); // Set the anchor element to open the menu
+    setAnchorEl(event.currentTarget);
   };
 
-  // Function to handle closing the filter menu
   const handleCloseBtn = () => {
-    setAnchorEl(null); // Close the menu
+    setAnchorEl(null);
   };
 
-  // Function to handle fetching labours and applying the filter based on the dropdown selection
   const handleFilterSelect = async (filterType, page = 1, limit = 50) => {
     setLoading(true);
-    setError(null); // Reset error state before fetching
+    setError(null);
 
     try {
       const response = await axios.get(`${API_BASE_URL}/labours`, {
@@ -2273,13 +1992,11 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
       let filtered;
       if (filterType === "OnboardingForm") {
-        // Fetch labours with uploadAadhaarFront present
         filtered = labours.filter(
           (labour) =>
             labour.uploadAadhaarFront && labour.uploadAadhaarFront.trim() !== ""
         );
       } else if (filterType === "Farvision") {
-        // Fetch labours where uploadAadhaarFront is null, empty, or undefined
         filtered = labours.filter(
           (labour) =>
             !labour.uploadAadhaarFront || labour.uploadAadhaarFront.trim() === ""
@@ -2289,8 +2006,8 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       }
 
       setSelectedFilter(filterType);
-      setFilteredIconLabours(filtered); // Update the filtered labours state
-      setLabours(labours); // Update the full labours state
+      setFilteredIconLabours(filtered);
+      setLabours(labours);
       setPage(0);
       setLoading(false);
     } catch (error) {
@@ -2298,56 +2015,22 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
       setLoading(false);
     }
 
-    setAnchorEl(null); // Close dropdown
+    setAnchorEl(null);
   };
 
-  // const getFilteredLaboursForTab = () => {
-  //   if (tabValue === 0) {
-  //     // Pending tab: Filter labours with "Pending" status
-  //     return filteredIconLabours.length > 0
-  //       ? filteredIconLabours.filter(labour => labour.status === 'Pending')
-  //       : labours.filter(labour => labour.status === 'Pending');
-  //   } else if (tabValue === 1) {
-  //     // Approved tab: Filter labours with "Approved" status
-  //     return filteredIconLabours.length > 0
-  //       ? filteredIconLabours.filter(labour => labour.status === 'Approved')
-  //       : labours.filter(labour => labour.status === 'Approved');
-  //   } else if (tabValue === 2) {
-  //     // Rejected tab: Filter labours with "Rejected" or "Resubmitted" status
-  //     return filteredIconLabours.length > 0
-  //       ? filteredIconLabours.filter(
-  //         labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
-  //       )
-  //       : labours.filter(
-  //         labour => labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable'
-  //       );
-  //   }
-  //   // return filteredIconLabours.length > 0 ? filteredIconLabours : labours;
-  //   return filteredLabours.length > 0 ? filteredLabours : labours;
-  // };
 
   const getFilteredLaboursForTab = () => {
-    // Start with the base list (using filteredIconLabours if available)
     let baseLabours = filteredIconLabours.length > 0 ? filteredIconLabours : labours;
-  
-    // Filter labours by allowed project IDs
+
     baseLabours = baseLabours.filter((labour) => {
-      // Here, labour.projectName holds the project id. Convert it to Number.
       return allowedProjectIds.includes(Number(labour.projectName));
     });
-  
-    // Optionally, if you want to restrict by department as well, you can add:
-    // baseLabours = baseLabours.filter((labour) => allowedDepartmentIds.includes(Number(labour.department)));
-  
-    // Now apply the tab-specific filters
+
     if (tabValue === 0) {
-      // Pending tab
       baseLabours = baseLabours.filter((labour) => labour.status === 'Pending');
     } else if (tabValue === 1) {
-      // Approved tab
       baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
     } else if (tabValue === 2) {
-      // Rejected tab
       baseLabours = baseLabours.filter(
         (labour) =>
           labour.status === 'Rejected' ||
@@ -2355,7 +2038,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           labour.status === 'Disable'
       );
     }
-    // Return the filtered list
     return baseLabours;
   };
 
@@ -2364,18 +2046,16 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const handleSiteChange = (labour, siteId) => {
     setSelectedLabour(labour);
     setNewSite(siteId);
-    setOpenDialogSite(true); // Open the confirmation dialog
+    setOpenDialogSite(true);
   };
 
   const confirmTransfer = async () => {
-    setOpenDialogSite(false); // Close the dialog
+    setOpenDialogSite(false);
 
     try {
       setSelectedSite((prev) => ({ ...prev, [selectedLabour.LabourID]: newSite }));
 
-      // Fetch SerialNumber from selected site ID
       const siteResponse = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${newSite}`);
-      // Check if SerialNumber exists in the response
       const SerialNumber = siteResponse.data.serialNumber || 'Unknown';
 
 
@@ -2409,9 +2089,9 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           LabourID: selectedLabour.LabourID,
           name: selectedLabour.name,
           currentSite: selectedLabour.projectName,
-          currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit, // Send Business_Unit name
+          currentSiteName: projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit,
           transferSite: newSite,
-          transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit, // Send new Business_Unit name
+          transferSiteName: projectNames.find((p) => p.id === newSite)?.Business_Unit,
           esslStatus: 'Transferred',
           esslCommandId: commandId,
           esslPayload: soapEnvelope,
@@ -2438,32 +2118,30 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const fetchTransferSiteNames = async (labourIds) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
-      return response.data; // Assuming response.data contains [{ LabourID, transferSiteName }]
+      return response.data;
     } catch (error) {
       console.error('Error fetching transfer site names:', error);
       return [];
     }
   };
 
-  // Fetch and map transfer site names to labour data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
 
       const labourList =
         searchResults.length > 0 ? searchResults : filteredIconLabours.length > 0 ? filteredIconLabours : labours;
-      const labourIds = labourList.map((labour) => labour.LabourID || labour.id); // Collect all Labour IDs
+      const labourIds = labourList.map((labour) => labour.LabourID || labour.id);
 
       if (labourIds.length > 0) {
         const statusesData = await fetchTransferSiteNames(labourIds);
 
-        // Map transfer site names to the corresponding labour IDs
         const updatedStatuses = statusesData.reduce((acc, status) => {
           acc[status.LabourID] = status.transferSiteName || 'Not Transferred';
           return acc;
         }, {});
 
-        setStatusesSite(updatedStatuses); // Update state with mapped data
+        setStatusesSite(updatedStatuses);
       }
 
       setLoading(false);
@@ -2471,27 +2149,26 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
     if (previousTabValue !== tabValue) {
       fetchData();
-      setPreviousTabValue(tabValue); // Update the previous tab value
+      setPreviousTabValue(tabValue);
     }
-  }, [searchResults, filteredIconLabours, labours]); // Dependencies
+  }, [searchResults, filteredIconLabours, labours]);
 
 
   return (
     <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: isMobile ? 'auto' : 'auto', }}>
 
 
-<Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
-                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
-                    User | Labour Details
-                </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+        <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+          User | Labour Details
+        </Typography>
         <SearchBar
           handleSubmit={handleSubmit}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
-          // handleSearch={() => {}}
-            searchResults={searchResults}
-            setSearchResults={setSearchResults}   
+          searchResults={searchResults}
+          setSearchResults={setSearchResults}
           handleSelectLabour={handleSelectLabour}
           showResults={false}
           className="search-bar"
@@ -2539,7 +2216,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
               mr: 1,
               minHeight: "auto",
               minWidth: "auto",
-              // padding: "6px 12px",
               "&:hover": {
                 bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
               },
@@ -2557,7 +2233,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
               fontWeight: "bold",
               minHeight: "auto",
               minWidth: "auto",
-              // padding: "6px 12px",
               "&:hover": {
                 bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
               },
@@ -2574,7 +2249,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
               fontWeight: "bold",
               minHeight: "auto",
               minWidth: "auto",
-              // padding: "6px 12px",
               "&:hover": {
                 bgcolor: tabValue === 2 ? "rgb(255, 229, 229)" : "rgb(255, 229, 229)",
               },
@@ -2595,7 +2269,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             minWidth: "auto",
             px: 2,
             py: 1.2,
-            // padding: "6px 12px",
             "&:hover": {
               bgcolor: tabValue === 2 ? "rgb(204 255 213 / 89%)" : "rgb(204 255 213 / 89%)",
             },
@@ -2611,7 +2284,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
         </Button>
 
         <Box display="flex" alignItems="center" ml={2}>
-          {/* Green Dot */}
           <CircleIcon
             sx={{
               color: "#ed4b4b", // Green color
@@ -2625,7 +2297,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
         {/* Filter Icon */}
         <Box display="flex" alignItems="center">
-          {/* Icon button for the filter */}
           <IconButton
             onClick={handleFilterClick}
             sx={{ marginLeft: "auto", color: "rgb(84, 198, 104)", background: "rgb(204 255 213 / 89%)", '&:hover': { color: "rgb(84, 198, 104)", backgroundColor: "rgb(162 241 176 / 89%)" } }}
@@ -2633,18 +2304,16 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             <FilterAltIcon />
           </IconButton>
 
-          {/* Display the selected filter next to the icon */}
           {selectedFilter && (
             <Typography sx={{ marginLeft: 1, color: "black" }}>
               {selectedFilter}
             </Typography>
           )}
 
-          {/* Dropdown menu for filter options */}
           <Menu
-            anchorEl={anchorEl} // Menu opens anchored to the icon button
-            open={Boolean(anchorEl)} // If anchorEl has a value, the menu is open
-            onClose={handleCloseBtn} // Close the menu when clicking outside
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleCloseBtn}
           >
             <MenuItem onClick={() => handleFilterSelect("OnboardingForm")}>
               OnboardingForm
@@ -2663,7 +2332,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           className="custom-pagination"
           rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
           count={getFilteredLaboursForTab().length}
-          //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -2700,15 +2368,15 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                     '@media (max-width: 600px)': {
                       padding: '10px',
                     },
-                    backgroundColor: 'white', // Ensure the background color is set
+                    backgroundColor: 'white',
                     position: 'sticky',
                     top: 0,
                     zIndex: 1,
                   },
                   '& td': {
-                    padding: '16px 9px', // Applying padding to all td elements
+                    padding: '16px 9px',
                     '@media (max-width: 600px)': {
-                      padding: '14px 8px', // Adjust padding for smaller screens if needed
+                      padding: '14px 8px',
                     },
                   },
                 }}
@@ -2758,37 +2426,19 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
             <TableBody
               sx={{
                 '& td': {
-                  padding: '16px 9px', // Applying padding to all td elements
+                  padding: '16px 9px',
                   '@media (max-width: 600px)': {
-                    padding: '14px 8px', // Adjust padding for smaller screens if needed
+                    padding: '14px 8px',
                   },
                 },
               }}
             >
-              {/* {(rowsPerPage > 0
-                ? (searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours]))
-                  .filter(labour => {
-                    if (tabValue === 0) return labour.status === 'Pending';
-                    if (tabValue === 1) return labour.status === 'Approved';
-                    if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
-                    return true; // fallback if no condition matches
-                  })
-                  .sort((a, b) => b.labourID - a.labourID) // Sort in descending order by id
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                : (filteredIconLabours.length > 0 ? filteredIconLabours : [...labours])
-                  .filter(labour => {
-                    if (tabValue === 0) return labour.status === 'Pending';
-                    if (tabValue === 1) return labour.status === 'Approved';
-                    if (tabValue === 2) return labour.status === 'Rejected' || labour.status === 'Resubmitted' || labour.status === 'Disable';
-                    return true; // fallback if no condition matches
-                  })
-                  .sort((a, b) => b.labourID - a.labourID)
-              ).map((labour, index) => ( */}
 
-{(rowsPerPage > 0
-              ? laboursToDisplay.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              : laboursToDisplay
-            ).map((labour, index) => (
+
+              {(rowsPerPage > 0
+                ? laboursToDisplay.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                : laboursToDisplay
+              ).map((labour, index) => (
                 <TableRow key={labour.id}>
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   {tabValue !== 0 && tabValue !== 2 && <TableCell>{labour.LabourID}</TableCell>}
@@ -2833,23 +2483,21 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                     >
                       {labour.status}
 
-                      {/* Display the indicator based on conditions */}
                       {labour.status === 'Pending' && labour.LabourID && (
                         <Box
                           sx={{
                             position: 'absolute',
-                            top: '-8px', // Positioning the indicator above and to the right
+                            top: '-8px',
                             right: '-8px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
                         >
-                          {/* Green Dot */}
                           <CircleIcon
                             sx={{
-                              color: '#ed4b4b', // Green color
-                              fontSize: '12px', // Smaller size for the dot
+                              color: '#ed4b4b',
+                              fontSize: '12px',
                             }}
                           />
                         </Box>
@@ -2959,9 +2607,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                                 Resubmit
                               </Button>
                             )}
-                            {/* {labour.status === 'Resubmitted' && (
-                <CheckCircleIcon style={{ color: 'green', marginLeft: '10px' }} />
-              )} */}
+
                           </Box>
                         )}
                       </div>
@@ -3038,7 +2684,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                         </Button>
                       )}
 
-                      {/* {labours.map(labour => ( */}
                       <div key={labour.id}>
                         {((labour.status === 'Rejected' && labour.isApproved !== 1) || labour.status === 'Resubmitted' || labour.status === 'Disable') && (
                           <Box display="flex" alignItems="center">
@@ -3058,38 +2703,14 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
                                 Resubmit
                               </Button>
                             )}
-                            {/* {labour.status === 'Resubmitted' && (
-                <CheckCircleIcon style={{ color: 'green', marginLeft: '10px' }} />
-              )} */}
+
                           </Box>
                         )}
                       </div>
                       {/* ))} */}
 
 
-                      {/* {labour.status === 'Rejected' && (
-                <Box display="flex" alignItems="center">
-                <Button
-                  variant="contained"
-                  sx={{
-                    backgroundColor: 'rgb(229, 255, 225)',
-                    color: 'rgb(43, 217, 144)',
-                    '&:hover': {
-                      backgroundColor: 'rgb(229, 255, 225)',
-                    },
-                  }}
-                  onClick={() => handleResubmit(labour)}
-                >
-                  Resubmit
-                </Button>
-                {labour.status === 'Resubmitted' && (
-                          <CheckCircleIcon style={{ color: 'green', marginLeft: '10px' }} />
-                        )}
 
-                        
-
-              </Box>
-              )} */}
                     </TableCell>
                   )}
 
@@ -3138,8 +2759,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
         open={isPopupOpen}
         onClose={closePopup}
         closeAfterTransition
-      // BackdropComponent={Backdrop}
-      // BackdropProps={{ timeout: 500 }}
       >
         <Fade in={isPopupOpen}>
           <div className="modal">
@@ -3175,7 +2794,6 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
               <Button variant="outlined" color="secondary" onClick={closeRejectPopup} >
                 Cancel
               </Button>
-              {/* <Button variant="contained" color="primary" onClick={() => handleReject(selectedLabour.id)}> */}
               <Button variant="contained" color="primary" onClick={() => {
                 if (!rejectReason.trim()) {
                   toast.error("Please add a reason for rejection.");

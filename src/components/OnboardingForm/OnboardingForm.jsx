@@ -57,7 +57,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const [searchResults, setSearchResults] = useState([]);
   const [error, setError] = useState('');
   const [newError, setNewError] = useState('');
-  const [hover, setHover] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadAadhaarFront, setuploadAadhaarFront] = useState('');
   const [uploadAadhaarBack, setuploadAadhaarBack] = useState('');
@@ -70,25 +69,19 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const [isAddUserCollapsed, setIsAddUserCollapsed] = useState(true);
   const [isLabourDetailsCollapsed, setIsLabourDetailsCollapsed] = useState(true);
   const location = useLocation();
-  // New Chages for dorpdown
   const [projectNames, setProjectNames] = useState([]);
   const [labourCategories, setLabourCategories] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [workingHours, setWorkingHours] = useState([]);
   const [designations, setDesignations] = useState([]);
   const [companyNames, setCompanyNames] = useState([]);
-  const [nextID, setNextID] = useState(null);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
   const navigate = useNavigate();
   const [selectedLabour, setSelectedLabour] = useState(null);
   const [contactError, setContactError] = useState('');
   const [emergencyError, setEmergencyError] = useState('');
-  const [aadhaarFront, setAadhaarFront] = useState(null);
-  const [isAadhaarValid, setIsAadhaarValid] = useState(false);
-  const [aadhaarBack, setAadhaarBack] = useState(null);
   const { labourId, onFormSubmitSuccess } = location.state || {};
-  const [aadhaarFrontData, setAadhaarFrontData] = useState({});
   const [formData, setFormData] = useState({
     uploadAadhaarFront: '',
     uploadAadhaarBack: '',
@@ -202,7 +195,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
     const setStateFunction = fileStateSetter[name];
     if (setStateFunction) {
-      // setStateFunction(file);
       setStateFunction(file.name);
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -229,7 +221,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     formData.append('file', file);
 
     try {
-      // Step 1: OCR API to extract Aadhaar number
       const ocrResponse = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -250,9 +241,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         toast.error('Aadhaar number not found in the uploaded image. Please upload a valid Aadhaar card image.');
         return;
       }
-      // toast.success('Aadhaar details extracted successfully. Validating Aadhaar number...');
-
-      // Step 2: Aadhaar Validation API
       const validationResponse = await axios.post(
         'https://kyc-api.aadhaarkyc.io/api/v1/aadhaar-validation/aadhaar-validation',
         { id_number: aadhaarNumber },
@@ -271,24 +259,20 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
       toast.success('Aadhaar number validated successfully. Proceeding to backend checks...');
 
-      // Step 3: Backend Aadhaar Check
       const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber });
 
-      // Skip Aadhaar check if LabourID is present
       if (checkAadhaarResponse.data.LabourID) {
         toast.success('Labour ID found. Proceeding without duplicate checks.');
         processAadhaarData(ocrFields);
-        return; // Exit the function to avoid further checks
+        return;
       }
 
-      // Skip Aadhaar check if formStatus is 'Resubmitted' and isApproved === 3
       if (formStatus === 'Resubmitted' && isApproved === 3) {
         toast.success('Resubmitted form detected. Processing Aadhaar details...');
         processAadhaarData(ocrFields);
-        return; // Exit the function to avoid further checks
+        return;
       }
 
-      // Proceed with Aadhaar check if the above conditions are not met
       if (checkAadhaarResponse.data.exists) {
         toast.error('This Aadhaar number is already in use. User has already filled the form.');
       } else {
@@ -303,99 +287,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       toast.error('Aadhaar Number Verification Failed. Aadhaar upload Not successfully.');
     }
   };
-
-
-
-  // const uploadAadhaarImageToSurepass = async (file, formStatus, isApproved) => {
-  //   const formData = new FormData();
-  //   formData.append('file', file);
-
-  //   try {
-  //     const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
-  //       headers: {
-  //         'Content-Type': 'multipart/form-data',
-  //         'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
-  //       }
-  //     });
-
-  //     const { data } = response;
-  //     if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
-  //       const ocrFields = data.data.ocr_fields[0];
-
-  //       // Check Aadhaar details with backend
-  //       const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
-
-  //       // Skip Aadhaar check if LabourID is present
-  //       if (checkAadhaarResponse.data.LabourID) {
-  //         processAadhaarData(ocrFields); // Process the Aadhaar data without checking for duplicates
-  //         return; // Exit the function to avoid further checks
-  //       }
-
-  //       // Skip Aadhaar check if formStatus is 'Resubmitted' and isApproved === 3
-  //       if (formStatus === 'Resubmitted' && isApproved === 3) {
-  //         processAadhaarData(ocrFields); // Process the Aadhaar data for Resubmitted case
-  //         return; // Exit the function to avoid further checks
-  //       }
-
-  //       // Proceed with Aadhaar check if the above conditions are not met
-  //       if (checkAadhaarResponse.data.exists) {
-  //         setMessageType('error');
-  //         toast.error('User has already filled the form with this Aadhaar Number.');
-  //       } else {
-  //         processAadhaarData(ocrFields);
-  //       }
-  //     } else {
-  //       setNewError('Error reading Aadhaar details from Image.');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error Uploading Aadhaar image to surepass:', error);
-  //     if (error.response) {
-  //       console.error('Error response data:', error.response.data);
-  //     }
-  //     setNewError('Error uploading Aadhaar image. Please try again.');
-  //   }
-  // };
-
-  // const uploadAadhaarImageToSurepass = async (file) => {  
-  //   const formData = new FormData();
-  //   formData.append('file', file);
-
-  //   try {
-  //     const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
-  //       headers: {
-  //         'Content-Type': 'multipart/form-data',
-  //         'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
-  //       }
-  //     });
-
-  //     const { data } = response;
-  //     if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
-  //       const ocrFields = data.data.ocr_fields[0];
-
-  //       if (formStatus !== 'Resubmitted' || isApproved !== 3) {
-  //         const existingAadhaarCheck = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
-
-  //         if (existingAadhaarCheck.data.exists) {
-  //           setMessageType('error');
-  //           toast.error('User has Already filled the form with this Aadhaar Number.');
-  //         } else {
-  //           processAadhaarData(ocrFields);
-  //         }
-  //       } else {
-  //         processAadhaarData(ocrFields);
-  //       }
-  //     } else {
-  //       setNewError('Error reading Aadhaar details from Image.');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error Uploading Aadhaar image to surepass:', error);
-  //     if (error.response) {
-  //       console.error('Error response data:', error.response.data);
-  //     }
-  //     setNewError('Error uploading Aadhaar image. please try again.');
-  //   }
-  // };
-
 
   const processAadhaarData = (ocrFields) => {
     let localError = '';
@@ -414,7 +305,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
     const gender = genderMap[ocrFields.gender?.value] || ocrFields.gender?.value;
 
-    // Function to check if the age is under 18
     const checkAge = (dob) => {
       const birthDate = new Date(dob);
       const today = new Date();
@@ -437,21 +327,19 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       if (ageStatus === 'underage') {
         localError = 'Labour is underage. Age must be 18 or older.';
         toast.error(localError);
-        return; // Exit the function, don't fill the form fields
+        return;
       }
 
       if (ageStatus === 'overage') {
         localError = 'Labour exceeds the age limit. Age must be 60 or younger.';
         toast.error(localError);
-        return; // Exit the function, don't fill the form fields
+        return;
       }
 
       setFormData((prev) => ({
         ...prev,
         name: ocrFields.full_name?.value,
         dateOfBirth: dob,
-        // dateOfBirth: ocrFields.dob?.value,
-        // gender: ocrFields.gender?.value,
         gender: gender,
         aadhaarNumber: ocrFields.aadhaar_number.value,
       }));
@@ -489,15 +377,11 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const handleAadhaarNumberChange = async (e) => {
     const { value } = e.target;
 
-    // Update form data with the Aadhaar number
     setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value }));
     setNewError('');
-    // Validate Aadhaar number format
     if (value.length === 12) {
-      // Validate Aadhaar number format
       if (/^\d{12}$/.test(value)) {
         try {
-          // Step 1: Aadhaar Validation API
           const validationResponse = await axios.post(
             'https://kyc-api.aadhaarkyc.io/api/v1/aadhaar-validation/aadhaar-validation',
             { id_number: value },
@@ -509,30 +393,25 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
             }
           );
 
-          // If Aadhaar Validation API fails
           if (!validationResponse.data.success) {
             toast.error('Aadhaar validation failed. Please check the Aadhaar number and try again.');
-            setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));// Clear invalid Aadhaar number
+            setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));
             return;
           }
 
-          // Step 2: Backend Check API
           const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: value });
           const { exists, skipCheck } = response.data;
 
           if (skipCheck) {
-            // If Aadhaar resubmission is detected
             setMessageType('success');
             setMessage('Congratulations! Aadhaar resubmission detected, proceeding with the form.');
             toast.success('Aadhaar resubmission detected, proceeding with the form.');
           } else {
             if (exists) {
-              // If Aadhaar already exists in the backend
               setMessageType('error');
               toast.error('User has already filled the form with this Aadhaar number.');
-              setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear the field
+              setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));
             } else {
-              // If Aadhaar is unique
               setMessageType('success');
               setMessage('Congratulations! New Aadhaar number registered.');
               toast.success('New Aadhaar number registered successfully!');
@@ -544,12 +423,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
           toast.error('Error checking Aadhaar number. Please try again.');
         }
       } else {
-        // Invalid Aadhaar format
         toast.error('Invalid Aadhaar number. It must be a 12-digit numeric value.');
-        setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear invalid Aadhaar number
+        setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));
       }
     }
-    // Optionally, you can handle cases where the input exceeds 12 digits
     else if (value.length > 12) {
       toast.error('Aadhaar number cannot exceed 12 digits.');
       setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value.slice(0, 12) }));
@@ -557,54 +434,14 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   };
 
 
-  // const handleAadhaarNumberChange = async (e) => {
-  //   const { value } = e.target;
-  //   setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value }));
-  //   validateAadhaarNumber(value);
-
-  //   if (value.length === 12 && /^\d{12}$/.test(value)) {
-  //     try {
-  //       const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: value });
-  //       const { exists, skipCheck } = response.data;
-
-  //       if (skipCheck) {
-  //         // Skip the check and proceed
-  //         setMessageType('success');
-  //         setMessage('Congratulations! Aadhaar resubmission detected, proceeding with the form.');
-  //         toast.success('Aadhaar resubmission detected, proceeding with the form.'); // Add a success toast
-  //       } else {
-  //         if (exists) {
-  //           setMessageType('error');
-  //           toast.error('User has already filled the form with this Aadhaar number.');
-  //           // setMessage('User has already filled the form with this Aadhaar number.');
-  //           setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear the field
-  //         } else {
-  //           if (newError === '') {
-  //             setMessageType('success');
-  //             setMessage('Congratulations! New Aadhaar number registered.');
-  //           }
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error('Error checking Aadhaar number:', error);
-  //       setMessageType('error');
-  //       setMessage('Error checking Aadhaar number. Please try again.');
-  //     }
-  //   }
-  // };
-
-
-
-
-
 
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
         setMessage('');
-      }, 5000); // Clear message after 5 seconds
+      }, 5000);
 
-      return () => clearTimeout(timer); // Cleanup timer
+      return () => clearTimeout(timer);
     }
   }, [message]);
 
@@ -646,19 +483,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         setShowSuggestions(true);
       } else {
         setShowSuggestions(false);
-        // const nearbyPincode = pincode.substring(0, 4);
-        // const nearbyResponse = await fetchPincodeData(nearbyPincode);
 
-        // if (nearbyResponse && nearbyResponse[0] && nearbyResponse[0].Status === "Success") {
-        //   setSuggestions(nearbyResponse[0].PostOffice);
-        //   setShowSuggestions(true);
-        // } else {
-        //   console.error('Location data not found');
-        //   setShowSuggestions(false);
-        // }
       }
       setLoading(false);
-      // setShowSuggestions(false);
     } else {
       setShowSuggestions(false);
     }
@@ -688,7 +515,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     };
   }, []);
 
-  // New changes start here ---------------------------------------------
 
   useEffect(() => {
     const fetchData = async () => {
@@ -698,10 +524,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         const departmentsRes = await axios.get(API_BASE_URL + `/api/departments`);
         const workingHoursRes = await axios.get(API_BASE_URL + `/api/working-hours`);
         setProjectNames(projectNamesRes.data);
-        console.log('dprojectNamesRes.data',projectNamesRes.data)
+        console.log('dprojectNamesRes.data', projectNamesRes.data)
         setLabourCategories(labourCategoriesRes.data);
         setDepartments(departmentsRes.data);
-        console.log('departmentsRes.data',departmentsRes.data)
+        console.log('departmentsRes.data', departmentsRes.data)
         setWorkingHours(workingHoursRes.data);
 
       } catch (err) {
@@ -715,17 +541,11 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   useEffect(() => {
     const fetchDesignations = async () => {
       if (formData.department) {
-        console.log('formData.department',formData.department)
+        console.log('formData.department', formData.department)
         try {
           const designationsRes = await axios.get(API_BASE_URL + `/api/designations/${formData.department}`);
           setDesignations(designationsRes.data);
 
-          // if (designationsRes.data.length > 0 && !formData.designation) {
-          //   setFormData(prevFormData => ({
-          //     ...prevFormData,
-          //     designation: designationsRes.data[0].Description
-          //   }));
-          // }
 
         } catch (err) {
           console.error(err);
@@ -736,63 +556,37 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     fetchDesignations();
   }, [formData.department]);
 
-  // useEffect(() => {
-  //   const fetchCompanyNames = async () => {
-  //     if (formData.projectName) {
-  //       console.log('formData.projectName',formData.projectName)
-  //       try {
-  //         const companyNamesRes = await axios.get(API_BASE_URL + `/api/company-names/${formData.projectName}`);
-  //         console.log("companyNamesRes.data{{",companyNamesRes.data)
-  //         setCompanyNames(companyNamesRes.data);
-
-  //         if (companyNamesRes.data.length > 0 && !formData.companyName) {
-  //           setFormData(prevFormData => ({
-  //             ...prevFormData,
-  //             companyName: companyNamesRes.data[0].Company_Name
-  //           }));
-  //         }
-
-  //       } catch (err) {
-  //         console.error(err);
-  //       }
-  //     }
-  //   };
-
-  //   fetchCompanyNames();
-  // }, [formData.projectName]);
 
   useEffect(() => {
-  const fetchCompanyNames = async () => {
-    if (formData.projectName) {
-      console.log("Fetching company names for:", formData.projectName);
+    const fetchCompanyNames = async () => {
+      if (formData.projectName) {
+        console.log("Fetching company names for:", formData.projectName);
 
-      try {
-        const companyNamesRes = await axios.get(API_BASE_URL + `/api/company-names/${formData.projectName}`);
-        
-        console.log("API Response:", companyNamesRes.data);  // Debugging line
+        try {
+          const companyNamesRes = await axios.get(API_BASE_URL + `/api/company-names/${formData.projectName}`);
 
-        // Ensure `companyNames` is always an array
-        const companyData = Array.isArray(companyNamesRes.data) ? companyNamesRes.data : [companyNamesRes.data];
+          console.log("API Response:", companyNamesRes.data);
 
-        setCompanyNames(companyData);
+          const companyData = Array.isArray(companyNamesRes.data) ? companyNamesRes.data : [companyNamesRes.data];
 
-        if (companyData.length > 0 && !formData.companyName) {
-          setFormData(prevFormData => ({
-            ...prevFormData,
-            companyName: companyData[0].Description
-          }));
+          setCompanyNames(companyData);
+
+          if (companyData.length > 0 && !formData.companyName) {
+            setFormData(prevFormData => ({
+              ...prevFormData,
+              companyName: companyData[0].Description
+            }));
+          }
+        } catch (err) {
+          console.error("Error fetching company names:", err);
         }
-      } catch (err) {
-        console.error("Error fetching company names:", err);
       }
-    }
-  };
+    };
 
-  fetchCompanyNames();
-}, [formData.projectName]);
+    fetchCompanyNames();
+  }, [formData.projectName]);
 
 
-  // New changes end here ----------------------------------
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -803,7 +597,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     try {
       const response = await axios.get(API_BASE_URL + `/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
-      // setPage(0);
     } catch (error) {
       console.error('Error searching:', error);
       toast.error('Error searching. Please try again.');
@@ -818,21 +611,11 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // const startCamera = async () => {
-  //   try {
-  //     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  //     videoRef.current.srcObject = stream;
-  //     setStream(stream);
-  //   } catch (err) {
-  //     console.error("Error accessing camera: ", err);
-  //   }
-  // };
+
   const startCamera = async () => {
     try {
-      // Define video constraints for better compatibility
       const constraints = {
         video: {
-          // facingMode: 'user' 
           facingMode: facingMode
         }
       };
@@ -1023,7 +806,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const bankDetailsRequiredFields = ['bankName', 'branch', 'accountNumber', 'ifscCode'];
   const projectRequiredFields = ['projectName', 'companyName', 'department', 'designation', 'labourCategory', 'workingHours', 'Induction_Date', 'Inducted_By', 'uploadInductionDoc'];
 
-  // Check if all required fields are filled
   const isFormComplete = (form, requiredFields) => {
     return requiredFields.every(field => form[field] !== '');
   };
@@ -1043,15 +825,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const getBulletColor = (isCompleted) => {
     return isCompleted ? '#20C305' : '#FFBF00';
   };
-  // const getBulletColor = () => {
-  //   if (formType === "kyc") {
-  //     return kycCompleted ? '#20C305' : '#FFBF00';
-  //   } else if (formType === "project") {
-  //     return projectCompleted ? '#20C305' : '#FFBF00';
-  //   } else {
-  //     return '#FFBF00';
-  //   }
-  // };
+
 
   const handleDateChange = (e) => {
     const selectedDate = new Date(e.target.value);
@@ -1077,12 +851,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       'projectName', 'department', 'designation', 'labourCategory', 'workingHours', 'Induction_Date', 'Inducted_By', 'uploadInductionDoc',
     ];
 
-    // for (const field of requiredFields) {
-    //   if (!formData[field]) {
-    //     toast.error(`Please fill in the ${field} field.`);
-    //     return false;
-    //   }
-    // }
     const missingFields = [];
 
     for (const field of requiredFields) {
@@ -1095,8 +863,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       toast.error(`Please fill in the following fields: ${missingFields.join(', ')}`);
       return false;
     }
-
-
     return true;
   };
 
@@ -1122,22 +888,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   };
 
 
-  // const base64ToBlob = (base64, mimeType) => {
-  //   const byteString = atob(base64.split(',')[1]);
-  //   const arrayBuffer = new ArrayBuffer(byteString.length);
-  //   const intArray = new Uint8Array(arrayBuffer);
-
-  //   for (let i = 0; i < byteString.length; i++) {
-  //     intArray[i] = byteString.charCodeAt(i);
-  //   }
-
-  //   return new Blob([intArray], { type: mimeType });
-  // };
-
-
   useEffect(() => {
     if (labourId) {
-      // Fetch the existing labour data
       fetchLabourData(labourId);
     }
   }, [labourId]);
@@ -1145,7 +897,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const fetchLabourData = async (id) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/labours/${id}`);
-      setFormData(response.data); // Populate the form with the fetched data
+      setFormData(response.data);
     } catch (error) {
       console.error('Error fetching labour data:', error);
     }
@@ -1175,7 +927,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     setLoading(true);
     setSaved(false);
 
-    // const { user } = useUser();
 
     try {
       const formDataToSend = new FormData();
@@ -1190,12 +941,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       } else {
         console.error('uploadAadhaarFront is not a file object');
       }
-
-      // if (uploadAadhaarBack && uploadAadhaarBack instanceof File) {
-      //   formDataToSend.append('uploadAadhaarBack', uploadAadhaarBack, uploadAadhaarBack.name);
-      // } else {
-      //   console.error('uploadAadhaarBack is not a file object');
-      // }
       if (uploadAadhaarBack && uploadAadhaarBack instanceof File) {
         formDataToSend.append('uploadAadhaarBack', uploadAadhaarBack, uploadAadhaarBack.name);
       }
@@ -1216,7 +961,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         const photoBlob = base64ToBlob(photoSrc, 'image/jpeg');
         formDataToSend.append('photoSrc', photoBlob, 'captured_photo.jpg');
       } else if (photoSrc && typeof photoSrc === 'string') {
-        formDataToSend.append('photoSrc', photoSrc); // Use existing URL
+        formDataToSend.append('photoSrc', photoSrc);
       }
 
       if (user.name) {
@@ -1266,10 +1011,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         }
 
         if (['Rejected', 'Resubmitted', 'Disable'].includes(labourStatus) && (response.status === 200 || response.status === 201)) {
-          // Call API to update hideResubmit field
           await axios.put(`${API_BASE_URL}/labours/updateHideResubmit/${labourId}`, { hideResubmit: true });
 
-          // Notify LabourDetails that the resubmit was successful for the selected statuses
           if (onFormSubmitSuccess) {
             onFormSubmitSuccess({ labourId, hideResubmit: true });
           }
@@ -1369,8 +1112,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     };
     const setStateFunction = fileStateSetter[name];
     if (setStateFunction) {
-      // setStateFunction(file);
-      setStateFunction(file.name); // Set the file name for display
+      setStateFunction(file.name);
       setFormData((prevFormData) => ({
         ...prevFormData,
         [name]: file,
@@ -1429,7 +1171,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
   const handleContactNumberChange = (e) => {
     const { value } = e.target;
-    if (/^\d*$/.test(value)) {  // Only allow digits
+    if (/^\d*$/.test(value)) {
       setFormData({ ...formData, contactNumber: value });
       validateContactNumber(value);
     }
@@ -1443,7 +1185,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
   const handleEmergencyContactChange = (e) => {
     const { value } = e.target;
-    if (/^\d*$/.test(value)) {  // Only allow digits
+    if (/^\d*$/.test(value)) {
       setFormData({ ...formData, emergencyContact: value });
       validateEmergencyNumber(value);
     }
@@ -1464,17 +1206,17 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     const { name, value } = e.target;
 
     if (name === "projectName") {
-      const projectId = parseInt(value, 10); // Get the selected project's ID
+      const projectId = parseInt(value, 10);
       const selectedProject = projectNames.find(project => project.Id === projectId);
 
       if (selectedProject) {
-        const companyName = selectedProject.Business_Unit; // Get the corresponding company name
+        const companyName = selectedProject.Business_Unit;
 
         setFormData((prevFormData) => ({
           ...prevFormData,
-          projectName: value, // Update projectName
-          projectId,          // Store the project ID
-          companyName,        // Automatically update companyName
+          projectName: value,
+          projectId,
+          companyName,
         }));
       } else {
         console.error(`Project with ID ${projectId} not found.`);
@@ -1603,32 +1345,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     }
   };
 
-
-
-  const handleAddressSelect = (selectedAddress) => {
-    const addressComponents = selectedAddress.display_name.split(', ');
-    const city = addressComponents[1];
-    const taluka = addressComponents[1];
-    const district = addressComponents[2];
-    const state = addressComponents[3];
-    const pincode = addressComponents[7];
-
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      address: selectedAddress.display_name,
-      village: city,
-      taluka: taluka || '',
-      district: district || '',
-      state: state || '',
-      pincode: pincode || '',
-    }));
-
-    setSuggestions([]);
-  };
-
-
-
-
   const clearFile = (name) => {
     const fileStateSetter = {
       uploadAadhaarFront: setuploadAadhaarFront,
@@ -1652,17 +1368,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   };
 
 
-  function handlePhotoChange(event) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const imageData = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
   const getFormattedDate = (offsetDays = 0) => {
     const date = new Date();
     date.setDate(date.getDate() + offsetDays);
@@ -1678,9 +1383,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     setSearchQuery(value);
   };
 
-  // const handleTitleChange = (e) => {
-  //   setFormData({ ...formData, [e.target.name]: e.target.value });
-  // };
   const styles = {
     list: {
       marginLeft: '-22px',
@@ -2178,54 +1880,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                         </div>
                       </div>
 
-
-
-                      {/* <div className="location-photo-label">
-                        <InputLabel
-                          id="personal-emcontact-label"
-                          sx={{ color: "black" }}
-                        >
-                          Capture Photo{renderRequiredAsterisk(true)}
-                        </InputLabel>
-                        <div className="camera-container">
-                          <div className="video-container" style={{ position: 'relative' }}>
-                            <video ref={videoRef} className="video" autoPlay style={{ display: stream ? 'block' : 'none', width: '100%' }}></video>
-                            <canvas ref={canvasRef} className="canvas" style={{ display: 'none' }}></canvas>
-                            {photoSrc && <img src={photoSrc} alt="Captured" className="photo" style={{ width: '96%', position: 'absolute', top: 0, left: 0 }} />}
-                          </div>
-                          <div className="button-container" style={{ marginTop: '10px' }}>
-                            {!stream && !photoSrc && (
-                              <button type="button" onClick={startCamera} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
-                                Start Camera<CameraAltIcon />
-                              </button>
-                            )}
-                            {stream && !photoSrc && (
-                              <button type="button" onClick={capturePhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px', backgroundColor: 'rgb(93 210 120 / 89%)', color: 'white', }}>
-                                Capture Photo<CameraAltIcon />
-                              </button>
-                            )}
-                            {!stream && photoSrc && (
-                              <button type="button" onClick={repeatPhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px', backgroundColor: 'rgb(214 94 105 / 78%)', color: 'white', }}>
-                                Repeat Photo<CameraAltIcon />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        <input
-                          type="hidden"
-                          id="photoInput"
-                          name="photoInput"
-                          value={photoSrc || ''}
-                          required
-                          onChange={(e) => setFormData((prevFormData) => {
-                            return { ...prevFormData, photoInput: e.target.value }
-                          })}
-                        />
-
-                      </div> */}
-
-
-
                       <div className="location-photo-label">
                         <InputLabel
                           id="personal-emcontact-label"
@@ -2382,29 +2036,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                         </div>
                       </div>
 
-                      {/* <div className="locations">
-                        <div className="bankDetails-field">
-                          <InputLabel id="branch-label" sx={{ color: "black" }}>
-                            Payment Mode
-                          </InputLabel>
-                          <input
-                            type="text"
-                            id="Payment_Mode"
-                            name="Payment_Mode"
-                            required
-                            value={formData.Payment_Mode || 'NEFT'}
-                            onChange={handleChanges}
-                            style={getInputStyle('Payment_Mode')}
-                          />
-                        </div>
-                      </div> */}
-
-                      {/* <div className="bankDetails-field">
-                        <InputLabel id="id-card-label" sx={{ color: "black" }}>
-                          Id Proof{renderRequiredAsterisk(true)}
-                        </InputLabel>
-                        <input type="file" onChange={() => { }} required />
-                      </div> */}
                       <div className="navigationBut">
                         <button onClick={() => handlePrevious('/personal')}>Previous</button>
                         <button onClick={() => handleNext('/project')} style={{ marginLeft: "10px" }}>Next</button>
@@ -2472,14 +2103,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 id="projectName"
                                 name="projectName"
                                 value={formData.projectName}
-                                // onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                                 onChange={handleInputChange}
                                 style={getInputStyle('projectName')}
                               // required
                               >
                                 <option value="" >Select a project</option>
                                 {projectNames.map(project => (
-                                  // <option key={project.id} value={project.Business_Unit}>{project.Business_Unit}</option>
                                   <option key={project.Id} value={project.Id}>{project.Business_Unit}</option>
                                 ))}
                               </select>
@@ -2499,15 +2128,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                                 style={getInputStyle('companyName')}
                               >
-                                {/* <option value="" >Select Company Name</option> */}
-                                {/* {companyNames.map(company => (
-                                  <option key={company.id} value={company.Company_Name}>{company.Company_Name}</option>
-                                ))} */}
+
                                 {Array.isArray(companyNames) ? companyNames.map((company) => (
-    <option key={company.Company_Name} value={company.Company_Name}>
-      {company.Company_Name}
-    </option>
-  )) : null}
+                                  <option key={company.Company_Name} value={company.Company_Name}>
+                                    {company.Company_Name}
+                                  </option>
+                                )) : null}
                               </select>
                             </div>
                           </div>
@@ -2526,7 +2152,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 Id="department"
                                 name="department"
                                 value={formData.department}
-                                // onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                                 onChange={handleInputChange}
                                 style={getInputStyle('department')}
                               // required
@@ -2558,9 +2183,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                     {designation.farvision_description}
                                   </option>
                                 ))}
-                                {/* {designations.map(designation => (
-                                  <option key={designation.id} value={designation.Description}>{designation.Description}</option>
-                                ))} */}
+
                               </select>
                             </div>
                           </div>
@@ -2576,7 +2199,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 id="labourCategory"
                                 name="labourCategory"
                                 value={formData.labourCategory}
-                                // onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
                                 onChange={handleSelectChange}
                                 style={getInputStyle('labourCategory')}
                               // required
@@ -2587,9 +2209,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                     {category.Description}
                                   </option>
                                 ))}
-                                {/* {labourCategories.map(category => (
-                                  <option key={category.Id} value={category.Description}>{category.Description}</option>
-                                ))} */}
+
                               </select>
                             </div>
                           </div>
@@ -2602,7 +2222,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 id="workingHours"
                                 name="workingHours"
                                 value={formData.workingHours}
-                                // onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
                                 onChange={handleInputChange}
                                 style={getInputStyle('workingHours')}
                                 // required
@@ -2612,9 +2231,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 {Object.values(departmentWorkingHoursMapping).map((hours, index) => (
                                   <option key={index} value={hours}>{hours}</option>
                                 ))}
-                                {/* {workingHours.map(hours => (
-                                  <option key={hours.Id} value={hours.Shift_Name}>{hours.Shift_Name}</option>
-                                ))} */}
+
                               </select>
                             </div>
                           </div>
@@ -2694,7 +2311,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
                         <div className="buttons-container">
                           <div className="navigation-buttons">
-                            {/* <button onClick={() => handleNext('/project')} style={{marginLeft: '10px'}}>Next</button> */}
                           </div>
                           <div className="save-btn">
                             <button
@@ -2706,7 +2322,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                             <button
                               variant="contained"
                               type="button"
-                              // onClick={openModal}
                               onClick={openPreviewModal}
                               className="btn btn-preview"
                             > Preview

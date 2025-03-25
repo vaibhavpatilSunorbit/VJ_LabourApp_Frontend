@@ -19,9 +19,7 @@ import {
     Select,
     MenuItem,
     Tabs,
-    Tab,
     Typography,
-    InputAdornment,
     Modal,
     Grid
 } from '@mui/material';
@@ -34,15 +32,12 @@ import "./attendanceReport.css";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CircleIcon from '@mui/icons-material/Circle';
-import SearchIcon from '@mui/icons-material/Search';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { useUser } from '../../UserContext/UserContext';
 import dayjs from 'dayjs';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-// import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
-// toast.configure();
 
 const CalenderAttendance = () => {
     const theme = useTheme();
@@ -58,9 +53,6 @@ const CalenderAttendance = () => {
     const [selectedMonth, setSelectedMonth] = useState('');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [searchResults, setSearchResults] = useState([]);
-    const [totalDays, setTotalDays] = useState(0);
-    const [presentDays, setPresentDays] = useState(0);
-    const [totalOvertime, setTotalOvertime] = useState(0);
     const [tabValue, setTabValue] = useState(0);
     const [selectedLabourId, setSelectedLabourId] = useState('');
     const [editManualDialogOpen, setEditManualDialogOpen] = useState(false);
@@ -81,10 +73,9 @@ const CalenderAttendance = () => {
     const [endDate, setEndDate] = useState('');
     const [file, setFile] = useState(null);
     const { user } = useUser();
-    const [isAttendanceFetched, setIsAttendanceFetched] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
-const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
-const [projectName, setProjectName] = useState('');
+    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+    const [projectName, setProjectName] = useState('');
 
 
 
@@ -105,39 +96,35 @@ const [projectName, setProjectName] = useState('');
     const handleManualEditDialogClose = () => {
         setEditManualDialogOpen(false);
     };
-    
+
 
     const handleSaveManualEdit = async () => {
         try {
-            // Ensure punchIn and punchOut are dayjs objects, then format them as HH:mm:ss
             const formattedPunchIn = manualEditData.punchIn && dayjs.isDayjs(manualEditData.punchIn)
                 ? manualEditData.punchIn.format('HH:mm:ss')
                 : null;
-    
+
             const formattedPunchOut = manualEditData.punchOut && dayjs.isDayjs(manualEditData.punchOut)
                 ? manualEditData.punchOut.format('HH:mm:ss')
                 : null;
-    
-            // Ensure overtime is treated as a string for .trim() check, default to an empty string if it's undefined or null
+
             const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
-    
-            // Validation rules:
+
             const hasOvertime = overtime !== '';
             const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
-    
+
             if (!hasOvertime && !hasPunchInOrOut) {
                 toast.error('At least provide Overtime or Punch In/Out details to save.');
                 return;
             }
-    
-            // Construct the payload
+
             const onboardName = user.name || null;
             const workingHours = manualEditData.workingHours || selectedDay.workingHours;
-    
+
             const payload = {
                 labourId: selectedDay.labourId,
                 date: selectedDay.date,
-                AttendanceId: manualEditData.AttendanceId || "", 
+                AttendanceId: manualEditData.AttendanceId || "",
                 ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
                 ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
                 ...(hasOvertime && { overtimeManually: manualEditData.overtime }),
@@ -145,13 +132,11 @@ const [projectName, setProjectName] = useState('');
                 workingHours,
                 ...(onboardName && { onboardName }),
             };
-    
-            console.log('Request payload +++++:', payload); // Debug log
-    
-            // Call the backend
+
+            console.log('Request payload +++++:', payload);
+
             await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
-    
-            // Update local attendanceData
+
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
                     ? {
@@ -164,25 +149,23 @@ const [projectName, setProjectName] = useState('');
                     }
                     : day
             );
-    
+
             setAttendanceData(updatedAttendanceData);
-    
+
             toast.success('Attendance updated successfully!');
             handleManualEditDialogClose();
         } catch (error) {
-           // Simplify and log errors to the console
-        const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
-        console.error('Error saving attendance:', errorMessage);
+            const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
+            console.error('Error saving attendance:', errorMessage);
 
-        // Show appropriate toast messages
-        if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
-            toast.info('The date is a holiday. You cannot modify punch times or overtime.');
-        } else {
-            toast.error(errorMessage);
-        }
+            if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
+                toast.info('The date is a holiday. You cannot modify punch times or overtime.');
+            } else {
+                toast.error(errorMessage);
+            }
         }
     };
-    
+
 
     const months = [
         { value: 1, label: 'January' },
@@ -213,12 +196,11 @@ const [projectName, setProjectName] = useState('');
         }
     };
 
-    // Fetch labours and sort by LabourID
     const fetchLabours = async () => {
         setLoading(true);
         try {
             const response = await axios.get(`${API_BASE_URL}/labours`);
-            const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID); // Sorting by LabourID DESC
+            const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID);
             setLabours(sortedLabours);
             setLoading(false);
         } catch (error) {
@@ -228,17 +210,9 @@ const [projectName, setProjectName] = useState('');
         }
     };
 
-    // useEffect(() => {
-    //     fetchLabours();
-    //     if (modalOpen) {
-    //         fetchAttendanceForMonth();
-    //     }
-    // }, [modalOpen]);
     useEffect(() => {
-        fetchLabours(); // Fetch labours when the component mounts or some other condition
-    }, []); // Empty dependency array ensures this runs only once
-    
-    // Fetch attendance for the month only when modal is opened
+        fetchLabours();
+    }, []);
     useEffect(() => {
         if (modalOpen) {
             fetchAttendanceForMonth();
@@ -251,7 +225,6 @@ const [projectName, setProjectName] = useState('');
             setSelectedLabourId(labour.LabourID);
             setModalOpen(true);
             fetchAttendanceForMonth();
-            // fetchAttendanceData(labour.LabourID, startDate, endDate);
         } else {
             console.error('LabourID is null or undefined for the selected labour.');
         }
@@ -263,8 +236,6 @@ const [projectName, setProjectName] = useState('');
             setSelectedLabourId(labour.LabourID);
             setOpen(true);
             fetchAttendance();
-            // handleOpen
-            // fetchAttendanceData(labour.LabourID, startDate, endDate);
         } else {
             console.error('LabourID is null or undefined for the selected labour.');
         }
@@ -281,19 +252,17 @@ const [projectName, setProjectName] = useState('');
             });
 
             const attendanceList = response.data;
-            console.log('response.data for the labour 16-12-24',response.data)
+            console.log('response.data for the labour 16-12-24', response.data)
 
-            // Generate a full list of dates for the selected month
             const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
             const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
-                const date = new Date(selectedYear, selectedMonth - 1, i + 1); // Month is 0-indexed
+                const date = new Date(selectedYear, selectedMonth - 1, i + 1);
                 const attendanceRecord = attendanceList.find(
                     (record) => new Date(record.Date).toDateString() === date.toDateString()
                 );
 
                 return {
-                    // date: date.toISOString().split('T')[0], // Format: yyyy-mm-dd
-                    date: attendanceRecord?.Date.split('T')[0] || date.toISOString().split('T')[0], // Format: yyyy-mm-dd
+                    date: attendanceRecord?.Date.split('T')[0] || date.toISOString().split('T')[0],
                     status: attendanceRecord ? attendanceRecord.Status : 'NA',
                     firstPunch: attendanceRecord?.FirstPunch || '-',
                     lastPunch: attendanceRecord?.LastPunch || '-',
@@ -332,57 +301,57 @@ const [projectName, setProjectName] = useState('');
         if (!selectedLabourId || !selectedMonth) return;
         setLoading(true);
         try {
-          const response = await axios.get(
-            `${API_BASE_URL}/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
-            { params: { month: selectedMonth, year: selectedYear } }
-          );
-    
-          const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-    
-          const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
-            const date = new Date(selectedYear, selectedMonth - 1, i + 1)
-              .toISOString()
-              .split('T')[0];
-            const record = response.data.find((att) => att.Date.split('T')[0] === date);
-            return {
-              date,
-              status: record ? record.Status : 'NA',
-            };
-          });
-    
-          setAttendanceData(fullMonthAttendance);
+            const response = await axios.get(
+                `${API_BASE_URL}/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
+                { params: { month: selectedMonth, year: selectedYear } }
+            );
+
+            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+            const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
+                const date = new Date(selectedYear, selectedMonth - 1, i + 1)
+                    .toISOString()
+                    .split('T')[0];
+                const record = response.data.find((att) => att.Date.split('T')[0] === date);
+                return {
+                    date,
+                    status: record ? record.Status : 'NA',
+                };
+            });
+
+            setAttendanceData(fullMonthAttendance);
         } catch (error) {
-          console.error('Error fetching attendance:', error);
+            console.error('Error fetching attendance:', error);
         }
-      };
-    
-      useEffect(() => {
+    };
+
+    useEffect(() => {
         if (open) fetchAttendance();
-      }, [open]);
-    
-      const renderStatusBox = (status) => {
+    }, [open]);
+
+    const renderStatusBox = (status) => {
         const statusColors = {
-          P: '#4CAF50',
-          A: '#FF6F00',
-          HD: '#F44336',
-          H: '#8236BC',
-          MP: '#005cff',
-          NA: '#ccc',
+            P: '#4CAF50',
+            A: '#FF6F00',
+            HD: '#F44336',
+            H: '#8236BC',
+            MP: '#005cff',
+            NA: '#ccc',
         };
         return {
-          backgroundColor: statusColors[status],
-          color: '#fff',
-          width: 40,
-          height: 40,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          borderRadius: 4,
-          margin: 4,
-          fontSize: '12px',
+            backgroundColor: statusColors[status],
+            color: '#fff',
+            width: 40,
+            height: 40,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 4,
+            margin: 4,
+            fontSize: '12px',
         };
-      };
-    
+    };
+
 
     const fetchCachedAttendance = async () => {
         setLoading(true);
@@ -421,7 +390,7 @@ const [projectName, setProjectName] = useState('');
             const processedAttendance = attendanceList.map((labour, index) => ({
                 srNo: index + 1,
                 labourId: labour.LabourId,
-                name: labour.Name, // Ensure 'name' is included if required
+                name: labour.Name,
                 totalDays: labour.TotalDays,
                 presentDays: labour.PresentDays,
                 halfDays: labour.HalfDays,
@@ -445,69 +414,6 @@ const [projectName, setProjectName] = useState('');
         }
     }, [selectedMonth, selectedYear]);
 
-
-
-
-    // Function to display attendance for each day of the selected month
-    const renderAttendanceForMonth = () => {
-        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate(); // Get days in the selected month
-        const result = [];
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const formattedDay = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-            // Check if there's attendance data for the current day
-            const attendanceForDay = attendanceData.find(a => a.punch_date === formattedDay);
-
-            if (selectedLabour && selectedLabour.workingHours) {
-                const shiftHours = selectedLabour.workingHours.includes('9') ? 9 : 8;
-
-                if (attendanceForDay) {
-                    const totalHours = calculateTotalHours(attendanceForDay);
-                    const overtime = totalHours > shiftHours ? totalHours - shiftHours : 0;
-
-                    result.push({
-                        date: formattedDay,
-                        status: 'P',
-                        firstPunch: attendanceForDay.punch_in || '-',
-                        lastPunch: attendanceForDay.punch_out || '-',
-                        totalHours,
-                        overtime,
-                        shift: selectedLabour.workingHours
-                    });
-                } else {
-                    result.push({
-                        date: formattedDay,
-                        status: 'A', // Absent if no attendance data for the day
-                        firstPunch: '-',
-                        lastPunch: '-',
-                        totalHours: '-',
-                        overtime: '-',
-                        shift: selectedLabour.workingHours
-                    });
-                }
-            }
-        }
-
-        return result; // Return the calculated attendance data
-    };
-
-
-    const handleOverTime = (labourId) => {
-        const labour = labours.find((l) => l.LabourID === labourId);
-        if (!labour || !attendanceData.length) return 0;
-
-        let totalOvertime = 0;
-        attendanceData.forEach((entry) => {
-            const punchTime = new Date(`1970-01-01T${entry.punch_time}Z`);
-            const hoursWorked = punchTime.getHours() + punchTime.getMinutes() / 60;
-            if (hoursWorked > 8) {
-                totalOvertime += hoursWorked - 8;
-            }
-        });
-        return totalOvertime;
-    };
-
     const handleModalClose = () => {
         setModalOpen(false);
         fetchAttendanceForMonthAll()
@@ -523,10 +429,10 @@ const [projectName, setProjectName] = useState('');
     };
 
     const calculateTotalHours = (attendanceEntry) => {
-        const punchIn = new Date(`${attendanceEntry.punch_in}Z`);  // Assuming punch_in is a time string
-        const punchOut = new Date(`${attendanceEntry.punch_out}Z`);  // Assuming punch_out is a time string
-        const totalHours = (punchOut - punchIn) / (1000 * 60 * 60);  // Convert milliseconds to hours
-        return totalHours.toFixed(2);  // Returning the total hours as a fixed decimal value (e.g., 8.25 hours)
+        const punchIn = new Date(`${attendanceEntry.punch_in}Z`);
+        const punchOut = new Date(`${attendanceEntry.punch_out}Z`);
+        const totalHours = (punchOut - punchIn) / (1000 * 60 * 60);
+        return totalHours.toFixed(2);
     };
 
     const handleTabChange = (event, newValue) => {
@@ -544,7 +450,6 @@ const [projectName, setProjectName] = useState('');
         setPage(0);
     };
 
-    // Save full month's attendance to the database
     const saveFullMonthAttendance = async () => {
         try {
             const payload = {
@@ -568,7 +473,7 @@ const [projectName, setProjectName] = useState('');
     const fetchAttendanceWithLoading = async () => {
         setIsLoading(true);
         try {
-            await fetchAttendanceForMonth(); // Fetch data
+            await fetchAttendanceForMonth();
         } finally {
             setIsLoading(false);
         }
@@ -582,21 +487,20 @@ const [projectName, setProjectName] = useState('');
             ml={2}
             mt={2}
             sx={{
-                fontSize: { xs: "12px", sm: "13px", md: "14px", lg: "15px" }, // Responsive font size for the legend
+                fontSize: { xs: "12px", sm: "13px", md: "14px", lg: "15px" },
             }}
         >
-            {/* Present */}
             <Box display="flex" alignItems="center" mb={1} mr={2}>
                 <CircleIcon
                     sx={{
                         color: "#4CAF50",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, // Responsive icon size
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
                 <Typography
                     sx={{
-                        fontSize: { xs: "0.75rem", sm: "0.875rem", md: "0.9rem", lg: "1rem" }, // Typography size for different screens
+                        fontSize: { xs: "0.75rem", sm: "0.875rem", md: "0.9rem", lg: "1rem" },
                         color: "#5e636e",
                     }}
                 >
@@ -604,12 +508,11 @@ const [projectName, setProjectName] = useState('');
                 </Typography>
             </Box>
 
-            {/* Half Day */}
             <Box display="flex" alignItems="center" mb={1} mr={2}>
                 <CircleIcon
                     sx={{
                         color: "#F44336",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, // Responsive icon size
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
@@ -623,12 +526,11 @@ const [projectName, setProjectName] = useState('');
                 </Typography>
             </Box>
 
-            {/* Holiday */}
             <Box display="flex" alignItems="center" mb={1} mr={2}>
                 <CircleIcon
                     sx={{
                         color: "#8236BC",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, // Responsive icon size
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
@@ -642,12 +544,11 @@ const [projectName, setProjectName] = useState('');
                 </Typography>
             </Box>
 
-            {/* Absent */}
             <Box display="flex" alignItems="center">
                 <CircleIcon
                     sx={{
                         color: "#FF6F00",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, // Responsive icon size
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
@@ -665,7 +566,7 @@ const [projectName, setProjectName] = useState('');
                 <CircleIcon
                     sx={{
                         color: "#005cff",
-                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" }, // Responsive icon size
+                        fontSize: { xs: "10px", sm: "12px", md: "13px", lg: "14px" },
                         marginRight: "4px",
                     }}
                 />
@@ -692,35 +593,32 @@ const [projectName, setProjectName] = useState('');
                 params: { projectName, startDate, endDate },
                 responseType: 'blob',
             });
-           
-        // Create a Blob URL for the file
-        const blob = new Blob([response.data], {
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        });
 
-        const fileName = `Attendance_${selectedBusinessUnit}_${startDate}_${endDate}.xlsx`;
+            const blob = new Blob([response.data], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            });
 
-        // Download the file
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.setAttribute('download', fileName);
-        document.body.appendChild(link);
-        link.click();
+            const fileName = `Attendance_${selectedBusinessUnit}_${startDate}_${endDate}.xlsx`;
 
-        // Clean up after download
-        link.parentNode.removeChild(link);
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
 
-        toast.success('Attendance exported successfully!');
-    } catch (error) {
-        console.error('Error exporting data:', error);
+            link.parentNode.removeChild(link);
 
-        if (error.response && error.response.data && error.response.data.message) {
-            toast.error(`Export Error: ${error.response.data.message}`);
-        } else {
-            toast.error('Error exporting data. Please try again later.');
+            toast.success('Attendance exported successfully!');
+        } catch (error) {
+            console.error('Error exporting data:', error);
+
+            if (error.response && error.response.data && error.response.data.message) {
+                toast.error(`Export Error: ${error.response.data.message}`);
+            } else {
+                toast.error('Error exporting data. Please try again later.');
+            }
         }
-    }
-};
+    };
 
     const handleImport = async () => {
         if (!file) {
@@ -753,7 +651,6 @@ const [projectName, setProjectName] = useState('');
                 }
             } else {
                 console.error('Unexpected error:', error);
-                // alert('An unexpected error occurred.');
             }
         }
     };
@@ -769,21 +666,19 @@ const [projectName, setProjectName] = useState('');
             toast.error('Error fetching business units.');
         }
     };
-    
-    // Call this function in useEffect
+
     useEffect(() => {
         fetchBusinessUnits();
     }, []);
-    
+
     const handleBusinessUnitChange = async (event) => {
         const selectedUnit = event.target.value;
         setSelectedBusinessUnit(selectedUnit);
-    
+
         const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
         if (selectedProject) {
             setProjectName(selectedProject.ProjectID);
-    
-            // Fetch labours by ProjectID
+
             try {
                 const response = await axios.get(`${API_BASE_URL}/labours`, {
                     params: { projectName: selectedProject.ProjectID },
@@ -795,7 +690,7 @@ const [projectName, setProjectName] = useState('');
             }
         }
     };
-    
+
 
 
     const displayLabours = labours;
@@ -804,7 +699,6 @@ const [projectName, setProjectName] = useState('');
             <ToastContainer />
             <Box ml={-1.5}>
                 <SearchBar
-                    //  handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
                     handleSearch={handleSearch}
@@ -849,16 +743,15 @@ const [projectName, setProjectName] = useState('');
 
                 <Box sx={{
                     display: 'flex',
-                    flexDirection: { xs: 'row', sm: 'row' }, // Column for mobile, row for tablet and larger
-                    alignItems: { xs: 'stretch', sm: 'center' }, // Center alignment for larger screens
+                    flexDirection: { xs: 'row', sm: 'row' },
+                    alignItems: { xs: 'stretch', sm: 'center' },
                     gap: 2,
                     height: { xs: '50px', sm: '50px', md: '50px' },
-                    paddingRight: { xs: 2, sm: 5 }, // Adjust padding for small screens
-                    width: { xs: '100%', sm: '80%', md: '100%' }, // Full width for mobile, smaller for larger screens
+                    paddingRight: { xs: 2, sm: 5 },
+                    width: { xs: '100%', sm: '80%', md: '100%' },
                     justifyContent: { xs: 'flex-start', sm: 'flex-start' },
                 }}>
                     <Box sx={{ width: '50%', gap: '20px', display: 'flex', alignItems: 'flex-end' }}>
-                        {/* Month Selector */}
                         <Select
                             value={selectedMonth}
                             sx={{ width: { xs: '100%', sm: '20%' }, }}
@@ -873,7 +766,6 @@ const [projectName, setProjectName] = useState('');
                             ))}
                         </Select>
 
-                        {/* Year Selector */}
                         <Select
                             value={selectedYear}
                             sx={{ width: { xs: '100%', sm: '20%' }, }}
@@ -887,7 +779,6 @@ const [projectName, setProjectName] = useState('');
                             ))}
                         </Select>
 
-                        {/* Fetch Attendance Button */}
                         <Button
                             variant="contained"
                             sx={{
@@ -909,21 +800,21 @@ const [projectName, setProjectName] = useState('');
 
 
                     <Box display="flex" alignItems="flex-end" gap={2}>
-                    <Select
-        value={selectedBusinessUnit}
-        onChange={handleBusinessUnitChange}
-        displayEmpty
-        sx={{ width: '200px' }}
-    >
-        <MenuItem value="" disabled>
-            Select Business Unit
-        </MenuItem>
-        {businessUnits.map((unit) => (
-            <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
-                {unit.BusinessUnit}
-            </MenuItem>
-        ))}
-    </Select>
+                        <Select
+                            value={selectedBusinessUnit}
+                            onChange={handleBusinessUnitChange}
+                            displayEmpty
+                            sx={{ width: '200px' }}
+                        >
+                            <MenuItem value="" disabled>
+                                Select Business Unit
+                            </MenuItem>
+                            {businessUnits.map((unit) => (
+                                <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
+                                    {unit.BusinessUnit}
+                                </MenuItem>
+                            ))}
+                        </Select>
                         <TextField
                             label="Start Date"
                             type="date"
@@ -931,9 +822,9 @@ const [projectName, setProjectName] = useState('');
                             onChange={(e) => setStartDate(e.target.value)}
                             InputLabelProps={{ shrink: true }}
                             sx={{
-                                padding: '4px 4px 1px 4px', // Adjust the top-bottom and left-right padding
+                                padding: '4px 4px 1px 4px',
                                 '& .MuiInputBase-input': {
-                                    padding: '8px 8px', // Padding inside the input field
+                                    padding: '8px 8px',
                                 },
                             }}
                         />
@@ -944,9 +835,9 @@ const [projectName, setProjectName] = useState('');
                             onChange={(e) => setEndDate(e.target.value)}
                             InputLabelProps={{ shrink: true }}
                             sx={{
-                                padding: '4px 4px 1px 4px',// Adjust the top-bottom and left-right padding
+                                padding: '4px 4px 1px 4px',
                                 '& .MuiInputBase-input': {
-                                    padding: '8px 8px', // Padding inside the input field
+                                    padding: '8px 8px',
                                 },
                             }}
                         />
@@ -968,12 +859,12 @@ const [projectName, setProjectName] = useState('');
 
                 <Box sx={{
                     display: 'flex',
-                    flexDirection: { xs: 'row', sm: 'row' }, // Column for mobile, row for tablet and larger
-                    alignItems: { xs: 'stretch', sm: 'center' }, // Center alignment for larger screens
+                    flexDirection: { xs: 'row', sm: 'row' },
+                    alignItems: { xs: 'stretch', sm: 'center' },
                     gap: 2,
                     height: { xs: '50px', sm: '50px', md: '50px' },
-                    paddingRight: { xs: 2, sm: 5 }, // Adjust padding for small screens
-                    width: { xs: '100%', sm: '80%', md: '100%' }, // Full width for mobile, smaller for larger screens
+                    paddingRight: { xs: 2, sm: 5 },
+                    width: { xs: '100%', sm: '80%', md: '100%' },
                     justifyContent: { xs: 'flex-start', sm: 'flex-start' },
                 }}>
                     <Box sx={{ width: '50%', gap: '20px', display: 'flex', alignItems: 'flex-end' }}>
@@ -981,7 +872,6 @@ const [projectName, setProjectName] = useState('');
                             type="file"
                             onChange={(e) => setFile(e.target.files[0])}
                             style={{
-                                // marginRight: '10px',
                                 padding: '10px 4px',
                                 border: '1px solid #ccc',
                                 borderRadius: '4px',
@@ -1005,7 +895,6 @@ const [projectName, setProjectName] = useState('');
                         <TablePagination
                             className="custom-pagination"
                             rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                            //  count={filteredLabours.length > 0 ? filteredLabours.length : labours.length}
                             rowsPerPage={rowsPerPage}
                             page={page}
                             onPageChange={handleChangePage}
@@ -1052,7 +941,7 @@ const [projectName, setProjectName] = useState('');
                                 return (
                                     <TableRow key={labour.LabourID}>
                                         <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                        <TableCell><CalendarTodayIcon onClick={() =>handleModalOpenCalenderAttendance(labour)} style={{ cursor: 'pointer' }} /> </TableCell> 
+                                        <TableCell><CalendarTodayIcon onClick={() => handleModalOpenCalenderAttendance(labour)} style={{ cursor: 'pointer' }} /> </TableCell>
                                         <TableCell>{labour.LabourID}</TableCell>
                                         <TableCell>{labour.name || '-'}</TableCell>
                                         <TableCell>{labour.workingHours || '-'}</TableCell>
@@ -1086,7 +975,7 @@ const [projectName, setProjectName] = useState('');
 
 
 
-           
+
             <Dialog
                 open={modalOpen}
                 onClose={handleModalClose}
@@ -1107,23 +996,23 @@ const [projectName, setProjectName] = useState('');
                         display: "flex",
                         flexDirection: "column",
                         gap: 3,
-                        fontSize: { xs: "14px", sm: "16px" }, // Adjust content font size for mobile
+                        fontSize: { xs: "14px", sm: "16px" },
                     }}
                 >
                     <Box sx={{
                         display: "flex",
-                        flexWrap: { xs: "wrap", sm: "nowrap" }, // Wrap for mobile, single row for tablet and larger
+                        flexWrap: { xs: "wrap", sm: "nowrap" },
                         gap: { xs: 0.5, sm: "10px" },
                     }}>
                         <Box sx={{
                             display: "flex",
-                            flexWrap: { xs: "nowrap", sm: "nowrap" }, // Wrap for mobile, single row for tablet and larger
+                            flexWrap: { xs: "nowrap", sm: "nowrap" },
                             gap: { xs: 0.5, sm: "10px" },
                         }}>
                             <Select
                                 value={selectedMonth}
                                 sx={{
-                                    width: { xs: "100%", sm: "54%" }, // Full width on mobile, fixed width on tablet and larger
+                                    width: { xs: "100%", sm: "54%" },
                                 }}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
                                 displayEmpty
@@ -1140,7 +1029,7 @@ const [projectName, setProjectName] = useState('');
                             <Select
                                 value={selectedYear}
                                 sx={{
-                                    width: { xs: "100%", sm: "54%" }, // Full width on mobile, fixed width on tablet and larger
+                                    width: { xs: "100%", sm: "54%" },
                                 }}
                                 onChange={(e) => setSelectedYear(e.target.value)}
                                 displayEmpty
@@ -1154,8 +1043,8 @@ const [projectName, setProjectName] = useState('');
                                     backgroundColor: "rgb(229, 255, 225)",
                                     color: "rgb(43, 217, 144)",
                                     height: { xs: "88%", sm: "90%", lg: "90%" },
-                                    width: { xs: "100%", sm: "80%", lg: "80%" }, // Full width on mobile, fixed width on tablet and larger
-                                    marginTop: { xs: 0.8, sm: "6px" }, // No margin on mobile
+                                    width: { xs: "100%", sm: "80%", lg: "80%" },
+                                    marginTop: { xs: 0.8, sm: "6px" },
                                     "&:hover": {
                                         backgroundColor: "rgb(229, 255, 225)",
                                     },
@@ -1166,8 +1055,8 @@ const [projectName, setProjectName] = useState('');
                         </Box>
                         <Box
                             sx={{
-                                width: { xs: "100%", sm: "auto" }, // Full width on mobile, auto for larger screens
-                                marginTop: { xs: 0, sm: 0 }, // Add margin on mobile to separate from button
+                                width: { xs: "100%", sm: "auto" },
+                                marginTop: { xs: 0, sm: 0 },
                             }}
                         >
                             <StatusLegend />
@@ -1326,7 +1215,6 @@ const [projectName, setProjectName] = useState('');
                         <Box>
                             <TimePicker
                                 label="Punch In (Manually)"
-                                // value={manualEditData.punchIn}
                                 value={
                                     manualEditData?.punchIn
                                         ? dayjs(manualEditData.punchIn, 'HH:mm:ss')
@@ -1337,9 +1225,9 @@ const [projectName, setProjectName] = useState('');
                                 onChange={(newValue) =>
                                     setManualEditData({ ...manualEditData, punchIn: newValue })
                                 }
-                                views={['hours', 'minutes', 'seconds']} // Enable hours, minutes, and seconds
-                                ampm={false} // 24-hour format
-                                inputFormat="HH:mm:ss" // Format displayed in the input field
+                                views={['hours', 'minutes', 'seconds']}
+                                ampm={false}
+                                inputFormat="HH:mm:ss"
                                 renderInput={(params) => <TextField {...params} fullWidth />}
                             />
                         </Box>
@@ -1347,7 +1235,6 @@ const [projectName, setProjectName] = useState('');
                         <Box>
                             <TimePicker
                                 label="Punch Out (Manually)"
-                                // value={manualEditData.punchOut}
                                 value={
                                     manualEditData?.punchOut
                                         ? dayjs(manualEditData.punchOut, 'HH:mm:ss')
@@ -1358,9 +1245,9 @@ const [projectName, setProjectName] = useState('');
                                 onChange={(newValue) =>
                                     setManualEditData({ ...manualEditData, punchOut: newValue })
                                 }
-                                views={['hours', 'minutes', 'seconds']} // Enable hours, minutes, and seconds
-                                ampm={false} // 24-hour format
-                                inputFormat="HH:mm:ss" // Format displayed in the input field
+                                views={['hours', 'minutes', 'seconds']}
+                                ampm={false}
+                                inputFormat="HH:mm:ss"
                                 renderInput={(params) => <TextField {...params} fullWidth />}
                             />
                         </Box>
@@ -1429,28 +1316,28 @@ const [projectName, setProjectName] = useState('');
             </LocalizationProvider>
 
             <Modal open={open} onClose={() => setOpen(false)}>
-        <Box sx={{ width: 450, margin: '50px auto', padding: 2, backgroundColor: '#fff', borderRadius: 2 }}>
-          <Typography variant="h6" textAlign="center" mb={2}>
-            Attendance for Labour ID: {selectedLabourId}
-          </Typography>
-          <Grid container justifyContent="center" flexWrap="wrap">
-            {attendanceData.map((day, index) => (
-              <Box key={index} sx={renderStatusBox(day.status)}>
-                {new Date(day.date).getDate()}
-              </Box>
-            ))}
-          </Grid>
-          <Box mt={2}>
-            <Typography variant="body2">Legend:</Typography>
-            <Typography variant="body2" color="#4CAF50">P - Present</Typography>
-            <Typography variant="body2" color="#FF6F00">A - Absent</Typography>
-            <Typography variant="body2" color="#F44336">HD - Half Day</Typography>
-            <Typography variant="body2" color="#8236BC">H - Holiday</Typography>
-            <Typography variant="body2" color="#005cff">MP - MissPunch</Typography>
-            <Typography variant="body2" color="#ccc">NA - No Data</Typography>
-          </Box>
-        </Box>
-      </Modal>
+                <Box sx={{ width: 450, margin: '50px auto', padding: 2, backgroundColor: '#fff', borderRadius: 2 }}>
+                    <Typography variant="h6" textAlign="center" mb={2}>
+                        Attendance for Labour ID: {selectedLabourId}
+                    </Typography>
+                    <Grid container justifyContent="center" flexWrap="wrap">
+                        {attendanceData.map((day, index) => (
+                            <Box key={index} sx={renderStatusBox(day.status)}>
+                                {new Date(day.date).getDate()}
+                            </Box>
+                        ))}
+                    </Grid>
+                    <Box mt={2}>
+                        <Typography variant="body2">Legend:</Typography>
+                        <Typography variant="body2" color="#4CAF50">P - Present</Typography>
+                        <Typography variant="body2" color="#FF6F00">A - Absent</Typography>
+                        <Typography variant="body2" color="#F44336">HD - Half Day</Typography>
+                        <Typography variant="body2" color="#8236BC">H - Holiday</Typography>
+                        <Typography variant="body2" color="#005cff">MP - MissPunch</Typography>
+                        <Typography variant="body2" color="#ccc">NA - No Data</Typography>
+                    </Box>
+                </Box>
+            </Modal>
         </Box>
     );
 };

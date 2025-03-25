@@ -1,4 +1,3 @@
-/* General Styling */
 .payslip-modal {
     background-color: white;
     padding: 30px;
@@ -9,7 +8,6 @@
     font-family: 'Arial', sans-serif;
 }
 
-/* Header Styling */
 .payslip-header {
     display: flex;
     justify-content: space-between;
@@ -21,21 +19,12 @@
     height: 50px;
 }
 
-/* Payslip Summary */
 .payslip-summary {
     text-align: center;
     margin-bottom: 20px;
 }
 
-/* .payslip-summary h4 {
-    color: #2d2d2d;
-}
 
-.payslip-summary b {
-    color: #007bff;
-} */
-
-/* Grid Layout */
 .payslip-grid {
     display: flex;
     flex-wrap: wrap;
@@ -49,7 +38,6 @@
     border-radius: 6px;
 }
 
-/* Typography */
 .payslip-label {
     font-weight: bold;
     color: #444;
@@ -60,7 +48,6 @@
     color: #555;
 }
 
-/* Table Styling */
 .payslip-table-container {
     margin-top: 15px;
 }
@@ -70,7 +57,8 @@
     border-collapse: collapse;
 }
 
-.payslip-table th, .payslip-table td {
+.payslip-table th,
+.payslip-table td {
     padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
@@ -85,7 +73,6 @@
     background-color: #fff;
 }
 
-/* Close Button */
 .modal-close-button {
     margin-top: 20px;
     width: 120px;
@@ -99,7 +86,6 @@
     background-color: #d9534f !important;
 }
 
-/* Loading Text */
 .modal-loading {
     text-align: center;
     font-size: 1.2rem;

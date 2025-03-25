@@ -81,14 +81,14 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     const [salaryData, setSalaryData] = useState([]);
     const [noDataAvailable, setNoDataAvailable] = useState(false);
 
-    const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false); 
+    const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false);
     const handleApproveConfirmOpen = () => {
         setIsApproveConfirmOpen(true);
-      };
-    
-      const handleApproveConfirmClose = () => {
+    };
+
+    const handleApproveConfirmClose = () => {
         setIsApproveConfirmOpen(false);
-      };
+    };
 
     // Extract selectedMonth and selectedYear from navigation state
     // const { selectedMonth, selectedYear } = location.state || {};
@@ -206,12 +206,12 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     fullResponse: labour
                 };
             });
-// console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
+            // console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
             console.error('Error fetching salary generation data:', error);
-            setNoDataAvailable(true); 
+            setNoDataAvailable(true);
             toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
         } finally {
             setLoading(false);
@@ -258,23 +258,23 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             const worksheet = XLSX.utils.json_to_sheet(selectiveData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "PayrollData");
-    
+
             // Generate Excel file as an array buffer
             const workbookOutput = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
 
             const blob = new Blob([workbookOutput], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-              });
-        
-              const fileName = ` Export Provisional PayRoll_${selectedMonth}_${selectedYear}.xlsx`;
-        
-              const link = document.createElement('a');
-              link.href = window.URL.createObjectURL(blob);
-              link.setAttribute('download', fileName);
-              document.body.appendChild(link);
-              link.click();
-              link.parentNode.removeChild(link);
-              toast.success(`Salary Data Exported successfully`)
+            });
+
+            const fileName = ` Export Provisional PayRoll_${selectedMonth}_${selectedYear}.xlsx`;
+
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+            toast.success(`Salary Data Exported successfully`)
         } catch (error) {
             console.error('Error saving final payroll data:', error);
             toast.error(error.message || "Error Salary Data Exported. Please try again later.");
@@ -322,7 +322,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                 month: selectedMonth,
                 year: selectedYear,
             });
-          
+
             toast.success(response.data.message || "Payroll generated successfully.");
         } catch (error) {
             console.error('Error saving payroll data:', error);
@@ -333,41 +333,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     };
 
 
-    // const deletePayrollData = async (labourIds = []) => {
-    //     if (!selectedMonth || !selectedYear) {
-    //         toast.warning("Please select both Month and Year.");
-    //         return;
-    //     }
-
-    //     setLoading(true);
-    //     try {
-    //         const requestData = {
-    //             month: selectedMonth,
-    //             year: selectedYear,
-    //         };
-
-    //         if (labourIds.length > 0) {
-    //             requestData.labourIds = labourIds; // If deleting specific labourIds, add them to request
-    //         }
-
-    //         const response = await axios.delete(`${API_BASE_URL}/insentive/payroll/deleteFinalPayrollData`, {
-    //             data: requestData, // Pass data inside 'data' property for DELETE requests
-    //         });
-
-    //         toast.success(response.data.message || "Payroll records deleted successfully.");
-    //     } catch (error) {
-    //         console.error("Error deleting payroll data:", error);
-    //         toast.error(error.response?.data?.message || "Error deleting payroll data. Please try again.");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-
-
-
     // -------------------------------------   SHOW ATTENDACNE ----------------------
-   
+
     const handleOpenModal = (labour) => {
         setSelectedLabour(labour);
         setModalOpen(true);
@@ -408,17 +375,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
         setModalOpenNetpay(false);
     };
     // -----------------------------------------------------------------------------
-    const handleOpenModalDetails = (labour) => {
-        setSelectedLabour(labour);
-        setModalOpen(true);
-    };
-
-    const handleCloseModalDetails = () => {
-        setSelectedLabour(null);
-        setModalOpen(false);
-    };
-
-    //------------------------------------------------------------------
 
     const handleCancel = () => {
         setModalOpen(false);
@@ -451,21 +407,13 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     };
 
 
-    const handleToast = (type, message) => {
-        if (type === 'success') {
-            toast.success(message);
-        } else if (type === 'error') {
-            toast.error(message);
-        }
-    };
-
     function searchLabourData(data, searchQuery) {
         if (!searchQuery) return data; // Return original data if search query is empty
-    
+
         searchQuery = searchQuery.toLowerCase(); // Convert query to lowercase for case-insensitive search
-    
-        return data.filter(item => 
-            item.name.toLowerCase().includes(searchQuery) || 
+
+        return data.filter(item =>
+            item.name.toLowerCase().includes(searchQuery) ||
             item.LabourID.toLowerCase().includes(searchQuery) ||
             item.projectName.toLowerCase().includes(searchQuery) ||
             item.department.toLowerCase().includes(searchQuery)
@@ -523,12 +471,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
         return Object.values(latestEntries);
     };
 
-    const handleViewHistory = (labourID) => {
-        const history = labours.filter((labour) => labour.LabourID === labourID);
-        setSelectedHistory(history);
-        setOpenModal(true);
-    };
-
     const filteredLabours = getLatestLabourData(searchResults.length > 0 ? searchResults : labours);
     const paginatedLabours = filteredLabours.slice(
         page * rowsPerPage,
@@ -537,21 +479,17 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
     const getProjectDescription = (projectId) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) {
-          return 'Unknown';
+            return 'Unknown';
         }
-      
+
         if (projectId === undefined || projectId === null || projectId === '') {
-          return 'Unknown';
+            return 'Unknown';
         }
-      
+
         const project = projectNames.find(proj => proj.Id === Number(projectId));
-      
-        // console.log('Project Names:', projectNames);
-        // console.log('Searching for Project ID:', projectId);
-        // console.log('Found Project:', project);
-      
+
         return project ? project.projectName : 'Unknown';
-      };
+    };
 
 
     const getDepartmentDescription = (departmentId) => {
@@ -576,8 +514,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
         setOpenDialogSite(false);
 
         try {
-            // Fetch current and new site names for transfer
-            // const projectName = projectNames.find((p) => p.id === selectedLabour.projectName)?.Business_Unit || "Unknown";
 
             if (!payStructure || !variablePay) {
                 toast.error("Please fill in all required fields.");
@@ -601,7 +537,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             const response = await axios.post(`${API_BASE_URL}/insentive/upsertVariablePay`, transferDataPayload);
 
             if (response.status === 200) {
-                // Update UI
                 setLabours((prevLabours) =>
                     prevLabours.map((labour) =>
                         labour.LabourID === selectedLabour.LabourID
@@ -656,68 +591,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             setLoading(false);
         };
 
-        // if (labours.length > 0) fetchStatuses();
     }, [labours]);
-
-
-    const handlePayStructureChange = (e, labourID) => {
-        const newPayStructure = e.target.value;
-        const updatedLabours = labours.map(labour => {
-            if (labour.LabourID === labourID) {
-                return {
-                    ...labour,
-                    payStructure: newPayStructure,
-                    variablePayRemark: ''  // Reset remarks when pay structure changes
-                };
-            }
-            return labour;
-        });
-        setLabours(updatedLabours);
-    };
-
-    const handleRemarkChange = (e, labourID) => {
-        const newVariablePayRemark = e.target.value;
-        const updatedLabours = labours.map(labour => {
-            if (labour.LabourID === labourID) {
-                return {
-                    ...labour,
-                    variablePayRemark: newVariablePayRemark
-                };
-            }
-            return labour;
-        });
-        setLabours(updatedLabours);
-    };
-
-    const getRemarksOptions = (payStructure) => {
-        switch (payStructure) {
-            case "Advance":
-                return ["New Joinee", "Payment Delay"];
-            case "Debit":
-                return ["Gadget Mishandling", "Performance Issue"];
-            case "Incentive":
-                return ["Payment Arrears", "Outstanding Performance"];
-            default:
-                return [];
-        }
-    };
-
-    const handleVariablePayChange = (e, labourID) => {
-        const input = e.target.value;
-        // Parse the input as a float only if it is not empty and has 5 or fewer digits
-        const value = (input === '' || input.length > 5) ? null : parseFloat(input);
-
-        // Update labours state only if the input is valid (5 digits or fewer)
-        if (input === '' || input.length <= 5) {
-            const updatedLabours = labours.map(labour => {
-                if (labour.LabourID === labourID) {
-                    return { ...labour, variablePay: value };
-                }
-                return labour;
-            });
-            setLabours(updatedLabours);
-        }
-    };
 
     const navigateToSalaryGeneration = () => {
         setNavigating(true);
@@ -759,36 +633,34 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             <Box
                 sx={{
                     flex: 3,
-                    overflowY: "auto", // Enable scrolling
+                    overflowY: "auto",
                     padding: "0px 24px",
-                    bgcolor: "#f9f9f9", // Light background
-                    borderRight: "1px solid #ddd", // Border for separation
-                    height: "90vh", // Full-height scrolling container
-                    scrollbarWidth: "none", // Hide scrollbar (Firefox)
+                    bgcolor: "#f9f9f9",
+                    borderRight: "1px solid #ddd",
+                    height: "90vh",
+                    scrollbarWidth: "none",
                     "&::-webkit-scrollbar": {
-                        display: "none", // Hide scrollbar (Chrome, Safari, Edge)
+                        display: "none",
                     },
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx= {{display:'flex', alignItems:'center', gap:2}}>
-                    <IconButton
-                        sx={{ marginRight: 2 }}
-                        onClick={navigateToSalaryGeneration} disabled={navigating}
-                    >
-                        <ArrowBack />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <IconButton
+                            sx={{ marginRight: 2 }}
+                            onClick={navigateToSalaryGeneration} disabled={navigating}
+                        >
+                            <ArrowBack />
+                        </IconButton>
 
-                    {/* Title */}
-                    <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
-                        Reports | Run PayRoll
-                    </Typography>
-</Box>
+                        <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                            Reports | Run PayRoll
+                        </Typography>
+                    </Box>
                     <SearchBar
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
                         handleSearch={handleSearch}
-                        // handleSearch={() => {}}
                         searchResults={searchResults}
                         setSearchResults={setSearchResults}
                         handleSelectLabour={handleSelectLabour}
@@ -796,7 +668,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         className="search-bar"
                     />
                 </Box>
-                {/* {loading && <Loading />} */}
 
 
                 <Box
@@ -812,7 +683,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        flexWrap: { xs: "wrap", sm: "nowrap" }, // Allows items to wrap on extra small devices
+                        flexWrap: { xs: "wrap", sm: "nowrap" },
                     }}
                 >
                     <Tabs
@@ -826,7 +697,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             minHeight: "auto",
                         }}
                     >
-                        {/* Add Tab components here if needed */}
                     </Tabs>
 
                     <Box
@@ -857,7 +727,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 // size="small"
                                 displayEmpty
                                 sx={{
-                                    // marginTop: '-5px',
                                     width: "100%", // Full width to fill the container space
                                     marginBottom: { xs: "20px", sm: "0" } // Add bottom margin on small screens
                                 }}
@@ -901,10 +770,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                         color="primary"
                                     />
                                 }
-                                // label={fetchForAll ? 'Fetch All' : 'Fetch for Labour ID'}
                                 sx={{
-                                    marginBottom: { xs: "20px", sm: "0" }, // Margin bottom on small screens
-                                    // width: "100%", // Full width to align switch properly
+                                    marginBottom: { xs: "20px", sm: "0" },
                                 }}
                             />
 
@@ -1035,30 +902,30 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     },
                                 }}
                             >
-                               {loading ? (
-                    <TableRow>
-                        <TableCell colSpan={13} align="center">
-                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <TableSkeletonLoading rows={9} columns={13} sx={{ maxWidth: '300px' }} />
-            </Box>
-                        </TableCell>
-                    </TableRow>
-                ) : noDataAvailable ? (
-                    <TableRow>
-                        <TableCell colSpan={13} align="center">
-                        <Box display="flex" flexDirection="column" alignItems="center">
-                            <img
-                                src={NoData}
-                                alt="No Data Available"
-                                style={{ width: "250px", opacity: 0.7 }}
-                            />
-                            <Typography variant="h6" sx={{ mt: 2, color: "#777" }}>
-                                No labour salary available for this month.
-                            </Typography>
-                            </Box>
-                        </TableCell>
-                    </TableRow>
-                ) : (  paginatedLabours.map((labour, index) => (
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={13} align="center">
+                                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                                <TableSkeletonLoading rows={9} columns={13} sx={{ maxWidth: '300px' }} />
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : noDataAvailable ? (
+                                    <TableRow>
+                                        <TableCell colSpan={13} align="center">
+                                            <Box display="flex" flexDirection="column" alignItems="center">
+                                                <img
+                                                    src={NoData}
+                                                    alt="No Data Available"
+                                                    style={{ width: "250px", opacity: 0.7 }}
+                                                />
+                                                <Typography variant="h6" sx={{ mt: 2, color: "#777" }}>
+                                                    No labour salary available for this month.
+                                                </Typography>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (paginatedLabours.map((labour, index) => (
                                     <TableRow key={labour.LabourID}>
                                         <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                         {/* <TableCell>{labour.LabourID}</TableCell> */}
@@ -1312,8 +1179,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Attendance Count (A)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
-                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -1339,8 +1206,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Wages Count (B)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
-                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -1364,8 +1231,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Gross Pay (C)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
-                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -1389,8 +1256,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Deductions (D)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding:'10px 30px'}}>
-                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor:"#fffae7" }}>
+                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                            <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -1417,12 +1284,12 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             <Button variant="contained" color="primary">Download</Button>
                             {/* <Button variant="contained" color="secondary">View Details</Button> */}
                             <Button
-                            variant="contained"
-                            className="modal-close-button"
-                            onClick={handleCloseModalNetpay}
-                        >
-                            Close
-                        </Button>
+                                variant="contained"
+                                className="modal-close-button"
+                                onClick={handleCloseModalNetpay}
+                            >
+                                Close
+                            </Button>
                         </Box>
                     </Box>
                 </Modal>
@@ -1586,22 +1453,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             Finalize PayRoll
                         </Button>
 
-                        {/* Delete Payroll Button */}
-                        {/* <Button
-                            variant="contained"
-                            onClick={() => deletePayrollData()} // Calls delete function without labourIds (deletes all)
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                height: "40px",
-                                width: "100%",
-                                backgroundColor: "rgb(255, 225, 225)",
-                                color: "rgb(255, 43, 43)",
-                                '&:hover': { backgroundColor: "rgb(255, 200, 200)" },
-                                marginBottom: { xs: "20px", sm: "0" }
-                            }}
-                        >
-                            Delete Payroll
-                        </Button> */}
                     </Box>
 
 
@@ -1610,19 +1461,19 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
             </Box>
 
             <Dialog
-        open={isApproveConfirmOpen}
-        onClose={handleApproveConfirmClose}
-        aria-labelledby="approve-confirm-dialog-title"
-        aria-describedby="approve-confirm-dialog-description"
-      >
-        <DialogTitle id="approve-confirm-dialog-title">
-        Finalize PayRoll
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="approve-confirm-dialog-description">
-            Are you sure you want to Finalize PayRoll this labours?
-          </DialogContentText>
-        </DialogContent>
+                open={isApproveConfirmOpen}
+                onClose={handleApproveConfirmClose}
+                aria-labelledby="approve-confirm-dialog-title"
+                aria-describedby="approve-confirm-dialog-description"
+            >
+                <DialogTitle id="approve-confirm-dialog-title">
+                    Finalize PayRoll
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="approve-confirm-dialog-description">
+                        Are you sure you want to Finalize PayRoll this labours?
+                    </DialogContentText>
+                </DialogContent>
                 <DialogActions>
                     <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
                         Cancel
@@ -1702,7 +1553,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
                     </Typography>
 
-                    {/* Modal Content */}
                     <Box
                         sx={{
                             display: "flex",
@@ -1809,8 +1659,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                 open={isPopupOpen}
                 onClose={closePopup}
                 closeAfterTransition
-            // BackdropComponent={Backdrop}
-            // BackdropProps={{ timeout: 500 }}
             >
                 <Fade in={isPopupOpen}>
                     <div className="modal">
