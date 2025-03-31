@@ -1194,7 +1194,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       const labourStatus = formData.status || '';
 
       try {
-        if (labourStatus === 'Disable' && labourId) {
+        if (
+          ['Disable', 'Rejected', 'Resubmitted'].includes(labourStatus) &&
+          labourId
+        ){
           response = await axios.put(`${API_BASE_URL}/labours/updatelabourDisableStatus/${labourId}`, formDataToSend, {
             headers: {
               // 'Content-Type': 'application/json',
