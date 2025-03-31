@@ -714,6 +714,7 @@ const VariableInputApproval = ({ departments, projectNames, labour }) => {
                   /></TableCell>}
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
+                <TableCell>Name</TableCell>
                 <TableCell>Date</TableCell>
                 <TableCell>PayStructure</TableCell>
                 <TableCell>Variable Pay Amount</TableCell>
@@ -772,6 +773,7 @@ const VariableInputApproval = ({ departments, projectNames, labour }) => {
                   )}
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{labour.LabourID}</TableCell>
+                  <TableCell>{labour.name}</TableCell>
                   <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString('en-GB') : '-'}</TableCell>
                   <TableCell>{labour.PayStructure}</TableCell>
                   <TableCell>{labour.VariablepayAmount}</TableCell>

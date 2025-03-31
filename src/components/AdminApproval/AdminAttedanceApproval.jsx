@@ -705,6 +705,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
                   /></TableCell>}
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
+                <TableCell>Name</TableCell>
                 <TableCell>Date</TableCell>
                 <TableCell>First Punch</TableCell>
                 <TableCell>Last Punch</TableCell>
@@ -763,6 +764,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
                   )}
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{labour.LabourId}</TableCell>
+                  <TableCell>{labour.name}</TableCell>
                   <TableCell>{labour.Date ? new Date(labour.Date).toLocaleDateString('en-GB') : '-'}</TableCell>
                   <TableCell>{labour.FirstPunchManually}</TableCell>
                   <TableCell>{labour.LastPunchManually}</TableCell>

@@ -36,5 +36,5 @@ export const StyleForPayslip = {
 export const StyleEmpInfo = {
     my:2,
     padding:'10px 30px',
-    width: "calc(100% + 159px)"
+    width: "calc(75% + 159px)"
 };

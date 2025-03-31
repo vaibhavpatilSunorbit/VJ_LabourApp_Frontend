@@ -680,6 +680,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
                   /></TableCell>}
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
+                <TableCell>Name</TableCell>
                 <TableCell>Effective Date</TableCell>
                 <TableCell>PayStructure</TableCell>
                 <TableCell>DailyWages</TableCell>
@@ -739,6 +740,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
                   )}
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{labour.LabourID}</TableCell>
+                  <TableCell>{labour.name}</TableCell>
                   <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                   <TableCell>{labour.PayStructure}</TableCell>
                   <TableCell>{labour.DailyWages || '-'}</TableCell>

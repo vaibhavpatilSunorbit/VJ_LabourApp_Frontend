@@ -38,13 +38,14 @@ import ExportVariablePay from '../../VariableInputs/ImportExportVariablePay/Expo
 import ViewDetails from '../../ViewDetails/ViewDetails.jsx';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
-import { parse } from "fast-xml-parser";
 import { ArrowBack } from '@mui/icons-material';
 import logo from "../../../images/VJlogo-1-removebg.png";
 import NoData from "../../../images/NoData.jpg";
+import FilterListIcon from '@mui/icons-material/FilterList';
+import EditIcon from '@mui/icons-material/Edit';
 
 
-const RunPayroll = ({ departments, projectNames = [], labour }) => {
+const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
@@ -80,6 +81,19 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
     const [labourId, setLabourId] = useState('');
     const [salaryData, setSalaryData] = useState([]);
     const [noDataAvailable, setNoDataAvailable] = useState(false);
+    const [isFinalizeEnabled, setIsFinalizeEnabled] = useState(false);
+    const [isFinalizeClicked, setIsFinalizeClicked] = useState(false);
+    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+    const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [selectedPayStructure, setSelectedPayStructure] = useState('');
+    const [employeeToggle, setEmployeeToggle] = useState('all');
+    const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [filterModalOpen, setFilterModalOpen] = useState(false);
+    const [labourData, setLabourData] = useState([]);
+    const [isTransferConfirmOpen, setIsTransferConfirmOpen] = useState(false);
+    const [isTransferSuccess, setIsTransferSuccess] = useState(false);
+    const [selectedLabourIds, setSelectedLabourIds] = useState([]);
+
 
     const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false);
     const handleApproveConfirmOpen = () => {
@@ -88,6 +102,99 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
     const handleApproveConfirmClose = () => {
         setIsApproveConfirmOpen(false);
+    };
+
+
+    const allowedProjectIds =
+        user && user.projectNames ? JSON.parse(user.projectNames) : [];
+    const allowedDepartmentIds =
+        user && user.departments ? JSON.parse(user.departments) : [];
+    const laboursSource =
+        labourlist && labourlist.length > 0 ? labourlist : labours;
+
+    const fetchLabours = async (filters = {}) => {
+        setLoading(true);
+        try {
+            const response = await axios.get(
+                `${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`,
+                {
+                    params: filters,
+                }
+            );
+            setLabours(response.data);
+
+        } catch (error) {
+            console.error('Error fetching labours:', error);
+            toast.error('Failed to fetch data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // useEffect(() => {
+    //     fetchLabours();
+    // }, []);
+
+    const handleApplyFilter = async () => {
+        const params = {};
+        if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
+        if (selectedDepartment) params.department = selectedDepartment;
+        if (selectedPayStructure) params.payStructure = selectedPayStructure;
+        if (employeeToggle === 'single' && selectedEmployee) {
+            params.employee = selectedEmployee;
+        }
+    }
+    const handleResetFilter = () => {
+        setSelectedBusinessUnit('');
+        setSelectedDepartment('');
+        setSelectedPayStructure('');
+        setEmployeeToggle('all');
+        setSelectedEmployee('');
+        fetchLabours();
+        setFilterModalOpen(false);
+    };
+
+    const handleApplyFilters = () => {
+        const filters = {};
+        if (selectedBusinessUnit) {
+            filters.ProjectID = selectedBusinessUnit;
+        }
+        if (selectedDepartment) {
+            filters.DepartmentID = selectedDepartment;
+        }
+        if (selectedPayStructure) {
+            filters.PayStructure = selectedPayStructure;
+        }
+        if (employeeToggle === 'single' && selectedEmployee) {
+            filters.employee = selectedEmployee;
+        }
+        fetchLabours(filters);
+        setFilterModalOpen(false);
+    };
+
+
+    //   const fetchProjectNames = async () => {
+    //         try {
+    //           const response = await axios.get(API_BASE_URL + "/api/project-names");
+    //           // Expecting response.data to be an array of projects with properties "Id" and "Business_Unit"
+    //           setProjectNames(response.data);
+    //         } catch (error) {
+    //           console.error('Error fetching project names:', error);
+    //           toast.error('Error fetching project names.');
+    //         }
+    //       };
+
+    // Lookup function to get Business_Unit name based on project id
+    const getProjectDescription = (projectNames) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) {
+            return 'Unknown';
+        }
+        if (projectNames === undefined || projectNames === null || projectNames === '') {
+            return 'Unknown';
+        }
+        // Convert projectId to a number if necessary and find the matching project
+        const project = projectNames.find(proj => proj.Id === Number(projectNames));
+        return project ? project.Business_Unit : 'Unknown';
     };
 
     // Extract selectedMonth and selectedYear from navigation state
@@ -188,7 +295,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     previousWageAmount: labour.previousWageAmount || 0,
                     totalAttendanceDeductions: labour.totalAttendanceDeductions || 0,
                     totalDeductions: labour.totalDeductions || 0,
-                    grossPay: labour.grossPay || 0,
+                    baseWage: labour.baseWage || 0,
                     netPay: labour.netPay || 0,
                     // Variable Pay
                     advancePay: labour.variablePay?.advance || 0,
@@ -201,6 +308,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     year: labour.year || "-",
                     // Wages Info
                     wageType: labour.wageType || "-",
+                    daysInSlice: labour.daysInSlice || "-",
                     dailyWageRate: labour.dailyWageRate || 0,
                     fixedMonthlyWage: labour.fixedMonthlyWage || 0,
                     totalWagesForMonth: labour.wagesInfo?.totalWagesForMonth || 0,
@@ -479,19 +587,16 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
         (page + 1) * rowsPerPage
     );
 
-    const getProjectDescription = (projectId) => {
-        if (!Array.isArray(projectNames) || projectNames.length === 0) {
-            return 'Unknown';
-        }
-
-        if (projectId === undefined || projectId === null || projectId === '') {
-            return 'Unknown';
-        }
-
-        const project = projectNames.find(proj => proj.Id === Number(projectId));
-
-        return project ? project.projectName : 'Unknown';
-    };
+    // const getProjectDescription = (projectId) => {
+    //     if (!Array.isArray(projectNames) || projectNames.length === 0) {
+    //         return 'Unknown';
+    //     }
+    //     if (projectId === undefined || projectId === null || projectId === '') {
+    //         return 'Unknown';
+    //     }
+    //     const project = projectNames.find(proj => proj.Id === Number(projectId));
+    //     return project ? project.projectName : 'Unknown';
+    // };
 
 
     const getDepartmentDescription = (departmentId) => {
@@ -704,8 +809,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                     <Box
                         sx={{
                             display: "flex",
-                            flexDirection: { xs: "column", sm: "row" }, // Stacks items vertically on small screens
-                            alignItems: { xs: "stretch", sm: "center" },
+                            flexDirection: { xs: "column", sm: "column" },
+                            alignItems: { xs: "stretch", sm: "flex-end" },
                             gap: 2,
                             height: "auto",
                             width: "100%",
@@ -717,10 +822,10 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 width: "100%",
                                 gap: "20px",
                                 display: "flex",
-                                flexDirection: { xs: "column", sm: "row" }, // Stack selectors vertically on smaller screens, horizontally on larger
-                                alignItems: "center", // Center align items for better visual alignment
-                                justifyContent: "flex-start", // Align items to the start of the container
-                                padding: "20px", // Add some padding around the controls for spacing
+                                flexDirection: { xs: "column", sm: "row" },
+                                alignItems: "flex-end",
+                                justifyContent: "flex-start",
+                                // padding: "20px",
                             }}
                         >
                             <Select
@@ -729,8 +834,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 // size="small"
                                 displayEmpty
                                 sx={{
-                                    width: "100%", // Full width to fill the container space
-                                    marginBottom: { xs: "20px", sm: "0" } // Add bottom margin on small screens
+                                    width: "25%",
+                                    marginBottom: { xs: "20px", sm: "0" }
                                 }}
                             >
                                 <MenuItem value="" disabled>
@@ -750,7 +855,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 displayEmpty
                                 sx={{
                                     // marginTop: '-5px',
-                                    width: "100%", // Ensure this also takes full width
+                                    width: "25%", // Ensure this also takes full width
                                     marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
                                 }}
                             >
@@ -776,8 +881,6 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     marginBottom: { xs: "20px", sm: "0" },
                                 }}
                             />
-
-
                             {!fetchForAll && (
                                 <TextField
                                     label="Labour ID"
@@ -786,8 +889,9 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     value={labourId}
                                     onChange={(e) => setLabourId(e.target.value)}
                                     sx={{
-                                        width: "100%", // Full width
-                                        marginBottom: { xs: "20px", sm: "0" }  // Bottom margin for spacing
+                                        width: "25%", // Full width
+                                        marginBottom: { xs: "20px", sm: "0" },  
+                                        marginTop: { xs: "0", sm: "5px" }
                                     }}
                                 />
                             )}
@@ -798,7 +902,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 sx={{
                                     fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
                                     height: "40px",
-                                    width: "100%", // Button width to match other inputs
+                                    width: "20%", // Button width to match other inputs
                                     backgroundColor: "rgb(229, 255, 225)",
                                     color: "rgb(43, 217, 144)",
                                     '&:hover': {
@@ -809,6 +913,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             >
                                 PayRoll
                             </Button>
+                           
+                          
                         </Box>
 
                         <Box
@@ -828,7 +934,15 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     justifyContent: "space-evenly",
                                 }}
                             >
-
+                                 <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
+                                Filter
+                            </Button>
+                            {selectedLabourIds.length > 0 && (
+                                <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
+                                    Edit ({selectedLabourIds.length})
+                                </Button>
+                            )}
+                                
                                 <TablePagination
                                     className="custom-pagination"
                                     rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
@@ -886,13 +1000,15 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                     <TableCell>Name</TableCell>
                                     <TableCell>Project</TableCell>
                                     <TableCell>Department</TableCell>
-                                    <TableCell>Attendance Count</TableCell>
+                                    <TableCell>Wages</TableCell>
+                                    <TableCell>Total Days</TableCell>
+                                    <TableCell>Present Days</TableCell>
                                     <TableCell>Total OT Hours</TableCell>
                                     <TableCell>Overtime Pay</TableCell>
                                     <TableCell>Weekly Off Pay</TableCell>
                                     <TableCell>Bonus</TableCell>
                                     <TableCell>Total Deductions</TableCell>
-                                    <TableCell>Basic Salary</TableCell>
+                                    {/* <TableCell>Basic Salary</TableCell> */}
                                     <TableCell>Net Pay</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -940,11 +1056,18 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                         <TableCell>{labour.name || '-'}</TableCell>
                                         <TableCell>{labour.projectName || '-'}</TableCell>
                                         <TableCell>{labour.department || '-'}</TableCell>
+                                        <TableCell>
+                                            {labour.wageType === 'FIXED MONTHLY WAGES'
+                                                ? labour.fixedMonthlyWage
+                                                : labour.dailyWageRate}
+                                        </TableCell>
+                                        <TableCell>{labour.daysInSlice}</TableCell>
                                         <TableCell
                                             onClick={() => handleOpenModal(labour)}
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
-                                            {labour.attendanceCount}
+                                            {/* {labour.attendanceCount} */}
+                                            {(labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0)}
                                         </TableCell>
                                         <TableCell>{labour.totalOvertimeHours}</TableCell>
                                         <TableCell>{labour.overtimePay}</TableCell>
@@ -961,7 +1084,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                         >
                                             {labour.totalDeductions}
                                         </TableCell>
-                                        <TableCell>{labour.grossPay}</TableCell>
+                                        {/* <TableCell>{labour.baseWage}</TableCell> */}
                                         {/* <TableCell>{labour.netPay}</TableCell> */}
                                         <TableCell
                                             onClick={() => handleOpenModalNetpay(labour)}
@@ -1005,6 +1128,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                             <Typography><strong style={{ marginRight: '13%' }}>Absent Days:</strong> {selectedLabour?.absentDays || 0}</Typography>
                             <Typography><strong style={{ marginRight: '18.5%' }}>Half Days:</strong> {selectedLabour?.halfDays || 0}</Typography>
                             <Typography><strong style={{ marginRight: '5%' }}>Miss Punch Days:</strong> {selectedLabour?.missPunchDays || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '12.5%' }}>Holiday Days:</strong> {selectedLabour?.totalHolidaysInMonth || 0}</Typography>
                         </Box>
 
                         <Button variant="contained" sx={{
@@ -1149,10 +1273,10 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
                         {/* Net Pay Summary */}
                         <Box textAlign="left" sx={{ display: 'flex', justifyContent: 'flex-end', mr: 3 }}>
-                            <Box textAlign="left" sx={{ backgroundColor: "#FFECB3", padding: 2, borderRadius: 2, width: "40%" }}>
-                                <Typography variant="h6" fontWeight="bold">Net Pay: ₹{selectedLabour?.netPay || "N/A"}</Typography>
+                            <Box textAlign="left" sx={{ backgroundColor: "#FFECB3", padding: 2, borderRadius: 2, width: "30%" }}>
+                                <Typography variant="h6" fontWeight="bold">Net Pay: ₹{selectedLabour?.netPay || "-"}</Typography>
                                 <Typography variant="body2">
-                                    Gross Pay (A): <b>₹{selectedLabour?.grossPay || "N/A"}</b>
+                                    Gross Pay (A): <b>₹{selectedLabour?.baseWage || "-"}</b>
                                 </Typography>
                                 <Typography>
                                     Deductions (B): <b>₹{selectedLabour?.totalDeductions || "0.00"}</b>
@@ -1164,15 +1288,14 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Box sx={StyleEmpInfo}>
                             <Grid container spacing={2}>
                                 <Grid item xs={6}>
-                                    <Typography><b>Employee Code:</b> {selectedLabour?.LabourID || "N/A"}</Typography>
-                                    <Typography><b>Name:</b> {selectedLabour?.name || "N/A"}</Typography>
-                                    <Typography><b>Business Unit:</b> {selectedLabour?.projectName || "N/A"}</Typography>
-                                    <Typography><b>Department:</b> {selectedLabour?.department || "N/A"}</Typography>
+                                    <Typography><b>Employee Code:</b> {selectedLabour?.LabourID || "-"}</Typography>
+                                    <Typography><b>Name:</b> {selectedLabour?.name || "-"}</Typography>
+                                    <Typography><b>Business Unit:</b> {selectedLabour?.projectName || "-"}</Typography>
+                                    <Typography><b>Department:</b> {selectedLabour?.department || "-"}</Typography>
                                 </Grid>
                                 <Grid item xs={6}>
-                                    <Typography><b>Aadhar No:</b> N/A</Typography>
-                                    <Typography><b>Account No:</b> N/A</Typography>
-                                    <Typography><b>IFSC Code:</b> N/A</Typography>
+                                    <Typography><b>Aadhar No:</b> {selectedLabour?.aadhaarNumber || "-"}</Typography>
+                                    <Typography><b>Account No:</b> {selectedLabour?.accountNumber || "-"}</Typography>
                                 </Grid>
                             </Grid>
                         </Box>
@@ -1181,7 +1304,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Attendance Count (A)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                        <Box sx={{ mt: 0, padding: '10px 30px' }}>
                             <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
@@ -1189,15 +1312,17 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                             <TableCell><b>Total Days</b></TableCell>
                                             <TableCell><b>Present Days</b></TableCell>
                                             <TableCell><b>Half Days</b></TableCell>
-                                            <TableCell><b>Miss Punch Days</b></TableCell>
+                                            <TableCell><b>Absent Days</b></TableCell>
+                                            <TableCell><b>MissPunch Days</b></TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         <TableRow>
-                                            <TableCell>{selectedLabour?.attendanceCount || "N/A"}</TableCell>
-                                            <TableCell>{selectedLabour?.presentDays || "N/A"}</TableCell>
-                                            <TableCell>{selectedLabour?.halfDays || "N/A"}</TableCell>
-                                            <TableCell>{selectedLabour?.missPunchDays || "N/A"}</TableCell>
+                                            <TableCell>{selectedLabour?.daysInSlice || "-"}</TableCell>
+                                            <TableCell>{selectedLabour?.presentDays || "-"}</TableCell>
+                                            <TableCell>{selectedLabour?.halfDays || "-"}</TableCell>
+                                            <TableCell>{selectedLabour?.absentDays || "-"}</TableCell>
+                                            <TableCell>{selectedLabour?.missPunchDays || "-"}</TableCell>
                                         </TableRow>
                                     </TableBody>
                                 </Table>
@@ -1208,7 +1333,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Wages Count (B)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                        <Box sx={{ mt: 0, padding: '10px 30px' }}>
                             <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
@@ -1216,12 +1341,14 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                             <TableCell><b>Wages Type</b></TableCell>
                                             <TableCell><b>Daily Wages</b></TableCell>
                                             <TableCell><b>Fixed Monthly Wages</b></TableCell>
+                                            <TableCell><b>Weekly Off</b></TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         <TableRow>
-                                            <TableCell>{selectedLabour?.wageType || "N/A"}</TableCell>
+                                            <TableCell>{selectedLabour?.wageType || "-"}</TableCell>
                                             <TableCell>{selectedLabour?.dailyWageRate || "0.00"}</TableCell>
+                                            <TableCell>{selectedLabour?.fixedMonthlyWage || "0.00"}</TableCell>
                                             <TableCell>{selectedLabour?.fixedMonthlyWage || "0.00"}</TableCell>
                                         </TableRow>
                                     </TableBody>
@@ -1233,13 +1360,14 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Gross Pay (C)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                        <Box sx={{ mt: 0, padding: '10px 30px' }}>
                             <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
                                             <TableCell><b>Earnings Pay</b></TableCell>
                                             <TableCell><b>Monthly Bonus</b></TableCell>
+                                            <TableCell><b>Monthly Deduction</b></TableCell>
                                             <TableCell><b>Total</b></TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -1247,7 +1375,8 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                         <TableRow>
                                             <TableCell>{selectedLabour?.basicSalary || "0.00"}</TableCell>
                                             <TableCell>{selectedLabour?.bonuses || "0.00"}</TableCell>
-                                            <TableCell>{selectedLabour?.grossPay || "0.00"}</TableCell>
+                                            <TableCell>{selectedLabour?.totalDeductions || "0.00"}</TableCell>
+                                            <TableCell>{selectedLabour?.netPay || "0.00"}</TableCell>
                                         </TableRow>
                                     </TableBody>
                                 </Table>
@@ -1258,7 +1387,7 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                         <Box sx={StyleForPayslip}>
                             <Typography fontWeight="bold">• Deductions (D)</Typography>
                         </Box>
-                        <Box sx={{ mt: 1, padding: '10px 30px' }}>
+                        <Box sx={{ mt: 0, padding: '10px 30px' }}>
                             <TableContainer component={Paper} sx={{ border: "2px solid green", borderRadius: 1, backgroundColor: "#fffae7" }}>
                                 <Table>
                                     <TableHead>
@@ -1419,18 +1548,20 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
                         <Button
                             variant="contained"
-                            // onClick={saveFinalizePayrollData}
-                            onClick={() => exportPayrollData(salaryData)}
+                            onClick={() => {
+                                exportPayrollData(salaryData);
+                                setIsFinalizeEnabled(prev => !prev); // toggle finalize enabled/disabled
+                            }}
                             sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
+                                fontSize: { xs: "0.8rem", sm: "1rem" },
                                 height: "40px",
-                                width: "100%", // Button width to match other inputs
+                                width: "100%",
                                 backgroundColor: "#EFE6F7",
                                 color: "#8236BC",
                                 '&:hover': {
                                     backgroundColor: "#EFE6F7",
                                 },
-                                marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
+                                marginBottom: { xs: "20px", sm: "0" }
                             }}
                         >
                             Export PayRoll
@@ -1438,22 +1569,28 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
 
                         <Button
                             variant="contained"
-                            // onClick={saveFinalizePayrollData}
-                            onClick={() => handleApproveConfirmOpen()}
+                            onClick={() => {
+                                handleApproveConfirmOpen();
+                                setIsFinalizeClicked(true); // permanently disable after 1st click
+                            }}
+                            disabled={!isFinalizeEnabled || isFinalizeClicked}
                             sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
+                                fontSize: { xs: "0.8rem", sm: "1rem" },
                                 height: "40px",
-                                width: "100%", // Button width to match other inputs
+                                width: "100%",
                                 backgroundColor: "rgb(229, 255, 225)",
                                 color: "rgb(43, 217, 144)",
                                 '&:hover': {
                                     backgroundColor: "rgb(229, 255, 225)",
                                 },
-                                marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
+                                marginBottom: { xs: "20px", sm: "0" },
+                                opacity: (!isFinalizeEnabled || isFinalizeClicked) ? 0.5 : 1,
+                                cursor: (!isFinalizeEnabled || isFinalizeClicked) ? 'not-allowed' : 'pointer'
                             }}
                         >
                             Finalize PayRoll
                         </Button>
+
 
                     </Box>
 
@@ -1653,6 +1790,114 @@ const RunPayroll = ({ departments, projectNames = [], labour }) => {
                                 </Box>
                             </Box>
                         ))}
+                    </Box>
+                </Box>
+            </Modal>
+
+
+            {/* ===== FILTER MODAL ===== */}
+            <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: 4,
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            mb: 2,
+                        }}
+                    >
+                        <Typography variant="h6" gutterBottom>
+                            Filter Options
+                        </Typography>
+                        <Button onClick={() => setFilterModalOpen(false)}>
+                            <CloseIcon />
+                        </Button>
+                    </Box>
+
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="body1">Business Unit</Typography>
+                        <Select
+                            fullWidth
+                            value={selectedBusinessUnit}
+                            onChange={(e) => setSelectedBusinessUnit(e.target.value)}
+                            displayEmpty
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="">
+                                <em>All</em>
+                            </MenuItem>
+                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                projectNames.map((project) => (
+                                    <MenuItem key={project.Id} value={project.Id}>
+                                        {project.Business_Unit}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Projects Available
+                                </MenuItem>
+                            )}
+                        </Select>
+                    </Box>
+
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="body1">Department</Typography>
+                        <Select
+                            fullWidth
+                            value={selectedDepartment}
+                            onChange={(e) => setSelectedDepartment(e.target.value)}
+                            displayEmpty
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="">
+                                <em>All</em>
+                            </MenuItem>
+                            {Array.isArray(departments) && departments.length > 0 ? (
+                                departments.map((department) => (
+                                    <MenuItem key={department.Id} value={department.Id}>
+                                        {department.Description}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Department Available
+                                </MenuItem>
+                            )}
+                        </Select>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        <Button variant="outlined" color="secondary" onClick={handleResetFilter}>
+                            Reset
+                        </Button>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                backgroundColor: 'rgb(229, 255, 225)',
+                                color: 'rgb(43, 217, 144)',
+                                width: '100px',
+                                marginRight: '10px',
+                                marginBottom: '3px',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}
+                            onClick={handleApplyFilters}
+                        >
+                            Apply
+                        </Button>
                     </Box>
                 </Box>
             </Modal>

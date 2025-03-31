@@ -150,7 +150,7 @@ function App() {
                     <Route path="/approveLabours" element={<ApproveLabours refresh={refresh} departments={departments} projectNames={projectNames} />} />
                     <Route path="/addUser" element={<AddUser onFormSubmit={handleFormSubmit} />} />
                     <Route path="/edit-labour" element={<EditLabour />} />
-                    <Route path="/attendanceReport" element={<AttendanceReport onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/attendanceReport" element={<AttendanceReport onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
                     <Route path="/wagesReport" element={<WagesReport onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames} />} />
                     <Route path="/peopleReport" element={<PeopleReport onFormSubmit={handleFormSubmit} />} />
                     <Route path="/peopleEditDetails" element={<PeopleEditDetails onFormSubmit={handleFormSubmit} />} />

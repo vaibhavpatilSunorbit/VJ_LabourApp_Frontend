@@ -739,6 +739,7 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
                   /></TableCell>}
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
+                <TableCell>Name</TableCell>
                 <TableCell>Date</TableCell>
                 <TableCell>Current Site</TableCell>
                 <TableCell>Transfer Site</TableCell>
@@ -795,6 +796,7 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
                   )}
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{labour.LabourID}</TableCell>
+                  <TableCell>{labour.name}</TableCell>
                   <TableCell>{labour.createdAt ? new Date(labour.createdAt).toLocaleDateString('en-GB') : '-'}</TableCell>
                   <TableCell>{labour.currentSiteName}</TableCell>
                   <TableCell>{labour.transferSiteName}</TableCell>
