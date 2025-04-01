@@ -719,6 +719,7 @@ const VariableInputApproval = ({ departments, projectNames, labour }) => {
                 <TableCell>PayStructure</TableCell>
                 <TableCell>Variable Pay Amount</TableCell>
                 <TableCell>Pay Remark</TableCell>
+                <TableCell>Incentive Remark</TableCell>
                 <TableCell>Pay Effective Date</TableCell>
                 <TableCell>Site Transfer By</TableCell>
                 {/* <TableCell>Status</TableCell> */}
@@ -778,6 +779,7 @@ const VariableInputApproval = ({ departments, projectNames, labour }) => {
                   <TableCell>{labour.PayStructure}</TableCell>
                   <TableCell>{labour.VariablepayAmount}</TableCell>
                   <TableCell>{labour.variablePayRemark}</TableCell>
+                  <TableCell>{labour.incentiveRemark}</TableCell>
                   <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString('en-GB') : '-'}</TableCell>
                   <TableCell>{labour.payAddedBy}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}

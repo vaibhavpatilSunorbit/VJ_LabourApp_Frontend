@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     Table, IconButton, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Typography, TableFooter, Modal,
-    Grid
+    Grid, Checkbox, ListItemText,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -62,14 +62,14 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         punchOut: "",
         overtime: "",
         remark: "",
-        shift: ""
+        shift: "",
     });
     const [error, setError] = useState(null);
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const { user } = useUser();
     const [businessUnits, setBusinessUnits] = useState([]);
-    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
     const [projectName, setProjectName] = useState('');
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const [isOvertimeDisable, setIsOvertimeDisable] = useState(false);
@@ -81,6 +81,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
  const [selectedEmployee, setSelectedEmployee] = useState('');
  const [filters, setFilters] = useState({});
  const [laboursAttenadance, setLaboursAttenadance] = useState([]);
+//  const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
 
 // -----------------------------------------------------  FILTER START ------------------
 
@@ -165,16 +166,18 @@ useEffect(() => {
 //     }
 // }
 const handleResetFilter = () => {
-    setSelectedBusinessUnit('');
+    // setSelectedBusinessUnit('');
     setSelectedDepartment('');
     fetchLaboursAttenadance();
+    setSelectedBusinessUnit([]);
     setFilterModalOpen(false);
 };
 
 const handleApplyFilters = () => {
     const filters = {};
     if (selectedBusinessUnit) {
-      filters.projectName = selectedBusinessUnit;
+    //   filters.projectName = selectedBusinessUnit;
+    filters.ProjectID = selectedBusinessUnit.join(',');
     }
     if (selectedDepartment) {
       filters.department = selectedDepartment;
@@ -1021,23 +1024,40 @@ const handleApplyFilters = () => {
         fetchBusinessUnits();
     }, []);
 
-    const handleBusinessUnitChange = async (event) => {
-        const selectedUnit = event.target.value;
-        setSelectedBusinessUnit(selectedUnit);
+    // const handleBusinessUnitChange = async (event) => {
+    //     const selectedUnit = event.target.value;
+    //     setSelectedBusinessUnit(selectedUnit);
 
-        const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
-        if (selectedProject) {
-            setProjectName(selectedProject.ProjectID);
+    //     const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
+    //     if (selectedProject) {
+    //         setProjectName(selectedProject.ProjectID);
 
-            try {
-                const response = await axios.get(`${API_BASE_URL}/labours`, {
-                    params: { projectName: selectedProject.ProjectID },
-                });
-                setLabours(response.data);
-            } catch (error) {
-                console.error('Error fetching labours for project:', error);
-                toast.error('Error fetching labours for the selected project.');
+    //         try {
+    //             const response = await axios.get(`${API_BASE_URL}/labours`, {
+    //                 params: { projectName: selectedProject.ProjectID },
+    //             });
+    //             setLabours(response.data);
+    //         } catch (error) {
+    //             console.error('Error fetching labours for project:', error);
+    //             toast.error('Error fetching labours for the selected project.');
+    //         }
+    //     }
+    // };
+
+    const isAllSelected = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
+
+    const handleBusinessUnitChange = (event) => {
+        const value = event.target.value;
+    
+        if (value.includes('ALL')) {
+            if (isAllSelected) {
+                setSelectedBusinessUnit([]); // Deselect all
+            } else {
+                const allIds = projectNames.map(p => p.Id);
+                setSelectedBusinessUnit(allIds); // Select all
             }
+        } else {
+            setSelectedBusinessUnit(value);
         }
     };
 
@@ -1767,7 +1787,7 @@ const handleApplyFilters = () => {
 
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="body1">Business Unit</Typography>
-                        <Select
+                        {/* <Select
                             fullWidth
                             value={selectedBusinessUnit}
                             onChange={(e) => setSelectedBusinessUnit(e.target.value)}
@@ -1781,6 +1801,39 @@ const handleApplyFilters = () => {
                                 projectNames.map((project) => (
                                     <MenuItem key={project.Id} value={project.Id}>
                                         {project.Business_Unit}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Projects Available
+                                </MenuItem>
+                            )}
+                        </Select> */}
+
+<Select
+                            fullWidth
+                            multiple
+                            value={selectedBusinessUnit}
+                            onChange={handleBusinessUnitChange}
+                            displayEmpty
+                            renderValue={(selected) => {
+                                if (selected.length === 0) return <em>All</em>;
+                                const selectedLabels = projectNames
+                                    .filter(project => selected.includes(project.Id))
+                                    .map(project => project.Business_Unit);
+                                return selectedLabels.join(', ');
+                            }}
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="ALL">
+                                <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+                                <ListItemText primary="Select All" />
+                            </MenuItem>
+                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                projectNames.map((project) => (
+                                    <MenuItem key={project.Id} value={project.Id}>
+                                        <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                        <ListItemText primary={project.Business_Unit} />
                                     </MenuItem>
                                 ))
                             ) : (
@@ -1815,6 +1868,7 @@ const handleApplyFilters = () => {
                                 </MenuItem>
                             )}
                         </Select>
+                       
                     </Box>
 
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>

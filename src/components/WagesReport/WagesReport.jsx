@@ -13,7 +13,7 @@ import {
     Box,
     TextField,
     TablePagination,
-    Select, CircularProgress,
+    Select, CircularProgress, Checkbox, ListItemText,
     MenuItem, Modal, Typography, IconButton, Tabs, Tab
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -55,7 +55,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     const [fixedMonthlyWages, setFixedMonthlyWages] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedLabour, setSelectedLabour] = useState(null);
-    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
     const [businessUnits, setBusinessUnits] = useState([]);
     const [projectName, setProjectName] = useState('');
     const [startDate, setStartDate] = useState('');
@@ -74,6 +74,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     const [tabValue, setTabValue] = useState(0);
     const [modalOpens, setModalOpens] = useState(true);
     const [perHourWages, setPerHourWages] = useState(null);
+    // const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
+
 
     const workingHoursString = labours?.workingHours || "FLEXI SHIFT - 9 HRS";
     const workingHours = parseInt(workingHoursString.match(/\d+/)?.[0], 10) || 8;
@@ -136,11 +138,12 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         }
     }
     const handleResetFilter = () => {
-        setSelectedBusinessUnit('');
+        // setSelectedBusinessUnit('');
         setSelectedDepartment('');
         setSelectedPayStructure('');
         setEmployeeToggle('all');
         setSelectedEmployee('');
+        setSelectedBusinessUnit([]);
         fetchLabours();
         setFilterModalOpen(false);
     };
@@ -148,7 +151,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     const handleApplyFilters = () => {
         const filters = {};
         if (selectedBusinessUnit) {
-            filters.ProjectID = selectedBusinessUnit;
+            // filters.ProjectID = selectedBusinessUnit;
+            filters.ProjectID = selectedBusinessUnit.join(',');
         }
         if (selectedDepartment) {
             filters.DepartmentID = selectedDepartment;
@@ -209,26 +213,42 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         setPage(0);
     };
 
+    const isAllSelectedProject = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
 
-    const handleBusinessUnitChange = async (event) => {
-        const selectedUnit = event.target.value;
-        setSelectedBusinessUnit(selectedUnit);
-
-        const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
-        if (selectedProject) {
-            setProjectName(selectedProject.ProjectID);
-
-            try {
-                const response = await axios.get(`${API_BASE_URL}/labours`, {
-                    params: { projectName: selectedProject.ProjectID },
-                });
-                setLabours(response.data);
-            } catch (error) {
-                console.error('Error fetching labours for project:', error);
-                toast.error('Error fetching labours for the selected project.');
+    const handleBusinessUnitChange = (event) => {
+        const value = event.target.value;
+    
+        if (value.includes('ALL')) {
+            if (isAllSelectedProject) {
+                setSelectedBusinessUnit([]); // Deselect all
+            } else {
+                const allIds = projectNames.map(p => p.Id);
+                setSelectedBusinessUnit(allIds); // Select all
             }
+        } else {
+            setSelectedBusinessUnit(value);
         }
     };
+
+    // const handleBusinessUnitChange = async (event) => {
+    //     const selectedUnit = event.target.value;
+    //     setSelectedBusinessUnit(selectedUnit);
+
+    //     const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
+    //     if (selectedProject) {
+    //         setProjectName(selectedProject.ProjectID);
+
+    //         try {
+    //             const response = await axios.get(`${API_BASE_URL}/labours`, {
+    //                 params: { projectName: selectedProject.ProjectID },
+    //             });
+    //             setLabours(response.data);
+    //         } catch (error) {
+    //             console.error('Error fetching labours for project:', error);
+    //             toast.error('Error fetching labours for the selected project.');
+    //         }
+    //     }
+    // };
 
     const handleExport = async () => {
         if (!startDate || !endDate) {
@@ -736,7 +756,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         p: 4,
                     }}
                 >
-                    {/* Modal Header with Title and Close Button */}
                     <Box
                         sx={{
                             display: 'flex',
@@ -753,10 +772,9 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         </Button>
                     </Box>
 
-                    {/* Business Unit Filter using projectNames from props */}
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="body1">Business Unit</Typography>
-                        <Select
+                        {/* <Select
                             fullWidth
                             value={selectedBusinessUnit}
                             onChange={(e) => setSelectedBusinessUnit(e.target.value)}
@@ -770,6 +788,40 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                 projectNames.map((project) => (
                                     <MenuItem key={project.Id} value={project.Id}>
                                         {project.Business_Unit}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Projects Available
+                                </MenuItem>
+                            )}
+                        </Select> */}
+
+
+                        <Select
+                            fullWidth
+                            multiple
+                            value={selectedBusinessUnit}
+                            onChange={handleBusinessUnitChange}
+                            displayEmpty
+                            renderValue={(selected) => {
+                                if (selected.length === 0) return <em>All</em>;
+                                const selectedLabels = projectNames
+                                    .filter(project => selected.includes(project.Id))
+                                    .map(project => project.Business_Unit);
+                                return selectedLabels.join(', ');
+                            }}
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="ALL">
+        <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+        <ListItemText primary="Select All" />
+    </MenuItem>
+                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                projectNames.map((project) => (
+                                    <MenuItem key={project.Id} value={project.Id}>
+                                        <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                        <ListItemText primary={project.Business_Unit} />
                                     </MenuItem>
                                 ))
                             ) : (

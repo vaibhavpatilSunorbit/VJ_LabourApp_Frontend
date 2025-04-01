@@ -152,8 +152,8 @@ function App() {
                     <Route path="/edit-labour" element={<EditLabour />} />
                     <Route path="/attendanceReport" element={<AttendanceReport onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
                     <Route path="/wagesReport" element={<WagesReport onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames} />} />
-                    <Route path="/peopleReport" element={<PeopleReport onFormSubmit={handleFormSubmit} />} />
-                    <Route path="/peopleEditDetails" element={<PeopleEditDetails onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/peopleReport" element={<PeopleReport onFormSubmit={handleFormSubmit} />} departments={departments} projectNames={projectNames}/>
+                    <Route path="/peopleEditDetails" element={<PeopleEditDetails onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
                     <Route path="/adminApproval" element={<AdminApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/adminAttendanceApproval" element={<AdminAttendanceApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/siteTransferLabour" element={<SiteTransfer departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} onApprove={handleApprove} />} />
@@ -161,10 +161,10 @@ function App() {
                     <Route path="/adminApproval/wagesApproval" element={<WagesApproval onFormSubmit={handleFormSubmit} />} />
                     <Route path="/variableInput" element={<VariableInput departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} />} />
                     <Route path="/adminApproval/variableInputApproval" element={<VariableInputApproval onFormSubmit={handleFormSubmit} />} />
-                    <Route path="/SalaryRejester" element={<SalaryRegister onFormSubmit={handleFormSubmit} />} />
-                    <Route path="/SalaryGeneration" element={<SalaryGeneration onFormSubmit={handleFormSubmit} />} />
-                    <Route path="/RunPayroll" element={<RunPayroll onFormSubmit={handleFormSubmit} />} />
-                    <Route path="/ViewMonthlyPayroll" element={<ViewMonthlyPayroll onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/SalaryRejester" element={<SalaryRegister onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
+                    <Route path="/SalaryGeneration" element={<SalaryGeneration onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
+                    <Route path="/RunPayroll" element={<RunPayroll onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
+                    <Route path="/ViewMonthlyPayroll" element={<ViewMonthlyPayroll onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
                     <Route path="/adminApproval/CompanyTransferApproval" element={<CompanyTransferApproval departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} />} />
 
 

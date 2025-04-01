@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogActions, FormControl, Tabs, Tab
+  DialogActions, FormControl, Tabs, Tab, Checkbox, ListItemText,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -45,7 +45,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedLabour, setSelectedLabour] = useState(null);
-  const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+  const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
   const [businessUnits, setBusinessUnits] = useState([]);
   const { user } = useUser();
   const [openModal, setOpenModal] = useState(false);
@@ -62,9 +62,11 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
     payStructure: "",
     variablePay: "",
     variablePayRemark: "",
+    incentiveRemark: "",
     effectiveDate: new Date().toISOString().split("T")[0],
   });
   const [tabValue, setTabValue] = useState(0);
+  // const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
 
   const fetchLabours = async (filters = {}) => {
     setLoading(true);
@@ -95,11 +97,12 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
 
 
   const handleResetFilter = () => {
-    setSelectedBusinessUnit('');
+    setSelectedBusinessUnit([]);
     setSelectedDepartment('');
     setSelectedPayStructure('');
     setEmployeeToggle('all');
     setSelectedEmployee('');
+    // setSelectedBusinessUnit([]);
     fetchLabours();
     setFilterModalOpen(false);
   };
@@ -107,7 +110,8 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
   const handleApplyFilters = () => {
     const filters = {};
     if (selectedBusinessUnit) {
-      filters.ProjectID = selectedBusinessUnit;
+      // filters.ProjectID = selectedBusinessUnit;
+      filters.ProjectID = selectedBusinessUnit.join(',');
     }
     if (selectedDepartment) {
       filters.DepartmentID = selectedDepartment;
@@ -149,10 +153,27 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
       payStructure: "",
       variablePay: "",
       variablePayRemark: "",
+      incentiveRemark: "",
       effectiveDate: new Date().toISOString().split("T")[0],
     });
   };
 
+  const isAllSelected = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
+
+  const handleBusinessUnitChange = (event) => {
+      const value = event.target.value;
+  
+      if (value.includes('ALL')) {
+          if (isAllSelected) {
+              setSelectedBusinessUnit([]); // Deselect all
+          } else {
+              const allIds = projectNames.map(p => p.Id);
+              setSelectedBusinessUnit(allIds); // Select all
+          }
+      } else {
+          setSelectedBusinessUnit(value);
+      }
+  };
 
   const handleToast = (type, message) => {
     if (type === 'success') {
@@ -195,6 +216,12 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
       toast.error("Please fill in all required fields in the modal.");
       return;
     }
+
+    if (modalPayData.payStructure === "Incentive" && !modalPayData.incentiveRemark.trim()) {
+      toast.error("Please enter a remark for Incentive.");
+      return;
+    }
+    
     if (!selectedLabourIds || selectedLabourIds.length === 0) {
       toast.error("No labour selected.");
       return;
@@ -261,6 +288,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
           variablePayRemark: modalPayData.variablePayRemark,
           effectiveDate: modalPayData.effectiveDate,
           payAddedBy: onboardName,
+          incentiveRemark: modalPayData.incentiveRemark,
         };
 
         const response = await axios.post(
@@ -277,6 +305,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
                   payStructure: modalPayData.payStructure,
                   variablePay: modalPayData.variablePay,
                   variablePayRemark: modalPayData.variablePayRemark,
+                  incentiveRemark: modalPayData.incentiveRemark,
                   effectiveDate: modalPayData.effectiveDate,
                 };
               }
@@ -792,6 +821,22 @@ Edit ({selectedLabourIds.length})
             </FormControl>
           )}
 
+          {modalPayData.payStructure === "Incentive" && (
+            <TextField
+              label="Remark For Incentive"
+              fullWidth
+              value={modalPayData.incentiveRemark}
+              onChange={(e) =>
+                setModalPayData((prev) => ({
+                  ...prev,
+                  incentiveRemark: e.target.value,
+                }))
+              }
+              sx={{ mb: 2 }}
+              required
+            />
+          )}
+
           <TextField
             label="Variable Pay"
             type="number"
@@ -921,7 +966,7 @@ Edit ({selectedLabourIds.length})
           {/* Business Unit Filter using projectNames from props */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="body1">Business Unit</Typography>
-            <Select
+            {/* <Select
               fullWidth
               value={selectedBusinessUnit}
               onChange={(e) => setSelectedBusinessUnit(e.target.value)}
@@ -942,7 +987,40 @@ Edit ({selectedLabourIds.length})
                   No Projects Available
                 </MenuItem>
               )}
-            </Select>
+            </Select> */}
+
+              <Select
+                                        fullWidth
+                                        multiple
+                                        value={selectedBusinessUnit}
+                                        onChange={handleBusinessUnitChange}
+                                        displayEmpty
+                                        renderValue={(selected) => {
+                                            if (selected.length === 0) return <em>All</em>;
+                                            const selectedLabels = projectNames
+                                                .filter(project => selected.includes(project.Id))
+                                                .map(project => project.Business_Unit);
+                                            return selectedLabels.join(', ');
+                                        }}
+                                        sx={{ mt: 1 }}
+                                    >
+                                        <MenuItem value="ALL">
+                    <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+                    <ListItemText primary="Select All" />
+                </MenuItem>
+                                        {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                            projectNames.map((project) => (
+                                                <MenuItem key={project.Id} value={project.Id}>
+                                                    <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                                    <ListItemText primary={project.Business_Unit} />
+                                                </MenuItem>
+                                            ))
+                                        ) : (
+                                            <MenuItem value="Unknown" disabled>
+                                                No Projects Available
+                                            </MenuItem>
+                                        )}
+                                    </Select>
           </Box>
 
           {/* Department Filter using departments from props */}

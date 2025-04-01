@@ -27,8 +27,8 @@ import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../UserContext/UserContext';
-import ExportWagesReport from '../WagesReport/ImportExportWages/ExportWages'
-import ImportWagesReport from '../WagesReport/ImportExportWages/ImportWages'
+import ExportSiteTransfer from './ExportSiteTransfer'
+import ImportSiteTransfer from './ImportSiteTransfer'
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -913,8 +913,8 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
           flexWrap: "wrap",
         }}
       >
-        <ExportWagesReport />
-        <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} />
+        <ExportSiteTransfer />
+        <ImportSiteTransfer handleToast={handleToast} onboardName={user.name || null} />
         <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
           Filter
         </Button>

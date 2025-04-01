@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
-import { API_BASE_URL } from "../../../Data";
+import { API_BASE_URL } from "../../Data";
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import {
     Button,
@@ -14,14 +14,14 @@ import {
 // import 'react-toastify/dist/ReactToastify.css';
 import PropTypes from 'prop-types';
 
-const ImportWages = ({ handleToast = (type, message) => console[type]?.(message), onboardName, modalOpens, setModalOpens  }) => {
+const ImportSiteTransfer = ({ handleToast = (type, message) => console[type]?.(message), onboardName, modalOpens, setModalOpens  }) => {
     const [open, setOpen] = useState(false);
     const [file, setFile] = useState(null);
     // const handleClosed = () => setModalOpen(false);
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
-        setFile(null); 
+        setFile(null); // Reset the file input on modal close
         setModalOpens(false);
         setOpen(false);
     };
@@ -41,93 +41,13 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
         }
     };
     
-    // const handleImport = async () => {
-    //     if (!file) {
-    //         handleToast('error','Please select an Excel file');
-    //         return;
-    //     }
-    
-    //     await handleFilePreview(file);
-    
-    //     const formData = new FormData();
-    //     formData.append('file', file);
-    //     formData.append('wagesEditedBy', onboardName);
-    
-    //     try {
-    //         const response = await axios.post(`${API_BASE_URL}/labours/importWagesExcel`, formData, {
-    //             headers: { 'Content-Type': 'multipart/form-data' },
-    //             responseType: 'blob', // Handle file or JSON response
-    //         });
-    
-    //         const contentType = response.headers['content-type'];
-    //         if (contentType.includes('application/json')) {
-    //             // Handle JSON response
-    //             const text = await new Response(response.data).text(); // Convert blob to text
-    //             const jsonResponse = JSON.parse(text);
-    //             if (jsonResponse.message) {
-    //                 handleToast('success', jsonResponse.message);
-    //                 setModalOpens(false);
-    //                 setOpen(false);
-    //             }
-    //         } else if (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
-    //             // Handle Excel file download for error rows
-    //             const blob = new Blob([response.data], {
-    //                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //             });
-    //             const link = document.createElement('a');
-    //             link.href = window.URL.createObjectURL(blob);
-    //             link.setAttribute('download', 'Error_Rows.xlsx');
-    //             document.body.appendChild(link);
-    //             link.click();
-    //             link.parentNode.removeChild(link);
-    
-    //             handleToast('error','Errors occurred during import. Downloaded error file.');
-    //             setModalOpens(false);
-    //         } else {
-    //             handleToast('error','Unexpected response from the server.');
-    //         }
-    //     } catch (error) {
-    //         if (error.response && error.response.data) {
-    //             const reader = new FileReader();
-    //             reader.onload = () => {
-    //                 try {
-    //                     const responseData = JSON.parse(reader.result);
-    //                     if (responseData.message) {
-    //                         let userMessage = '';
-
-    //                         if (responseData.message.includes("Pending' approval already exists")) {
-    //                             userMessage = 'This labour already has a pending wage update. Please wait for admin approval before re-uploading.';
-    //                         } else {
-    //                             userMessage = `Error: ${responseData.message}`;
-    //                         }
-
-    //                         handleToast('error', userMessage);
-    //                     }
-    //                 } catch (parseError) {
-    //                     handleToast('error', 'Unexpected error from server response.');
-    //                 }
-    //             };
-    //             reader.readAsText(error.response.data);
-    //         } else {
-    //             handleToast('error', 'Error uploading the file. Please try again.');
-    //         }
-    //         handleToast('error', 'Error uploading the file:', error);
-    //         setModalOpens(false);
-    //     }
-    //     ImportWages.propTypes = {
-    //         handleToast: PropTypes.func,
-    //         onboardName: PropTypes.string,
-    //         modalOpens: PropTypes.bool,
-    //         setModalOpens: PropTypes.func,
-    //     };
-    // };
- 
     const handleImport = async () => {
         if (!file) {
-            handleToast('error', 'Please select an Excel file');
+            handleToast('error','Please select an Excel file');
             return;
         }
     
+        // Preview the file data in the console before uploading
         await handleFilePreview(file);
     
         const formData = new FormData();
@@ -137,19 +57,21 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
         try {
             const response = await axios.post(`${API_BASE_URL}/labours/importWagesExcel`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                responseType: 'blob',
+                responseType: 'blob', // Handle file or JSON response
             });
     
             const contentType = response.headers['content-type'];
-    
             if (contentType.includes('application/json')) {
-                const text = await new Response(response.data).text();
+                // Handle JSON response
+                const text = await new Response(response.data).text(); // Convert blob to text
                 const jsonResponse = JSON.parse(text);
                 if (jsonResponse.message) {
                     handleToast('success', jsonResponse.message);
+                    setModalOpens(false);
                     setOpen(false);
                 }
             } else if (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
+                // Handle Excel file download for error rows
                 const blob = new Blob([response.data], {
                     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 });
@@ -160,9 +82,9 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
                 link.click();
                 link.parentNode.removeChild(link);
     
-                handleToast('error', 'Errors occurred during import. Downloaded error file.');
+                handleToast('error','Errors occurred during import. Downloaded error file.');
             } else {
-                handleToast('error', 'Unexpected response from the server.');
+                handleToast('error','Unexpected response from the server.');
             }
         } catch (error) {
             if (error.response && error.response.data) {
@@ -171,40 +93,26 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
                     try {
                         const responseData = JSON.parse(reader.result);
                         if (responseData.message) {
-                            let userMessage = '';
-    
-                            if (responseData.message.includes("Pending' approval already exists")) {
-                                userMessage = 'This labour already has a pending wage update. Please wait for admin approval before re-uploading.';
-                            } else {
-                                userMessage = `Error: ${responseData.message}`;
-                            }
-    
-                            handleToast('error', userMessage);
+                            handleToast('error',`Error: ${responseData.message}`);
                         }
                     } catch (parseError) {
-                        handleToast('error', 'Unexpected error from server response.');
+                        handleToast('error','Unexpected error from server response.');
                     }
                 };
                 reader.readAsText(error.response.data);
             } else {
-                handleToast('error', 'Error uploading the file. Please try again.');
+                handleToast('error','Error uploading the file. Please try again.');
             }
-            console.error('Upload Error:', error); // Optional: for debugging
-        } finally {
-            // ✅ Always close modal
-            setOpen(false);
+            handleToast('error','Error uploading the file:', error);
         }
+        ImportSiteTransfer.propTypes = {
+            handleToast: PropTypes.func,
+            onboardName: PropTypes.string,
+            modalOpens: PropTypes.bool,
+            setModalOpens: PropTypes.func,
+        };
     };
-    
-    // Define prop types outside the function
-    ImportWages.propTypes = {
-        handleToast: PropTypes.func,
-        onboardName: PropTypes.string,
-        modalOpens: PropTypes.bool,
-        setModalOpens: PropTypes.func,
-    };
-
-    
+ 
     return (
         <>
             <Button
@@ -324,4 +232,4 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
     );
 };
 
-export default ImportWages;
+export default ImportSiteTransfer;

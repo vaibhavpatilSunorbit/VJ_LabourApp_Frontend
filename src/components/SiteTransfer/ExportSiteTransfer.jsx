@@ -4,7 +4,7 @@ import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Tab, Typography,
     InputAdornment, IconButton, Modal, Grid
 } from '@mui/material';
-import { API_BASE_URL } from "../../../Data";
+import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTheme } from '@mui/material/styles';
@@ -13,7 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 
-const ExportWages = ({ departments, projectNames }) => {
+const ExportSiteTransfer = ({departments, projectNames}) => {
     const theme = useTheme();
     const [open, setOpen] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
@@ -25,7 +25,6 @@ const ExportWages = ({ departments, projectNames }) => {
     const [labours, setLabours] = useState([]);
     const [month, setMonth] = useState('');
     const [payStructure, setPayStructure] = useState('');
-    const [approvalStatus, setApprovalStatus] = useState('');
     // const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
 
 
@@ -47,15 +46,15 @@ const ExportWages = ({ departments, projectNames }) => {
 
     useEffect(() => {
         if (projectNames && projectNames.length > 0) {
-            const units = projectNames.map((p) => ({
-                BusinessUnit: p.Business_Unit,
-                ProjectID: p.Id,
-            }));
-            setBusinessUnits(units);
+          const units = projectNames.map((p) => ({
+            BusinessUnit: p.Business_Unit,
+            ProjectID: p.Id,
+          }));
+          setBusinessUnits(units);
         }
-        console.log('Unit for bu', projectNames)
+    //   console.log('Unit for bu',projectNames)
 
-    }, [projectNames]);
+      }, [projectNames]);
 
 
     const handleBusinessUnitsChange = async (event) => {
@@ -74,7 +73,7 @@ const ExportWages = ({ departments, projectNames }) => {
             return;
         }
         setSelectedBusinessUnit(selectedValues);
-
+    
         // If only one business unit is selected, fetch its labours.
         if (selectedValues.length === 1) {
             const selectedProject = businessUnits.find(
@@ -120,65 +119,65 @@ const ExportWages = ({ departments, projectNames }) => {
     //     }
     // };
 
+    
+  const handleExport = async () => {
+    if (!month) {
+      toast.error('Please select a Month.');
+      return;
+    }
+    if (!payStructure) {
+      toast.error('Please select a Pay Structure.');
+      return;
+    }
+    if (selectedBusinessUnit.length === 0) {
+      toast.error('Please select at least one Business Unit.');
+      return;
+    }
 
-    const handleExport = async () => {
-        if (!month) {
-            toast.error('Please select a Month.');
-            return;
-        }
-        if (!payStructure) {
-            toast.error('Please select a Pay Structure.');
-            return;
-        }
-        if (selectedBusinessUnit.length === 0) {
-            toast.error('Please select at least one Business Unit.');
-            return;
-        }
+    // Map selected business unit names to their corresponding project IDs.
+    // (Assuming each business unit object has BusinessUnit and ProjectID fields.)
+    const selectedProjectIds = selectedBusinessUnit
+      .map((bu) => {
+        const project = businessUnits.find((unit) => unit.BusinessUnit === bu);
+        return project ? project.ProjectID : null;
+      })
+      .filter(Boolean); // Remove any null values
 
-        // Map selected business unit names to their corresponding project IDs.
-        // (Assuming each business unit object has BusinessUnit and ProjectID fields.)
-        const selectedProjectIds = selectedBusinessUnit
-            .map((bu) => {
-                const project = businessUnits.find((unit) => unit.BusinessUnit === bu);
-                return project ? project.ProjectID : null;
-            })
-            .filter(Boolean); // Remove any null values
+    console.log("Exporting for project IDs:", selectedProjectIds);
 
-        console.log("Exporting for project IDs:", selectedProjectIds);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/insentive/exportWagesExcel`, {
+        // Send projectName as a comma-separated list of project IDs.
+        params: { projectName: selectedProjectIds.join(','), month, payStructure },
+        responseType: 'blob',
+      });
+console.log('response for export',response.data)
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
 
-        try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/exportWagesExcel`, {
-                // Send projectName as a comma-separated list of project IDs.
-                params: { projectName: selectedProjectIds.join(','), month, payStructure, approvalStatus },
-                responseType: 'blob',
-            });
-            console.log('response for export', response.data)
-            const blob = new Blob([response.data], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            });
+    //   const fileName = selectedProjectIds.length === 0 || selectedProjectIds.includes("all")
+    //     ? `Approved_Labours_${month}.xlsx`
+    //     : `Wages_${selectedProjectIds.join('_')}_${month}.xlsx`;
+    const fileName = `WagesReport_Export_${month}.xlsx`;
 
-            //   const fileName = selectedProjectIds.length === 0 || selectedProjectIds.includes("all")
-            //     ? `Approved_Labours_${month}.xlsx`
-            //     : `Wages_${selectedProjectIds.join('_')}_${month}.xlsx`;
-            const fileName = `WagesReport_Export_${month}.xlsx`;
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
 
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode.removeChild(link);
-
-            toast.success('Wages exported successfully!');
-        } catch (error) {
-            console.error('Error exporting data:', error);
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(`Export Error: ${error.response.data.message}`);
-            } else {
-                toast.error('Error exporting data. Please try again later.');
-            }
-        }
-    };
+      toast.success('Wages exported successfully!');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(`Export Error: ${error.response.data.message}`);
+      } else {
+        toast.error('Error exporting data. Please try again later.');
+      }
+    }
+  };
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
@@ -234,7 +233,7 @@ const ExportWages = ({ departments, projectNames }) => {
                         component="h2"
                         sx={{ fontWeight: 'bold', marginBottom: 2 }}
                     >
-                        Export Wages Data
+                        Export Site Transfer Data
                     </Typography>
 
                     {/* Form Fields */}
@@ -270,33 +269,33 @@ const ExportWages = ({ departments, projectNames }) => {
                                 ))}
                             </Select> */}
                             <Select
-                                multiple
-                                value={selectedBusinessUnit}
-                                onChange={handleBusinessUnitsChange}
-                                fullWidth
-                                variant="outlined"
-                                displayEmpty
-                                renderValue={(selected) => {
-                                    if (selected.length === 0) {
-                                        return "Select Business Unit(s)";
-                                    }
-                                    return selected.join(', ');
-                                }}
-                                sx={{
-                                    borderRadius: '8px',
-                                    paddingTop: '4px',
-                                    paddingBottom: '2px',
-                                }}
-                            >
-                                <MenuItem value="All">
-                                    <em>Select All</em>
-                                </MenuItem>
-                                {businessUnits.map((unit) => (
-                                    <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
-                                        {unit.BusinessUnit}
-                                    </MenuItem>
-                                ))}
-                            </Select>
+  multiple
+  value={selectedBusinessUnit}
+  onChange={handleBusinessUnitsChange}
+  fullWidth
+  variant="outlined"
+  displayEmpty
+  renderValue={(selected) => {
+    if (selected.length === 0) {
+      return "Select Business Unit(s)";
+    }
+    return selected.join(', ');
+  }}
+  sx={{
+    borderRadius: '8px',
+    paddingTop: '4px',
+    paddingBottom: '2px',
+  }}
+>
+  <MenuItem value="All">
+    <em>Select All</em>
+  </MenuItem>
+  {businessUnits.map((unit) => (
+    <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
+      {unit.BusinessUnit}
+    </MenuItem>
+  ))}
+</Select>
 
                         </Box>
 
@@ -332,34 +331,7 @@ const ExportWages = ({ departments, projectNames }) => {
                                 ))}
                             </Select>
                         </Box>
-
-                        <Box>
-    <Typography variant="body2">Approval Status</Typography>
-    <Select
-        value={approvalStatus}
-        onChange={(e) => setApprovalStatus(e.target.value)}
-        fullWidth
-        displayEmpty
-    >
-        <MenuItem value="">All</MenuItem>
-        <MenuItem value="Approved">Approved</MenuItem>
-        <MenuItem value="NotApproved">Not Approved</MenuItem>
-    </Select>
-</Box>
-
-                        <Box>
-                            <Typography variant="body2">Select Pay Structure</Typography>
-                            <Select
-                                value={payStructure}
-                                onChange={(e) => setPayStructure(e.target.value)}
-                                fullWidth
-                                displayEmpty
-                            >
-                                <MenuItem value="" disabled>Select Pay Structure</MenuItem>
-                                <MenuItem value="DAILY WAGES">Daily Wages</MenuItem>
-                                <MenuItem value="FIXED MONTHLY WAGES">Fixed Monthly Wages</MenuItem>
-                            </Select>
-                        </Box>
+                     
                         {/* Buttons */}
                         <Grid container spacing={2} justifyContent="flex-end">
                             <Grid item>
@@ -401,4 +373,4 @@ const ExportWages = ({ departments, projectNames }) => {
     )
 
 };
-export default ExportWages;
+export default ExportSiteTransfer;

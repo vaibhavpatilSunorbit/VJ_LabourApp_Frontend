@@ -23,6 +23,9 @@ const ExportVariablePay = () => {
     const [endDate, setEndDate] = useState('');
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
+    const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
+   const [approvalStatus, setApprovalStatus] = useState('');
+
 
     const fetchBusinessUnits = async () => {
         try {
@@ -58,13 +61,18 @@ const ExportVariablePay = () => {
     };
 
     const handleExportSelectBU = async () => {
-        if (!projectName || !startDate) {
-            toast.error('Please select a Business Unit and Start Date.');
+        if (selectedBusinessUnits.length === 0 || !startDate) {
+            toast.error("Please select at least one Business Unit and Start Date.");
             return;
-        }
+          }
+          for (const unit of selectedBusinessUnits) {
+            const selectedProject = businessUnits.find((b) => b.BusinessUnit === unit);
+            const projectID = selectedProject?.ProjectID;
+        
+            if (!projectID) continue;
         try {
             const response = await axios.get(`${API_BASE_URL}/insentive/exportVariablePayexcelSheetWithBU`, {
-                params: { projectName, startDate },
+                params: { projectName, startDate, approvalStatus },
                 responseType: 'blob', // Important for handling binary data
             });
 
@@ -78,10 +86,7 @@ const ExportVariablePay = () => {
             const month = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
 
             // Define the file name based on 'projectName' and 'month'
-            const fileName = projectName === "all"
-                ? `Approved_Labours_${month}.xlsx`
-                : `VariablePay_${selectedBusinessUnit}_${month}.xlsx`;
-
+            const fileName = `VariablePay_${unit}_${month}.xlsx`;
             // Create a link element to trigger the download
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
@@ -112,7 +117,7 @@ const ExportVariablePay = () => {
               } else {
                 toast.error('Unexpected error:', error.message);
               }
-        }
+        }}
     };
 
 
@@ -229,7 +234,7 @@ const ExportVariablePay = () => {
                             >
                                 Select Business Unit
                             </Typography>
-                            <Select
+                            {/* <Select
                                 value={selectedBusinessUnit}
                                 onChange={(e) => {
                                     setSelectedBusinessUnit(e.target.value);
@@ -258,6 +263,59 @@ const ExportVariablePay = () => {
                                         {unit.BusinessUnit}
                                     </MenuItem>
                                 ))}
+                            </Select> */}
+                            <Select
+  multiple
+  value={selectedBusinessUnits}
+  onChange={(e) => {
+    const value = e.target.value;
+
+    // If "All" is selected
+    if (value.includes("all")) {
+      if (selectedBusinessUnits.length === businessUnits.length) {
+        // All were already selected → deselect all
+        setSelectedBusinessUnits([]);
+      } else {
+        // Select all BUs
+        setSelectedBusinessUnits(businessUnits.map((unit) => unit.BusinessUnit));
+      }
+    } else {
+      setSelectedBusinessUnits(value);
+    }
+  }}
+  renderValue={(selected) => selected.join(", ")}
+  displayEmpty
+  fullWidth
+  variant="outlined"
+  sx={{
+    borderRadius: "8px",
+    paddingTop: "4px",
+    paddingBottom: "2px",
+  }}
+>
+  <MenuItem value="all">
+    <em>Select All</em>
+  </MenuItem>
+  {businessUnits.map((unit) => (
+    <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
+      {unit.BusinessUnit}
+    </MenuItem>
+  ))}
+</Select>
+
+                        </Box>
+
+                         <Box>
+                            <Typography variant="body2">Approval Status</Typography>
+                            <Select
+                                value={approvalStatus}
+                                onChange={(e) => setApprovalStatus(e.target.value)}
+                                fullWidth
+                                displayEmpty
+                            >
+                                <MenuItem value="">All</MenuItem>
+                                <MenuItem value="Approved">Approved</MenuItem>
+                                <MenuItem value="NotApproved">Not Approved</MenuItem>
                             </Select>
                         </Box>
 

@@ -9,13 +9,14 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import { Chip } from '@mui/material';
 
 
 const ExportAttendance = () => {
     const theme = useTheme();
     const [open, setOpen] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
-    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
     const [projectName, setProjectName] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -39,9 +40,16 @@ const ExportAttendance = () => {
             toast.error('Please select a Business Unit, Start Date, and End Date.');
             return;
         }
+        const selectedProjectIds = selectedBusinessUnit
+            .map((bu) => {
+                const project = businessUnits.find((unit) => unit.BusinessUnit === bu);
+                return project ? project.ProjectID : null;
+            })
+            .filter(Boolean);
+
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/export`, {
-                params: { projectName, startDate, endDate },
+                params: { projectName: selectedProjectIds.join(','), startDate, endDate },
                 responseType: 'blob',
             });
 
@@ -49,7 +57,7 @@ const ExportAttendance = () => {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             });
 
-            const fileName = `Attendance_${selectedBusinessUnit}_${startDate}_${endDate}.xlsx`;
+            const fileName = `Attendance_${selectedBusinessUnit.join('_')}_${startDate}_${endDate}.xlsx`;
 
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
@@ -136,7 +144,7 @@ const ExportAttendance = () => {
                             >
                                 Select Business Unit
                             </Typography>
-                            <Select
+                            {/* <Select
                                 value={selectedBusinessUnit}
                                 onChange={(e) => {
                                     setSelectedBusinessUnit(e.target.value);
@@ -165,17 +173,85 @@ const ExportAttendance = () => {
                                         {unit.BusinessUnit}
                                     </MenuItem>
                                 ))}
+                            </Select> */}
+                            <Select
+                                multiple
+                                value={selectedBusinessUnit}
+                                onChange={(e) => {
+                                    const { value } = e.target;
+                                    const selected = typeof value === 'string' ? value.split(',') : value;
+
+                                    if (selected.includes("All")) {
+                                        const allUnits = businessUnits.map((unit) => unit.BusinessUnit);
+                                        if (selectedBusinessUnit.length === businessUnits.length) {
+                                            setSelectedBusinessUnit([]);
+                                        } else {
+                                            setSelectedBusinessUnit(allUnits);
+                                        }
+                                        return;
+                                    }
+
+                                    setSelectedBusinessUnit(selected);
+
+                                    if (selected.length === 1) {
+                                        const selectedProject = businessUnits.find(
+                                            (unit) => unit.BusinessUnit === selected[0]
+                                        );
+                                        setProjectName(selectedProject?.ProjectID || '');
+                                    } else {
+                                        setProjectName('');
+                                    }
+                                }}
+                                fullWidth
+                                variant="outlined"
+                                displayEmpty
+                                renderValue={(selected) => {
+                                    if (selected.length === 0) return "Select Business Unit(s)";
+                                    return (
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                            {selected.map((value) => (
+                                                <Chip
+                                                    key={value}
+                                                    label={value}
+                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                    onDelete={() => {
+                                                        const updated = selectedBusinessUnit.filter(item => item !== value);
+                                                        setSelectedBusinessUnit(updated);
+
+                                                        if (updated.length === 1) {
+                                                            const selectedProject = businessUnits.find(
+                                                                (unit) => unit.BusinessUnit === updated[0]
+                                                            );
+                                                            setProjectName(selectedProject?.ProjectID || '');
+                                                        } else {
+                                                            setProjectName('');
+                                                        }
+                                                    }}
+                                                />
+                                            ))}
+                                        </Box>
+                                    );
+                                }}
+                                sx={{
+                                    borderRadius: '8px',
+                                    paddingTop: '4px',
+                                    paddingBottom: '2px',
+                                }}
+                            >
+                                <MenuItem value="All">
+                                    <em>Select All</em>
+                                </MenuItem>
+                                {businessUnits.map((unit) => (
+                                    <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
+                                        {unit.BusinessUnit}
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </Box>
 
                         <Box>
-                            <Typography
-                                component="label"
-                                variant="body2"
-                                color="textSecondary"
-                                sx={{ marginBottom: 0.5 }}
-                            >
-                                Start date
+                            <Typography component="label" variant="body2" color="textSecondary">
+                                Start Date
                             </Typography>
                             <TextField
                                 type="date"
@@ -183,22 +259,13 @@ const ExportAttendance = () => {
                                 onChange={(e) => setStartDate(e.target.value)}
                                 fullWidth
                                 variant="outlined"
-                                sx={{
-                                    '& .MuiInputBase-input': {
-                                        paddingBottom: '12px',
-                                    },
-                                }}
+                                sx={{ '& .MuiInputBase-input': { paddingBottom: '12px' } }}
                             />
                         </Box>
 
                         <Box>
-                            <Typography
-                                component="label"
-                                variant="body2"
-                                color="textSecondary"
-                                sx={{ marginBottom: 0.5 }}
-                            >
-                                End date
+                            <Typography component="label" variant="body2" color="textSecondary">
+                                End Date
                             </Typography>
                             <TextField
                                 type="date"
@@ -206,14 +273,9 @@ const ExportAttendance = () => {
                                 onChange={(e) => setEndDate(e.target.value)}
                                 fullWidth
                                 variant="outlined"
-                                sx={{
-                                    '& .MuiInputBase-input': {
-                                        paddingBottom: '12px',
-                                    },
-                                }}
+                                sx={{ '& .MuiInputBase-input': { paddingBottom: '12px' } }}
                             />
                         </Box>
-
 
                         <Grid container spacing={2} justifyContent="flex-end">
                             <Grid item>

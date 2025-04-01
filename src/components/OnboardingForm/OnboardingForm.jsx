@@ -37,6 +37,7 @@ const departmentWorkingHoursMapping = {
   'ELECTRICAL': 'FLEXI SHIFT - 9 HRS',
   'FEP-R': 'FLEXI SHIFT - 9 HRS',
   'MQC': 'FLEXI SHIFT - 8 HRS',
+  'Department-IN-H0USE': 'FLEXI SHIFT - 8 HRS',
 };
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = [], departmentList = [] }) => {
