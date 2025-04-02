@@ -117,7 +117,7 @@ const laboursSource =
                         workingHours: item.workingHours || item.Shift,
                         businessUnit: item.businessUnit,
                         departmentName: item.departmentName,
-                        status: 'Approved', 
+                        status: item.status || 'Approved', 
                         PresentDays: item.PresentDays,
                         AbsentDays: item.AbsentDays,
                         HalfDays: item.HalfDays,
@@ -461,7 +461,7 @@ const handleApplyFilters = () => {
                 markWeeklyOff: manualEditData.status === 'weeklyOff',
             };
 
-
+console.log("payload for attendance only",payload)
             const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
 
             const updatedAttendanceData = attendanceData.map((day) =>
@@ -526,8 +526,9 @@ const handleApplyFilters = () => {
     const fetchLabours = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours`);
+            const response = await axios.get(`${API_BASE_URL}/labours/getAllRecordsLaboursOnboarding`);
             const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID);
+            console.log("sortedLabours for fetchlabours", sortedLabours);
             setLabours(sortedLabours);
             setLoading(false);
         } catch (error) {
@@ -800,7 +801,7 @@ const handleApplyFilters = () => {
             );
         });
 
-        baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
+        baseLabours = baseLabours.filter((labour) => labour.status === 'Approved' || labour.status === 'Disable');
         return baseLabours;
     };
 
@@ -1645,6 +1646,10 @@ const handleApplyFilters = () => {
                                                             ...(day.status === 'MP' && {
                                                                 backgroundColor: 'rgb(197 186 255 / 30%)',
                                                                 color: '#005cff',
+                                                            }),
+                                                            ...(day.status === 'WO' && {
+                                                                backgroundColor: 'rgb(255 237 186 / 40%)',
+                                                                color: '#ff9900',
                                                             }),
                                                             ...(day.status === 'NA' && {
                                                                 backgroundColor: '#f0f0f0',

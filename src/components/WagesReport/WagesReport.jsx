@@ -681,17 +681,24 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                     (tabValue === 1 && labour?.ApprovalStatusWages === 'Approved')
                                 )
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((labour, index) => (
-                                    <TableRow key={labour.LabourID}
-                                        sx={{
-                                            backgroundColor:
-                                                labour?.ApprovalStatusWages === 'Pending'
-                                                    ? '#ffe6e6' // Light red for Pending
-                                                    : labour?.ApprovalStatusWages === 'Approved'
-                                                        ? '#dcfff0' // Light green for Approved
-                                                        : 'inherit',
-                                        }}
-                                    >
+                                .map((labour, index) => {
+                                    const createdAt = new Date(labour.CreatedAt);
+                                    const currentDate = new Date();
+                                    const threeMonthsAgo = new Date();
+                                    threeMonthsAgo.setMonth(currentDate.getMonth() - 3);
+                                
+                                    const isOlderThan3Months = createdAt < threeMonthsAgo;
+                                
+                                    let backgroundColor = 'inherit';
+                                    if (!isOlderThan3Months) {
+                                      if (labour?.ApprovalStatusWages === 'Pending') {
+                                        backgroundColor = '#ffe6e6'; // Light red
+                                      } else if (labour?.ApprovalStatusWages === 'Approved') {
+                                        backgroundColor = '#dcfff0'; // Light green
+                                      }
+                                    }
+                                            return (
+                                                <TableRow key={labour.LabourID} sx={{ backgroundColor }}>
                                         <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                         <TableCell>{labour.LabourID}</TableCell>
                                         <TableCell>{labour.name || '-'}</TableCell>
@@ -735,7 +742,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                             </Button>
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                            
+                                )})}
                         </TableBody>
                     </Table>
                 </Box>

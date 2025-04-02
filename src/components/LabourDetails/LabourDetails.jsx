@@ -1954,7 +1954,8 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
         statuses.forEach(status => {
           updatedStatuses[status.LabourID] = {
             esslStatus: status.esslStatus === 'success',
-            employeeMasterStatus: status.employeeMasterStatus === 'true'
+            employeeMasterStatus: status.employeeMasterStatus === 'true',
+            disabledAttendanceCreatedAt: status.disabledAttendanceCreatedAt ? new Date(status.disabledAttendanceCreatedAt) : null,
           };
         });
 
@@ -2413,6 +2414,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
                   </>
                 )}
                 {tabValue === 2 && <TableCell>Reject Reason</TableCell>}
+                {tabValue === 2 && <TableCell>Disable Date</TableCell>}
                 {tabValue === 1 && <TableCell>labourID Card</TableCell>}
                 {tabValue === 1 && <TableCell>Edit Labour</TableCell>}
                 {((user.userType === 'admin' || user.userType === 'superadmin') || (tabValue !== 0 && user.userType === 'user')) && <TableCell>Action</TableCell>}
@@ -2543,6 +2545,15 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
                         }} style={{ cursor: 'pointer', }} />
                       </Box>
                     </TableCell>
+                  )}
+                  {tabValue === 2 && (
+                    <>
+                      <TableCell>
+                        {statuses[labour.LabourID]?.disabledAttendanceCreatedAt
+                          ? statuses[labour.LabourID].disabledAttendanceCreatedAt.toLocaleDateString()
+                          : '-'}
+                      </TableCell>
+                    </>
                   )}
                   {tabValue === 1 && (
                     <TableCell>

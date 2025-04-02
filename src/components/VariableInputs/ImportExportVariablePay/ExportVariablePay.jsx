@@ -67,12 +67,12 @@ const ExportVariablePay = () => {
           }
           for (const unit of selectedBusinessUnits) {
             const selectedProject = businessUnits.find((b) => b.BusinessUnit === unit);
-            const projectID = selectedProject?.ProjectID;
+            const projectID = selectedProject?.ProjectID || ''; // Join project IDs with commas
         
             if (!projectID) continue;
         try {
             const response = await axios.get(`${API_BASE_URL}/insentive/exportVariablePayexcelSheetWithBU`, {
-                params: { projectName, startDate, approvalStatus },
+                params: { projectName: projectID, startDate, approvalStatus },
                 responseType: 'blob', // Important for handling binary data
             });
 
