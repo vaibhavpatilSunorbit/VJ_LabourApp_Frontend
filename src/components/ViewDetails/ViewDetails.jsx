@@ -293,9 +293,9 @@ import {API_BASE_URL} from '../../Data'
 
 
 const trimUrl = (url) => {
-  const baseUrl = "http://localhost:4000/uploads/";
+  // const baseUrl = "http://localhost:4000/uploads/";
   // const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
-  // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
+  const baseUrl = "https://vjlabour.vjerp.com/uploads/";
 
 
 

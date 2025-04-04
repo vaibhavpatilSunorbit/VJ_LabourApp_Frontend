@@ -109,6 +109,8 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   const [statusesSite, setStatusesSite] = useState({});
   const [previousTabValue, setPreviousTabValue] = useState(tabValue);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [labourQueue, setLabourQueue] = useState([]);
+
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -137,9 +139,10 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
   };
 
 
-  const approveLabour = async (id) => {
+  const approveLabour = async (id, departmentId) => {
     try {
-      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/labours/next-id`);
+      console.log("departmentId", departmentId);
+      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/labours/next-id`,{params: { departmentId }});
       const labourID = nextID;
 
       const labourResponse = await axios.get(`${API_BASE_URL}/labours/${id}`);
@@ -1592,40 +1595,46 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
 
   useEffect(() => {
     const processLabourApprovals = async () => {
-      if (labourIds.length === 0 || isApproving) return;
-
+      if (labourQueue.length === 0 || isApproving) return;
+  
       setIsApproving(true);
-
-      const currentId = labourIds[0];
-
+      const { id, departmentId } = labourQueue[0];
+  
       try {
-        const success = await approveLabour(currentId);
+        const success = await approveLabour(id, departmentId);
         if (success) {
-          setLabourIds((prev) => prev.slice(1)); // Remove the first element after success
+          setLabourQueue(prev => prev.slice(1)); // Remove current
         }
       } catch (error) {
-        console.log(`Skipping labour ${currentId} due to error.`);
-        setLabourIds((prev) => prev.slice(1));
+        console.log(`Skipping labour ${id} due to error.`);
+        setLabourQueue(prev => prev.slice(1));
       }
-
+  
       setIsApproving(false);
     };
-
-    if (labourIds.length > 0) {
+  
+    if (labourQueue.length > 0) {
       processLabourApprovals();
     }
-  }, [labourIds, isApproving]);
+  }, [labourQueue, isApproving]);
+  
 
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (labour) => {
 
     handleApproveConfirmClose();
-    if (!Array.isArray(id)) {
-      id = [id];
-    }
-    setApprovingLabours((prev) => [...prev, ...id]);
+    const labourObj = Array.isArray(labour)
+    ? labour.map(l => ({ id: l.id, departmentId: l.departmentId }))
+    : [{ id: labour.id, departmentId: labour.departmentId }];
 
-    setLabourIds((prev) => [...prev, ...id]);
+  setApprovingLabours(prev => [...prev, ...labourObj.map(l => l.id)]);
+  setLabourQueue(prev => [...prev, ...labourObj]);
+    // if (!Array.isArray(id)) {
+    //   id = [id];
+    // }
+    // setApprovingLabours((prev) => [...prev, ...id]);
+
+    // setLabourIds((prev) => [...prev, ...id]);
     // approve();
 
     setPopupMessage(
@@ -3155,7 +3164,7 @@ const LabourDetails = ({ onApprove, departments, projectNames, labour, labourlis
           <Button onClick={handleApproveConfirmClose} variant="outlined" color="secondary">
             Cancel
           </Button>
-          <Button onClick={() => handleApprove(labourToApprove.id)} sx={{
+          <Button onClick={() => handleApprove(labourToApprove)} sx={{
             backgroundColor: 'rgb(229, 255, 225)',
             color: 'rgb(43, 217, 144)',
             width: '100px',
