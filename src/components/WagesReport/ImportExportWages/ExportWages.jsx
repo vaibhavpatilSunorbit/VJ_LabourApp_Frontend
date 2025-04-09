@@ -60,14 +60,12 @@ const ExportWages = ({ departments, projectNames }) => {
 
     const handleBusinessUnitsChange = async (event) => {
         const { value } = event.target;
-        // Ensure value is always an array
         const selectedValues = typeof value === 'string' ? value.split(',') : value;
         if (selectedValues.includes("All")) {
             if (selectedBusinessUnit.length === businessUnits.length) {
-                // If all were already selected, deselect all
+          
                 setSelectedBusinessUnit([]);
             } else {
-                // Select all
                 const allUnits = businessUnits.map((unit) => unit.BusinessUnit);
                 setSelectedBusinessUnit(allUnits);
             }
@@ -75,7 +73,6 @@ const ExportWages = ({ departments, projectNames }) => {
         }
         setSelectedBusinessUnit(selectedValues);
 
-        // If only one business unit is selected, fetch its labours.
         if (selectedValues.length === 1) {
             const selectedProject = businessUnits.find(
                 (unit) => unit.BusinessUnit === selectedValues[0]
@@ -122,14 +119,8 @@ const ExportWages = ({ departments, projectNames }) => {
 
 
     const handleExport = async () => {
-        if (!month) {
-            toast.error('Please select a Month.');
-            return;
-        }
-        if (!payStructure) {
-            toast.error('Please select a Pay Structure.');
-            return;
-        }
+
+
         if (selectedBusinessUnit.length === 0) {
             toast.error('Please select at least one Business Unit.');
             return;
@@ -149,7 +140,7 @@ const ExportWages = ({ departments, projectNames }) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/insentive/exportWagesExcel`, {
                 // Send projectName as a comma-separated list of project IDs.
-                params: { projectName: selectedProjectIds.join(','), month, payStructure, approvalStatus },
+                params: { projectName: selectedProjectIds.join(','), payStructure, approvalStatus },
                 responseType: 'blob',
             });
             console.log('response for export', response.data)
@@ -301,7 +292,7 @@ const ExportWages = ({ departments, projectNames }) => {
                         </Box>
 
                         {/* Month Selector */}
-                        <Box>
+                        {/* <Box>
                             <Typography
                                 component="label"
                                 variant="body2"
@@ -331,21 +322,21 @@ const ExportWages = ({ departments, projectNames }) => {
                                     </MenuItem>
                                 ))}
                             </Select>
-                        </Box>
+                        </Box> */}
 
                         <Box>
-    <Typography variant="body2">Approval Status</Typography>
-    <Select
-        value={approvalStatus}
-        onChange={(e) => setApprovalStatus(e.target.value)}
-        fullWidth
-        displayEmpty
-    >
-        <MenuItem value="">All</MenuItem>
-        <MenuItem value="Approved">Approved</MenuItem>
-        <MenuItem value="NotApproved">Not Approved</MenuItem>
-    </Select>
-</Box>
+                            <Typography variant="body2">Approval Status</Typography>
+                            <Select
+                                value={approvalStatus}
+                                onChange={(e) => setApprovalStatus(e.target.value)}
+                                fullWidth
+                                displayEmpty
+                            >
+                                <MenuItem value="">All</MenuItem>
+                                <MenuItem value="Approved">Approved</MenuItem>
+                                <MenuItem value="NotApproved">Not Approved</MenuItem>
+                            </Select>
+                        </Box>
 
                         <Box>
                             <Typography variant="body2">Select Pay Structure</Typography>

@@ -22,6 +22,23 @@ const ExportAttendance = () => {
     const [endDate, setEndDate] = useState('');
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
+    const [departments, setDepartments] = useState([]);
+const [selectedDepartments, setSelectedDepartments] = useState([]);
+
+const fetchDepartments = async () => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/departments`);
+        setDepartments(response.data); // expected: array of strings or objects with .name
+    } catch (error) {
+        console.error('Error fetching departments:', error);
+        toast.error('Error fetching departments.');
+    }
+};
+
+useEffect(() => {
+    fetchDepartments();
+}, []);
+
 
     const fetchBusinessUnits = async () => {
         try {
@@ -35,8 +52,9 @@ const ExportAttendance = () => {
     useEffect(() => {
         fetchBusinessUnits();
     }, []);
+
     const handleExport = async () => {
-        if (!selectedBusinessUnit || !projectName || !startDate || !endDate) {
+        if (!selectedBusinessUnit || !startDate || !endDate) {
             toast.error('Please select a Business Unit, Start Date, and End Date.');
             return;
         }
@@ -49,7 +67,7 @@ const ExportAttendance = () => {
 
         try {
             const response = await axios.get(`${API_BASE_URL}/labours/export`, {
-                params: { projectName: selectedProjectIds.join(','), startDate, endDate },
+                params: { projectName: selectedProjectIds.join(','), department: selectedDepartments.join(','), startDate, endDate },
                 responseType: 'blob',
             });
 
@@ -57,7 +75,8 @@ const ExportAttendance = () => {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             });
 
-            const fileName = `Attendance_${selectedBusinessUnit.join('_')}_${startDate}_${endDate}.xlsx`;
+            // const fileName = `Attendance_${selectedBusinessUnit.join('_')}_${startDate}_${endDate}.xlsx`;
+            const fileName = `Attendance_${startDate}_${endDate}.xlsx`;
 
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
@@ -140,7 +159,7 @@ const ExportAttendance = () => {
                                 component="label"
                                 variant="body2"
                                 color="textSecondary"
-                                sx={{ marginBottom: 0.5 }}
+                                sx={{ marginBottom: 0.5}}
                             >
                                 Select Business Unit
                             </Typography>
@@ -175,7 +194,7 @@ const ExportAttendance = () => {
                                 ))}
                             </Select> */}
                             <Select
-                                multiple
+                             multiple
                                 value={selectedBusinessUnit}
                                 onChange={(e) => {
                                     const { value } = e.target;
@@ -208,7 +227,7 @@ const ExportAttendance = () => {
                                 renderValue={(selected) => {
                                     if (selected.length === 0) return "Select Business Unit(s)";
                                     return (
-                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 , height: '100px', overflowY: 'auto' }}>
                                             {selected.map((value) => (
                                                 <Chip
                                                     key={value}
@@ -233,9 +252,9 @@ const ExportAttendance = () => {
                                     );
                                 }}
                                 sx={{
-                                    borderRadius: '8px',
                                     paddingTop: '4px',
                                     paddingBottom: '2px',
+                                
                                 }}
                             >
                                 <MenuItem value="All">
@@ -248,6 +267,72 @@ const ExportAttendance = () => {
                                 ))}
                             </Select>
                         </Box>
+
+                        <Box>
+    <Typography component="label" variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
+        Select Department(s)
+    </Typography>
+    <Select
+        multiple
+        fullWidth
+        variant="outlined"
+        value={selectedDepartments}
+        onChange={(e) => {
+            const { value } = e.target;
+            const selected = typeof value === 'string' ? value.split(',') : value;
+
+            if (selected.includes('All')) {
+                if (selectedDepartments.length === departments.length) {
+                    // Deselect all
+                    setSelectedDepartments([]);
+                } else {
+                    // Select all department IDs
+                    const allDeptIds = departments.map((dept) => dept.Id);
+                    setSelectedDepartments(allDeptIds);
+                }
+                return;
+            }
+
+            setSelectedDepartments(selected);
+        }}
+        renderValue={(selected) => {
+            if (selected.length === 0) return "Select Department(s)";
+            return (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, height: '90px', overflowY: 'auto' }}>
+                    {selected.map((id) => {
+                        const dept = departments.find((d) => d.Id === id);
+                        return (
+                            <Chip
+                                key={id}
+                                label={dept?.Description || id}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onDelete={() => {
+                                    const updated = selectedDepartments.filter(item => item !== id);
+                                    setSelectedDepartments(updated);
+                                }}
+                            />
+                        );
+                    })}
+                </Box>
+            );
+        }}
+        sx={{
+            paddingTop: '4px',
+            paddingBottom: '2px',
+        }}
+    >
+        <MenuItem value="All">
+            <em>Select All</em>
+        </MenuItem>
+        {departments.map((dept) => (
+            <MenuItem key={dept.Id} value={dept.Id}>
+                {dept.Description}
+            </MenuItem>
+        ))}
+    </Select>
+</Box>
+
+
 
                         <Box>
                             <Typography component="label" variant="body2" color="textSecondary">
