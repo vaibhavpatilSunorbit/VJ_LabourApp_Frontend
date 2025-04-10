@@ -75,25 +75,25 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const [isOvertimeDisable, setIsOvertimeDisable] = useState(false);
     const [isOvertimeError, setIsOvertimeError] = useState(false);
     const [filterModalOpen, setFilterModalOpen] = useState(false);
-    const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [selectedDepartment, setSelectedDepartment] = useState([]);
     const [selectedLabourIds, setSelectedLabourIds] = useState([]);
-  const [employeeToggle, setEmployeeToggle] = useState('all');
- const [selectedEmployee, setSelectedEmployee] = useState('');
- const [filters, setFilters] = useState({});
- const [laboursAttenadance, setLaboursAttenadance] = useState([]);
-//  const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
+    const [employeeToggle, setEmployeeToggle] = useState('all');
+    const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [filters, setFilters] = useState({});
+    const [laboursAttenadance, setLaboursAttenadance] = useState([]);
+    //  const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
 
-// -----------------------------------------------------  FILTER START ------------------
+    // -----------------------------------------------------  FILTER START ------------------
 
     // const allowedProjectIds = user && user.projectIds ? JSON.parse(user.projectIds) : [];
     // const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
 
     const allowedProjectIds =
-    user && user.projectIds ? JSON.parse(user.projectIds) : [];
-const allowedDepartmentIds =
-    user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
-const laboursSource =
-    labourlist && labourlist.length > 0 ? labourlist : labours;
+        user && user.projectIds ? JSON.parse(user.projectIds) : [];
+    const allowedDepartmentIds =
+        user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+    const laboursSource =
+        labourlist && labourlist.length > 0 ? labourlist : labours;
 
     const fetchLaboursAttenadance = async (filters = {}) => {
         setLoading(true);
@@ -102,11 +102,11 @@ const laboursSource =
                 `${API_BASE_URL}/labours/getAttendanceReportAndLabourOnboardingJoin`,
                 { params: filters }
             );
-    
+
             console.log("Filtered Attendance Response", response.data);
-    
+
             const uniqueLaboursMap = new Map();
-    console.log("uniqueLaboursMap", uniqueLaboursMap);
+            console.log("uniqueLaboursMap", uniqueLaboursMap);
             response.data.forEach(item => {
                 if (!uniqueLaboursMap.has(item.LabourID)) {
                     uniqueLaboursMap.set(item.LabourID, {
@@ -117,7 +117,7 @@ const laboursSource =
                         workingHours: item.workingHours || item.Shift,
                         businessUnit: item.businessUnit,
                         departmentName: item.departmentName,
-                        status: item.status || 'Approved', 
+                        status: item.status || 'Approved',
                         PresentDays: item.PresentDays,
                         AbsentDays: item.AbsentDays,
                         HalfDays: item.HalfDays,
@@ -125,12 +125,12 @@ const laboursSource =
                     });
                 }
             });
-    
+
             const uniqueLabours = Array.from(uniqueLaboursMap.values());
-    console.log("uniqueLabours", uniqueLabours);
+            console.log("uniqueLabours", uniqueLabours);
             setLaboursAttenadance(response.data);
             setLabours(uniqueLabours);
-    
+
         } catch (error) {
             console.error('Error fetching labours:', error);
             toast.error('Failed to fetch data');
@@ -138,11 +138,11 @@ const laboursSource =
             setLoading(false);
         }
     };
-    
 
 
-            // setAttendanceData(response.data);
-            // setLabours(uniqueLabours); 
+
+    // setAttendanceData(response.data);
+    // setLabours(uniqueLabours); 
     //     } catch (error) {
     //         console.error('Error fetching labours:', error);
     //         toast.error('Failed to fetch data');
@@ -150,46 +150,68 @@ const laboursSource =
     //         setLoading(false);
     //     }
     // };
-    
 
-useEffect(() => {
-    // fetchLaboursAttenadance();
-    fetchProjectNames();
-}, []);
 
-// const handleApplyFilter = async () => {
-//     const params = {};
-//     if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
-//     if (selectedDepartment) params.department = selectedDepartment;
-//     if (employeeToggle === 'single' && selectedEmployee) {
-//         params.employee = selectedEmployee;
-//     }
-// }
-const handleResetFilter = () => {
-    // setSelectedBusinessUnit('');
-    setSelectedDepartment('');
-    fetchLaboursAttenadance();
-    setSelectedBusinessUnit([]);
-    setFilterModalOpen(false);
-};
+    useEffect(() => {
+        // fetchLaboursAttenadance();
+        fetchProjectNames();
+    }, []);
 
-const handleApplyFilters = () => {
-    const filters = {};
-    if (selectedBusinessUnit) {
-    //   filters.projectName = selectedBusinessUnit;
-    filters.ProjectID = selectedBusinessUnit.join(',');
-    }
-    if (selectedDepartment) {
-      filters.department = selectedDepartment;
-    }
-    if (employeeToggle === 'single' && selectedEmployee) {
-      filters.employee = selectedEmployee;
-    }
-    fetchLaboursAttenadance(filters);
-    setFilterModalOpen(false);
-  };
+    // const handleApplyFilter = async () => {
+    //     const params = {};
+    //     if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
+    //     if (selectedDepartment) params.department = selectedDepartment;
+    //     if (employeeToggle === 'single' && selectedEmployee) {
+    //         params.employee = selectedEmployee;
+    //     }
+    // }
+    const handleResetFilter = () => {
+        // setSelectedBusinessUnit('');
+        // setSelectedDepartment('');
+        setSelectedDepartment([]);
+        fetchLaboursAttenadance();
+        setSelectedBusinessUnit([]);
+        setFilterModalOpen(false);
+        setSelectedEmployee('');
+    };
 
-// ----------------------------------------------     FILTER END ------------------
+    // const handleApplyFilters = () => {
+    //     const filters = {};
+    //     if (selectedBusinessUnit) {
+    //     //   filters.projectName = selectedBusinessUnit;
+    //     filters.ProjectID = selectedBusinessUnit.join(',');
+    //     }
+    //     if (selectedDepartment) {
+    //       filters.department = selectedDepartment;
+    //     }
+    //     if (employeeToggle === 'single' && selectedEmployee) {
+    //       filters.employee = selectedEmployee;
+    //     }
+    //     fetchLaboursAttenadance(filters);
+    //     setFilterModalOpen(false);
+    //   };
+
+    const handleApplyFilters = () => {
+        const filters = {};
+
+        if (Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0) {
+            filters.ProjectID = selectedBusinessUnit.join(','); // Pass as comma-separated string
+        }
+
+        if (Array.isArray(selectedDepartment) && selectedDepartment.length > 0) {
+            filters.DepartmentID = selectedDepartment.join(',');
+        }
+
+        if (employeeToggle === 'single' && selectedEmployee) {
+            filters.EmployeeID = selectedEmployee; // or filters.employee = ...
+        }
+
+        fetchLaboursAttenadance(filters);
+        setFilterModalOpen(false);
+    };
+
+
+    // ----------------------------------------------     FILTER END ------------------
 
     const laboursToDisplay = (
         labours
@@ -461,7 +483,7 @@ const handleApplyFilters = () => {
                 markWeeklyOff: manualEditData.status === 'weeklyOff',
             };
 
-console.log("payload for attendance only",payload)
+            console.log("payload for attendance only", payload)
             const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
 
             const updatedAttendanceData = attendanceData.map((day) =>
@@ -760,7 +782,7 @@ console.log("payload for attendance only",payload)
         }
     }, [selectedMonth, selectedYear]);
 
-    
+
     // const getFilteredLaboursForTable = () => {
     //     let baseLabours = rowsPerPage > 0
     //         ? (searchResults.length > 0
@@ -769,7 +791,7 @@ console.log("payload for attendance only",payload)
     //                 ? filteredIconLabours
     //                 : [...labours]))
     //         : [];
-    
+
     //     baseLabours = baseLabours.filter((labour) => {
     //         const labourProjectId = Number(labour.projectId);
     //         const labourDepartmentId = Number(labour.departmentId);
@@ -781,7 +803,7 @@ console.log("payload for attendance only",payload)
     //     baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
     //     return baseLabours;
     // };
-    
+
 
     const getFilteredLaboursForTable = () => {
         let baseLabours = rowsPerPage > 0
@@ -987,30 +1009,30 @@ console.log("payload for attendance only",payload)
         </Box>
     );
 
-  
+
     const fetchProjectNames = async () => {
         try {
-          const response = await axios.get(API_BASE_URL + "/api/project-names");
-          // Expecting response.data to be an array of projects with properties "Id" and "Business_Unit"
-          setProjectNames(response.data);
+            const response = await axios.get(API_BASE_URL + "/api/project-names");
+            // Expecting response.data to be an array of projects with properties "Id" and "Business_Unit"
+            setProjectNames(response.data);
         } catch (error) {
-          console.error('Error fetching project names:', error);
-          toast.error('Error fetching project names.');
+            console.error('Error fetching project names:', error);
+            toast.error('Error fetching project names.');
         }
-      };
-    
-      // Lookup function to get Business_Unit name based on project id
-      const getProjectDescription = (projectId) => {
+    };
+
+    // Lookup function to get Business_Unit name based on project id
+    const getProjectDescription = (projectId) => {
         if (!Array.isArray(projectNames) || projectNames.length === 0) {
-          return 'Unknown';
+            return 'Unknown';
         }
         if (projectId === undefined || projectId === null || projectId === '') {
-          return 'Unknown';
+            return 'Unknown';
         }
         // Convert projectId to a number if necessary and find the matching project
         const project = projectNames.find(proj => proj.Id === Number(projectId));
         return project ? project.Business_Unit : 'Unknown';
-      };
+    };
 
     const fetchBusinessUnits = async () => {
         try {
@@ -1046,10 +1068,11 @@ console.log("payload for attendance only",payload)
     // };
 
     const isAllSelected = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
+    const isAllSelectedDep = departments.length > 0 && selectedDepartment.length === departments.length;
 
     const handleBusinessUnitChange = (event) => {
         const value = event.target.value;
-    
+
         if (value.includes('ALL')) {
             if (isAllSelected) {
                 setSelectedBusinessUnit([]); // Deselect all
@@ -1061,6 +1084,22 @@ console.log("payload for attendance only",payload)
             setSelectedBusinessUnit(value);
         }
     };
+
+    const handleDepartmentChange = (event) => {
+        const value = event.target.value;
+        if (value.includes('ALL')) {
+            if (isAllSelectedDep) {
+                setSelectedDepartment([]);
+            } else {
+                const allDeptIds = departments.map(d => d.Id);
+                setSelectedDepartment(allDeptIds);
+            }
+        } else {
+            // setSelectedDepartment(typeof value === 'string' ? value.split(',') : value);
+            setSelectedDepartment(value);
+        }
+    };
+
 
     const CalendarBox = ({ day, status, margin = '8px', padding = '4px' }) => (
         <Box
@@ -1158,15 +1197,15 @@ console.log("payload for attendance only",payload)
     // useEffect(() => {
     //     fetchLaboursAttenadance(filters);
     //   }, [filters]);
-    
-     
-    
-      // Example filter change handler. When filters are updated,
-      // update the state so useEffect calls fetchLaboursAttenadance.
-      const handleApplyFilter = (newFilters) => {
+
+
+
+    // Example filter change handler. When filters are updated,
+    // update the state so useEffect calls fetchLaboursAttenadance.
+    const handleApplyFilter = (newFilters) => {
         setFilters(newFilters);
-      };
-    
+    };
+
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
             <ToastContainer />
@@ -1284,23 +1323,50 @@ console.log("payload for attendance only",payload)
                         marginRight: '20px',
                         flexDirection: { xs: 'row', sm: 'row' }
                     }}>
-                        <Box sx={{
-                            width: { xs: '100%', sm: 'auto' },
-                            display: 'flex',
-                            flexDirection: { xs: 'row', sm: 'row' },
-                            gap: '20px',
-                            alignItems: 'center',
-                            justifyContent: 'space-evenly',
-                            marginRight: '3vw'
-                        }}>
-  <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
-                    Filter
-                </Button>
-                {selectedLabourIds.length > 0 && (
-                    <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
-                        Edit ({selectedLabourIds.length})
-                    </Button>
-                )}
+                        <Box
+                            sx={{
+                                width: { xs: '100%', sm: 'auto' },
+                                display: 'flex',
+                                flexDirection: { xs: 'row', sm: 'row' },
+                                gap: '20px',
+                                alignItems: 'center',
+                                justifyContent: 'space-evenly',
+                                marginRight: '3vw'
+                            }}
+                        >
+                            <Button
+                                variant="outlined"
+                                color="secondary"
+                                startIcon={<FilterListIcon />}
+                                onClick={() => setFilterModalOpen(true)}
+                            >
+                                Filter
+                            </Button>
+
+                            {selectedLabourIds.length > 0 && (
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    startIcon={<EditIcon />}
+                                    onClick={() => setModalOpen(true)}
+                                >
+                                    Edit ({selectedLabourIds.length})
+                                </Button>
+                            )}
+                            {/* </Box> */}
+
+                            {/* {(selectedBusinessUnit.length > 0 || selectedDepartment.length > 0) && (
+                                <Typography
+                                    variant="body2"
+                                    color="textSecondary"
+                                    sx={{ mt: 1, ml: { xs: 2, sm: 'auto' }, textAlign: { xs: 'left', sm: 'right' } }}
+                                >
+                                    Filters applied:
+                                    {selectedBusinessUnit.length > 0 && ` Business Units (${selectedBusinessUnit.length})`}
+                                    {selectedDepartment.length > 0 && ` Departments (${selectedDepartment.length})`}
+                                </Typography>
+                            )} */}
+
 
                             <ExportAttendance />
                             <ImportAttendance /></Box>
@@ -1759,8 +1825,8 @@ console.log("payload for attendance only",payload)
             </Dialog>
 
 
-      {/* ===== FILTER MODAL ===== */}
-      <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
+            {/* ===== FILTER MODAL ===== */}
+            <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
                 <Box
                     sx={{
                         position: 'absolute',
@@ -1815,7 +1881,7 @@ console.log("payload for attendance only",payload)
                             )}
                         </Select> */}
 
-<Select
+                        <Select
                             fullWidth
                             multiple
                             value={selectedBusinessUnit}
@@ -1853,18 +1919,32 @@ console.log("payload for attendance only",payload)
                         <Typography variant="body1">Department</Typography>
                         <Select
                             fullWidth
+                            multiple
                             value={selectedDepartment}
-                            onChange={(e) => setSelectedDepartment(e.target.value)}
+                            onChange={handleDepartmentChange}
                             displayEmpty
+                            renderValue={(selected) => {
+                                if (selected.length === 0) return <em>All</em>;
+                                const selectedLabels = departments
+                                    .filter(dept => selected.includes(dept.Id))
+                                    .map(dept => dept.Description);
+                                return selectedLabels.join(', ');
+                            }}
                             sx={{ mt: 1 }}
                         >
-                            <MenuItem value="">
-                                <em>All</em>
+                            <MenuItem value="ALL">
+                                <Checkbox
+                                    checked={isAllSelectedDep}
+                                    indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep }
+                                />
+                                <ListItemText primary="Select All" />
                             </MenuItem>
+
                             {Array.isArray(departments) && departments.length > 0 ? (
                                 departments.map((department) => (
                                     <MenuItem key={department.Id} value={department.Id}>
-                                        {department.Description}
+                                        <Checkbox checked={selectedDepartment.includes(department.Id)} />
+                                        <ListItemText primary={department.Description} />
                                     </MenuItem>
                                 ))
                             ) : (
@@ -1873,7 +1953,7 @@ console.log("payload for attendance only",payload)
                                 </MenuItem>
                             )}
                         </Select>
-                       
+
                     </Box>
 
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
@@ -1965,18 +2045,29 @@ console.log("payload for attendance only",payload)
                                         renderInput={(params) => <TextField {...params} fullWidth />}
                                     />
                                 </Box>
-                                {!isOvertimeDisable && <TextField
-                                    label="Overtime (Manually)"
-                                    type="number"
-                                    variant="outlined"
-                                    fullWidth
-                                    value={manualEditData.overtimeManually}
-                                    error={isOvertimeError}
-                                    helperText={isOvertimeError ? `Add Overtime Upto ${formatConvertedOverTime(manualEditData.overtime).hours} hours and ${formatConvertedOverTime(manualEditData.overtime).minutes} minutes` : ""}
-                                    onChange={(e) =>
-                                        setManualEditData({ ...manualEditData, overtimeManually: e.target.value })
-                                    }
-                                />}
+                                {!isOvertimeDisable && (
+                                    <TextField
+                                        label="Overtime (Manually)"
+                                        type="number"
+                                        variant="outlined"
+                                        fullWidth
+                                        value={manualEditData.overtimeManually}
+                                        error={isOvertimeError}
+                                        helperText={
+                                            isOvertimeError
+                                                ? `Add Overtime up to ${formatConvertedOverTime(manualEditData.overtime).hours} hours and ${formatConvertedOverTime(manualEditData.overtime).minutes} minutes`
+                                                : ""
+                                        }
+                                        inputProps={{ min: 0 }}
+                                        onChange={(e) => {
+                                            const value = Number(e.target.value);
+                                            // Prevent negative values from being set
+                                            if (value >= 0 || e.target.value === "") {
+                                                setManualEditData({ ...manualEditData, overtimeManually: e.target.value });
+                                            }
+                                        }}
+                                    />
+                                )}
                             </>
                         )}
 
