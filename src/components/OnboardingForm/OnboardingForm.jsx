@@ -2744,7 +2744,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                 className={`ok-button ${popupType}`}
                 onClick={() => {
                   setSaved(false);
-                  // window.location.reload(); 
+                  navigate('/kyc');
                 }}
               >
                 <span className={`icon ${popupType}`}>
