@@ -70,7 +70,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const { user } = useUser();
     const [businessUnits, setBusinessUnits] = useState([]);
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
-    const [projectName, setProjectName] = useState('');
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const [isOvertimeDisable, setIsOvertimeDisable] = useState(false);
     const [isOvertimeError, setIsOvertimeError] = useState(false);
@@ -1858,28 +1857,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="body1">Business Unit</Typography>
-                        {/* <Select
-                            fullWidth
-                            value={selectedBusinessUnit}
-                            onChange={(e) => setSelectedBusinessUnit(e.target.value)}
-                            displayEmpty
-                            sx={{ mt: 1 }}
-                        >
-                            <MenuItem value="">
-                                <em>All</em>
-                            </MenuItem>
-                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
-                                projectNames.map((project) => (
-                                    <MenuItem key={project.Id} value={project.Id}>
-                                        {project.Business_Unit}
-                                    </MenuItem>
-                                ))
-                            ) : (
-                                <MenuItem value="Unknown" disabled>
-                                    No Projects Available
-                                </MenuItem>
-                            )}
-                        </Select> */}
+                        
 
                         <Select
                             fullWidth
@@ -1935,7 +1913,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                             <MenuItem value="ALL">
                                 <Checkbox
                                     checked={isAllSelectedDep}
-                                    indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep }
+                                    indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep}
                                 />
                                 <ListItemText primary="Select All" />
                             </MenuItem>
@@ -1953,7 +1931,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                                 </MenuItem>
                             )}
                         </Select>
-
                     </Box>
 
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>

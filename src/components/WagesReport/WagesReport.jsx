@@ -65,7 +65,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     const [selectedHistory, setSelectedHistory] = useState([]);
     const [effectiveDate, setEffectiveDate] = useState("");
     const [filterModalOpen, setFilterModalOpen] = useState(false);
-    const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [selectedDepartment, setSelectedDepartment] = useState([]);
     const [selectedPayStructure, setSelectedPayStructure] = useState('');
     const [employeeToggle, setEmployeeToggle] = useState('all'); // 'all' or 'single'
     const [selectedEmployee, setSelectedEmployee] = useState('');
@@ -139,7 +139,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     }
     const handleResetFilter = () => {
         // setSelectedBusinessUnit('');
-        setSelectedDepartment('');
+        setSelectedDepartment([]);
         setSelectedPayStructure('');
         setEmployeeToggle('all');
         setSelectedEmployee('');
@@ -148,21 +148,42 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         setFilterModalOpen(false);
     };
 
+    // const handleApplyFilters = () => {
+    //     const filters = {};
+    //     if (selectedBusinessUnit) {
+    //         // filters.ProjectID = selectedBusinessUnit;
+    //         filters.ProjectID = selectedBusinessUnit.join(',');
+    //     }
+    //     if (selectedDepartment) {
+    //         filters.DepartmentID = selectedDepartment;
+    //     }
+    //     if (selectedPayStructure) {
+    //         filters.PayStructure = selectedPayStructure;
+    //     }
+    //     if (employeeToggle === 'single' && selectedEmployee) {
+    //         filters.employee = selectedEmployee;
+    //     }
+    //     fetchLabours(filters);
+    //     setFilterModalOpen(false);
+    // };
+
     const handleApplyFilters = () => {
         const filters = {};
-        if (selectedBusinessUnit) {
-            // filters.ProjectID = selectedBusinessUnit;
-            filters.ProjectID = selectedBusinessUnit.join(',');
+
+        if (Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0) {
+            filters.ProjectID = selectedBusinessUnit.join(','); 
         }
-        if (selectedDepartment) {
-            filters.DepartmentID = selectedDepartment;
+
+        if (Array.isArray(selectedDepartment) && selectedDepartment.length > 0) {
+            filters.DepartmentID = selectedDepartment.join(',');
         }
         if (selectedPayStructure) {
             filters.PayStructure = selectedPayStructure;
         }
         if (employeeToggle === 'single' && selectedEmployee) {
-            filters.employee = selectedEmployee;
+            filters.EmployeeID = selectedEmployee; 
         }
+
         fetchLabours(filters);
         setFilterModalOpen(false);
     };
@@ -217,7 +238,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
 
     const handleBusinessUnitChange = (event) => {
         const value = event.target.value;
-    
+
         if (value.includes('ALL')) {
             if (isAllSelectedProject) {
                 setSelectedBusinessUnit([]); // Deselect all
@@ -250,44 +271,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     //     }
     // };
 
-    const handleExport = async () => {
-        if (!startDate || !endDate) {
-            toast.error('Please select a Business Unit, Start Date, and End Date.');
-            return;
-        }
-        try {
-            const response = await axios.get(`${API_BASE_URL}/insentive/exportWagesExcel`, {
-                params: { startDate, endDate },
-                responseType: 'blob',
-            });
-
-            const blob = new Blob([response.data], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            });
-
-            const fileName = `Attendance_${selectedBusinessUnit}_${startDate}_${endDate}.xlsx`;
-
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-
-            link.parentNode.removeChild(link);
-
-            toast.success('Attendance exported successfully!');
-        } catch (error) {
-            console.error('Error exporting data:', error);
-
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(`Export Error: ${error.response.data.message}`);
-            } else {
-                toast.error('Error exporting data. Please try again later.');
-            }
-        }
-    };
-
-
+   
 
     const handleSave = async () => {
         setSaveLoader(true);
@@ -444,6 +428,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         filteredLaboursForTable.length > 0 &&
         filteredLaboursForTable.every((labour) => selectedLabourIds.includes(labour.LabourID));
 
+        const isAllSelectedDep = departments.length > 0 && selectedDepartment.length === departments.length;
+
     const handleSelectRow = (event, labourId, workingHours) => {
         if (event.target.checked) {
             setSelectedLabourIds((prev) => [...prev, labourId]);
@@ -465,6 +451,21 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
             setSelectedLabourIds((prev) =>
                 prev.filter((id) => !newSelected.includes(id))
             );
+        }
+    };
+
+    const handleDepartmentChange = (event) => {
+        const value = event.target.value;
+        if (value.includes('ALL')) {
+            if (isAllSelectedDep) {
+                setSelectedDepartment([]);
+            } else {
+                const allDeptIds = departments.map(d => d.Id);
+                setSelectedDepartment(allDeptIds);
+            }
+        } else {
+            // setSelectedDepartment(typeof value === 'string' ? value.split(',') : value);
+            setSelectedDepartment(value);
         }
     };
 
@@ -585,17 +586,25 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                 <ExportWagesReport departments={departments} projectNames={projectNames} />
                 <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} modalOpens={modalOpens} setModalOpens={setModalOpens} />
 
+                <Button
+                                variant="outlined"
+                                color="secondary"
+                                startIcon={<FilterListIcon />}
+                                onClick={() => setFilterModalOpen(true)}
+                            >
+                                Filter
+                            </Button>
 
-
-                <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
-                    Filter
-                </Button>
-                {selectedLabourIds.length > 0 && (
-                    <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
-                        Edit ({selectedLabourIds.length})
-                    </Button>
-                )}
-
+                            {selectedLabourIds.length > 0 && (
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    startIcon={<EditIcon />}
+                                    onClick={() => setModalOpen(true)}
+                                >
+                                    Edit ({selectedLabourIds.length})
+                                </Button>
+                            )}
 
                 <TablePagination
                     className="custom-pagination"
@@ -686,64 +695,65 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                     const currentDate = new Date();
                                     const threeMonthsAgo = new Date();
                                     threeMonthsAgo.setMonth(currentDate.getMonth() - 3);
-                                
+
                                     const isOlderThan3Months = createdAt < threeMonthsAgo;
-                                
+
                                     let backgroundColor = 'inherit';
                                     if (!isOlderThan3Months) {
-                                      if (labour?.ApprovalStatusWages === 'Pending') {
-                                        backgroundColor = '#ffe6e6'; // Light red
-                                      } else if (labour?.ApprovalStatusWages === 'Approved') {
-                                        backgroundColor = '#dcfff0'; // Light green
-                                      }
+                                        if (labour?.ApprovalStatusWages === 'Pending') {
+                                            backgroundColor = '#ffe6e6'; // Light red
+                                        } else if (labour?.ApprovalStatusWages === 'Approved') {
+                                            backgroundColor = '#dcfff0'; // Light green
+                                        }
                                     }
-                                            return (
-                                                <TableRow key={labour.LabourID} sx={{ backgroundColor }}>
-                                        <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                        <TableCell>{labour.LabourID}</TableCell>
-                                        <TableCell>{labour.name || '-'}</TableCell>
-                                        {/* <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell> */}
-                                        <TableCell>{labour.businessUnit || '-'}</TableCell>
-                                        <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
-                                        {/* <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell> */}
-                                        <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString() : '-'}</TableCell>
-                                        <TableCell>{labour.PayStructure || '-'}</TableCell>
-                                        <TableCell>{labour.DailyWages || '-'}</TableCell>
-                                        <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
-                                        <TableCell>{labour.WeeklyOff || '-'}</TableCell>
-                                        <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
-                                        <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
-                                        <TableCell>
-                                            <IconButton
-                                                color='rgb(239,230,247)'
-                                                onClick={() => handleViewHistory(labour.LabourID)}
-                                            >
-                                                <VisibilityIcon />
-                                            </IconButton>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button
-                                                variant="contained"
-                                                sx={{
-                                                    backgroundColor: 'rgb(239,230,247)',
-                                                    color: 'rgb(130,54,188)',
-                                                    '&:hover': { backgroundColor: 'rgb(239,230,247)' },
-                                                }}
-                                                onClick={() => {
-                                                    // For individual edit, you can add this labour to the selection and open the modal.
-                                                    if (!selectedLabourIds.includes(labour.LabourID)) {
-                                                        setSelectedLabourIds([...selectedLabourIds, labour.LabourID]);
-                                                        setSelectedLabourWorkingHours(labour.workingHours);
-                                                    }
-                                                    setModalOpen(true);
-                                                }}
-                                            >
-                                                Edit
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                            
-                                )})}
+                                    return (
+                                        <TableRow key={labour.LabourID} sx={{ backgroundColor }}>
+                                            <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                            <TableCell>{labour.LabourID}</TableCell>
+                                            <TableCell>{labour.name || '-'}</TableCell>
+                                            {/* <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell> */}
+                                            <TableCell>{labour.businessUnit || '-'}</TableCell>
+                                            <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
+                                            {/* <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell> */}
+                                            <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString() : '-'}</TableCell>
+                                            <TableCell>{labour.PayStructure || '-'}</TableCell>
+                                            <TableCell>{labour.DailyWages || '-'}</TableCell>
+                                            <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
+                                            <TableCell>{labour.WeeklyOff || '-'}</TableCell>
+                                            <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
+                                            <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
+                                            <TableCell>
+                                                <IconButton
+                                                    color='rgb(239,230,247)'
+                                                    onClick={() => handleViewHistory(labour.LabourID)}
+                                                >
+                                                    <VisibilityIcon />
+                                                </IconButton>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    variant="contained"
+                                                    sx={{
+                                                        backgroundColor: 'rgb(239,230,247)',
+                                                        color: 'rgb(130,54,188)',
+                                                        '&:hover': { backgroundColor: 'rgb(239,230,247)' },
+                                                    }}
+                                                    onClick={() => {
+                                                        // For individual edit, you can add this labour to the selection and open the modal.
+                                                        if (!selectedLabourIds.includes(labour.LabourID)) {
+                                                            setSelectedLabourIds([...selectedLabourIds, labour.LabourID]);
+                                                            setSelectedLabourWorkingHours(labour.workingHours);
+                                                        }
+                                                        setModalOpen(true);
+                                                    }}
+                                                >
+                                                    Edit
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+
+                                    )
+                                })}
                         </TableBody>
                     </Table>
                 </Box>
@@ -822,9 +832,9 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                             sx={{ mt: 1 }}
                         >
                             <MenuItem value="ALL">
-        <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
-        <ListItemText primary="Select All" />
-    </MenuItem>
+                                <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+                                <ListItemText primary="Select All" />
+                            </MenuItem>
                             {Array.isArray(projectNames) && projectNames.length > 0 ? (
                                 projectNames.map((project) => (
                                     <MenuItem key={project.Id} value={project.Id}>
@@ -840,32 +850,45 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         </Select>
                     </Box>
 
-                    {/* Department Filter using departments from props */}
                     <Box sx={{ mb: 2 }}>
-                        <Typography variant="body1">Department</Typography>
-                        <Select
-                            fullWidth
-                            value={selectedDepartment}
-                            onChange={(e) => setSelectedDepartment(e.target.value)}
-                            displayEmpty
-                            sx={{ mt: 1 }}
-                        >
-                            <MenuItem value="">
-                                <em>All</em>
-                            </MenuItem>
-                            {Array.isArray(departments) && departments.length > 0 ? (
-                                departments.map((department) => (
-                                    <MenuItem key={department.Id} value={department.Id}>
-                                        {department.Description}
-                                    </MenuItem>
-                                ))
-                            ) : (
-                                <MenuItem value="Unknown" disabled>
-                                    No Department Available
-                                </MenuItem>
-                            )}
-                        </Select>
-                    </Box>
+                                           <Typography variant="body1">Department</Typography>
+                                           <Select
+                                               fullWidth
+                                               multiple
+                                               value={selectedDepartment}
+                                               onChange={handleDepartmentChange}
+                                               displayEmpty
+                                               renderValue={(selected) => {
+                                                   if (selected.length === 0) return <em>All</em>;
+                                                   const selectedLabels = departments
+                                                       .filter(dept => selected.includes(dept.Id))
+                                                       .map(dept => dept.Description);
+                                                   return selectedLabels.join(', ');
+                                               }}
+                                               sx={{ mt: 1 }}
+                                           >
+                                               <MenuItem value="ALL">
+                                                   <Checkbox
+                                                       checked={isAllSelectedDep}
+                                                       indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep}
+                                                   />
+                                                   <ListItemText primary="Select All" />
+                                               </MenuItem>
+                   
+                                               {Array.isArray(departments) && departments.length > 0 ? (
+                                                   departments.map((department) => (
+                                                       <MenuItem key={department.Id} value={department.Id}>
+                                                           <Checkbox checked={selectedDepartment.includes(department.Id)} />
+                                                           <ListItemText primary={department.Description} />
+                                                       </MenuItem>
+                                                   ))
+                                               ) : (
+                                                   <MenuItem value="Unknown" disabled>
+                                                       No Department Available
+                                                   </MenuItem>
+                                               )}
+                                           </Select>
+                                       </Box>
 
                     {/* Pay Structure Filter */}
                     <Box sx={{ mb: 2 }}>
@@ -1107,7 +1130,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         bgcolor: "background.paper",
                         borderRadius: 2,
                         boxShadow: 24,
-                        p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
+                        p: { xs: 2, sm: 3, md: 4 }, 
                         maxHeight: "85vh",
                         overflowY: "auto",
                         "&::-webkit-scrollbar": {
@@ -1122,7 +1145,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         },
                     }}
                 >
-                    {/* Close Icon */}
                     <IconButton
                         onClick={() => setOpenModal(false)}
                         sx={{
@@ -1135,7 +1157,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         <CloseIcon />
                     </IconButton>
 
-                    {/* Modal Header */}
                     <Typography
                         variant="h6"
                         sx={{
@@ -1147,7 +1168,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         Wages History Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
                     </Typography>
 
-                    {/* Modal Content */}
                     <Box
                         sx={{
                             display: "flex",
@@ -1165,14 +1185,13 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                     alignItems: "flex-start",
                                     gap: 4,
                                     position: "relative",
-                                    width: { xs: "100%", md: "70%" }, // Adjust width for responsiveness
+                                    width: { xs: "100%", md: "70%" }, 
                                 }}
                             >
-                                {/* Vertical Line */}
                                 <Box
                                     sx={{
                                         position: "absolute",
-                                        left: { xs: "27%", md: "27.5%" }, // Adjust line position
+                                        left: { xs: "27%", md: "27.5%" }, 
                                         top: 0,
                                         bottom: index !== selectedHistory.length - 0 ? 0 : "auto",
                                         width: 4,
@@ -1181,7 +1200,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                     }}
                                 />
 
-                                {/* Dot for Edited On */}
                                 <Box
                                     sx={{
                                         width: 16,
@@ -1189,17 +1207,16 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                         bgcolor: "darkgreen",
                                         borderRadius: "50%",
                                         position: "absolute",
-                                        left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, // Adjust dot position
+                                        left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, 
                                     }}
                                 ></Box>
 
-                                {/* Left Side - Edited On */}
                                 <Box
                                     sx={{
                                         flex: 1,
                                         textAlign: "right",
                                         pr: 2,
-                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, 
                                     }}
                                 >
                                     <Typography variant="body2" sx={{ fontWeight: "bold" }}>
@@ -1213,11 +1230,10 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                     </Typography>
                                 </Box>
 
-                                {/* Right Side - Details */}
                                 <Box
                                     sx={{
                                         flex: 3,
-                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, 
                                     }}
                                 >
                                     <Typography variant="body2" sx={{ mb: 1 }}>

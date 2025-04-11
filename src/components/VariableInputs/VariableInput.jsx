@@ -53,7 +53,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
   const [openDialogSite, setOpenDialogSite] = useState(false);
   const [statusesSite, setStatusesSite] = useState({});
   const [filterModalOpen, setFilterModalOpen] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState([]);
   const [selectedPayStructure, setSelectedPayStructure] = useState('');
   const [employeeToggle, setEmployeeToggle] = useState('all'); // 'all' or 'single'
   const [selectedEmployee, setSelectedEmployee] = useState('');
@@ -98,7 +98,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
 
   const handleResetFilter = () => {
     setSelectedBusinessUnit([]);
-    setSelectedDepartment('');
+    setSelectedDepartment([]);
     setSelectedPayStructure('');
     setEmployeeToggle('all');
     setSelectedEmployee('');
@@ -107,25 +107,45 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
     setFilterModalOpen(false);
   };
 
+  // const handleApplyFilters = () => {
+  //   const filters = {};
+  //   if (selectedBusinessUnit) {
+  //     // filters.ProjectID = selectedBusinessUnit;
+  //     filters.ProjectID = selectedBusinessUnit.join(',');
+  //   }
+  //   if (selectedDepartment) {
+  //     filters.DepartmentID = selectedDepartment;
+  //   }
+  //   if (selectedPayStructure) {
+  //     filters.PayStructure = selectedPayStructure;
+  //   }
+  //   if (employeeToggle === 'single' && selectedEmployee) {
+  //     filters.employee = selectedEmployee;
+  //   }
+  //   fetchLabours(filters);
+  //   setFilterModalOpen(false);
+  // };
+
   const handleApplyFilters = () => {
     const filters = {};
-    if (selectedBusinessUnit) {
-      // filters.ProjectID = selectedBusinessUnit;
-      filters.ProjectID = selectedBusinessUnit.join(',');
+
+    if (Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0) {
+      filters.ProjectID = selectedBusinessUnit.join(','); // Pass as comma-separated string
     }
-    if (selectedDepartment) {
-      filters.DepartmentID = selectedDepartment;
+
+    if (Array.isArray(selectedDepartment) && selectedDepartment.length > 0) {
+      filters.DepartmentID = selectedDepartment.join(',');
     }
     if (selectedPayStructure) {
       filters.PayStructure = selectedPayStructure;
     }
     if (employeeToggle === 'single' && selectedEmployee) {
-      filters.employee = selectedEmployee;
+      filters.EmployeeID = selectedEmployee; // or filters.employee = ...
     }
+
     fetchLabours(filters);
     setFilterModalOpen(false);
   };
-
 
   const fetchBusinessUnits = async () => {
     try {
@@ -159,20 +179,21 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
   };
 
   const isAllSelected = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
+  const isAllSelectedDep = departments.length > 0 && selectedDepartment.length === departments.length;
 
   const handleBusinessUnitChange = (event) => {
-      const value = event.target.value;
-  
-      if (value.includes('ALL')) {
-          if (isAllSelected) {
-              setSelectedBusinessUnit([]); // Deselect all
-          } else {
-              const allIds = projectNames.map(p => p.Id);
-              setSelectedBusinessUnit(allIds); // Select all
-          }
+    const value = event.target.value;
+
+    if (value.includes('ALL')) {
+      if (isAllSelected) {
+        setSelectedBusinessUnit([]); // Deselect all
       } else {
-          setSelectedBusinessUnit(value);
+        const allIds = projectNames.map(p => p.Id);
+        setSelectedBusinessUnit(allIds); // Select all
       }
+    } else {
+      setSelectedBusinessUnit(value);
+    }
   };
 
   const handleToast = (type, message) => {
@@ -221,7 +242,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
       toast.error("Please enter a remark for Incentive.");
       return;
     }
-    
+
     if (!selectedLabourIds || selectedLabourIds.length === 0) {
       toast.error("No labour selected.");
       return;
@@ -470,6 +491,20 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
     labour?.ApprovalStatusPay === 'Approved'
   ).length;
 
+  const handleDepartmentChange = (event) => {
+    const value = event.target.value;
+    if (value.includes('ALL')) {
+        if (isAllSelectedDep) {
+            setSelectedDepartment([]);
+        } else {
+            const allDeptIds = departments.map(d => d.Id);
+            setSelectedDepartment(allDeptIds);
+        }
+    } else {
+        // setSelectedDepartment(typeof value === 'string' ? value.split(',') : value);
+        setSelectedDepartment(value);
+    }
+};
 
 
   const handleViewHistory = (labourID) => {
@@ -989,57 +1024,70 @@ Edit ({selectedLabourIds.length})
               )}
             </Select> */}
 
-              <Select
-                                        fullWidth
-                                        multiple
-                                        value={selectedBusinessUnit}
-                                        onChange={handleBusinessUnitChange}
-                                        displayEmpty
-                                        renderValue={(selected) => {
-                                            if (selected.length === 0) return <em>All</em>;
-                                            const selectedLabels = projectNames
-                                                .filter(project => selected.includes(project.Id))
-                                                .map(project => project.Business_Unit);
-                                            return selectedLabels.join(', ');
-                                        }}
-                                        sx={{ mt: 1 }}
-                                    >
-                                        <MenuItem value="ALL">
-                    <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
-                    <ListItemText primary="Select All" />
+            <Select
+              fullWidth
+              multiple
+              value={selectedBusinessUnit}
+              onChange={handleBusinessUnitChange}
+              displayEmpty
+              renderValue={(selected) => {
+                if (selected.length === 0) return <em>All</em>;
+                const selectedLabels = projectNames
+                  .filter(project => selected.includes(project.Id))
+                  .map(project => project.Business_Unit);
+                return selectedLabels.join(', ');
+              }}
+              sx={{ mt: 1 }}
+            >
+              <MenuItem value="ALL">
+                <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+                <ListItemText primary="Select All" />
+              </MenuItem>
+              {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                projectNames.map((project) => (
+                  <MenuItem key={project.Id} value={project.Id}>
+                    <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                    <ListItemText primary={project.Business_Unit} />
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="Unknown" disabled>
+                  No Projects Available
                 </MenuItem>
-                                        {Array.isArray(projectNames) && projectNames.length > 0 ? (
-                                            projectNames.map((project) => (
-                                                <MenuItem key={project.Id} value={project.Id}>
-                                                    <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
-                                                    <ListItemText primary={project.Business_Unit} />
-                                                </MenuItem>
-                                            ))
-                                        ) : (
-                                            <MenuItem value="Unknown" disabled>
-                                                No Projects Available
-                                            </MenuItem>
-                                        )}
-                                    </Select>
+              )}
+            </Select>
           </Box>
 
-          {/* Department Filter using departments from props */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="body1">Department</Typography>
             <Select
               fullWidth
+              multiple
               value={selectedDepartment}
-              onChange={(e) => setSelectedDepartment(e.target.value)}
+              onChange={handleDepartmentChange}
               displayEmpty
+              renderValue={(selected) => {
+                if (selected.length === 0) return <em>All</em>;
+                const selectedLabels = departments
+                  .filter(dept => selected.includes(dept.Id))
+                  .map(dept => dept.Description);
+                return selectedLabels.join(', ');
+              }}
               sx={{ mt: 1 }}
             >
-              <MenuItem value="">
-                <em>All</em>
+              <MenuItem value="ALL">
+                <Checkbox
+                  checked={isAllSelectedDep}
+                  indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep}
+                />
+                <ListItemText primary="Select All" />
               </MenuItem>
+
               {Array.isArray(departments) && departments.length > 0 ? (
                 departments.map((department) => (
                   <MenuItem key={department.Id} value={department.Id}>
-                    {department.Description}
+                    <Checkbox checked={selectedDepartment.includes(department.Id)} />
+                    <ListItemText primary={department.Description} />
                   </MenuItem>
                 ))
               ) : (
