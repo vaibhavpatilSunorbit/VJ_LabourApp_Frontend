@@ -289,6 +289,99 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     }
   };
 
+
+
+  // const uploadAadhaarImageToSurepass = async (file, formStatus, isApproved) => {
+  //   const formData = new FormData();
+  //   formData.append('file', file);
+
+  //   try {
+  //     const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //         'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
+  //       }
+  //     });
+
+  //     const { data } = response;
+  //     if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
+  //       const ocrFields = data.data.ocr_fields[0];
+
+  //       // Check Aadhaar details with backend
+  //       const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
+
+  //       // Skip Aadhaar check if LabourID is present
+  //       if (checkAadhaarResponse.data.LabourID) {
+  //         processAadhaarData(ocrFields); // Process the Aadhaar data without checking for duplicates
+  //         return; // Exit the function to avoid further checks
+  //       }
+
+  //       // Skip Aadhaar check if formStatus is 'Resubmitted' and isApproved === 3
+  //       if (formStatus === 'Resubmitted' && isApproved === 3) {
+  //         processAadhaarData(ocrFields); // Process the Aadhaar data for Resubmitted case
+  //         return; // Exit the function to avoid further checks
+  //       }
+
+  //       // Proceed with Aadhaar check if the above conditions are not met
+  //       if (checkAadhaarResponse.data.exists) {
+  //         setMessageType('error');
+  //         toast.error('User has already filled the form with this Aadhaar Number.');
+  //       } else {
+  //         processAadhaarData(ocrFields);
+  //       }
+  //     } else {
+  //       setNewError('Error reading Aadhaar details from Image.');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error Uploading Aadhaar image to surepass:', error);
+  //     if (error.response) {
+  //       console.error('Error response data:', error.response.data);
+  //     }
+  //     setNewError('Error uploading Aadhaar image. Please try again.');
+  //   }
+  // };
+
+  // const uploadAadhaarImageToSurepass = async (file) => {  
+  //   const formData = new FormData();
+  //   formData.append('file', file);
+
+  //   try {
+  //     const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //         'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
+  //       }
+  //     });
+
+  //     const { data } = response;
+  //     if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
+  //       const ocrFields = data.data.ocr_fields[0];
+
+  //       if (formStatus !== 'Resubmitted' || isApproved !== 3) {
+  //         const existingAadhaarCheck = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
+
+  //         if (existingAadhaarCheck.data.exists) {
+  //           setMessageType('error');
+  //           toast.error('User has Already filled the form with this Aadhaar Number.');
+  //         } else {
+  //           processAadhaarData(ocrFields);
+  //         }
+  //       } else {
+  //         processAadhaarData(ocrFields);
+  //       }
+  //     } else {
+  //       setNewError('Error reading Aadhaar details from Image.');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error Uploading Aadhaar image to surepass:', error);
+  //     if (error.response) {
+  //       console.error('Error response data:', error.response.data);
+  //     }
+  //     setNewError('Error uploading Aadhaar image. please try again.');
+  //   }
+  // };
+
+
   const processAadhaarData = (ocrFields) => {
     let localError = '';
 
@@ -977,7 +1070,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       const labourStatus = formData.status || '';
 
       try {
-        if (labourStatus === 'Disable' && labourId) {
+        if (
+          ['Disable', 'Rejected', 'Resubmitted'].includes(labourStatus) &&
+          labourId
+        ){
           response = await axios.put(`${API_BASE_URL}/labours/updatelabourDisableStatus/${labourId}`, formDataToSend, {
             headers: {
               // 'Content-Type': 'application/json',
@@ -2359,7 +2455,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                 className={`ok-button ${popupType}`}
                 onClick={() => {
                   setSaved(false);
-                  // window.location.reload(); 
+                  navigate('/kyc');
                 }}
               >
                 <span className={`icon ${popupType}`}>
