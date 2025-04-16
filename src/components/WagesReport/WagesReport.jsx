@@ -124,9 +124,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         }
     };
 
-    useEffect(() => {
-        fetchLabours();
-    }, []);
+  
 
     const handleApplyFilter = async () => {
         const params = {};
@@ -382,7 +380,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     };
 
 
-
     const getFilteredLaboursForTable = () => {
         let baseLabours = searchResults.length > 0 ? [...searchResults] : [...laboursSource];
         baseLabours = baseLabours.filter((labour) => {
@@ -496,6 +493,35 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
     const approvedCount = displayedLabours.filter(labour =>
         labour?.ApprovalStatusWages === 'Approved'
     ).length;
+
+    const fetchWageHistory = async () => {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/labours/wages/adminApprovals`);
+          const allWageHistories = response.data;
+      
+          // Assuming selectedHistory[0]?.LabourID is available
+          const targetLabourId = selectedHistory[0]?.LabourID;
+      
+          // Filter to match the LabourID
+          const matchedHistory = allWageHistories.filter(
+            (record) => record.LabourID === targetLabourId
+          );
+      
+          setSelectedHistory(matchedHistory); // Update state to re-render the modal
+        } catch (error) {
+          console.error("Error fetching wage history:", error);
+        }
+      };
+      
+      useEffect(() => {
+        if (openModal) {
+          fetchWageHistory();
+        }
+      }, [openModal]);
+      
+      useEffect(() => {
+        fetchLabours();
+    }, []);
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
@@ -1157,17 +1183,62 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         <CloseIcon />
                     </IconButton>
 
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            mb: 4,
-                            textAlign: "center",
-                            fontSize: { xs: "1rem", sm: "1.25rem" },
-                        }}
-                    >
-                        Wages History Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
-                    </Typography>
+                    {/* Header Info */}
+    <Box
+      sx={{
+        mb: 4,
+        textAlign: "center",
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 2,
+        flexWrap: "wrap",
+      }}
+    >
+      <Typography
+        variant="h6"
+        sx={{
+          fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
+          fontWeight: 600,
+          color: "text.primary",
+        }}
+      >
+        Labour ID:{" "}
+        <span style={{ color: "#2e7d32" }}>
+          {selectedHistory[0]?.LabourID || "N/A"}
+        </span>
+      </Typography>
 
+      <Typography
+        variant="h6"
+        sx={{
+          fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
+          fontWeight: 600,
+          color: "text.primary",
+        }}
+      >
+        Name:{" "}
+        <span style={{ color: "#1565c0" }}>
+          {selectedHistory[0]?.name || "N/A"}
+        </span>
+      </Typography>
+    </Box>
+
+    {/* Conditional Content */}
+    {selectedHistory.length === 0 ? (
+      <Typography
+        variant="body1"
+        sx={{
+          textAlign: "center",
+          fontSize: { xs: "0.95rem", sm: "1.1rem" },
+          color: "text.secondary",
+          mt: 4,
+        }}
+      >
+        No wages History available for this labour.
+      </Typography>
+    ) : (
                     <Box
                         sx={{
                             display: "flex",
@@ -1237,15 +1308,15 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                     }}
                                 >
                                     <Typography variant="body2" sx={{ mb: 1 }}>
-                                        <strong>Name:</strong> {record.name || "N/A"}
+                                        <strong>Labour ID:</strong> {record.LabourID || "N/A"}
                                     </Typography>
                                     <Typography variant="body2" >
                                         <strong>Edited By:</strong> {record.WagesEditedBy || "N/A"}
                                     </Typography>
                                     <Typography variant="body2">
                                         <strong>From Date:</strong>{" "}
-                                        {record.From_Date
-                                            ? new Date(record.From_Date).toLocaleDateString()
+                                        {record.EffectiveDate
+                                            ? new Date(record.EffectiveDate).toLocaleDateString()
                                             : "N/A"}
                                     </Typography>
                                     <Typography variant="body2">
@@ -1274,6 +1345,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                             </Box>
                         ))}
                     </Box>
+                    )}
                 </Box>
             </Modal>
 
