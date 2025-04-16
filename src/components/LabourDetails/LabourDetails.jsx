@@ -95,6 +95,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   const [previousTabValue, setPreviousTabValue] = useState(tabValue);
   const [isLabourCardOpen, setIsLabourCardOpen] = useState(false);
   const [selectedLabourData, setSelectedLabourData] = useState(null);
+  const [labourQueue, setLabourQueue] = useState([]);
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
