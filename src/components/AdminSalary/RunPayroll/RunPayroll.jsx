@@ -17,7 +17,7 @@ import {
     MenuItem, Modal, Typography, IconButton, Dialog,
     DialogTitle,
     DialogContent,
-    DialogContentText,
+    DialogContentText, Checkbox, ListItemText,
     DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, Fade, FormControlLabel, Switch
 } from '@mui/material';
 import { modalStyle } from '../modalStyles.js';
@@ -83,8 +83,8 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     const [noDataAvailable, setNoDataAvailable] = useState(false);
     const [isFinalizeEnabled, setIsFinalizeEnabled] = useState(false);
     const [isFinalizeClicked, setIsFinalizeClicked] = useState(false);
-    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
-    const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
+    const [selectedDepartment, setSelectedDepartment] = useState([]);
     const [selectedPayStructure, setSelectedPayStructure] = useState('');
     const [employeeToggle, setEmployeeToggle] = useState('all');
     const [selectedEmployee, setSelectedEmployee] = useState('');
@@ -131,6 +131,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
         }
     };
 
+
     // useEffect(() => {
     //     fetchLabours();
     // }, []);
@@ -147,29 +148,66 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     const handleResetFilter = () => {
         setSelectedBusinessUnit('');
         setSelectedDepartment('');
+        setLabours(salaryData)
         setSelectedPayStructure('');
         setEmployeeToggle('all');
         setSelectedEmployee('');
-        fetchLabours();
         setFilterModalOpen(false);
     };
 
     const handleApplyFilters = () => {
         const filters = {};
-        if (selectedBusinessUnit) {
-            filters.ProjectID = selectedBusinessUnit;
+
+        if (Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0) {
+            filters.ProjectID = selectedBusinessUnit.join(','); // Pass as comma-separated string
         }
-        if (selectedDepartment) {
-            filters.DepartmentID = selectedDepartment;
+
+        if (Array.isArray(selectedDepartment) && selectedDepartment.length > 0) {
+            filters.DepartmentID = selectedDepartment.join(',');
         }
-        if (selectedPayStructure) {
-            filters.PayStructure = selectedPayStructure;
-        }
-        if (employeeToggle === 'single' && selectedEmployee) {
-            filters.employee = selectedEmployee;
-        }
-        fetchLabours(filters);
+        // fetchLabours(filters);
+        const projectFilter = filters.ProjectID.split(',').map(Number);
+        const departmentFilter = filters.DepartmentID.split(',').map(Number);
+
+        // Filter data array based on projectName and department
+        const filteredData = labours.filter(item =>
+            projectFilter.includes(item.projectId) && departmentFilter.includes(item.departmentId)
+        );
+        setLabours(filteredData);
         setFilterModalOpen(false);
+    };
+
+    const isAllSelected = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
+    const isAllSelectedDep = departments.length > 0 && selectedDepartment.length === departments.length;
+
+    const handleBusinessUnitChange = (event) => {
+        const value = event.target.value;
+
+        if (value.includes('ALL')) {
+            if (isAllSelected) {
+                setSelectedBusinessUnit([]); // Deselect all
+            } else {
+                const allIds = projectNames.map(p => p.Id);
+                setSelectedBusinessUnit(allIds); // Select all
+            }
+        } else {
+            setSelectedBusinessUnit(value);
+        }
+    };
+
+    const handleDepartmentChange = (event) => {
+        const value = event.target.value;
+        if (value.includes('ALL')) {
+            if (isAllSelectedDep) {
+                setSelectedDepartment([]);
+            } else {
+                const allDeptIds = departments.map(d => d.Id);
+                setSelectedDepartment(allDeptIds);
+            }
+        } else {
+            // setSelectedDepartment(typeof value === 'string' ? value.split(',') : value);
+            setSelectedDepartment(value);
+        }
     };
 
 
@@ -270,7 +308,9 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     srNo: index + 1,
                     id: labour.id || 0,
                     LabourID: labour.labourId,
-                    name: labour.name || "-",
+                    name: labour.name || "-",      
+                    projectId: labour.projectName || "-",
+                    departmentId: labour.department || "-",         
                     projectName: labour.businessUnit || "-",
                     department: labour.departmentName || "-",
                     aadhaarNumber: labour.aadhaarNumber || "-",
@@ -890,7 +930,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                     onChange={(e) => setLabourId(e.target.value)}
                                     sx={{
                                         width: "25%", // Full width
-                                        marginBottom: { xs: "20px", sm: "0" },  
+                                        marginBottom: { xs: "20px", sm: "0" },
                                         marginTop: { xs: "0", sm: "5px" }
                                     }}
                                 />
@@ -913,8 +953,8 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             >
                                 PayRoll
                             </Button>
-                           
-                          
+
+
                         </Box>
 
                         <Box
@@ -934,15 +974,15 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                     justifyContent: "space-evenly",
                                 }}
                             >
-                                 <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
-                                Filter
-                            </Button>
-                            {selectedLabourIds.length > 0 && (
-                                <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
-                                    Edit ({selectedLabourIds.length})
+                                <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
+                                    Filter
                                 </Button>
-                            )}
-                                
+                                {selectedLabourIds.length > 0 && (
+                                    <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
+                                        Edit ({selectedLabourIds.length})
+                                    </Button>
+                                )}
+
                                 <TablePagination
                                     className="custom-pagination"
                                     rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
@@ -1810,6 +1850,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         p: 4,
                     }}
                 >
+                    {/* Modal Header with Title and Close Button */}
                     <Box
                         sx={{
                             display: 'flex',
@@ -1826,22 +1867,56 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         </Button>
                     </Box>
 
+                    {/* Business Unit Filter using projectNames from props */}
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="body1">Business Unit</Typography>
+                        {/* <Select
+              fullWidth
+              value={selectedBusinessUnit}
+              onChange={(e) => setSelectedBusinessUnit(e.target.value)}
+              displayEmpty
+              sx={{ mt: 1 }}
+            >
+              <MenuItem value="">
+                <em>All</em>
+              </MenuItem>
+              {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                projectNames.map((project) => (
+                  <MenuItem key={project.Id} value={project.Id}>
+                    {project.Business_Unit}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="Unknown" disabled>
+                  No Projects Available
+                </MenuItem>
+              )}
+            </Select> */}
+
                         <Select
                             fullWidth
+                            multiple
                             value={selectedBusinessUnit}
-                            onChange={(e) => setSelectedBusinessUnit(e.target.value)}
+                            onChange={handleBusinessUnitChange}
                             displayEmpty
+                            renderValue={(selected) => {
+                                if (selected.length === 0) return <em>All</em>;
+                                const selectedLabels = projectNames
+                                    .filter(project => selected.includes(project.Id))
+                                    .map(project => project.Business_Unit);
+                                return selectedLabels.join(', ');
+                            }}
                             sx={{ mt: 1 }}
                         >
-                            <MenuItem value="">
-                                <em>All</em>
+                            <MenuItem value="ALL">
+                                <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+                                <ListItemText primary="Select All" />
                             </MenuItem>
                             {Array.isArray(projectNames) && projectNames.length > 0 ? (
                                 projectNames.map((project) => (
                                     <MenuItem key={project.Id} value={project.Id}>
-                                        {project.Business_Unit}
+                                        <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                        <ListItemText primary={project.Business_Unit} />
                                     </MenuItem>
                                 ))
                             ) : (
@@ -1856,18 +1931,32 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         <Typography variant="body1">Department</Typography>
                         <Select
                             fullWidth
+                            multiple
                             value={selectedDepartment}
-                            onChange={(e) => setSelectedDepartment(e.target.value)}
+                            onChange={handleDepartmentChange}
                             displayEmpty
+                            renderValue={(selected) => {
+                                if (selected.length === 0) return <em>All</em>;
+                                const selectedLabels = departments
+                                    .filter(dept => selected.includes(dept.Id))
+                                    .map(dept => dept.Description);
+                                return selectedLabels.join(', ');
+                            }}
                             sx={{ mt: 1 }}
                         >
-                            <MenuItem value="">
-                                <em>All</em>
+                            <MenuItem value="ALL">
+                                <Checkbox
+                                    checked={isAllSelectedDep}
+                                    indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep}
+                                />
+                                <ListItemText primary="Select All" />
                             </MenuItem>
+
                             {Array.isArray(departments) && departments.length > 0 ? (
                                 departments.map((department) => (
                                     <MenuItem key={department.Id} value={department.Id}>
-                                        {department.Description}
+                                        <Checkbox checked={selectedDepartment.includes(department.Id)} />
+                                        <ListItemText primary={department.Description} />
                                     </MenuItem>
                                 ))
                             ) : (
@@ -1878,24 +1967,21 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         </Select>
                     </Box>
 
+                    {/* Modal Action Buttons */}
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                         <Button variant="outlined" color="secondary" onClick={handleResetFilter}>
                             Reset
                         </Button>
-                        <Button
-                            variant="contained"
-                            sx={{
-                                backgroundColor: 'rgb(229, 255, 225)',
-                                color: 'rgb(43, 217, 144)',
-                                width: '100px',
-                                marginRight: '10px',
-                                marginBottom: '3px',
-                                '&:hover': {
-                                    backgroundColor: 'rgb(229, 255, 225)',
-                                },
-                            }}
-                            onClick={handleApplyFilters}
-                        >
+                        <Button variant="contained" sx={{
+                            backgroundColor: "rgb(229, 255, 225)",
+                            color: "rgb(43, 217, 144)",
+                            width: "100px",
+                            marginRight: "10px",
+                            marginBottom: "3px",
+                            "&:hover": {
+                                backgroundColor: "rgb(229, 255, 225)",
+                            },
+                        }} onClick={handleApplyFilters}>
                             Apply
                         </Button>
                     </Box>

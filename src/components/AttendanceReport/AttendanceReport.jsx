@@ -467,7 +467,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             }
 
             const onboardName = user.name || null;
-            const workingHours = manualEditData.workingHours || selectedDay.workingHours;
+            const workingHours = manualEditData.shift || selectedDay.workingHours;
             const AttendanceStatus = manualEditData.attendanceStatus || null;
             const payload = {
                 labourId: selectedDay.labourId,
