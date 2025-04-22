@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -31,6 +30,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
 import './wagesReport.css'
+// import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+// import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+// import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import  AdapterDateFns  from '@date-io/date-fns';
+import { format, parse } from 'date-fns';
 
 const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => {
     const theme = useTheme();
@@ -512,6 +517,14 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
           console.error("Error fetching wage history:", error);
         }
       };
+
+    const shouldDisableDate = (date) => {
+        return date.getDate() !== 1;
+      };
+      const handleDateChange = (newDate) => {
+        const formattedDate = format(newDate, 'dd-MM-yyyy');
+        setEffectiveDate(formattedDate);
+      };
       
       useEffect(() => {
         if (openModal) {
@@ -741,13 +754,13 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                             <TableCell>{labour.businessUnit || '-'}</TableCell>
                                             <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
                                             {/* <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell> */}
-                                            <TableCell>{labour.EffectiveDate ? new Date(labour.EffectiveDate).toLocaleDateString() : '-'}</TableCell>
+                                            <TableCell>{labour.EffectiveDate ? format(new Date(labour.EffectiveDate), 'dd/MM/yyyy') : '-'}</TableCell>
                                             <TableCell>{labour.PayStructure || '-'}</TableCell>
                                             <TableCell>{labour.DailyWages || '-'}</TableCell>
                                             <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
                                             <TableCell>{labour.WeeklyOff || '-'}</TableCell>
                                             <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
-                                            <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
+                                            <TableCell>{labour.CreatedAt ? format(new Date(labour.CreatedAt), 'dd/MM/yyyy') : '-'}</TableCell>
                                             <TableCell>
                                                 <IconButton
                                                     color='rgb(239,230,247)'
@@ -765,7 +778,6 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                                         '&:hover': { backgroundColor: 'rgb(239,230,247)' },
                                                     }}
                                                     onClick={() => {
-                                                        // For individual edit, you can add this labour to the selection and open the modal.
                                                         if (!selectedLabourIds.includes(labour.LabourID)) {
                                                             setSelectedLabourIds([...selectedLabourIds, labour.LabourID]);
                                                             setSelectedLabourWorkingHours(labour.workingHours);
@@ -1005,16 +1017,20 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                     </Select>
 
                     {/* Effective Date Picker */}
-                    <TextField
-                        label="Effective Date"
-                        type="date"
-                        fullWidth
-                        value={effectiveDate}
-                        onChange={(e) => setEffectiveDate(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{ mb: 2 }}
-                        required
-                    />
+               <Box sx={{ mb: 2 }}>
+<LocalizationProvider dateAdapter={AdapterDateFns} >
+      <DatePicker
+       label="Effective Date"
+       value={effectiveDate ? new Date(effectiveDate.split("-").reverse().join("-")) : null}  // Parse the formatted date back to Date object
+       onChange={(newDate) => handleDateChange(newDate)}
+       renderInput={(params) => <TextField {...params} fullWidth required />}
+       shouldDisableDate={shouldDisableDate} // Disable all days except the 1st of each month
+       format="dd-MM-yyyy" 
+       mask="__/__/____" // Mask to guide user input
+        sx={{ mb: 2, width: "100%"}} // Adjust width for mobile responsiveness
+      />
+    </LocalizationProvider>
+    </Box>
 
                     {payStructure === 'DAILY WAGES' && (
                         <>
