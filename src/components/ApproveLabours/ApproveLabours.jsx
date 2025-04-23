@@ -15,7 +15,7 @@ import {
   Box,
   Select,
   MenuItem,
-  TablePagination,
+  TablePagination, DialogTitle,
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { ToastContainer, toast } from 'react-toastify';
@@ -342,6 +342,13 @@ const ApproveLabours = () => {
         aria-describedby="modal-modal-description"
       >
         <Box sx={{ ...modalStyle, position: 'relative' }}>
+           <DialogTitle
+                              sx={{
+                                  fontSize: { xs: "14px", sm: "16px", md: "18px" },
+                                  paddingBottom: { xs: "0px", sm: "0px", md: "18px" },
+                              }}
+                          >Update Device
+                          </DialogTitle>
           <IconButton
             aria-label="close"
             onClick={handleCloseModal}
@@ -355,7 +362,7 @@ const ApproveLabours = () => {
           </IconButton>
           <form onSubmit={handleModalSubmit}>
             <InputLabel id="new-project-name-label" style={inputLabelStyle}>
-              Project Name{renderRequiredAsterisk(true)}
+              Project Name
             </InputLabel>
             <Select
               id="newProjectId"
@@ -365,7 +372,7 @@ const ApproveLabours = () => {
               fullWidth
               required
             >
-              {availableProjectNames.map((project) => (
+              {projectNames.map((project) => (
                 <MenuItem key={project.Id} value={project.Id}>{project.Business_Unit}</MenuItem>
               ))}
             </Select>

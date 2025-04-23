@@ -752,6 +752,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
                   })
                   .sort((a, b) => b.labourID - a.labourID)
               ).map((labour, index) => (
+                
                 <TableRow key={labour.id}>
                   {tabValue === 0 && (
                     <><TableCell padding="checkbox">
@@ -766,9 +767,57 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
                   <TableCell>{labour.LabourId}</TableCell>
                   <TableCell>{labour.name}</TableCell>
                   <TableCell>{labour.Date ? new Date(labour.Date).toLocaleDateString('en-GB') : '-'}</TableCell>
-                  <TableCell>{labour.FirstPunchManually}</TableCell>
-                  <TableCell>{labour.LastPunchManually}</TableCell>
-                  <TableCell>{labour.OvertimeManually}</TableCell>
+                  <TableCell sx={{ padding: '8px' }}>
+                    <Box
+                      component="span"
+                      sx={{
+                        backgroundColor:
+                          labour.UpdatedFields?.includes('punchIn') && labour.FirstPunchManually
+                            ? 'rgb(229, 255, 225)'
+                            : 'transparent',
+                        px: 1, py: 1,
+                        borderRadius: 1,
+                        display: 'inline-block',
+                      }}
+                    >
+                      {labour.FirstPunchManually}
+                    </Box>
+                  </TableCell>
+
+                  <TableCell sx={{ padding: '8px' }}>
+                    <Box
+                      component="span"
+                      sx={{
+                        backgroundColor:
+                          labour.UpdatedFields?.includes('punchOut') && labour.LastPunchManually
+                            ? 'rgb(229, 255, 225)'
+                            : 'transparent',
+                        px: 1, // horizontal padding inside the highlight
+                        py: 1, // vertical padding inside the highlight
+                        borderRadius: 1, // optional: rounded corners
+                        display: 'inline-block', // so background hugs the content
+                      }}
+                    >
+                      {labour.LastPunchManually}
+                    </Box>
+                  </TableCell>
+
+                  <TableCell sx={{ padding: '8px' }}>
+                    {/* <Box
+                      component="span"
+                      sx={{
+                        backgroundColor:
+                          labour.UpdatedFields?.includes('overtimemanually') && labour.OvertimeManually
+                            ? 'rgb(229, 255, 225)'
+                            : 'transparent',
+                        px: 1, py: 1,
+                        borderRadius: 1,
+                        display: 'inline-block',
+                      }}
+                    > */}
+                      {labour.OvertimeManually}
+                    {/* </Box> */}
+                  </TableCell>
                   <TableCell>{labour.RemarkManually}</TableCell>
                   <TableCell>{labour.OnboardName}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}

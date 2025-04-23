@@ -63,6 +63,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         overtime: "",
         remark: "",
         shift: "",
+        overtimemanually: "",
     });
     const [error, setError] = useState(null);
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
@@ -80,7 +81,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [filters, setFilters] = useState({});
     const [laboursAttenadance, setLaboursAttenadance] = useState([]);
-    // const [changedFields, setChangedFields] = useState([]);
+    const [changedFields, setChangedFields] = useState([]);
     //  const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
 
     // -----------------------------------------------------  FILTER START ------------------
@@ -398,14 +399,14 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             punchIn: day.firstPunch || "",
             punchOut: day.lastPunch || "",
             overtime: day.overtime || "",
-            overtimemanually: day.overtimemanually || "",
+            overtimemanually: day.overtimemanually || 0,
             remark: day.remark || "",
             attendanceStatus: day.status || "",
             isFinalPayAvailable: day.isFinalPayAvailable || "",
             shift: day.Shift || ""
         });
         setEditManualDialogOpen(true);
-        // setChangedFields([]);
+        setChangedFields([]);
     };
 
     const handleManualEditDialogClose = () => {
@@ -442,7 +443,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             }
 
 
-            if (manualEditData.overtimeManually > manualEditData.overtime || Number(manualEditData.overtimeManually) > 4) {
+            if (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4) {
                 toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
                 return;
             }
@@ -477,11 +478,12 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 AttendanceId: manualEditData.AttendanceId || "",
                 ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
                 ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
-                ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually }),
+                ...(hasOvertime && { overtimeManually: manualEditData.overtimemanually }),
                 ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
                 workingHours,
                 ...(onboardName && { onboardName }), AttendanceStatus,
                 markWeeklyOff: manualEditData.status === 'weeklyOff',
+                updatedFields: changedFields,
             };
 
             console.log("payload for attendance only", payload)
@@ -493,7 +495,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                         ...day,
                         ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
                         ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
-                        ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually || 0 }),
+                        ...(hasOvertime && { overtimemanually: manualEditData.overtimemanually || 0 }),
                         ...(manualEditData.remark && { remark: manualEditData.remark }),
                         workingHours, AttendanceStatus,
                         markWeeklyOff: manualEditData.status === 'weeklyOff',
@@ -1200,25 +1202,24 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     //   }, [filters]);
 
 
-    // const handleFieldChange = (fieldName, newValue) => {
-    //     const oldValue = manualEditData?.[fieldName];
-    //     const isChanged = oldValue !== newValue;
+    const handleFieldChange = (fieldName, newValue) => {
+        const oldValue = manualEditData?.[fieldName];
+        const isChanged = oldValue !== newValue;
+        setManualEditData((prev) => ({
+          ...prev,
+          [fieldName]: newValue,
+        }));
       
-    //     setManualEditData((prev) => ({
-    //       ...prev,
-    //       [fieldName]: newValue,
-    //     }));
-      
-    //     setChangedFields((prevFields) => {
-    //       if (isChanged && !prevFields.includes(fieldName)) {
-    //         return [...prevFields, fieldName];
-    //       } else if (!isChanged && prevFields.includes(fieldName)) {
-    //         return prevFields.filter((field) => field !== fieldName);
-    //       }
-    //       console.log("prevFields---->", prevFields);
-    //       return prevFields;
-    //     });
-    //   };
+        setChangedFields((prevFields) => {
+          if (isChanged && !prevFields.includes(fieldName)) {
+            return [...prevFields, fieldName];
+          } else if (!isChanged && prevFields.includes(fieldName)) {
+            return prevFields.filter((field) => field !== fieldName);
+          }
+          console.log("prevFields---->", prevFields);
+          return prevFields;
+        });
+      };
       
     const handleApplyFilter = (newFilters) => {
         setFilters(newFilters);
@@ -2016,8 +2017,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                                                 ? dayjs(manualEditData.punchIn, 'HH:mm:ss') : null
                                         }
                                         onChange={(newValue) =>
-                                            setManualEditData({ ...manualEditData, punchIn: newValue })
-                                            // handleFieldChange('punchIn', newValue)
+                                            // setManualEditData({ ...manualEditData, punchIn: newValue })
+                                            handleFieldChange('punchIn', newValue)
                                         }
                                         views={['hours', 'minutes', 'seconds']}
                                         ampm={false}
@@ -2034,8 +2035,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                                                 ? dayjs(manualEditData.punchOut, 'HH:mm:ss') : null
                                         }
                                         onChange={(newValue) =>
-                                            setManualEditData({ ...manualEditData, punchOut: newValue })
-                                            // handleFieldChange('punchOut', newValue)
+                                            // setManualEditData({ ...manualEditData, punchOut: newValue })
+                                            handleFieldChange('punchOut', newValue)
                                         }
                                         views={['hours', 'minutes', 'seconds']}
                                         ampm={false}
@@ -2049,7 +2050,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                                         type="number"
                                         variant="outlined"
                                         fullWidth
-                                        value={manualEditData.overtimeManually}
+                                        value={manualEditData.overtimemanually}
                                         error={isOvertimeError}
                                         helperText={
                                             isOvertimeError
@@ -2061,8 +2062,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                                             const value = Number(e.target.value);
                                             // Prevent negative values from being set
                                             if (value >= 0 || e.target.value !== "") {
-                                                setManualEditData({ ...manualEditData, overtimeManually: e.target.value });
-                                                // handleFieldChange('overtimeManually', value);
+                                                // setManualEditData({ ...manualEditData, overtimemanually: e.target.value });
+                                                handleFieldChange('overtimemanually', e.target.value);
                                             }
                                         }}
                                     />
