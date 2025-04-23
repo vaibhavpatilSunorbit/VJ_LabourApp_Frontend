@@ -49,6 +49,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -153,6 +154,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
         setEmployeeToggle('all');
         setSelectedEmployee('');
         setFilterModalOpen(false);
+        setFilteredData([]);
     };
 
     const handleApplyFilters = () => {
@@ -173,7 +175,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
         const filteredData = labours.filter(item =>
             projectFilter.includes(item.projectId) && departmentFilter.includes(item.departmentId)
         );
-        setLabours(filteredData);
+        setFilteredData(filteredData);
         setFilterModalOpen(false);
     };
 
@@ -622,7 +624,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     };
 
     const filteredLabours = getLatestLabourData(searchResults.length > 0 ? searchResults : labours);
-    const paginatedLabours = filteredLabours.slice(
+    const paginatedLabours = (filteredData.length > 0 ? filteredData : filteredLabours).slice(
         page * rowsPerPage,
         (page + 1) * rowsPerPage
     );
@@ -986,7 +988,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 <TablePagination
                                     className="custom-pagination"
                                     rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
-                                    count={labours.length}
+                                    count={filteredData.length > 0 ? filteredData.length : labours.length}
                                     rowsPerPage={rowsPerPage}
                                     page={page}
                                     onPageChange={handlePageChange}

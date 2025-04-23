@@ -80,6 +80,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [filters, setFilters] = useState({});
     const [laboursAttenadance, setLaboursAttenadance] = useState([]);
+    // const [changedFields, setChangedFields] = useState([]);
     //  const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
 
     // -----------------------------------------------------  FILTER START ------------------
@@ -404,6 +405,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             shift: day.Shift || ""
         });
         setEditManualDialogOpen(true);
+        // setChangedFields([]);
     };
 
     const handleManualEditDialogClose = () => {
@@ -1198,9 +1200,26 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     //   }, [filters]);
 
 
-
-    // Example filter change handler. When filters are updated,
-    // update the state so useEffect calls fetchLaboursAttenadance.
+    // const handleFieldChange = (fieldName, newValue) => {
+    //     const oldValue = manualEditData?.[fieldName];
+    //     const isChanged = oldValue !== newValue;
+      
+    //     setManualEditData((prev) => ({
+    //       ...prev,
+    //       [fieldName]: newValue,
+    //     }));
+      
+    //     setChangedFields((prevFields) => {
+    //       if (isChanged && !prevFields.includes(fieldName)) {
+    //         return [...prevFields, fieldName];
+    //       } else if (!isChanged && prevFields.includes(fieldName)) {
+    //         return prevFields.filter((field) => field !== fieldName);
+    //       }
+    //       console.log("prevFields---->", prevFields);
+    //       return prevFields;
+    //     });
+    //   };
+      
     const handleApplyFilter = (newFilters) => {
         setFilters(newFilters);
     };
@@ -1998,6 +2017,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                                         }
                                         onChange={(newValue) =>
                                             setManualEditData({ ...manualEditData, punchIn: newValue })
+                                            // handleFieldChange('punchIn', newValue)
                                         }
                                         views={['hours', 'minutes', 'seconds']}
                                         ampm={false}
@@ -2015,6 +2035,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                                         }
                                         onChange={(newValue) =>
                                             setManualEditData({ ...manualEditData, punchOut: newValue })
+                                            // handleFieldChange('punchOut', newValue)
                                         }
                                         views={['hours', 'minutes', 'seconds']}
                                         ampm={false}
@@ -2035,12 +2056,13 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                                                 ? `Add Overtime up to ${formatConvertedOverTime(manualEditData.overtime).hours} hours and ${formatConvertedOverTime(manualEditData.overtime).minutes} minutes`
                                                 : ""
                                         }
-                                        inputProps={{ min: 0 }}
+                                        // inputProps={{ min: 0 }}
                                         onChange={(e) => {
                                             const value = Number(e.target.value);
                                             // Prevent negative values from being set
-                                            if (value >= 0 || e.target.value === "") {
+                                            if (value >= 0 || e.target.value !== "") {
                                                 setManualEditData({ ...manualEditData, overtimeManually: e.target.value });
+                                                // handleFieldChange('overtimeManually', value);
                                             }
                                         }}
                                     />
