@@ -167,7 +167,7 @@ const ExportMonthlyPayroll = () => {
                         component="h2"
                         sx={{ fontWeight: 'bold', marginBottom: 2 }}
                     >
-                        Export Wages Data
+                        Export Payroll Report
                     </Typography>
 
                     <Box component="form" display="flex" flexDirection="column" gap={2}>

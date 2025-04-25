@@ -345,7 +345,8 @@ const ApproveLabours = () => {
            <DialogTitle
                               sx={{
                                   fontSize: { xs: "14px", sm: "16px", md: "18px" },
-                                  paddingBottom: { xs: "0px", sm: "0px", md: "18px" },
+                                  paddingBottom: { xs: "0px", sm: "0px", md: "18px"},
+                                  paddingLeft: { xs: "0px", sm: "0px", md: "0px"},
                               }}
                           >Update Device
                           </DialogTitle>
@@ -391,7 +392,16 @@ const ApproveLabours = () => {
                 <MenuItem key={device.DeviceId} value={device.DeviceId}>{device.DeviceSName}</MenuItem>
               ))}
             </Select>
-            <Button type="submit" variant="contained" color="primary" className="submit-button" sx={{ mt: 3 }}>
+            <Button type="submit" variant="contained" color="primary" className="submit-button"  sx={{
+                                backgroundColor: 'rgb(229, 255, 225)',
+                                color: 'rgb(43, 217, 144)',
+                                width: '100px',
+                                marginRight: '10px',
+                                marginBottom: '3px',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}>
               Update
             </Button>
           </form>

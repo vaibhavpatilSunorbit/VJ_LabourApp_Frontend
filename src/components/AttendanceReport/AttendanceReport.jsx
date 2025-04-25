@@ -568,14 +568,17 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         fetchLabours();
     }, []);
 
-    useEffect(() => {
-        if (modalOpen) {
-            fetchProjectNames();
-            fetchAttendanceForMonth();
-        }
-    }, [modalOpen]);
+    // useEffect(() => {
+    //     if (modalOpen) {
+    //         fetchProjectNames();
+    //         fetchAttendanceForMonth();
+    //     }
+    // }, [modalOpen]);
 
     const handleModalOpen = (labour, totalOvertimeHours, TotalOvertimeHoursManually) => {
+        setModalOpen(true);
+        fetchProjectNames();
+        fetchAttendanceForMonth();
         if (labour && labour.LabourID) {
             setSelectedLabour(labour);
             setSelectedLabourId(labour.LabourID);
@@ -583,8 +586,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             setTotalOvertimeminute(totalOvertimeHours.minutes)
             setTotalOvertimehoursManually(TotalOvertimeHoursManually.hours)
             setTotalOvertimeminuteManually(TotalOvertimeHoursManually.minutes)
-            setModalOpen(true);
-            fetchAttendanceForMonth();
+           
         } else {
             console.error('LabourID is null or undefined for the selected labour.');
         }
