@@ -15,7 +15,7 @@ import {
   Box,
   Select,
   MenuItem,
-  TablePagination,
+  TablePagination, DialogTitle,
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { ToastContainer, toast } from 'react-toastify';
@@ -342,6 +342,14 @@ const ApproveLabours = () => {
         aria-describedby="modal-modal-description"
       >
         <Box sx={{ ...modalStyle, position: 'relative' }}>
+           <DialogTitle
+                              sx={{
+                                  fontSize: { xs: "14px", sm: "16px", md: "18px" },
+                                  paddingBottom: { xs: "0px", sm: "0px", md: "18px"},
+                                  paddingLeft: { xs: "0px", sm: "0px", md: "0px"},
+                              }}
+                          >Update Device
+                          </DialogTitle>
           <IconButton
             aria-label="close"
             onClick={handleCloseModal}
@@ -355,7 +363,7 @@ const ApproveLabours = () => {
           </IconButton>
           <form onSubmit={handleModalSubmit}>
             <InputLabel id="new-project-name-label" style={inputLabelStyle}>
-              Project Name{renderRequiredAsterisk(true)}
+              Project Name
             </InputLabel>
             <Select
               id="newProjectId"
@@ -365,7 +373,7 @@ const ApproveLabours = () => {
               fullWidth
               required
             >
-              {availableProjectNames.map((project) => (
+              {projectNames.map((project) => (
                 <MenuItem key={project.Id} value={project.Id}>{project.Business_Unit}</MenuItem>
               ))}
             </Select>
@@ -384,7 +392,16 @@ const ApproveLabours = () => {
                 <MenuItem key={device.DeviceId} value={device.DeviceId}>{device.DeviceSName}</MenuItem>
               ))}
             </Select>
-            <Button type="submit" variant="contained" color="primary" className="submit-button" sx={{ mt: 3 }}>
+            <Button type="submit" variant="contained" color="primary" className="submit-button"  sx={{
+                                backgroundColor: 'rgb(229, 255, 225)',
+                                color: 'rgb(43, 217, 144)',
+                                width: '100px',
+                                marginRight: '10px',
+                                marginBottom: '3px',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}>
               Update
             </Button>
           </form>
