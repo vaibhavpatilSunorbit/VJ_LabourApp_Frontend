@@ -506,7 +506,6 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
     }
 };
 
-
   const handleViewHistory = (labourID) => {
     const history = labours.filter((labour) => labour.LabourID === labourID);
     setSelectedHistory(history);

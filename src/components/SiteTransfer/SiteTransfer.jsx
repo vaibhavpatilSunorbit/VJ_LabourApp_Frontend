@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogActions, FormControl, InputLabel
+  DialogActions, FormControl, InputLabel, ListItemText
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -59,7 +59,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [isCompanyTransfer, setIsCompanyTransfer] = useState(true);
   const [selectedLabour, setSelectedLabour] = useState(null);
-  const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+  const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
   const [businessUnits, setBusinessUnits] = useState([]);
   const [projectName, setProjectName] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -75,7 +75,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
   const [previousTabValue, setPreviousTabValue] = useState(tabValue);
   const [transferDate, setTransferDate] = useState("");
   const [filterModalOpen, setFilterModalOpen] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState([]);
   const [selectedPayStructure, setSelectedPayStructure] = useState('');
   const [employeeToggle, setEmployeeToggle] = useState('all'); // 'all' or 'single'
   const [selectedEmployee, setSelectedEmployee] = useState('');
@@ -92,9 +92,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     setLoading(true);
     try {
       const response = await axios.get(`${API_BASE_URL}/insentive/getAllLabours`,
-        {
-          params: filters, // e.g., { ProjectID: selectedBusinessUnit, DepartmentID: selectedDepartment }
-        }
+        {params: filters }
       );
       // console.log('response.data siteTransfer',response.data)
       setLabours(response.data);
@@ -133,8 +131,8 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
   }
   const handleResetFilter = () => {
     // Reset all filter fields and refetch the complete data set
-    setSelectedBusinessUnit('');
-    setSelectedDepartment('');
+    setSelectedBusinessUnit([]);
+    setSelectedDepartment([]);
     setSelectedPayStructure('');
     setEmployeeToggle('all');
     setSelectedEmployee('');
@@ -144,15 +142,33 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
 
   const handleApplyFilters = () => {
     const filters = {};
-    if (selectedBusinessUnit) {
-      filters.projectName = selectedBusinessUnit;
+
+    if (Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0) {
+      filters.ProjectID = selectedBusinessUnit.join(','); // Pass as comma-separated string
     }
-    if (selectedDepartment) {
-      filters.departmentId = selectedDepartment;
+
+    if (Array.isArray(selectedDepartment) && selectedDepartment.length > 0) {
+      filters.DepartmentID = selectedDepartment.join(',');
     }
+    if (employeeToggle === 'single' && selectedEmployee) {
+      filters.EmployeeID = selectedEmployee; // or filters.employee = ...
+    }
+
     fetchLabours(filters);
     setFilterModalOpen(false);
   };
+
+  // const handleApplyFilters = () => {
+  //   const filters = {};
+  //   if (selectedBusinessUnit) {
+  //     filters.projectName = selectedBusinessUnit;
+  //   }
+  //   if (selectedDepartment) {
+  //     filters.departmentId = selectedDepartment;
+  //   }
+  //   fetchLabours(filters);
+  //   setFilterModalOpen(false);
+  // };
 
   const handleSubmit = async () => {
     const formData = paginatedLabours.map(labour => ({
@@ -844,6 +860,39 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     }
   };
 
+  // const isAllSelected = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
+  const isAllSelectedDep = departments.length > 0 && selectedDepartment.length === departments.length;
+
+  const handleBusinessUnitChange = (event) => {
+    const value = event.target.value;
+
+    if (value.includes('ALL')) {
+      if (isAllSelected) {
+        setSelectedBusinessUnit([]); // Deselect all
+      } else {
+        const allIds = projectNames.map(p => p.Id);
+        setSelectedBusinessUnit(allIds); // Select all
+      }
+    } else {
+      setSelectedBusinessUnit(value);
+    }
+  };
+
+  const handleDepartmentChange = (event) => {
+    const value = event.target.value;
+    if (value.includes('ALL')) {
+        if (isAllSelectedDep) {
+            setSelectedDepartment([]);
+        } else {
+            const allDeptIds = departments.map(d => d.Id);
+            setSelectedDepartment(allDeptIds);
+        }
+    } else {
+        // setSelectedDepartment(typeof value === 'string' ? value.split(',') : value);
+        setSelectedDepartment(value);
+    }
+};
+
   const handleSelectAllRows = (event) => {
     if (event.target.checked) {
       const newSelected = paginatedLabours.map((labour) => labour.LabourID);
@@ -1335,12 +1384,12 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
       <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
         <Box
           sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             width: 400,
-            bgcolor: "background.paper",
+            bgcolor: 'background.paper',
             borderRadius: 2,
             boxShadow: 24,
             p: 4,
@@ -1349,9 +1398,9 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
           {/* Modal Header with Title and Close Button */}
           <Box
             sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
               mb: 2,
             }}
           >
@@ -1363,10 +1412,10 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             </Button>
           </Box>
 
-          {/* Business Unit Filter */}
+          {/* Business Unit Filter using projectNames from props */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="body1">Business Unit</Typography>
-            <Select
+            {/* <Select
               fullWidth
               value={selectedBusinessUnit}
               onChange={(e) => setSelectedBusinessUnit(e.target.value)}
@@ -1387,26 +1436,72 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
                   No Projects Available
                 </MenuItem>
               )}
+            </Select> */}
+
+            <Select
+              fullWidth
+              multiple
+              value={selectedBusinessUnit}
+              onChange={handleBusinessUnitChange}
+              displayEmpty
+              renderValue={(selected) => {
+                if (selected.length === 0) return <em>All</em>;
+                const selectedLabels = projectNames
+                  .filter(project => selected.includes(project.Id))
+                  .map(project => project.Business_Unit);
+                return selectedLabels.join(', ');
+              }}
+              sx={{ mt: 1 }}
+            >
+              <MenuItem value="ALL">
+                <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+                <ListItemText primary="Select All" />
+              </MenuItem>
+              {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                projectNames.map((project) => (
+                  <MenuItem key={project.Id} value={project.Id}>
+                    <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                    <ListItemText primary={project.Business_Unit} />
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="Unknown" disabled>
+                  No Projects Available
+                </MenuItem>
+              )}
             </Select>
           </Box>
 
-          {/* Department Filter */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="body1">Department</Typography>
             <Select
               fullWidth
+              multiple
               value={selectedDepartment}
-              onChange={(e) => setSelectedDepartment(e.target.value)}
+              onChange={handleDepartmentChange}
               displayEmpty
+              renderValue={(selected) => {
+                if (selected.length === 0) return <em>All</em>;
+                const selectedLabels = departments
+                  .filter(dept => selected.includes(dept.Id))
+                  .map(dept => dept.Description);
+                return selectedLabels.join(', ');
+              }}
               sx={{ mt: 1 }}
             >
-              <MenuItem value="">
-                <em>All</em>
+              <MenuItem value="ALL">
+                <Checkbox
+                  checked={isAllSelectedDep}
+                  indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep}
+                />
+                <ListItemText primary="Select All" />
               </MenuItem>
+
               {Array.isArray(departments) && departments.length > 0 ? (
                 departments.map((department) => (
                   <MenuItem key={department.Id} value={department.Id}>
-                    {department.Description}
+                    <Checkbox checked={selectedDepartment.includes(department.Id)} />
+                    <ListItemText primary={department.Description} />
                   </MenuItem>
                 ))
               ) : (
@@ -1417,22 +1512,21 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
             </Select>
           </Box>
 
-          {/* Action Buttons */}
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+          {/* Modal Action Buttons */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button variant="outlined" color="secondary" onClick={handleResetFilter}>
               Reset
             </Button>
-            <Button
-              variant="contained"
-              sx={{
+            <Button variant="contained" sx={{
+              backgroundColor: "rgb(229, 255, 225)",
+              color: "rgb(43, 217, 144)",
+              width: "100px",
+              marginRight: "10px",
+              marginBottom: "3px",
+              "&:hover": {
                 backgroundColor: "rgb(229, 255, 225)",
-                color: "rgb(43, 217, 144)",
-                "&:hover": {
-                  backgroundColor: "rgb(229, 255, 225)",
-                },
-              }}
-              onClick={handleApplyFilters}
-            >
+              },
+            }} onClick={handleApplyFilters}>
               Apply
             </Button>
           </Box>
