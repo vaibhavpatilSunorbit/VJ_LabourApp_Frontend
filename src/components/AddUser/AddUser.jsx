@@ -32,14 +32,14 @@ const accessPages = [
   "Project Machine",
   "Attendance Report",
   "Wages Report",
-  "People",
   "Admin Approval",
   "Site Transfer",
   "Variable Input",
   "Salary Register",
-  "Salary Generation",
   "Run PayRoll",
   "View Payroll",
+  // "Salary Generation",
+  // "People",
 ];
 
 const AddUser = () => {

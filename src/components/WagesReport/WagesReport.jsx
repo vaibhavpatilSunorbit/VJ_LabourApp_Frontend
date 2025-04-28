@@ -1330,7 +1330,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                         <strong>Edited By:</strong> {record.WagesEditedBy || "N/A"}
                                     </Typography>
                                     <Typography variant="body2">
-                                        <strong>From Date:</strong>{" "}
+                                        <strong>Effective Date:</strong>{" "}
                                         {record.EffectiveDate
                                             ? new Date(record.EffectiveDate).toLocaleDateString()
                                             : "N/A"}
