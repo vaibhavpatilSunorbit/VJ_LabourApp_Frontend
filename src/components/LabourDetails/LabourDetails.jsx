@@ -156,14 +156,12 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const approveLabour = async (id, departmentId) => {
     try {
-      console.log("departmentId", departmentId);
       const { data: { nextID } } = await axios.get(`${API_BASE_URL}/labours/next-id`,{params: { departmentId }});
       const labourID = nextID;
 
       const labourResponse = await axios.get(`${API_BASE_URL}/labours/${id}`);
       const labour = labourResponse.data;
       const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus/${labour.projectName}`);
-      console.log("response", response);
       const serialNumber = response.data.serialNumber;
 
       const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
@@ -181,7 +179,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
           </AddEmployee>
         </soap:Body>
       </soap:Envelope>`;
-      console.log('SOAP Envelope:', soapEnvelope);
+      // console.log('SOAP Envelope:', soapEnvelope);
 
       const soapResponse = await axios.post(
         `${API_BASE_URL}/labours/essl/addEmployee`,
@@ -1901,7 +1899,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
       return 'Unknown';
     }
     const department = departments.find(dept => dept.Id === Number(departmentId));
-    console.log("departmentId--->", department);
+    // console.log("department--->", department);
     return department ? department.Description : 'Unknown';
   };
 
@@ -1917,7 +1915,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     }
 
     const project = projectNames.find(proj => proj.Id === Number(projectId));
-
+    // console.log("project--->", project);
     return project ? project.Business_Unit : 'Unknown';
   };
 
