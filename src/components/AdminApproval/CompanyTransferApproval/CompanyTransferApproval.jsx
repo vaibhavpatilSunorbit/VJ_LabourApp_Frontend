@@ -444,7 +444,7 @@ const CompanyTransferApproval = ({ departments, projectNames, labour, labourlist
 
     try {
       // Directly send the PUT request to update the data in the table
-      const updateResponse = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData);
+      const updateResponse = await axios.put(`${API_BASE_URL}/api/labours/update/${formData.id}`, formattedFormData);
 
       if (updateResponse.status === 200) {
         toast.success('Labour details updated successfully.');

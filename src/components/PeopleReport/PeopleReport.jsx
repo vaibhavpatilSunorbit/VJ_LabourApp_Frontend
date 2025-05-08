@@ -120,7 +120,7 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromSiteTransfer?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/searchLaboursFromSiteTransfer?q=${searchQuery}`);
             setSearchResults(response.data);
             setPage(0);
         } catch (error) {
@@ -134,7 +134,7 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
     const fetchLabours = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours`);
             // console.log('API Response:', response.data);
             setLabours(response.data);
             setLoading(false);
@@ -193,7 +193,7 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
 
         try {
             // Directly send the PUT request to update the data in the table
-            const updateResponse = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData);
+            const updateResponse = await axios.put(`${API_BASE_URL}/api/labours/update/${formData.id}`, formattedFormData);
 
             if (updateResponse.status === 200) {
                 toast.success('Labour details updated successfully.');
@@ -250,7 +250,7 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
     useEffect(() => {
         const fetchStatuses = async (labourIds) => {
             try {
-                const response = await axios.post(`${API_BASE_URL}/labours/getCombinedStatuses`, { labourIds });
+                const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
                 return response.data;  // Return the entire list of statuses
             } catch (error) {
                 console.error('Error fetching statuses:', error);
@@ -299,7 +299,7 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
         setError(null); // Reset error state before fetching
 
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours`, {
+            const response = await axios.get(`${API_BASE_URL}/api/labours`, {
                 params: {
                     page: page,
                     limit: limit
@@ -438,7 +438,7 @@ const PeopleReport = ({ departments, projectNames, labour, labourlist }) => {
 
     const openPopup = async (labour) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
             const labourDetails = response.data;
             const projectName = getProjectDescription(labourDetails.projectName);
             const department = getDepartmentDescription(labourDetails.department);

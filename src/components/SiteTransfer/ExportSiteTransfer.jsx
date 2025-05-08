@@ -82,7 +82,7 @@ const ExportSiteTransfer = ({departments, projectNames}) => {
             if (selectedProject) {
                 setProjectName(selectedProject.ProjectID);
                 try {
-                    const response = await axios.get(`${API_BASE_URL}/labours`, {
+                    const response = await axios.get(`${API_BASE_URL}/api/labours`, {
                         params: { projectName: selectedProject.ProjectID },
                     });
                     setLabours(response.data);

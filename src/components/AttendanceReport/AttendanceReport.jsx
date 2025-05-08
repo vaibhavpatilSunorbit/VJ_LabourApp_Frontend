@@ -82,6 +82,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const [filters, setFilters] = useState({});
     const [laboursAttenadance, setLaboursAttenadance] = useState([]);
     const [changedFields, setChangedFields] = useState([]);
+    
     //  const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
 
     // -----------------------------------------------------  FILTER START ------------------
@@ -100,7 +101,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         setLoading(true);
         try {
             const response = await axios.get(
-                `${API_BASE_URL}/labours/getAttendanceReportAndLabourOnboardingJoin`,
+                `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
                 { params: filters }
             );
 
@@ -487,7 +488,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             };
 
             console.log("payload for attendance only", payload)
-            const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+            const response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
@@ -541,7 +542,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/search?q=${searchQuery}`);
             setSearchResults(response.data);
             setPage(0);
         } catch (error) {
@@ -551,7 +552,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const fetchLabours = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/getAllRecordsLaboursOnboarding`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/getAllRecordsLaboursOnboarding`);
             const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID);
             console.log("sortedLabours for fetchlabours", sortedLabours);
             setLabours(sortedLabours);
@@ -609,7 +610,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         if (!selectedLabourId || !selectedMonth) return;
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
+            const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
                 params: { month: selectedMonth, year: selectedYear }
             });
 
@@ -668,7 +669,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         setLoading(true);
         try {
             const response = await axios.get(
-                `${API_BASE_URL}/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
+                `${API_BASE_URL}/api/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
                 { params: { month: selectedMonth, year: selectedYear } }
             );
 
@@ -721,7 +722,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const fetchCachedAttendance = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/cachedattendance`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/cachedattendance`);
             const attendanceList = response.data;
 
             const processedAttendance = attendanceList.map(att => ({
@@ -746,7 +747,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/attendancelabours`, {
+            const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelabours`, {
                 params: { month: selectedMonth, year: selectedYear },
             });
 
@@ -873,7 +874,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 year: selectedYear,
                 attendance: attendanceData,
             };
-            await axios.post(`${API_BASE_URL}/labours/saveattendancemonthly`, payload);
+            await axios.post(`${API_BASE_URL}/api/labours/saveattendancemonthly`, payload);
             alert("Attendance saved successfully!");
             handleModalClose();
         } catch (error) {

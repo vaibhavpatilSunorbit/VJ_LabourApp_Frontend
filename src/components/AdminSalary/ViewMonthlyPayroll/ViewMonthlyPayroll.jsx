@@ -313,7 +313,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/searchAttendance?q=${searchQuery}`);
             setSearchResults(response.data);
             setPage(0);
         } catch (error) {
@@ -491,7 +491,7 @@ const ViewMonthlyPayroll = ({ departments, projectNames, labour }) => {
 
     const openPopup = async (labour) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
             const labourDetails = response.data;
             const projectName = labourDetails.businessUnit;
             const department = labourDetails.departmentName;

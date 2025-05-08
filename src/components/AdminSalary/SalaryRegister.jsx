@@ -226,7 +226,7 @@ const SalaryRegister = ({ departments, projectNames, labour }) => {
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/searchAttendance?q=${searchQuery}`);
             setLabours(response.data);
         } catch (error) {
             toast.error('Search failed');
@@ -450,7 +450,7 @@ const SalaryRegister = ({ departments, projectNames, labour }) => {
                 toast.error('Labour ID is missing. Please try again.');
                 return;
             }
-            const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
             const labourDetails = response.data;
             const projectName = getProjectDescription(labourDetails.projectName);
             const department = getDepartmentDescription(labourDetails.department);

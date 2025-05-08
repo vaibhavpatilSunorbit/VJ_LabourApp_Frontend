@@ -135,7 +135,7 @@ const CalenderAttendance = () => {
 
             console.log('Request payload +++++:', payload);
 
-            await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+            await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
@@ -189,7 +189,7 @@ const CalenderAttendance = () => {
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/search?q=${searchQuery}`);
             setSearchResults(response.data);
         } catch (error) {
             setError('Error searching. Please try again.');
@@ -199,7 +199,7 @@ const CalenderAttendance = () => {
     const fetchLabours = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours`);
             const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID);
             setLabours(sortedLabours);
             setLoading(false);
@@ -247,7 +247,7 @@ const CalenderAttendance = () => {
         if (!selectedLabourId || !selectedMonth) return;
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
+            const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
                 params: { month: selectedMonth, year: selectedYear }
             });
 
@@ -302,7 +302,7 @@ const CalenderAttendance = () => {
         setLoading(true);
         try {
             const response = await axios.get(
-                `${API_BASE_URL}/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
+                `${API_BASE_URL}/api/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
                 { params: { month: selectedMonth, year: selectedYear } }
             );
 
@@ -356,7 +356,7 @@ const CalenderAttendance = () => {
     const fetchCachedAttendance = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/cachedattendance`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/cachedattendance`);
             const attendanceList = response.data;
 
             const processedAttendance = attendanceList.map(att => ({
@@ -381,7 +381,7 @@ const CalenderAttendance = () => {
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/attendancelabours`, {
+            const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelabours`, {
                 params: { month: selectedMonth, year: selectedYear },
             });
 
@@ -458,7 +458,7 @@ const CalenderAttendance = () => {
                 year: selectedYear,
                 attendance: attendanceData,
             };
-            await axios.post(`${API_BASE_URL}/labours/saveattendancemonthly`, payload);
+            await axios.post(`${API_BASE_URL}/api/labours/saveattendancemonthly`, payload);
             alert("Attendance saved successfully!");
             handleModalClose();
         } catch (error) {
@@ -589,7 +589,7 @@ const CalenderAttendance = () => {
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/export`, {
+            const response = await axios.get(`${API_BASE_URL}/api/labours/export`, {
                 params: { projectName, startDate, endDate },
                 responseType: 'blob',
             });
@@ -630,7 +630,7 @@ const CalenderAttendance = () => {
         formData.append('file', file);
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/labours/import`, formData, {
+            const response = await axios.post(`${API_BASE_URL}/api/labours/import`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.message(response.data.message);
@@ -680,7 +680,7 @@ const CalenderAttendance = () => {
             setProjectName(selectedProject.ProjectID);
 
             try {
-                const response = await axios.get(`${API_BASE_URL}/labours`, {
+                const response = await axios.get(`${API_BASE_URL}/api/labours`, {
                     params: { projectName: selectedProject.ProjectID },
                 });
                 setLabours(response.data);

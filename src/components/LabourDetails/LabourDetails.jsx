@@ -134,7 +134,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
       return;
     }
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
       setPage(0);
     } catch (error) {
@@ -156,10 +156,10 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const approveLabour = async (id, departmentId) => {
     try {
-      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/labours/next-id`,{params: { departmentId }});
+      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});
       const labourID = nextID;
 
-      const labourResponse = await axios.get(`${API_BASE_URL}/labours/${id}`);
+      const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
       const labour = labourResponse.data;
       const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus/${labour.projectName}`);
       const serialNumber = response.data.serialNumber;
@@ -182,7 +182,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
       // console.log('SOAP Envelope:', soapEnvelope);
 
       const soapResponse = await axios.post(
-        `${API_BASE_URL}/labours/essl/addEmployee`,
+        `${API_BASE_URL}/api/labours/essl/addEmployee`,
         soapEnvelope,
         {
           headers: {
@@ -194,7 +194,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
         const commandId = soapResponse.data.CommandId;
 
         const pollStatus = async () => {
-          const { data: commandStatus } = await axios.get(`${API_BASE_URL}/labours/commandstatus/${commandId}`);
+          const { data: commandStatus } = await axios.get(`${API_BASE_URL}/api/labours/commandstatus/${commandId}`);
           return commandStatus.status;
         };
 
@@ -214,7 +214,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
         }
 
         if (status === 'Success') {
-          await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID });
+          await axios.put(`${API_BASE_URL}/api/labours/approve/${id}`, { labourID });
           setApprovedLabours((prev) => [...new Set([...prev, id])]);
           toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
           return labourID;
@@ -1445,7 +1445,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const disableApproveLabour = async (id) => {
     try {
-      const { data: labourResponse } = await axios.get(`${API_BASE_URL}/labours/${id}`);
+      const { data: labourResponse } = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
       const labour = labourResponse;
 
       if (labour.status === 'Pending') {
@@ -1472,14 +1472,14 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
 
         const soapResponse = await axios.post(
-          `${API_BASE_URL}/labours/essl/addEmployee`,
+          `${API_BASE_URL}/api/labours/essl/addEmployee`,
           soapEnvelope,
           { headers: { 'Content-Type': 'text/xml' } }
         );
 
         if (soapResponse.status === 200) {
 
-          await axios.put(`${API_BASE_URL}/labours/approveDisableLabour/${id}`, { labourID });
+          await axios.put(`${API_BASE_URL}/api/labours/approveDisableLabour/${id}`, { labourID });
           setApprovedLabours((prev) => [...new Set([...prev, id])]);
           toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
         } else {
@@ -1595,24 +1595,28 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
 
 
-
   useEffect(() => {
     fetchAttendanceLabours();
   }, []);
-
+  
   const fetchAttendanceLabours = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`);
-
+  
       if (response.data.labours.length > 0) {
         setLabours(response.data.labours);
       } else {
         setHasMore(false);
       }
-      setLoading(false);
     } catch (error) {
+      if (error.response?.status === 503) {
+        setError('Data is not available yet. Please try again later.');
+      } else {
+        setError('Failed to fetch labour data. Please check your connection.');
+      }
       console.error("Error fetching labours:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -1628,7 +1632,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   const handleResubmit = async (labour) => {
     try {
       setLoading(true);
-      const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${labour.id}`);
+      const response = await axios.put(`${API_BASE_URL}/api/labours/resubmit/${labour.id}`);
 
       if (response.data.success) {
         setLabours(prevLabours =>
@@ -1656,7 +1660,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const handleReject = async (id) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/reject/${id}`, { Reject_Reason: rejectReason });
+      const response = await axios.put(`${API_BASE_URL}/api/labours/reject/${id}`, { Reject_Reason: rejectReason });
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
@@ -1678,7 +1682,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const handleEditLabour = async (labour) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/editLabour/${labour.id}`);
+      const response = await axios.put(`${API_BASE_URL}/api/labours/editLabour/${labour.id}`);
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(l =>
@@ -1732,7 +1736,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const openPopup = async (labour) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
       const labourDetails = response.data;
       const projectName = getProjectDescription(labourDetails.projectName);
       const department = getDepartmentDescription(labourDetails.department);
@@ -1788,10 +1792,10 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours`);
       setLabours(response.data);
       setLoading(false);
-    } catch (error) {
+    } catch (error) { 
       setError('Error fetching labours. Please try again.');
       setLoading(false);
     }
@@ -1854,7 +1858,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     };
 
     try {
-      const updateResponse = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData);
+      const updateResponse = await axios.put(`${API_BASE_URL}/api/labours/update/${formData.id}`, formattedFormData);
 
       if (updateResponse.status === 200) {
         toast.success('Labour details updated successfully.');
@@ -1870,7 +1874,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const handleDownloadPDF = async (labourId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/${labourId}`);
       const labour = response.data;
       setSelectedLabourData(labour);
       setIsLabourCardOpen(true);
@@ -1950,7 +1954,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   useEffect(() => {
     const fetchStatuses = async (labourIds) => {
       try {
-        const response = await axios.post(`${API_BASE_URL}/labours/getCombinedStatuses`, { labourIds });
+        const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
         return response.data;
       } catch (error) {
         console.error('Error fetching statuses:', error);
@@ -1998,7 +2002,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     setError(null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours`, {
+      const response = await axios.get(`${API_BASE_URL}/api/labours`, {
         params: {
           page: page,
           limit: limit
@@ -2092,7 +2096,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
         </soap:Envelope>`;
 
       const soapResponse = await axios.post(
-        `${API_BASE_URL}/labours/essl/addEmployee`,
+        `${API_BASE_URL}/api/labours/essl/addEmployee`,
         soapEnvelope,
         { headers: { 'Content-Type': 'text/xml' } }
       );

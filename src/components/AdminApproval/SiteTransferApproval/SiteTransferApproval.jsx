@@ -444,7 +444,7 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
     };
 
     try {
-      const updateResponse = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData);
+      const updateResponse = await axios.put(`${API_BASE_URL}/api/labours/update/${formData.id}`, formattedFormData);
 
       if (updateResponse.status === 200) {
         toast.success('Labour details updated successfully.');
@@ -472,7 +472,7 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
 
   const openPopup = async (labour) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
       const labourDetails = response.data;
 
       setIsPopupOpen(true);

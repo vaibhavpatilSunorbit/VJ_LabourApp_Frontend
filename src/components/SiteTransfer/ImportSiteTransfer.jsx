@@ -54,7 +54,7 @@ const ImportSiteTransfer = ({ handleToast = (type, message) => console[type]?.(m
         formData.append('wagesEditedBy', onboardName);
     
         try {
-            const response = await axios.post(`${API_BASE_URL}/labours/importWagesExcel`, formData, {
+            const response = await axios.post(`${API_BASE_URL}/api/labours/importWagesExcel`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 responseType: 'blob', // Handle file or JSON response
             });

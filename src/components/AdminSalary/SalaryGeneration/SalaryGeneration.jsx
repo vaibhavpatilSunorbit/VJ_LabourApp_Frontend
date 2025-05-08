@@ -419,7 +419,7 @@ const SalaryGeneration = ({ departments, projectNames = [], labour }) => {
 
     const openPopup = async (labour) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
             const labourDetails = response.data;
             const projectName = getProjectDescription(labourDetails.projectName);
             const department = getDepartmentDescription(labourDetails.department);

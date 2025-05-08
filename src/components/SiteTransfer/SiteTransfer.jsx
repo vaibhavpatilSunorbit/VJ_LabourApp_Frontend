@@ -184,7 +184,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     }));
 
     try {
-      await axios.post(`${API_BASE_URL}/labours/submitWages`, formData);
+      await axios.post(`${API_BASE_URL}/api/labours/submitWages`, formData);
       alert("Data submitted successfully!");
     } catch (error) {
       console.error("Error submitting data:", error);
@@ -262,7 +262,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     }
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromSiteTransfer?q=${searchQuery}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/searchLaboursFromSiteTransfer?q=${searchQuery}`);
       setSearchResults(response.data);
       setPage(0);
     } catch (error) {
