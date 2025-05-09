@@ -488,7 +488,16 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             };
 
             console.log("payload for attendance only", payload)
-            const response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
+            // const response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
+              // 🧠 Conditional API logic
+        const isOnlyOvertime = changedFields.length === 1 && changedFields[0] === "overtimemanually";
+        let response;
+
+        if (isOnlyOvertime) {
+            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload);
+        } else {
+            response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
+        }
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date

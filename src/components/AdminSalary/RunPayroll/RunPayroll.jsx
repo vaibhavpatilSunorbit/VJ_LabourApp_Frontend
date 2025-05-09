@@ -1608,7 +1608,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         >
                             Export PayRoll
                         </Button>
-
+                        {(user.userType === 'admin' || user.userType === 'superadmin') && (
                         <Button
                             variant="contained"
                             onClick={() => {
@@ -1632,7 +1632,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         >
                             Finalize PayRoll
                         </Button>
-
+)}
 
                     </Box>
 

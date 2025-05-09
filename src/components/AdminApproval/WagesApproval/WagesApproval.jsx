@@ -122,7 +122,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
     }
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/admin/rejectWages`, null, {
+      const response = await axios.put(`${API_BASE_URL}/api/labours/admin/rejectWages`, null, {
         params: { ApprovalID, Remarks: Remarks },
       });
 
@@ -153,7 +153,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
     }
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/admin/approveWages`, null, {
+      const response = await axios.put(`${API_BASE_URL}/api/labours/admin/approveWages`, null, {
         params: { ApprovalID },
       });
 
@@ -206,7 +206,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
           continue;
         }
 
-        const response = await axios.put(`${API_BASE_URL}/labours/admin/approveWages`, null, {
+        const response = await axios.put(`${API_BASE_URL}/api/labours/admin/approveWages`, null, {
           params: { ApprovalID: labourObj.ApprovalID },
         });
 
@@ -255,7 +255,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
           continue;
         }
 
-        const response = await axios.put(`${API_BASE_URL}/labours/admin/rejectWages`, null, {
+        const response = await axios.put(`${API_BASE_URL}/api/labours/admin/rejectWages`, null, {
           params: {
             ApprovalID: labourObj.ApprovalID,
             Remarks: Remarks
@@ -342,7 +342,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/wages/adminApprovals`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/wages/adminApprovals`);
       setLabours(response.data.map(labour => ({
         ...labour,
         IsApproveDisable: labour.IsApproveDisable === "true" || labour.IsApproveDisable === true,
@@ -420,7 +420,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
     };
 
     try {
-      const updateResponse = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData);
+      const updateResponse = await axios.put(`${API_BASE_URL}/api/labours/update/${formData.id}`, formattedFormData);
 
       if (updateResponse.status === 200) {
         toast.success('Labour details updated successfully.');
@@ -474,7 +474,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
 
   const openPopup = async (labour) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
       const labourDetails = response.data;
 
       setIsPopupOpen(true);

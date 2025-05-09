@@ -2411,7 +2411,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
                 {tabValue === 1 && (
                   <>
                     <TableCell>Essl Status</TableCell>
-                    <TableCell>Employee Status</TableCell>
+                    {/* <TableCell>Employee Status</TableCell> */}
                   </>
                 )}
                 {tabValue === 0 && (
@@ -2531,10 +2531,10 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
                         {statuses[labour.LabourID]?.esslStatus || statuses[labour.id]?.esslStatus ? (<span style={{ color: 'green' }}>✔</span>
                         ) : (<span style={{ color: 'red' }}>✘</span>)}
                       </TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         {statuses[labour.LabourID]?.employeeMasterStatus || statuses[labour.id]?.employeeMasterStatus ? (<span style={{ color: 'green' }}>✔</span>
                         ) : (<span style={{ color: 'red' }}>✘</span>)}
-                      </TableCell>
+                      </TableCell> */}
                     </>
                   )}
                   {tabValue === 0 && (
