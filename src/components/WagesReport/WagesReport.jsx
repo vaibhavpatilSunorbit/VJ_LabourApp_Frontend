@@ -1199,7 +1199,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                         <CloseIcon />
                     </IconButton>
 
-                    {/* Header Info */}
+                
     <Box
       sx={{
         mb: 4,
