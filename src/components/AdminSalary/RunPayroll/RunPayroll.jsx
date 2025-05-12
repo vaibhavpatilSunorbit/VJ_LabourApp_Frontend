@@ -117,7 +117,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
         setLoading(true);
         try {
             const response = await axios.get(
-                `${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`,
+                `${API_BASE_URL}/api/labours/getWagesAndLabourOnboardingJoin`,
                 {
                     params: filters,
                 }
@@ -757,7 +757,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
 
     const openPopup = async (labour) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
             const labourDetails = response.data;
             const projectName = getProjectDescription(labourDetails.projectName);
             const department = getDepartmentDescription(labourDetails.department);
@@ -1608,7 +1608,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         >
                             Export PayRoll
                         </Button>
-
+                        {(user.userType === 'admin' || user.userType === 'superadmin') && (
                         <Button
                             variant="contained"
                             onClick={() => {
@@ -1632,7 +1632,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         >
                             Finalize PayRoll
                         </Button>
-
+)}
 
                     </Box>
 

@@ -66,7 +66,7 @@ useEffect(() => {
             .filter(Boolean);
 
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/export`, {
+            const response = await axios.get(`${API_BASE_URL}/api/labours/export`, {
                 params: { projectName: selectedProjectIds.join(','), department: selectedDepartments.join(','), startDate, endDate },
                 responseType: 'blob',
             });

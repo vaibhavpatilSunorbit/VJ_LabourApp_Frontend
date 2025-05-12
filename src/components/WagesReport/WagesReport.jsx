@@ -114,7 +114,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         setLoading(true);
         try {
             const response = await axios.get(
-                `${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`,
+                `${API_BASE_URL}/api/labours/getWagesAndLabourOnboardingJoin`,
                 {
                     params: filters,
                 }
@@ -304,12 +304,12 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                 };
 
                 try {
-                    const upsertResponse = await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
+                    const upsertResponse = await axios.post(`${API_BASE_URL}/api/labours/upsertLabourMonthlyWages`, wageData);
 
                     if (upsertResponse.data && upsertResponse.data.WageID) {
                         wageData.wageId = upsertResponse.data.WageID; // Assign WageID
 
-                        apiPromises.push(axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData));
+                        apiPromises.push(axios.post(`${API_BASE_URL}/api/labours/sendWagesForApproval`, wageData));
 
                         // **Wait for all sendWagesForApproval API calls to complete**
                         await Promise.all(apiPromises);
@@ -370,7 +370,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromWages?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/searchLaboursFromWages?q=${searchQuery}`);
             setSearchResults(response.data);
             setPage(0);
         } catch (error) {
@@ -501,7 +501,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
 
     const fetchWageHistory = async () => {
         try {
-          const response = await axios.get(`${API_BASE_URL}/labours/wages/adminApprovals`);
+          const response = await axios.get(`${API_BASE_URL}/api/labours/wages/adminApprovals`);
           const allWageHistories = response.data;
       
           // Assuming selectedHistory[0]?.LabourID is available
@@ -1330,7 +1330,7 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                         <strong>Edited By:</strong> {record.WagesEditedBy || "N/A"}
                                     </Typography>
                                     <Typography variant="body2">
-                                        <strong>From Date:</strong>{" "}
+                                        <strong>Effective Date:</strong>{" "}
                                         {record.EffectiveDate
                                             ? new Date(record.EffectiveDate).toLocaleDateString()
                                             : "N/A"}

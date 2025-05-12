@@ -213,7 +213,7 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
     setLoading(true);
     try {
       // const response = await axios.get(`${API_BASE_URL}/insentive/searchLaboursFromVariablePay?q=${searchQuery}`);
-      const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromVariableInput?q=${searchQuery}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/searchLaboursFromVariableInput?q=${searchQuery}`);
       setSearchResults(response.data);
       setPage(0);
     } catch (error) {
@@ -505,7 +505,6 @@ const VariableInput = ({ departments, projectNames, labour, labourlist }) => {
         setSelectedDepartment(value);
     }
 };
-
 
   const handleViewHistory = (labourID) => {
     const history = labours.filter((labour) => labour.LabourID === labourID);

@@ -37,7 +37,7 @@ const departmentWorkingHoursMapping = {
   'ELECTRICAL': 'FLEXI SHIFT - 9 HRS',
   'FEP-R': 'FLEXI SHIFT - 9 HRS',
   'MQC': 'FLEXI SHIFT - 8 HRS',
-  'Department-IN-H0USE': 'FLEXI SHIFT - 8 HRS',
+  'IN-HOUSE': 'FLEXI SHIFT - 8 HRS',
 };
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = [], departmentList = [] }) => {
@@ -260,7 +260,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
       toast.success('Aadhaar number validated successfully. Proceeding to backend checks...');
 
-      const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber });
+      const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/api/labours/check-aadhaar`, { aadhaarNumber });
 
       if (checkAadhaarResponse.data.LabourID) {
         toast.success('Labour ID found. Proceeding without duplicate checks.');
@@ -493,7 +493,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
             return;
           }
 
-          const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: value });
+          const response = await axios.post(`${API_BASE_URL}/api/labours/check-aadhaar`, { aadhaarNumber: value });
           const { exists, skipCheck } = response.data;
 
           if (skipCheck) {
@@ -541,7 +541,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
   const checkAadhaarExistence = async (aadhaarNumber) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber });
+      const response = await axios.post(`${API_BASE_URL}/api/labours/check-aadhaar`, { aadhaarNumber });
       return response.data.exists;
     } catch (error) {
       console.error('Error checking Aadhaar number existence:', error);
@@ -689,7 +689,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       return;
     }
     try {
-      const response = await axios.get(API_BASE_URL + `/labours/search?q=${searchQuery}`);
+      const response = await axios.get(API_BASE_URL + `/api/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
     } catch (error) {
       console.error('Error searching:', error);
@@ -849,7 +849,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   useEffect(() => {
     const fetchLabourDetails = async (id) => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/labours/${id}`);
+        const response = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
         const labour = response.data;
         handleSelectLabour(labour);
       } catch (error) {
@@ -990,7 +990,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
   const fetchLabourData = async (id) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/${id}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
       setFormData(response.data);
     } catch (error) {
       console.error('Error fetching labour data:', error);
@@ -1074,25 +1074,25 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
           ['Disable', 'Rejected', 'Resubmitted'].includes(labourStatus) &&
           labourId
         ){
-          response = await axios.put(`${API_BASE_URL}/labours/updatelabourDisableStatus/${labourId}`, formDataToSend, {
+          response = await axios.put(`${API_BASE_URL}/api/labours/updatelabourDisableStatus/${labourId}`, formDataToSend, {
             headers: {
               // 'Content-Type': 'application/json',
             },
           });
         } else if (labourId && labourIdCode) {
-          response = await axios.put(`${API_BASE_URL}/labours/updatelabour/${labourId}`, formDataToSend, {
+          response = await axios.put(`${API_BASE_URL}/api/labours/updatelabour/${labourId}`, formDataToSend, {
             headers: {
               // 'Content-Type': 'application/json',
             },
           });
         } else if (labourId) {
-          response = await axios.post(`${API_BASE_URL}/labours/${labourId}/updateRecord`, formDataToSend, {
+          response = await axios.post(`${API_BASE_URL}/api/labours/${labourId}/updateRecord`, formDataToSend, {
             headers: {
               // 'Content-Type': 'application/json',
             },
           });
         } else {
-          response = await axios.post(`${API_BASE_URL}/labours`, formDataToSend, {
+          response = await axios.post(`${API_BASE_URL}/api/labours/laboursCreateRecord`, formDataToSend, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
@@ -1108,7 +1108,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         }
 
         if (['Rejected', 'Resubmitted', 'Disable'].includes(labourStatus) && (response.status === 200 || response.status === 201)) {
-          await axios.put(`${API_BASE_URL}/labours/updateHideResubmit/${labourId}`, { hideResubmit: true });
+          await axios.put(`${API_BASE_URL}/api/labours/updateHideResubmit/${labourId}`, { hideResubmit: true });
 
           if (onFormSubmitSuccess) {
             onFormSubmitSuccess({ labourId, hideResubmit: true });

@@ -69,12 +69,6 @@ export const SidebarData = [
   },
   {
     icon: UilFileAlt,
-    heading: "People",
-    path: "peopleReport",
-    roles: ["superadmin"],
-  },
-  {
-    icon: UilFileAlt,
     heading: "Admin Approval",
     path: "adminApproval",
     roles: ["superadmin"],
@@ -93,12 +87,6 @@ export const SidebarData = [
   },
   {
     icon: UilFileAlt,
-    heading: "Salary Register",
-    path: "SalaryRejester",
-    roles: ["superadmin"],
-  },
-  {
-    icon: UilFileAlt,
     heading: "Run PayRoll",
     path: "RunPayroll",
     roles: ["superadmin"],
@@ -109,6 +97,18 @@ export const SidebarData = [
     path: "ViewMonthlyPayroll",
     roles: ["superadmin"],
   },
+  // {
+  //   icon: UilFileAlt,
+  //   heading: "People",
+  //   path: "peopleReport",
+  //   roles: ["superadmin"],
+  // },
+   // {
+  //   icon: UilFileAlt,
+  //   heading: "Salary Register",
+  //   path: "SalaryRejester",
+  //   roles: ["superadmin"],
+  // },
 ];
 
 

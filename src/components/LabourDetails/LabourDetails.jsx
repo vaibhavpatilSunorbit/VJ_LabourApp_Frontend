@@ -134,7 +134,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
       return;
     }
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/search?q=${searchQuery}`);
       setSearchResults(response.data);
       setPage(0);
     } catch (error) {
@@ -156,13 +156,12 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const approveLabour = async (id, departmentId) => {
     try {
-      console.log("departmentId", departmentId);
-      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/labours/next-id`,{params: { departmentId }});
+      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});
       const labourID = nextID;
 
-      const labourResponse = await axios.get(`${API_BASE_URL}/labours/${id}`);
+      const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
       const labour = labourResponse.data;
-      const response = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${labour.projectName}`);
+      const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus/${labour.projectName}`);
       const serialNumber = response.data.serialNumber;
 
       const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
@@ -180,10 +179,10 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
           </AddEmployee>
         </soap:Body>
       </soap:Envelope>`;
-      console.log('SOAP Envelope:', soapEnvelope);
+      // console.log('SOAP Envelope:', soapEnvelope);
 
       const soapResponse = await axios.post(
-        `${API_BASE_URL}/labours/essl/addEmployee`,
+        `${API_BASE_URL}/api/labours/essl/addEmployee`,
         soapEnvelope,
         {
           headers: {
@@ -195,7 +194,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
         const commandId = soapResponse.data.CommandId;
 
         const pollStatus = async () => {
-          const { data: commandStatus } = await axios.get(`${API_BASE_URL}/labours/commandstatus/${commandId}`);
+          const { data: commandStatus } = await axios.get(`${API_BASE_URL}/api/labours/commandstatus/${commandId}`);
           return commandStatus.status;
         };
 
@@ -209,1227 +208,1233 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
           retries++;
         }
 
-        if (status === 'Pending' || status === 'Failure') {
+        if ((status === 'Pending' || status === 'Failure') && retries >= maxRetries) {
           toast.error('Labour cannot be approved due to pending or failed command status.');
           setApprovedLabours([]);
         }
 
         if (status === 'Success') {
-          const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
-            params: {
-              businessUnitDesc: labour.companyName,
-              workingHours: labour.workingHours,
-            },
-          });
-
-          const dynamicData = dynamicDataResponse.data;
-
-          const employeeMasterPayload = {
-            companyName: labour.companyName,
-            company: {
-              level: 3,
-              type: 'C',
-              businessSegment: {
-                id: 3,
-                objectId: '000000000000000000000000',
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                createdBy: 0,
-                createdOn: null,
-                lastModifiedBy: 0,
-                lastModifiedOn: null,
-                mode: '',
-                entityName: 'Segment',
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: '00000000-0000-0000-0000-000000000000',
-                isInApproval: false
-              },
-              zone: {
-                id: 0,
-                objectId: '000000000000000000000000',
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                createdBy: 0,
-                createdOn: null,
-                lastModifiedBy: 0,
-                lastModifiedOn: null,
-                mode: '',
-                entityName: 'BusinessUnitZone',
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: '00000000-0000-0000-0000-000000000000',
-                isInApproval: false
-              },
-              fiscalYear: {
-                yearStartDate: '2022-04-01T00:00:00.000Z',
-                yearEndDate: '2023-03-31T00:00:00.000Z',
-                fiscalYearTemplateId: 0,
-                startPeriodId: 0,
-                endPeriodId: 0,
-                yearType: 0,
-                isMidTermYear: false,
-                midTermYearStartDate: null,
-                id: 15,
-                objectId: '000000000000000000000000',
-                description: '01-04-2022-31-03-2023',
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                createdBy: 0,
-                createdOn: null,
-                lastModifiedBy: 0,
-                lastModifiedOn: null,
-                mode: '',
-                entityName: 'FiscalYear',
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: '00000000-0000-0000-0000-000000000000',
-                isInApproval: false
-              },
-              localCurrency: {
-                subUnitFactor: 0,
-                printOrder: 0,
-                id: 12,
-                objectId: '000000000000000000000000',
-                description: 'RUPEES',
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                createdBy: 0,
-                createdOn: null,
-                lastModifiedBy: 0,
-                lastModifiedOn: null,
-                mode: '',
-                entityName: 'Currency',
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: '00000000-0000-0000-0000-000000000000',
-                isInApproval: false
-              },
-              reportingCurrency1: {
-                subUnitFactor: 0,
-                printOrder: 0,
-                id: 12,
-                objectId: '000000000000000000000000',
-                description: 'RUPEES',
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                createdBy: 0,
-                createdOn: null,
-                lastModifiedBy: 0,
-                lastModifiedOn: null,
-                mode: '',
-                entityName: 'Currency',
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: '00000000-0000-0000-0000-000000000000',
-                isInApproval: false
-              },
-              reportingCurrency2: {
-                subUnitFactor: 0,
-                printOrder: 0,
-                id: 0,
-                objectId: '000000000000000000000000',
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                createdBy: 0,
-                createdOn: null,
-                lastModifiedBy: 0,
-                lastModifiedOn: null,
-                mode: '',
-                entityName: 'Currency',
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: '00000000-0000-0000-0000-000000000000',
-                isInApproval: false
-              },
-              templateGroupId: 0,
-              timeZoneId: 0,
-              ...dynamicData
-            },
-            code: labourID,
-            title: labour.title,
-            firstName: labour.name,
-            lastName: labour.name.split(' ')[1] || '',
-            userName: labourID,
-            gender: labour.gender,
-            maritalStatus: labour.Marital_Status,
-            dob: labour.dateOfBirth,
-            retirementDate: labour.retirementDate,
-            nationality: labour.Nationality,
-            calenderType: 1,
-            groupJoinDate: labour.Group_Join_Date,
-            confirmDate: labour.ConfirmDate,
-            doj: labour.dateOfJoining,
-            employeeName: labour.name,
-            BiometricNo: labourID,
-            employeeAddress: [
-              {
-                city: {
-                  id: 0,
-                  objectId: '000000000000000000000000',
-                  code: '0000039',
-                  description: labour.village,
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: '',
-                  entityName: 'City',
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: '00000000-0000-0000-0000-000000000000',
-                  isInApproval: false
-                },
-                state: {
-                  gstStateId: '27',
-                  isUnionTeritory: 0,
-                  id: 299,
-                  objectId: '000000000000000000000000',
-                  code: '19',
-                  description: labour.state,
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: '',
-                  entityName: 'State',
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: '00000000-0000-0000-0000-000000000000',
-                  isInApproval: false
-                },
-                country: {
-                  id: 122,
-                  objectId: '000000000000000000000000',
-                  code: 'IND',
-                  description: 'INDIA',
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: '',
-                  entityName: 'Country',
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: '00000000-0000-0000-0000-000000000000',
-                  isInApproval: false
-                },
-                countryName: 'INDIA',
-                countryId: 122,
-                stateName: labour.state,
-                stateId: 299,
-                cityName: labour.district,
-                cityId: 0,
-                type: 'P'
-              },
-              {
-                city: {
-                  id: 0,
-                  objectId: '000000000000000000000000',
-                  code: '0000039',
-                  description: labour.district,
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: '',
-                  entityName: 'City',
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: '00000000-0000-0000-0000-000000000000',
-                  isInApproval: false
-                },
-                state: {
-                  gstStateId: '27',
-                  isUnionTeritory: 0,
-                  id: 299,
-                  objectId: '000000000000000000000000',
-                  code: '19',
-                  description: labour.state,
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: '',
-                  entityName: 'State',
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: '00000000-0000-0000-0000-000000000000',
-                  isInApproval: false
-                },
-                country: {
-                  id: 122,
-                  objectId: '000000000000000000000000',
-                  code: 'IND',
-                  description: 'INDIA',
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: '',
-                  entityName: 'Country',
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: '00000000-0000-0000-0000-000000000000',
-                  isInApproval: false
-                },
-                countryName: 'INDIA',
-                countryId: 122,
-                stateName: 'MAHARASHTRA',
-                stateId: 299,
-                cityName: 'PUNE',
-                cityId: 0,
-                type: 'C'
-              }
-            ],
-            contactInfo: [
-              {
-                serialNo: 1,
-                type: 'Phone',
-                id: 0,
-                value: labour.contactNumber,
-                mode: 'I'
-              },
-              {
-                serialNo: 1,
-                type: 'Mobile',
-                id: 0,
-                value: labour.contactNumber,
-                mode: 'I'
-              },
-              {
-                serialNo: 1,
-                type: 'Email',
-                id: 0,
-                value: '',
-                mode: 'I'
-              }
-            ],
-            shiftId: dynamicData.shiftId,
-            shiftName: dynamicData.shiftName,
-            extraInfo: {
-              aadharNo: labour.aadhaarNumber,
-              isHandicap: false
-            },
-            paymentBank: {
-              paymentMode: {
-                id: 4
-              },
-              bank: {
-                id: dynamicData.bankId
-              },
-              employee: {},
-              bankAccountNo: labour.accountNumber,
-              companyNEFTNo: 'SBIN0004523'
-            },
-            personalBank: {
-              employee: {}
-            },
-            pf: {
-              companyPf: {}
-            },
-            Esi: {
-              companyEsi: {}
-            },
-            passport: {
-              companyPf: {}
-            },
-            visa: {},
-            leaveOpening: [
-              {
-                employeeId: 0,
-                isResignEmployee: false,
-                empRetirementDate: null,
-                empJoinDate: null,
-                leave: {
-                  type: 0,
-                  id: 1,
-                  objectId: '000000000000000000000000',
-                  description: 'PRIVLIAGE LEAVE',
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: '',
-                  entityName: 'Leave',
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: '00000000-0000-0000-0000-000000000000',
-                  isInApproval: false
-                },
-                openingBalance: 0,
-                currentBalance: 0,
-                isLeaveEntryDone: false,
-                serialNo: 0,
-                isApplicable: true,
-                isEmployeeMaster: false,
-                amount: 0,
-                id: 0,
-                objectId: '000000000000000000000000',
-                entryTypeId: 0,
-                fiscalYearId: 0,
-                taggedTaskId: 0,
-                yearType: 0,
-                refObjectId: '000000000000000000000000',
-                documentClassificationId: 0,
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                createdBy: 0,
-                createdOn: null,
-                lastModifiedBy: 0,
-                lastModifiedOn: null,
-                mode: '',
-                entityName: 'EmployeeLeave',
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: '00000000-0000-0000-0000-000000000000',
-                isInApproval: false,
-                financialYear: {
-                  id: 24,
-                  description: '01-01-2024-31-12-2024',
-                  fiscalYearTemplate: 2,
-                  yearStartDate: '2024-01-01T00:00:00.000Z',
-                  yearEndDate: '2024-12-31T00:00:00.000Z',
-                  startPeriodId: 51,
-                  endPeriodId: 63,
-                  yearType: 2
-                }
-              }
-            ],
-            entryTypeId: 275,
-            uiid: 18,
-            isDraft: false,
-            documentDate: '2024-07-18T18:30:00.000Z',
-            machineAddress: '103.186.18.36',
-            approvalBaseUrl: 'https://vjerp.farvisioncloud.com',
-            approvalToken: '0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw'
-          };
-
-
-
-
-          const employeeMasterResponse = await axios.post(`${API_BASE_URL}/employeeMasterPayloadUpdatepost`, JSON.stringify(employeeMasterPayload), {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-
-          });
-          if (employeeMasterResponse.data.status) {
-
-            const empId = employeeMasterResponse.data.outputList?.id;
-            const ledgerId = employeeMasterResponse.data.outputList?.ledgerId;
-
-            if (!empId) {
-              console.error('Employee ID is missing in the response. Skipping further API calls.');
-              return;
-            }
-
-            const empData = { empId };
-
-            const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${labour.id}`, empData);
-
-            const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
-              params: {
-                employeeId: empId,
-                monthdesc: labour.Period,
-                gradeId: labour.labourCategoryId,
-                salarybudescription: labour.SalaryBu,
-                workbudesc: labour.WorkingBu,
-                ledgerId,
-                departmentId: labour.departmentId,
-                designationId: labour.designationId,
-              },
-            });
-            const dynamicData2 = dynamicDataResponse2.data;
-
-            const organizationMasterPayload = {
-              locationName: dynamicData2.description,
-              workLocationName: dynamicData2.payrollUnit.WorkingBu,
-              approvar1: "",
-              approvar2: "",
-              approvar3: "",
-              division: {
-                Index: -1,
-                customObject: {}
-              },
-              noticePeriod: 0,
-              employee: {
-                totalRecordNo: 2,
-                id: dynamicData2.payrollUnit.empId,
-                code: dynamicData2.payrollUnit.labourID,
-                employeeName: dynamicData2.payrollUnit.name,
-                companyName: dynamicData2.payrollUnit.companyName,
-                dojLocal: dynamicData2.payrollUnit.dateOfJoining,
-                companyId: dynamicData2.parentId
-              },
-              monthPeriod: dynamicData2.monthPeriod,
-              // monthPeriod: {
-              //   id: dynamicData2.monthPeriod.id,
-              //   description: dynamicData2.monthPeriod.description, 
-              //   periodFrom: dynamicData2.monthPeriod.periodFrom,
-              //   periodTo: dynamicData2.monthPeriod.periodTo,
-              //   actualPeriod: dynamicData2.monthPeriod.actualPeriod,
-              //   startDate: dynamicData2.monthPeriod.startDate, 
-              //   endDate: dynamicData2.monthPeriod.endDate,
-              //   cutOffPeriodFrom: dynamicData2.monthPeriod.cutOffPeriodFrom,
-              //   cutOffPeriodTo: dynamicData2.monthPeriod.cutOffPeriodTo
-              // },
-
-              fromDate: dynamicData2.payrollUnit.dateOfJoining,
-              fromDateLocal: dynamicData2.payrollUnit.dateOfJoining,
-              employeeType: {
-                offDay: true,
-                holiDay: true,
-                periodCategory: 1,
-                employmentNature: 1,
-                attendanceType: 1,
-                id: 1,
-                objectId: "000000000000000000000000",
-                code: "Perm",
-                description: "Permanent",
-                workflowId: "00000000-0000-0000-0000-000000000000",
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                createdBy: 2,
-                createdOn: dynamicData2.payrollUnit.CreationDate,
-                lastModifiedBy: 2,
-                lastModifiedOn: "2007-05-03T15:16:48.187Z",
-                mode: "",
-                entityName: "EmployeeCategory",
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: "00000000-0000-0000-0000-000000000000",
-                isInApproval: false,
-                Index: 0,
-                customObject: {}
-              },
-              currentStatus: {
-                ignore: false,
-                left: false,
-                isChangable: true,
-                reasonCode: "W",
-                id: 1,
-                objectId: "000000000000000000000000",
-                code: "WORKING",
-                description: "WORKING",
-                workflowId: "00000000-0000-0000-0000-000000000000",
-                isFinalApproval: false,
-                tenantId: 1,
-                dbId: 0,
-                createdBy: 2,
-                createdOn: "2007-05-03T15:16:48.187Z",
-                lastModifiedBy: 2,
-                lastModifiedOn: "2007-05-03T15:16:48.187Z",
-                mode: "",
-                entityName: "CurrentStatus",
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: "00000000-0000-0000-0000-000000000000",
-                isInApproval: false,
-                Index: 0,
-                customObject: {}
-              },
-              grade: dynamicData2.grade,
-              // grade: {
-              //   belongsTo: 0,
-              //   id: 1,
-              //   objectId: "000000000000000000000000",
-              //   code: "SK",
-              //   description: formData.labourCategory,
-              //   workflowId: "00000000-0000-0000-0000-000000000000",
-              //   isFinalApproval: false,
-              //   tenantId: 1,
-              //   dbId: 0,
-              //   uiid: 28,
-              //   createdBy: 1914,
-              //   createdOn: formData.CreationDate,
-              //   lastModifiedBy: 1914,
-              //   lastModifiedOn: "2024-05-07T12:11:49.719Z",
-              //   mode: "",
-              //   entityName: "Grade",
-              //   isDraft: false,
-              //   isChildEntity: false,
-              //   appId: 0,
-              //   masterEntryTypeId: 0,
-              //   masterDocumentTypeId: 0,
-              //   importSrlNo: 0,
-              //   isUserAdmin: false,
-              //   isDataBeingImportFromExcel: false,
-              //   isDataBeingValidateOnly: false,
-              //   attachmentId: "00000000-0000-0000-0000-000000000000",
-              //   isInApproval: false,
-              //   Index: 0,
-              //   customObject: {}
-              // },
-              location: {
-                level: 5,
-                type: "B",
-                businessSegment: {
-                  // id: dynamicData2.id,
-                  id: 3,
-                  objectId: "000000000000000000000000",
-                  // description: dynamicData2.description,
-                  description: "DEPARTMENT LABOUR",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "Segment",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                zone: {
-                  id: 0,
-                  objectId: "000000000000000000000000",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "BusinessUnitZone",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                fiscalYear: {
-                  yearStartDate: "2022-04-01T00:00:00.000Z",
-                  yearEndDate: "2023-03-31T00:00:00.000Z",
-                  fiscalYearTemplateId: 0,
-                  startPeriodId: 0,
-                  endPeriodId: 0,
-                  yearType: 0,
-                  isMidTermYear: false,
-                  midTermYearStartDate: null,
-                  id: 15,
-                  objectId: "000000000000000000000000",
-                  description: "01-04-2022-31-03-2023",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "FiscalYear",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                localCurrency: {
-                  subUnitFactor: 0,
-                  printOrder: 0,
-                  id: 12,
-                  objectId: "000000000000000000000000",
-                  description: "RUPEES",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "Currency",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                reportingCurrency1: {
-                  subUnitFactor: 0,
-                  printOrder: 0,
-                  id: 12,
-                  objectId: "000000000000000000000000",
-                  description: "RUPEES",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "Currency",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                reportingCurrency2: {
-                  subUnitFactor: 0,
-                  printOrder: 0,
-                  id: 0,
-                  objectId: "000000000000000000000000",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "Currency",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                templateGroupId: 0,
-                timeZoneId: 0,
-                phone1: "+91-",
-                email1: dynamicData2.email1,
-                natureId: dynamicData2.natureId,
-                interUnitLedgerId: dynamicData2.interUnitLedgerId,
-                interUnitParentId: dynamicData2.interUnitParentId,
-                interUnitLedger: {
-                  ledgerGroupId: dynamicData2.interUnitLedger.ledgerGroupId
-                },
-                startDate: "2022-04-01T00:00:00.000Z",
-                countryCode: "IND",
-                stateCode: "19",
-                countryDesc: "INDIA",
-                stateDesc: "MAHARASHTRA",
-                cityDesc: "PUNE",
-                countryId: 122,
-                stateId: 299,
-                cityId: 0,
-                isDiscontinueBU: false,
-                isDiscontinuedStatusChanged: false,
-                isParentDiscontinued: false,
-                mollakCode: 0,
-                mollakDescription: "",
-                oracleBUCode: 0,
-                inpcrd: "Not Applicable",
-                id: dynamicData2.id,
-                objectId: "000000000000000000000000",
-                code: dynamicData2.code,
-                description: dynamicData2.description,
-                parentId: dynamicData2.parentId,
-                parentDesc: dynamicData2.payrollUnit.companyName,
-                isFinalApproval: false,
-                tenantId: 278,
-                dbId: 0,
-                uiid: 79,
-                createdBy: 1914,
-                createdOn: dynamicData2.payrollUnit.CreationDate,
-                lastModifiedBy: 1914,
-                lastModifiedOn: "2024-06-24T01:41:06.389Z",
-                mode: "",
-                isImported: false,
-                entityName: "BusinessUnit",
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: "00000000-0000-0000-0000-000000000000",
-                isInApproval: false
-              },
-              workLocation: {
-                level: 0,
-                type: "B",
-                businessSegment: {
-                  // id: dynamicData2.payrollUnit.projectName,
-                  id: 3,
-                  objectId: "000000000000000000000000",
-                  // description: dynamicData2.payrollUnit.WorkingBu,
-                  description: "DEPARTMENT LABOUR",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "Segment",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                zone: {
-                  id: 0,
-                  objectId: "000000000000000000000000",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "BusinessUnitZone",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                fiscalYear: {
-                  yearStartDate: "2022-04-01T00:00:00.000Z",
-                  yearEndDate: "2023-03-31T00:00:00.000Z",
-                  fiscalYearTemplateId: 0,
-                  startPeriodId: 0,
-                  endPeriodId: 0,
-                  yearType: 0,
-                  isMidTermYear: false,
-                  midTermYearStartDate: null,
-                  id: 15,
-                  objectId: "000000000000000000000000",
-                  description: "01-04-2022-31-03-2023",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "FiscalYear",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                localCurrency: {
-                  subUnitFactor: 0,
-                  printOrder: 0,
-                  id: 12,
-                  objectId: "000000000000000000000000",
-                  description: "RUPEES",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "Currency",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                reportingCurrency1: {
-                  subUnitFactor: 0,
-                  printOrder: 0,
-                  id: 12,
-                  objectId: "000000000000000000000000",
-                  description: "RUPEES",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "Currency",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                reportingCurrency2: {
-                  subUnitFactor: 0,
-                  printOrder: 0,
-                  id: 0,
-                  objectId: "000000000000000000000000",
-                  isFinalApproval: false,
-                  tenantId: 1,
-                  dbId: 0,
-                  createdBy: 0,
-                  createdOn: null,
-                  lastModifiedBy: 0,
-                  lastModifiedOn: null,
-                  mode: "",
-                  entityName: "Currency",
-                  isDraft: false,
-                  isChildEntity: false,
-                  appId: 0,
-                  masterEntryTypeId: 0,
-                  masterDocumentTypeId: 0,
-                  importSrlNo: 0,
-                  isUserAdmin: false,
-                  isDataBeingImportFromExcel: false,
-                  isDataBeingValidateOnly: false,
-                  attachmentId: "00000000-0000-0000-0000-000000000000",
-                  isInApproval: false
-                },
-                templateGroupId: 0,
-                timeZoneId: 0,
-                phone1: "+91-...",
-                email1: "abc@gmail.com",
-                natureId: 0,
-                interUnitLedgerId: 6560,
-                interUnitParentId: 170,
-                interUnitLedger: {
-                  ledgerGroupId: 53
-                },
-                startDate: "2022-04-01T00:00:00.000Z",
-                countryCode: "IND",
-                stateCode: "19",
-                countryDesc: "INDIA",
-                stateDesc: dynamicData2.payrollUnit.state,
-                cityDesc: dynamicData2.payrollUnit.district,
-                countryId: 122,
-                stateId: 299,
-                cityId: 0,
-                isDiscontinueBU: false,
-                isDiscontinuedStatusChanged: false,
-                isParentDiscontinued: false,
-                mollakCode: 0,
-                mollakDescription: "",
-                oracleBUCode: 0,
-                inpcrd: "Not Applicable",
-                id: dynamicData2.payrollUnit.projectName,
-                objectId: "000000000000000000000000",
-                code: dynamicData2.workbu.code,
-                description: dynamicData2.payrollUnit.WorkingBu,
-                parentId: dynamicData2.parentId,
-                parentDesc: dynamicData2.payrollUnit.companyName,
-                isFinalApproval: false,
-                tenantId: 278,
-                dbId: 0,
-                uiid: 79,
-                createdBy: 108,
-                createdOn: "2024-05-02T06:17:37.555Z",
-                lastModifiedBy: 1914,
-                lastModifiedOn: "2024-06-24T01:38:42.075Z",
-                mode: "",
-                isImported: false,
-                entityName: "BusinessUnit",
-                isDraft: false,
-                isChildEntity: false,
-                appId: 0,
-                masterEntryTypeId: 0,
-                masterDocumentTypeId: 0,
-                importSrlNo: 0,
-                isUserAdmin: false,
-                isDataBeingImportFromExcel: false,
-                isDataBeingValidateOnly: false,
-                attachmentId: "00000000-0000-0000-0000-000000000000",
-                isInApproval: false
-              },
-              department: {
-                id: dynamicData2.department.Id,
-                code: dynamicData2.department.Code,
-                description: dynamicData2.department.Description,
-                parentDesc: null,
-                parentId: 0,
-                isHidden: null,
-                uiid: 0,
-                isEditable: null,
-                isDeleted: null,
-                activeTill: null,
-                createdOn: "2021-06-11T11:27:41.990Z",
-                createdBy: 0,
-                lastModifiedOn: "2021-06-11T11:27:41.990Z",
-                lastModifiedBy: 0
-              },
-              designation: {
-                id: dynamicData2.designation.Id,
-                code: dynamicData2.designation.Code,
-                description: dynamicData2.designation.Description,
-                parentDesc: null,
-                parentId: null,
-                isHidden: null,
-                uiid: null,
-                isEditable: true,
-                isDeleted: null,
-                activeTill: null,
-                createdOn: "2024-06-26T05:26:48.004Z",
-                createdBy: 1914,
-                lastModifiedOn: "2024-06-26T05:26:48.004Z",
-                lastModifiedBy: 1914
-              },
-              office: {
-                rnum: 2,
-                id: 3,
-                code: "SL",
-                description: "SITE LABOUR"
-              },
-              uiid: 32,
-              IsImported: false,
-              machineAddress: "103.186.18.36",
-              approvalBaseUrl: "https://vjerp.farvisioncloud.com",
-              approvalToken: "0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw"
-            };
-
-
-            const orgMasterResponse = await axios.post(`${API_BASE_URL}/organizationMasterPayloadUpdatepost`, JSON.stringify(organizationMasterPayload), {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-            if (orgMasterResponse.data.status) {
-            }
-
-            await axios.post(`${API_BASE_URL}/saveApiResponsePayload`, {
-              userId: labour.id,
-              labourID: labourID,  // Use dynamic labourID here
-              name: labour.name,
-              aadharNumber: labour.aadhaarNumber,
-              employeeMasterPayload: employeeMasterPayload,
-              employeeMasterResponseId: employeeMasterResponse.data.outputList.id,
-              employeeMasterLedgerId: employeeMasterResponse.data.outputList.ledgerId,
-              employeeMasterUserId: employeeMasterResponse.data.outputList.userId,
-              employeeCompanyID: employeeMasterResponse.data.outputList.employeeCompanyID,
-              employeeExtraInfoId: employeeMasterResponse.data.outputList.employeeExtraInfoId,
-              employeeMasterFullResponse: employeeMasterResponse.data,
-              organizationMasterPayload: organizationMasterPayload,
-              organizationMasterResponseId: orgMasterResponse.data.outputList.id,
-              organizationMasterOrgId: orgMasterResponse.data.outputList.orgId,
-              organizationMasterStatus: orgMasterResponse.data.status,
-              organizationMasterFullResponse: orgMasterResponse.data,
-            });
-
-            await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID });
-            setApprovedLabours((prev) => [...new Set([...prev, id])]);
-            toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
-          } else {
-            throw new Error(`Failed to approve labour ${labour.name}. Status: ${status}`);
-          } return labourID;
-        } else {
-          toast.error('Failed to update ESSL details.');
+          await axios.put(`${API_BASE_URL}/api/labours/approve/${id}`, { labourID });
+          setApprovedLabours((prev) => [...new Set([...prev, id])]);
+          toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
+          return labourID;
         }
-      }
-      return labourID;
+        // if (status === 'Success') {
+        //   const dynamicDataResponse = await axios.get(`${API_BASE_URL}/fetchDynamicData`, {
+        //     params: {
+        //       businessUnitDesc: labour.companyName,
+        //       workingHours: labour.workingHours,
+        //     },
+        //   });
+
+        //   const dynamicData = dynamicDataResponse.data;
+
+        //   const employeeMasterPayload = {
+        //     companyName: labour.companyName,
+        //     company: {
+        //       level: 3,
+        //       type: 'C',
+        //       businessSegment: {
+        //         id: 3,
+        //         objectId: '000000000000000000000000',
+        //         isFinalApproval: false,
+        //         tenantId: 1,
+        //         dbId: 0,
+        //         createdBy: 0,
+        //         createdOn: null,
+        //         lastModifiedBy: 0,
+        //         lastModifiedOn: null,
+        //         mode: '',
+        //         entityName: 'Segment',
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: '00000000-0000-0000-0000-000000000000',
+        //         isInApproval: false
+        //       },
+        //       zone: {
+        //         id: 0,
+        //         objectId: '000000000000000000000000',
+        //         isFinalApproval: false,
+        //         tenantId: 1,
+        //         dbId: 0,
+        //         createdBy: 0,
+        //         createdOn: null,
+        //         lastModifiedBy: 0,
+        //         lastModifiedOn: null,
+        //         mode: '',
+        //         entityName: 'BusinessUnitZone',
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: '00000000-0000-0000-0000-000000000000',
+        //         isInApproval: false
+        //       },
+        //       fiscalYear: {
+        //         yearStartDate: '2022-04-01T00:00:00.000Z',
+        //         yearEndDate: '2023-03-31T00:00:00.000Z',
+        //         fiscalYearTemplateId: 0,
+        //         startPeriodId: 0,
+        //         endPeriodId: 0,
+        //         yearType: 0,
+        //         isMidTermYear: false,
+        //         midTermYearStartDate: null,
+        //         id: 15,
+        //         objectId: '000000000000000000000000',
+        //         description: '01-04-2022-31-03-2023',
+        //         isFinalApproval: false,
+        //         tenantId: 1,
+        //         dbId: 0,
+        //         createdBy: 0,
+        //         createdOn: null,
+        //         lastModifiedBy: 0,
+        //         lastModifiedOn: null,
+        //         mode: '',
+        //         entityName: 'FiscalYear',
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: '00000000-0000-0000-0000-000000000000',
+        //         isInApproval: false
+        //       },
+        //       localCurrency: {
+        //         subUnitFactor: 0,
+        //         printOrder: 0,
+        //         id: 12,
+        //         objectId: '000000000000000000000000',
+        //         description: 'RUPEES',
+        //         isFinalApproval: false,
+        //         tenantId: 1,
+        //         dbId: 0,
+        //         createdBy: 0,
+        //         createdOn: null,
+        //         lastModifiedBy: 0,
+        //         lastModifiedOn: null,
+        //         mode: '',
+        //         entityName: 'Currency',
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: '00000000-0000-0000-0000-000000000000',
+        //         isInApproval: false
+        //       },
+        //       reportingCurrency1: {
+        //         subUnitFactor: 0,
+        //         printOrder: 0,
+        //         id: 12,
+        //         objectId: '000000000000000000000000',
+        //         description: 'RUPEES',
+        //         isFinalApproval: false,
+        //         tenantId: 1,
+        //         dbId: 0,
+        //         createdBy: 0,
+        //         createdOn: null,
+        //         lastModifiedBy: 0,
+        //         lastModifiedOn: null,
+        //         mode: '',
+        //         entityName: 'Currency',
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: '00000000-0000-0000-0000-000000000000',
+        //         isInApproval: false
+        //       },
+        //       reportingCurrency2: {
+        //         subUnitFactor: 0,
+        //         printOrder: 0,
+        //         id: 0,
+        //         objectId: '000000000000000000000000',
+        //         isFinalApproval: false,
+        //         tenantId: 1,
+        //         dbId: 0,
+        //         createdBy: 0,
+        //         createdOn: null,
+        //         lastModifiedBy: 0,
+        //         lastModifiedOn: null,
+        //         mode: '',
+        //         entityName: 'Currency',
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: '00000000-0000-0000-0000-000000000000',
+        //         isInApproval: false
+        //       },
+        //       templateGroupId: 0,
+        //       timeZoneId: 0,
+        //       ...dynamicData
+        //     },
+        //     code: labourID,
+        //     title: labour.title,
+        //     firstName: labour.name,
+        //     lastName: labour.name.split(' ')[1] || '',
+        //     userName: labourID,
+        //     gender: labour.gender,
+        //     maritalStatus: labour.Marital_Status,
+        //     dob: labour.dateOfBirth,
+        //     retirementDate: labour.retirementDate,
+        //     nationality: labour.Nationality,
+        //     calenderType: 1,
+        //     groupJoinDate: labour.Group_Join_Date,
+        //     confirmDate: labour.ConfirmDate,
+        //     doj: labour.dateOfJoining,
+        //     employeeName: labour.name,
+        //     BiometricNo: labourID,
+        //     employeeAddress: [
+        //       {
+        //         city: {
+        //           id: 0,
+        //           objectId: '000000000000000000000000',
+        //           code: '0000039',
+        //           description: labour.village,
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: '',
+        //           entityName: 'City',
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: '00000000-0000-0000-0000-000000000000',
+        //           isInApproval: false
+        //         },
+        //         state: {
+        //           gstStateId: '27',
+        //           isUnionTeritory: 0,
+        //           id: 299,
+        //           objectId: '000000000000000000000000',
+        //           code: '19',
+        //           description: labour.state,
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: '',
+        //           entityName: 'State',
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: '00000000-0000-0000-0000-000000000000',
+        //           isInApproval: false
+        //         },
+        //         country: {
+        //           id: 122,
+        //           objectId: '000000000000000000000000',
+        //           code: 'IND',
+        //           description: 'INDIA',
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: '',
+        //           entityName: 'Country',
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: '00000000-0000-0000-0000-000000000000',
+        //           isInApproval: false
+        //         },
+        //         countryName: 'INDIA',
+        //         countryId: 122,
+        //         stateName: labour.state,
+        //         stateId: 299,
+        //         cityName: labour.district,
+        //         cityId: 0,
+        //         type: 'P'
+        //       },
+        //       {
+        //         city: {
+        //           id: 0,
+        //           objectId: '000000000000000000000000',
+        //           code: '0000039',
+        //           description: labour.district,
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: '',
+        //           entityName: 'City',
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: '00000000-0000-0000-0000-000000000000',
+        //           isInApproval: false
+        //         },
+        //         state: {
+        //           gstStateId: '27',
+        //           isUnionTeritory: 0,
+        //           id: 299,
+        //           objectId: '000000000000000000000000',
+        //           code: '19',
+        //           description: labour.state,
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: '',
+        //           entityName: 'State',
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: '00000000-0000-0000-0000-000000000000',
+        //           isInApproval: false
+        //         },
+        //         country: {
+        //           id: 122,
+        //           objectId: '000000000000000000000000',
+        //           code: 'IND',
+        //           description: 'INDIA',
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: '',
+        //           entityName: 'Country',
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: '00000000-0000-0000-0000-000000000000',
+        //           isInApproval: false
+        //         },
+        //         countryName: 'INDIA',
+        //         countryId: 122,
+        //         stateName: 'MAHARASHTRA',
+        //         stateId: 299,
+        //         cityName: 'PUNE',
+        //         cityId: 0,
+        //         type: 'C'
+        //       }
+        //     ],
+        //     contactInfo: [
+        //       {
+        //         serialNo: 1,
+        //         type: 'Phone',
+        //         id: 0,
+        //         value: labour.contactNumber,
+        //         mode: 'I'
+        //       },
+        //       {
+        //         serialNo: 1,
+        //         type: 'Mobile',
+        //         id: 0,
+        //         value: labour.contactNumber,
+        //         mode: 'I'
+        //       },
+        //       {
+        //         serialNo: 1,
+        //         type: 'Email',
+        //         id: 0,
+        //         value: '',
+        //         mode: 'I'
+        //       }
+        //     ],
+        //     shiftId: dynamicData.shiftId,
+        //     shiftName: dynamicData.shiftName,
+        //     extraInfo: {
+        //       aadharNo: labour.aadhaarNumber,
+        //       isHandicap: false
+        //     },
+        //     paymentBank: {
+        //       paymentMode: {
+        //         id: 4
+        //       },
+        //       bank: {
+        //         id: dynamicData.bankId
+        //       },
+        //       employee: {},
+        //       bankAccountNo: labour.accountNumber,
+        //       companyNEFTNo: 'SBIN0004523'
+        //     },
+        //     personalBank: {
+        //       employee: {}
+        //     },
+        //     pf: {
+        //       companyPf: {}
+        //     },
+        //     Esi: {
+        //       companyEsi: {}
+        //     },
+        //     passport: {
+        //       companyPf: {}
+        //     },
+        //     visa: {},
+        //     leaveOpening: [
+        //       {
+        //         employeeId: 0,
+        //         isResignEmployee: false,
+        //         empRetirementDate: null,
+        //         empJoinDate: null,
+        //         leave: {
+        //           type: 0,
+        //           id: 1,
+        //           objectId: '000000000000000000000000',
+        //           description: 'PRIVLIAGE LEAVE',
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: '',
+        //           entityName: 'Leave',
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: '00000000-0000-0000-0000-000000000000',
+        //           isInApproval: false
+        //         },
+        //         openingBalance: 0,
+        //         currentBalance: 0,
+        //         isLeaveEntryDone: false,
+        //         serialNo: 0,
+        //         isApplicable: true,
+        //         isEmployeeMaster: false,
+        //         amount: 0,
+        //         id: 0,
+        //         objectId: '000000000000000000000000',
+        //         entryTypeId: 0,
+        //         fiscalYearId: 0,
+        //         taggedTaskId: 0,
+        //         yearType: 0,
+        //         refObjectId: '000000000000000000000000',
+        //         documentClassificationId: 0,
+        //         isFinalApproval: false,
+        //         tenantId: 1,
+        //         dbId: 0,
+        //         createdBy: 0,
+        //         createdOn: null,
+        //         lastModifiedBy: 0,
+        //         lastModifiedOn: null,
+        //         mode: '',
+        //         entityName: 'EmployeeLeave',
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: '00000000-0000-0000-0000-000000000000',
+        //         isInApproval: false,
+        //         financialYear: {
+        //           id: 24,
+        //           description: '01-01-2024-31-12-2024',
+        //           fiscalYearTemplate: 2,
+        //           yearStartDate: '2024-01-01T00:00:00.000Z',
+        //           yearEndDate: '2024-12-31T00:00:00.000Z',
+        //           startPeriodId: 51,
+        //           endPeriodId: 63,
+        //           yearType: 2
+        //         }
+        //       }
+        //     ],
+        //     entryTypeId: 275,
+        //     uiid: 18,
+        //     isDraft: false,
+        //     documentDate: '2024-07-18T18:30:00.000Z',
+        //     machineAddress: '103.186.18.36',
+        //     approvalBaseUrl: 'https://vjerp.farvisioncloud.com',
+        //     approvalToken: '0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw'
+        //   };
+
+
+
+
+        //   const employeeMasterResponse = await axios.post(`${API_BASE_URL}/employeeMasterPayloadUpdatepost`, JSON.stringify(employeeMasterPayload), {
+        //     headers: {
+        //       'Content-Type': 'application/json',
+        //     },
+
+        //   });
+        //   if (employeeMasterResponse.data.status) {
+
+        //     const empId = employeeMasterResponse.data.outputList?.id;
+        //     const ledgerId = employeeMasterResponse.data.outputList?.ledgerId;
+
+        //     if (!empId) {
+        //       console.error('Employee ID is missing in the response. Skipping further API calls.');
+        //       return;
+        //     }
+
+        //     const empData = { empId };
+
+        //     const employeeDetails = await axios.put(`${API_BASE_URL}/addFvEmpId/${labour.id}`, empData);
+
+        //     const dynamicDataResponse2 = await axios.get(`${API_BASE_URL}/fetchOrgDynamicData`, {
+        //       params: {
+        //         employeeId: empId,
+        //         monthdesc: labour.Period,
+        //         gradeId: labour.labourCategoryId,
+        //         salarybudescription: labour.SalaryBu,
+        //         workbudesc: labour.WorkingBu,
+        //         ledgerId,
+        //         departmentId: labour.departmentId,
+        //         designationId: labour.designationId,
+        //       },
+        //     });
+        //     const dynamicData2 = dynamicDataResponse2.data;
+
+        //     const organizationMasterPayload = {
+        //       locationName: dynamicData2.description,
+        //       workLocationName: dynamicData2.payrollUnit.WorkingBu,
+        //       approvar1: "",
+        //       approvar2: "",
+        //       approvar3: "",
+        //       division: {
+        //         Index: -1,
+        //         customObject: {}
+        //       },
+        //       noticePeriod: 0,
+        //       employee: {
+        //         totalRecordNo: 2,
+        //         id: dynamicData2.payrollUnit.empId,
+        //         code: dynamicData2.payrollUnit.labourID,
+        //         employeeName: dynamicData2.payrollUnit.name,
+        //         companyName: dynamicData2.payrollUnit.companyName,
+        //         dojLocal: dynamicData2.payrollUnit.dateOfJoining,
+        //         companyId: dynamicData2.parentId
+        //       },
+        //       monthPeriod: dynamicData2.monthPeriod,
+        //       // monthPeriod: {
+        //       //   id: dynamicData2.monthPeriod.id,
+        //       //   description: dynamicData2.monthPeriod.description, 
+        //       //   periodFrom: dynamicData2.monthPeriod.periodFrom,
+        //       //   periodTo: dynamicData2.monthPeriod.periodTo,
+        //       //   actualPeriod: dynamicData2.monthPeriod.actualPeriod,
+        //       //   startDate: dynamicData2.monthPeriod.startDate, 
+        //       //   endDate: dynamicData2.monthPeriod.endDate,
+        //       //   cutOffPeriodFrom: dynamicData2.monthPeriod.cutOffPeriodFrom,
+        //       //   cutOffPeriodTo: dynamicData2.monthPeriod.cutOffPeriodTo
+        //       // },
+
+        //       fromDate: dynamicData2.payrollUnit.dateOfJoining,
+        //       fromDateLocal: dynamicData2.payrollUnit.dateOfJoining,
+        //       employeeType: {
+        //         offDay: true,
+        //         holiDay: true,
+        //         periodCategory: 1,
+        //         employmentNature: 1,
+        //         attendanceType: 1,
+        //         id: 1,
+        //         objectId: "000000000000000000000000",
+        //         code: "Perm",
+        //         description: "Permanent",
+        //         workflowId: "00000000-0000-0000-0000-000000000000",
+        //         isFinalApproval: false,
+        //         tenantId: 1,
+        //         dbId: 0,
+        //         createdBy: 2,
+        //         createdOn: dynamicData2.payrollUnit.CreationDate,
+        //         lastModifiedBy: 2,
+        //         lastModifiedOn: "2007-05-03T15:16:48.187Z",
+        //         mode: "",
+        //         entityName: "EmployeeCategory",
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: "00000000-0000-0000-0000-000000000000",
+        //         isInApproval: false,
+        //         Index: 0,
+        //         customObject: {}
+        //       },
+        //       currentStatus: {
+        //         ignore: false,
+        //         left: false,
+        //         isChangable: true,
+        //         reasonCode: "W",
+        //         id: 1,
+        //         objectId: "000000000000000000000000",
+        //         code: "WORKING",
+        //         description: "WORKING",
+        //         workflowId: "00000000-0000-0000-0000-000000000000",
+        //         isFinalApproval: false,
+        //         tenantId: 1,
+        //         dbId: 0,
+        //         createdBy: 2,
+        //         createdOn: "2007-05-03T15:16:48.187Z",
+        //         lastModifiedBy: 2,
+        //         lastModifiedOn: "2007-05-03T15:16:48.187Z",
+        //         mode: "",
+        //         entityName: "CurrentStatus",
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: "00000000-0000-0000-0000-000000000000",
+        //         isInApproval: false,
+        //         Index: 0,
+        //         customObject: {}
+        //       },
+        //       grade: dynamicData2.grade,
+        //       // grade: {
+        //       //   belongsTo: 0,
+        //       //   id: 1,
+        //       //   objectId: "000000000000000000000000",
+        //       //   code: "SK",
+        //       //   description: formData.labourCategory,
+        //       //   workflowId: "00000000-0000-0000-0000-000000000000",
+        //       //   isFinalApproval: false,
+        //       //   tenantId: 1,
+        //       //   dbId: 0,
+        //       //   uiid: 28,
+        //       //   createdBy: 1914,
+        //       //   createdOn: formData.CreationDate,
+        //       //   lastModifiedBy: 1914,
+        //       //   lastModifiedOn: "2024-05-07T12:11:49.719Z",
+        //       //   mode: "",
+        //       //   entityName: "Grade",
+        //       //   isDraft: false,
+        //       //   isChildEntity: false,
+        //       //   appId: 0,
+        //       //   masterEntryTypeId: 0,
+        //       //   masterDocumentTypeId: 0,
+        //       //   importSrlNo: 0,
+        //       //   isUserAdmin: false,
+        //       //   isDataBeingImportFromExcel: false,
+        //       //   isDataBeingValidateOnly: false,
+        //       //   attachmentId: "00000000-0000-0000-0000-000000000000",
+        //       //   isInApproval: false,
+        //       //   Index: 0,
+        //       //   customObject: {}
+        //       // },
+        //       location: {
+        //         level: 5,
+        //         type: "B",
+        //         businessSegment: {
+        //           // id: dynamicData2.id,
+        //           id: 3,
+        //           objectId: "000000000000000000000000",
+        //           // description: dynamicData2.description,
+        //           description: "DEPARTMENT LABOUR",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "Segment",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         zone: {
+        //           id: 0,
+        //           objectId: "000000000000000000000000",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "BusinessUnitZone",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         fiscalYear: {
+        //           yearStartDate: "2022-04-01T00:00:00.000Z",
+        //           yearEndDate: "2023-03-31T00:00:00.000Z",
+        //           fiscalYearTemplateId: 0,
+        //           startPeriodId: 0,
+        //           endPeriodId: 0,
+        //           yearType: 0,
+        //           isMidTermYear: false,
+        //           midTermYearStartDate: null,
+        //           id: 15,
+        //           objectId: "000000000000000000000000",
+        //           description: "01-04-2022-31-03-2023",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "FiscalYear",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         localCurrency: {
+        //           subUnitFactor: 0,
+        //           printOrder: 0,
+        //           id: 12,
+        //           objectId: "000000000000000000000000",
+        //           description: "RUPEES",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "Currency",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         reportingCurrency1: {
+        //           subUnitFactor: 0,
+        //           printOrder: 0,
+        //           id: 12,
+        //           objectId: "000000000000000000000000",
+        //           description: "RUPEES",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "Currency",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         reportingCurrency2: {
+        //           subUnitFactor: 0,
+        //           printOrder: 0,
+        //           id: 0,
+        //           objectId: "000000000000000000000000",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "Currency",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         templateGroupId: 0,
+        //         timeZoneId: 0,
+        //         phone1: "+91-",
+        //         email1: dynamicData2.email1,
+        //         natureId: dynamicData2.natureId,
+        //         interUnitLedgerId: dynamicData2.interUnitLedgerId,
+        //         interUnitParentId: dynamicData2.interUnitParentId,
+        //         interUnitLedger: {
+        //           ledgerGroupId: dynamicData2.interUnitLedger.ledgerGroupId
+        //         },
+        //         startDate: "2022-04-01T00:00:00.000Z",
+        //         countryCode: "IND",
+        //         stateCode: "19",
+        //         countryDesc: "INDIA",
+        //         stateDesc: "MAHARASHTRA",
+        //         cityDesc: "PUNE",
+        //         countryId: 122,
+        //         stateId: 299,
+        //         cityId: 0,
+        //         isDiscontinueBU: false,
+        //         isDiscontinuedStatusChanged: false,
+        //         isParentDiscontinued: false,
+        //         mollakCode: 0,
+        //         mollakDescription: "",
+        //         oracleBUCode: 0,
+        //         inpcrd: "Not Applicable",
+        //         id: dynamicData2.id,
+        //         objectId: "000000000000000000000000",
+        //         code: dynamicData2.code,
+        //         description: dynamicData2.description,
+        //         parentId: dynamicData2.parentId,
+        //         parentDesc: dynamicData2.payrollUnit.companyName,
+        //         isFinalApproval: false,
+        //         tenantId: 278,
+        //         dbId: 0,
+        //         uiid: 79,
+        //         createdBy: 1914,
+        //         createdOn: dynamicData2.payrollUnit.CreationDate,
+        //         lastModifiedBy: 1914,
+        //         lastModifiedOn: "2024-06-24T01:41:06.389Z",
+        //         mode: "",
+        //         isImported: false,
+        //         entityName: "BusinessUnit",
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: "00000000-0000-0000-0000-000000000000",
+        //         isInApproval: false
+        //       },
+        //       workLocation: {
+        //         level: 0,
+        //         type: "B",
+        //         businessSegment: {
+        //           // id: dynamicData2.payrollUnit.projectName,
+        //           id: 3,
+        //           objectId: "000000000000000000000000",
+        //           // description: dynamicData2.payrollUnit.WorkingBu,
+        //           description: "DEPARTMENT LABOUR",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "Segment",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         zone: {
+        //           id: 0,
+        //           objectId: "000000000000000000000000",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "BusinessUnitZone",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         fiscalYear: {
+        //           yearStartDate: "2022-04-01T00:00:00.000Z",
+        //           yearEndDate: "2023-03-31T00:00:00.000Z",
+        //           fiscalYearTemplateId: 0,
+        //           startPeriodId: 0,
+        //           endPeriodId: 0,
+        //           yearType: 0,
+        //           isMidTermYear: false,
+        //           midTermYearStartDate: null,
+        //           id: 15,
+        //           objectId: "000000000000000000000000",
+        //           description: "01-04-2022-31-03-2023",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "FiscalYear",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         localCurrency: {
+        //           subUnitFactor: 0,
+        //           printOrder: 0,
+        //           id: 12,
+        //           objectId: "000000000000000000000000",
+        //           description: "RUPEES",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "Currency",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         reportingCurrency1: {
+        //           subUnitFactor: 0,
+        //           printOrder: 0,
+        //           id: 12,
+        //           objectId: "000000000000000000000000",
+        //           description: "RUPEES",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "Currency",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         reportingCurrency2: {
+        //           subUnitFactor: 0,
+        //           printOrder: 0,
+        //           id: 0,
+        //           objectId: "000000000000000000000000",
+        //           isFinalApproval: false,
+        //           tenantId: 1,
+        //           dbId: 0,
+        //           createdBy: 0,
+        //           createdOn: null,
+        //           lastModifiedBy: 0,
+        //           lastModifiedOn: null,
+        //           mode: "",
+        //           entityName: "Currency",
+        //           isDraft: false,
+        //           isChildEntity: false,
+        //           appId: 0,
+        //           masterEntryTypeId: 0,
+        //           masterDocumentTypeId: 0,
+        //           importSrlNo: 0,
+        //           isUserAdmin: false,
+        //           isDataBeingImportFromExcel: false,
+        //           isDataBeingValidateOnly: false,
+        //           attachmentId: "00000000-0000-0000-0000-000000000000",
+        //           isInApproval: false
+        //         },
+        //         templateGroupId: 0,
+        //         timeZoneId: 0,
+        //         phone1: "+91-...",
+        //         email1: "abc@gmail.com",
+        //         natureId: 0,
+        //         interUnitLedgerId: 6560,
+        //         interUnitParentId: 170,
+        //         interUnitLedger: {
+        //           ledgerGroupId: 53
+        //         },
+        //         startDate: "2022-04-01T00:00:00.000Z",
+        //         countryCode: "IND",
+        //         stateCode: "19",
+        //         countryDesc: "INDIA",
+        //         stateDesc: dynamicData2.payrollUnit.state,
+        //         cityDesc: dynamicData2.payrollUnit.district,
+        //         countryId: 122,
+        //         stateId: 299,
+        //         cityId: 0,
+        //         isDiscontinueBU: false,
+        //         isDiscontinuedStatusChanged: false,
+        //         isParentDiscontinued: false,
+        //         mollakCode: 0,
+        //         mollakDescription: "",
+        //         oracleBUCode: 0,
+        //         inpcrd: "Not Applicable",
+        //         id: dynamicData2.payrollUnit.projectName,
+        //         objectId: "000000000000000000000000",
+        //         code: dynamicData2.workbu.code,
+        //         description: dynamicData2.payrollUnit.WorkingBu,
+        //         parentId: dynamicData2.parentId,
+        //         parentDesc: dynamicData2.payrollUnit.companyName,
+        //         isFinalApproval: false,
+        //         tenantId: 278,
+        //         dbId: 0,
+        //         uiid: 79,
+        //         createdBy: 108,
+        //         createdOn: "2024-05-02T06:17:37.555Z",
+        //         lastModifiedBy: 1914,
+        //         lastModifiedOn: "2024-06-24T01:38:42.075Z",
+        //         mode: "",
+        //         isImported: false,
+        //         entityName: "BusinessUnit",
+        //         isDraft: false,
+        //         isChildEntity: false,
+        //         appId: 0,
+        //         masterEntryTypeId: 0,
+        //         masterDocumentTypeId: 0,
+        //         importSrlNo: 0,
+        //         isUserAdmin: false,
+        //         isDataBeingImportFromExcel: false,
+        //         isDataBeingValidateOnly: false,
+        //         attachmentId: "00000000-0000-0000-0000-000000000000",
+        //         isInApproval: false
+        //       },
+        //       department: {
+        //         id: dynamicData2.department.Id,
+        //         code: dynamicData2.department.Code,
+        //         description: dynamicData2.department.Description,
+        //         parentDesc: null,
+        //         parentId: 0,
+        //         isHidden: null,
+        //         uiid: 0,
+        //         isEditable: null,
+        //         isDeleted: null,
+        //         activeTill: null,
+        //         createdOn: "2021-06-11T11:27:41.990Z",
+        //         createdBy: 0,
+        //         lastModifiedOn: "2021-06-11T11:27:41.990Z",
+        //         lastModifiedBy: 0
+        //       },
+        //       designation: {
+        //         id: dynamicData2.designation.Id,
+        //         code: dynamicData2.designation.Code,
+        //         description: dynamicData2.designation.Description,
+        //         parentDesc: null,
+        //         parentId: null,
+        //         isHidden: null,
+        //         uiid: null,
+        //         isEditable: true,
+        //         isDeleted: null,
+        //         activeTill: null,
+        //         createdOn: "2024-06-26T05:26:48.004Z",
+        //         createdBy: 1914,
+        //         lastModifiedOn: "2024-06-26T05:26:48.004Z",
+        //         lastModifiedBy: 1914
+        //       },
+        //       office: {
+        //         rnum: 2,
+        //         id: 3,
+        //         code: "SL",
+        //         description: "SITE LABOUR"
+        //       },
+        //       uiid: 32,
+        //       IsImported: false,
+        //       machineAddress: "103.186.18.36",
+        //       approvalBaseUrl: "https://vjerp.farvisioncloud.com",
+        //       approvalToken: "0APSJtXkF041rvjnErcFMe_g_lb8tX67jFFodma1_I4YXWZ-roHOiiQTd1mAXzD77W65n8N2iuLvxShYsJwxffLZ4Nl6JvvMOyd1k0Irl2ERiQEnXYnz5Dmw6YBfO_yHUQ_S0lxYRQCAWWpEWy6DdCyfhEFUAp2ltxXlrkvIeSiOOMCgW4Yhwc6IrTvaninwNRaLfGp3XGUFkTz6GdCkPWPZ9oNb66FGkAJ2pSbYnXnTmmRj4OS1n3MW2e2vw09WC-_9dPXzobyus0GJpW4gui_xcQNYpYvPLE4knuuSHocDs4vrGosQy5Q_W97ml0xaZ1g49aCh5m2peNiDw6VMWGcrLYxD1TSaSoPWlGWv4hXjN7uX-TGq9J9IOW2ehhXDxn8j_mo5uO9b1KRjkQQtcNZKHrLC2GCZ2SvabDvo0LNjJSmwhYxGQuOBS2t5Lub0XwtaCaP5LMx1AZ6oIp39124du1QXLRyqSOQDrXqUxTEXYIBURW19mhnGtXQ5SfjZDKRqG-_QEcri4WCn0_bKD4t95s2KweVXsGy8otLaqy2wdumHiRjCs0vdbi6pmGHx-mp280yW8k1XNFXWmquoB-XUUeoPFsDCTDB8D8e-R9hzwI4MQ_K5uqEwicGY7MOQzS29BbZB74DnpXd6R1oLdH62k2GWy9ugQGphoDiqYtLRexRPFUHb9xx6RJnkSeApxbLETekXoqCjREROjHRMxP_MO5N9WA4K8YmBKqabLmgWh-ga5GggRFR0gfm70yJ_oml0I_Lsgp23-Gv1PD6NGbfzAIw"
+        //     };
+
+
+        //     const orgMasterResponse = await axios.post(`${API_BASE_URL}/organizationMasterPayloadUpdatepost`, JSON.stringify(organizationMasterPayload), {
+        //       headers: {
+        //         'Content-Type': 'application/json',
+        //       },
+        //     });
+        //     if (orgMasterResponse.data.status) {
+        //     }
+
+        //     await axios.post(`${API_BASE_URL}/saveApiResponsePayload`, {
+        //       userId: labour.id,
+        //       labourID: labourID,  // Use dynamic labourID here
+        //       name: labour.name,
+        //       aadharNumber: labour.aadhaarNumber,
+        //       employeeMasterPayload: employeeMasterPayload,
+        //       employeeMasterResponseId: employeeMasterResponse.data.outputList.id,
+        //       employeeMasterLedgerId: employeeMasterResponse.data.outputList.ledgerId,
+        //       employeeMasterUserId: employeeMasterResponse.data.outputList.userId,
+        //       employeeCompanyID: employeeMasterResponse.data.outputList.employeeCompanyID,
+        //       employeeExtraInfoId: employeeMasterResponse.data.outputList.employeeExtraInfoId,
+        //       employeeMasterFullResponse: employeeMasterResponse.data,
+        //       organizationMasterPayload: organizationMasterPayload,
+        //       organizationMasterResponseId: orgMasterResponse.data.outputList.id,
+        //       organizationMasterOrgId: orgMasterResponse.data.outputList.orgId,
+        //       organizationMasterStatus: orgMasterResponse.data.status,
+        //       organizationMasterFullResponse: orgMasterResponse.data,
+        //     });
+
+        //     await axios.put(`${API_BASE_URL}/labours/approve/${id}`, { labourID });
+        //     setApprovedLabours((prev) => [...new Set([...prev, id])]);
+        //     toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
+        //   } else {
+        //     throw new Error(`Failed to approve labour ${labour.name}. Status: ${status}`);
+        //   } return labourID;
+        // } else {
+        //   toast.error('Failed to update ESSL details.');
+        // }
+      }     
+
     } catch (error) {
       console.error(`Error approving labour with ID ${id}:`, error);
       toast.error(`Error approving labour with ID ${labour.name}.`);
@@ -1440,7 +1445,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const disableApproveLabour = async (id) => {
     try {
-      const { data: labourResponse } = await axios.get(`${API_BASE_URL}/labours/${id}`);
+      const { data: labourResponse } = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
       const labour = labourResponse;
 
       if (labour.status === 'Pending') {
@@ -1467,14 +1472,14 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
 
         const soapResponse = await axios.post(
-          `${API_BASE_URL}/labours/essl/addEmployee`,
+          `${API_BASE_URL}/api/labours/essl/addEmployee`,
           soapEnvelope,
           { headers: { 'Content-Type': 'text/xml' } }
         );
 
         if (soapResponse.status === 200) {
 
-          await axios.put(`${API_BASE_URL}/labours/approveDisableLabour/${id}`, { labourID });
+          await axios.put(`${API_BASE_URL}/api/labours/approveDisableLabour/${id}`, { labourID });
           setApprovedLabours((prev) => [...new Set([...prev, id])]);
           toast.success(`Labour ${labour.name} approved successfully with LabourID ${labourID}`);
         } else {
@@ -1516,32 +1521,30 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     setIsApproving(false);
   }
 
+  const processLabourApprovals = async (labourQueue) => {
+    if (labourQueue.length === 0 || isApproving) return;
 
+    setIsApproving(true);
+    const { id, departmentId } = labourQueue[0];
 
-  useEffect(() => {
-    const processLabourApprovals = async () => {
-      if (labourQueue.length === 0 || isApproving) return;
-  
-      setIsApproving(true);
-      const { id, departmentId } = labourQueue[0];
-  
-      try {
-        const success = await approveLabour(id, departmentId);
-        if (success) {
-          setLabourIds((prev) => prev.slice(1));
-        }
-      } catch (error) {
-        console.log(`Skipping labour ${id} due to error.`);
-        setLabourQueue(prev => prev.slice(1));
+    try {
+      const success = await approveLabour(id, departmentId);
+      if (success) {
+        setLabourIds((prev) => prev.slice(1));
       }
-  
-      setIsApproving(false);
-    };
-  
-    if (labourQueue.length > 0) {
-      processLabourApprovals();
+    } catch (error) {
+      console.log(`Skipping labour ${id} due to error.`);
+      // setLabourQueue(prev => prev.slice(1));
     }
-  }, [labourQueue, isApproving]);
+
+    setIsApproving(false);
+  };
+
+  // useEffect(() => {
+  //   if (labourQueue.length > 0) {
+  //     processLabourApprovals();
+  //   }
+  // }, [labourQueue, isApproving]);
   
 
 
@@ -1553,7 +1556,10 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     : [{ id: labour.id, departmentId: labour.departmentId }];
 
   setApprovingLabours(prev => [...prev, ...labourObj.map(l => l.id)]);
-  setLabourQueue(prev => [...prev, ...labourObj]);
+  // setLabourQueue(prev => [...prev, ...labourObj]);
+  
+    processLabourApprovals([...labourObj]);
+  
     // if (!Array.isArray(id)) {
     //   id = [id];
     // }
@@ -1589,24 +1595,28 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
 
 
-
   useEffect(() => {
     fetchAttendanceLabours();
   }, []);
-
+  
   const fetchAttendanceLabours = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`);
-
+  
       if (response.data.labours.length > 0) {
         setLabours(response.data.labours);
       } else {
         setHasMore(false);
       }
-      setLoading(false);
     } catch (error) {
+      if (error.response?.status === 503) {
+        setError('Data is not available yet. Please try again later.');
+      } else {
+        setError('Failed to fetch labour data. Please check your connection.');
+      }
       console.error("Error fetching labours:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -1622,7 +1632,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   const handleResubmit = async (labour) => {
     try {
       setLoading(true);
-      const response = await axios.put(`${API_BASE_URL}/labours/resubmit/${labour.id}`);
+      const response = await axios.put(`${API_BASE_URL}/api/labours/resubmit/${labour.id}`);
 
       if (response.data.success) {
         setLabours(prevLabours =>
@@ -1650,7 +1660,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const handleReject = async (id) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/reject/${id}`, { Reject_Reason: rejectReason });
+      const response = await axios.put(`${API_BASE_URL}/api/labours/reject/${id}`, { Reject_Reason: rejectReason });
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
@@ -1672,7 +1682,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const handleEditLabour = async (labour) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/editLabour/${labour.id}`);
+      const response = await axios.put(`${API_BASE_URL}/api/labours/editLabour/${labour.id}`);
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(l =>
@@ -1726,7 +1736,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const openPopup = async (labour) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/${labour.id}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
       const labourDetails = response.data;
       const projectName = getProjectDescription(labourDetails.projectName);
       const department = getDepartmentDescription(labourDetails.department);
@@ -1782,10 +1792,10 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours`);
       setLabours(response.data);
       setLoading(false);
-    } catch (error) {
+    } catch (error) { 
       setError('Error fetching labours. Please try again.');
       setLoading(false);
     }
@@ -1848,7 +1858,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     };
 
     try {
-      const updateResponse = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData);
+      const updateResponse = await axios.put(`${API_BASE_URL}/api/labours/update/${formData.id}`, formattedFormData);
 
       if (updateResponse.status === 200) {
         toast.success('Labour details updated successfully.');
@@ -1864,7 +1874,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const handleDownloadPDF = async (labourId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/${labourId}`);
       const labour = response.data;
       setSelectedLabourData(labour);
       setIsLabourCardOpen(true);
@@ -1893,6 +1903,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
       return 'Unknown';
     }
     const department = departments.find(dept => dept.Id === Number(departmentId));
+    // console.log("department--->", department);
     return department ? department.Description : 'Unknown';
   };
 
@@ -1908,7 +1919,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     }
 
     const project = projectNames.find(proj => proj.Id === Number(projectId));
-
+    // console.log("project--->", project);
     return project ? project.Business_Unit : 'Unknown';
   };
 
@@ -1943,7 +1954,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   useEffect(() => {
     const fetchStatuses = async (labourIds) => {
       try {
-        const response = await axios.post(`${API_BASE_URL}/labours/getCombinedStatuses`, { labourIds });
+        const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
         return response.data;
       } catch (error) {
         console.error('Error fetching statuses:', error);
@@ -1991,7 +2002,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     setError(null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours`, {
+      const response = await axios.get(`${API_BASE_URL}/api/labours`, {
         params: {
           page: page,
           limit: limit
@@ -2085,7 +2096,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
         </soap:Envelope>`;
 
       const soapResponse = await axios.post(
-        `${API_BASE_URL}/labours/essl/addEmployee`,
+        `${API_BASE_URL}/api/labours/essl/addEmployee`,
         soapEnvelope,
         { headers: { 'Content-Type': 'text/xml' } }
       );
@@ -2400,7 +2411,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
                 {tabValue === 1 && (
                   <>
                     <TableCell>Essl Status</TableCell>
-                    <TableCell>Employee Status</TableCell>
+                    {/* <TableCell>Employee Status</TableCell> */}
                   </>
                 )}
                 {tabValue === 0 && (
@@ -2520,10 +2531,10 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
                         {statuses[labour.LabourID]?.esslStatus || statuses[labour.id]?.esslStatus ? (<span style={{ color: 'green' }}>✔</span>
                         ) : (<span style={{ color: 'red' }}>✘</span>)}
                       </TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         {statuses[labour.LabourID]?.employeeMasterStatus || statuses[labour.id]?.employeeMasterStatus ? (<span style={{ color: 'green' }}>✔</span>
                         ) : (<span style={{ color: 'red' }}>✘</span>)}
-                      </TableCell>
+                      </TableCell> */}
                     </>
                   )}
                   {tabValue === 0 && (

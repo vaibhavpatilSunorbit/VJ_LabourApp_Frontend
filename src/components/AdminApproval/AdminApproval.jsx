@@ -34,7 +34,7 @@ const AdminApproval = ({ onFormSubmit }) => {
    // Fetch Attendance Approval counts
    const fetchAttendance = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/LabourAttendanceApproval`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/LabourAttendanceApproval`);
       const pending = response.data.filter(labour => labour.ApprovalStatus === "Pending").length;
       const approved = response.data.filter(labour => labour.ApprovalStatus === "Approved").length;
       const rejected = response.data.filter(labour => labour.ApprovalStatus === "Rejected").length;
@@ -49,7 +49,7 @@ const AdminApproval = ({ onFormSubmit }) => {
   // Fetch Wages Approval counts
   const fetchWages = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/wages/adminApprovals`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/wages/adminApprovals`);
       const pending = response.data.filter(labour => labour.ApprovalStatus === "Pending").length;
       const approved = response.data.filter(labour => labour.ApprovalStatus === "Approved").length;
       const rejected = response.data.filter(labour => labour.ApprovalStatus === "Rejected").length;

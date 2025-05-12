@@ -14,15 +14,14 @@ import {
 // import 'react-toastify/dist/ReactToastify.css';
 import PropTypes from 'prop-types';
 
-const ImportSiteTransfer = ({ handleToast = (type, message) => console[type]?.(message), onboardName, modalOpens, setModalOpens  }) => {
+const ImportSiteTransfer = ({ handleToast = (type, message) => console[type]?.(message), onboardName}) => {
     const [open, setOpen] = useState(false);
     const [file, setFile] = useState(null);
     // const handleClosed = () => setModalOpen(false);
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
-        setFile(null); // Reset the file input on modal close
-        setModalOpens(false);
+        setFile(null); 
         setOpen(false);
     };
 
@@ -55,7 +54,7 @@ const ImportSiteTransfer = ({ handleToast = (type, message) => console[type]?.(m
         formData.append('wagesEditedBy', onboardName);
     
         try {
-            const response = await axios.post(`${API_BASE_URL}/labours/importWagesExcel`, formData, {
+            const response = await axios.post(`${API_BASE_URL}/api/labours/importWagesExcel`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 responseType: 'blob', // Handle file or JSON response
             });
@@ -67,7 +66,6 @@ const ImportSiteTransfer = ({ handleToast = (type, message) => console[type]?.(m
                 const jsonResponse = JSON.parse(text);
                 if (jsonResponse.message) {
                     handleToast('success', jsonResponse.message);
-                    setModalOpens(false);
                     setOpen(false);
                 }
             } else if (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
@@ -109,7 +107,6 @@ const ImportSiteTransfer = ({ handleToast = (type, message) => console[type]?.(m
             handleToast: PropTypes.func,
             onboardName: PropTypes.string,
             modalOpens: PropTypes.bool,
-            setModalOpens: PropTypes.func,
         };
     };
  
@@ -161,7 +158,7 @@ const ImportSiteTransfer = ({ handleToast = (type, message) => console[type]?.(m
                         component="h2"
                         sx={{ fontWeight: 'bold', marginBottom: 1 }}
                     >
-                        Import Wages
+                        Import Site Transfer
                     </Typography>
 
                     <Box display="flex" flexDirection="column" gap={3}>

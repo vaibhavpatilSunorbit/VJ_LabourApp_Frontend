@@ -71,7 +71,7 @@ const PeopleEditDetails = () => {
 
         const fetchLabourDetails = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL}/labours/${labourId}`);
+                const response = await axios.get(`${API_BASE_URL}/api/labours/${labourId}`);
                 setLabourDetails(response.data);
                 setSelectedLabourId(response.data.LabourID);
                 console.log('response.data attendance', response.data.LabourID)
@@ -245,7 +245,7 @@ const PeopleEditDetails = () => {
         setLoading(true);
         try {
             const response = await axios.get(
-                `${API_BASE_URL}/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
+                `${API_BASE_URL}/api/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
                 { params: { month: selectedMonth, year: selectedYear } }
             );
 

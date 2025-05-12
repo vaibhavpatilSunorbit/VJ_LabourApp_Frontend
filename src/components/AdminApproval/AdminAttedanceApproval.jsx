@@ -123,7 +123,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
     }
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/attendance/rejectFromAdmin`, null, {
+      const response = await axios.put(`${API_BASE_URL}/api/labours/attendance/rejectFromAdmin`, null, {
         params: { AttendanceId, rejectReason },
       });
 
@@ -154,7 +154,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
     }
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/labours/attendance/approve`, null, {
+      const response = await axios.put(`${API_BASE_URL}/api/labours/attendance/approve`, null, {
         params: { AttendanceId },
       });
 
@@ -208,7 +208,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
           console.warn(`No id found for labourID=${labourID}`);
           continue;
         }
-        const response = await axios.put(`${API_BASE_URL}/labours/attendance/approve`, null, {
+        const response = await axios.put(`${API_BASE_URL}/api/labours/attendance/approve`, null, {
           params: { AttendanceId: labourObj.AttendanceId },
         });
 
@@ -257,7 +257,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
           continue;
         }
 
-        const response = await axios.put(`${API_BASE_URL}/labours/attendance/rejectFromAdmin`, {
+        const response = await axios.put(`${API_BASE_URL}/api/labours/attendance/rejectFromAdmin`, {
           params: {
             id: labourObj.id,
             rejectReason: rejectReason
@@ -346,7 +346,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
   const fetchLabours = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/labours/LabourAttendanceApproval`);
+      const response = await axios.get(`${API_BASE_URL}/api/labours/LabourAttendanceApproval`);
       setLabours(response.data.map(labour => ({
         ...labour
       })));
@@ -423,7 +423,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
     };
 
     try {
-      const updateResponse = await axios.put(`${API_BASE_URL}/labours/update/${formData.id}`, formattedFormData);
+      const updateResponse = await axios.put(`${API_BASE_URL}/api/labours/update/${formData.id}`, formattedFormData);
 
       if (updateResponse.status === 200) {
         toast.success('Labour details updated successfully.');
