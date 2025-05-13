@@ -1989,7 +1989,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   const handleDownload = async () => {
     setLoadingExcel(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/download-excel`, {
+      const response = await axios.get(`${API_BASE_URL}/api/labours/download-excel`, {
         responseType: 'blob',
       });
 
