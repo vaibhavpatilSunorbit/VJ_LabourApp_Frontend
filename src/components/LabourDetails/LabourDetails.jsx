@@ -49,6 +49,9 @@ import CircleIcon from '@mui/icons-material/Circle';
 import LabourIdCard from '../../PaySlip/LabourIdCard';
 
 const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
+
+  const [departmentsNew, setDepartments] = useState(departments);
+  const [projectNamesNew, setProjectNames] = useState(projectNames);
   const { user } = useUser();
   const [labours, setLabours] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,8 +102,35 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const allowedProjectIds = user && user.projectIds ? JSON.parse(user.projectIds) : [];
-  const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+  const [superAdminUser, setSuperAdminUser] = useState(null);
+
+  useEffect(() => {
+    const fetchSuperAdminProjects = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/admin/getSuperAdminProjectNames`);
+        if (response.data.length > 0) {
+          setSuperAdminUser(response.data[0]); // ✅ use local state
+        }
+      } catch (error) {
+        console.error('Error fetching super admin project names:', error);
+      }
+    };
+
+    fetchSuperAdminProjects();
+  }, []);
+
+
+
+  const allowedProjectIds = superAdminUser?.projectIds
+    ? JSON.parse(superAdminUser.projectIds)
+    : [];
+
+  const allowedDepartmentIds = superAdminUser?.departmentIds
+    ? JSON.parse(superAdminUser.departmentIds)
+    : [];
+
+  // const allowedProjectIds = user && user.projectIds ? JSON.parse(user.projectIds) : [];
+  // const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
   const laboursToDisplay = (
     searchResults.length > 0 ? searchResults : labours
   )
@@ -124,6 +154,24 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
       );
     })
     .sort((a, b) => b.labourID - a.labourID);
+
+    useEffect(() => {
+      const fetchMetadata = async () => {
+        try {
+          const [deptRes, projRes] = await Promise.all([
+            axios.get(`${API_BASE_URL}/api/departments`),
+            axios.get(`${API_BASE_URL}/api/project-names`)
+          ]);
+  
+          setDepartments(deptRes.data);
+          setProjectNames(projRes.data);
+        } catch (err) {
+          console.error('Metadata load failed:', err);
+        }
+      };
+  
+      fetchMetadata();
+    }, []);
 
 
   const handleSearch = async (e) => {
@@ -1898,31 +1946,44 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     }
   });
 
+  // const getDepartmentDescription = (departmentId) => {
+  //   if (!departments || departments.length === 0) {
+  //     return 'Unknown';
+  //   }
+  //   const department = departments.find(dept => dept.Id === Number(departmentId));
+  //   console.log("department new--->", department);
+  //   return department ? department.Description : 'Unknown';
+  // };
+
+
+
+  // const getProjectDescription = (projectId) => {
+  //   if (!Array.isArray(projectNames) || projectNames.length === 0) {
+  //     return 'Unknown';
+  //   }
+  //   if (projectId === undefined || projectId === null || projectId === '') {
+  //     return 'Unknown';
+  //   }
+
+  //   const project = projectNames.find(proj => proj.Id === Number(projectId));
+  //   console.log("project new--->", project);
+  //   return project ? project.Business_Unit : 'Unknown';
+  // };
+
+
   const getDepartmentDescription = (departmentId) => {
-    if (!departments || departments.length === 0) {
-      return 'Unknown';
-    }
-    const department = departments.find(dept => dept.Id === Number(departmentId));
-    // console.log("department--->", department);
-    return department ? department.Description : 'Unknown';
+    if (!departmentsNew.length) return 'Unknown';
+    const dept = departmentsNew.find(d => d.Id === Number(departmentId));
+    return dept?.Description ?? 'Unknown';
   };
-
-
-
 
   const getProjectDescription = (projectId) => {
-    if (!Array.isArray(projectNames) || projectNames.length === 0) {
+    if (!projectNamesNew.length || projectId == null || projectId === '') {
       return 'Unknown';
     }
-    if (projectId === undefined || projectId === null || projectId === '') {
-      return 'Unknown';
-    }
-
-    const project = projectNames.find(proj => proj.Id === Number(projectId));
-    // console.log("project--->", project);
-    return project ? project.Business_Unit : 'Unknown';
+    const proj = projectNamesNew.find(p => p.Id === Number(projectId));
+    return proj?.Business_Unit ?? 'Unknown';
   };
-
 
 
   const handleDownload = async () => {
