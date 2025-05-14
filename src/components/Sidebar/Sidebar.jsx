@@ -136,11 +136,11 @@ import profileIcon4 from '../../images/labor.png';
 import profileIcon5 from '../../images/attendancedevic.png';
 import profileIcon6 from '../../images/attendanceM.png';
 import profileIcon7 from '../../images/report.png';
-import profileIcon8 from '../../images/people.png';
+// import profileIcon8 from '../../images/people.png';
 import profileIcon9 from '../../images/payuser.png';
 import profileIcon10 from '../../images/multiple.png';
 import profileIcon11 from '../../images/datatransfer.png';
-import profileIcon12 from '../../images/salaryRegister.png';
+// import profileIcon12 from '../../images/salaryRegister.png';
 import profileIcon13 from '../../images/wages.png';
 import profileIcon14 from '../../images/payroll.png';
 import VJLogo from '../../images/VJlogo-1-removebg.png';
@@ -188,8 +188,9 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
   }, [openSidebarToggle]);
 
   const isSuperAdminOnly = (item) => {
-    const superAdminPages = ["Attendance Report", "Wages Report", "People", "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Run PayRoll", "View Payroll"];
-    return superAdminPages.includes(item.heading) && user?.userType !== 'superadmin';
+    // const superAdminPages = ["Attendance Report", "Wages Report",  "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Run PayRoll", "View Payroll"];
+    const superAdminPages = [];
+        return superAdminPages.includes(item.heading) && user?.userType !== 'superadmin';
   };
 
   return (
@@ -247,13 +248,14 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
                 item.heading === "Project Machine" ? profileIcon5 :
                 item.heading === "Attendance Report" ? profileIcon6 :
                 item.heading === "Wages Report" ? profileIcon7 :
-                item.heading === "People" ? profileIcon8 :
                 item.heading === "Admin Approval" ? profileIcon9 :
                 item.heading === "Site Transfer" ? profileIcon10 :
                 item.heading === "Variable Input" ? profileIcon11 :
-                item.heading === "Salary Register" ? profileIcon12 :
                 item.heading === "Run PayRoll" ? profileIcon13 :
                 item.heading === "View Payroll" ? profileIcon14 :
+                // item.heading === "People" ? profileIcon8 :
+                // item.heading === "Salary Register" ? profileIcon12 :
+
                 profileIcon6
               } alt="Profile Icon" className="img-white-fill" style={{ height: "30px" }} />
               <Link

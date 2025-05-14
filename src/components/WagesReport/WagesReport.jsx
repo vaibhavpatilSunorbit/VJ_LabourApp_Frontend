@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -13,12 +12,12 @@ import {
     Box,
     TextField,
     TablePagination,
-    Select, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Checkbox,
-    MenuItem, Modal, Typography, IconButton
+    Select, CircularProgress, Checkbox, ListItemText,
+    MenuItem, Modal, Typography, IconButton, Tabs, Tab
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchWages';
+import SearchBar from '../SarchBar/SearchRegister';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import { ToastContainer, toast } from 'react-toastify';
@@ -31,8 +30,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
 import './wagesReport.css'
+// import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+// import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+// import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import  AdapterDateFns  from '@date-io/date-fns';
+import { format, parse } from 'date-fns';
 
-const AttendanceReport = ({ departments = [], projectNames = [] }) => {
+const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -40,6 +45,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [saveLoader, setSaveLoader] = useState(false);
     const [dailyWages, setDailyWages] = useState({});
     const [perDayWages, setPerDayWages] = useState({});
     const [monthlyWages, setMonthlyWages] = useState({});
@@ -54,7 +60,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const [fixedMonthlyWages, setFixedMonthlyWages] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedLabour, setSelectedLabour] = useState(null);
-    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
+    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
     const [businessUnits, setBusinessUnits] = useState([]);
     const [projectName, setProjectName] = useState('');
     const [startDate, setStartDate] = useState('');
@@ -64,11 +70,20 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const [selectedHistory, setSelectedHistory] = useState([]);
     const [effectiveDate, setEffectiveDate] = useState("");
     const [filterModalOpen, setFilterModalOpen] = useState(false);
-    const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [selectedDepartment, setSelectedDepartment] = useState([]);
     const [selectedPayStructure, setSelectedPayStructure] = useState('');
     const [employeeToggle, setEmployeeToggle] = useState('all'); // 'all' or 'single'
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [selectedLabourIds, setSelectedLabourIds] = useState([]);
+    const [selectedLabourWorkingHours, setSelectedLabourWorkingHours] = useState("");
+    const [tabValue, setTabValue] = useState(0);
+    const [modalOpens, setModalOpens] = useState(true);
+    const [perHourWages, setPerHourWages] = useState(null);
+    // const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
+
+
+    const workingHoursString = labours?.workingHours || "FLEXI SHIFT - 9 HRS";
+    const workingHours = parseInt(workingHoursString.match(/\d+/)?.[0], 10) || 8;
 
 
     const convertToIndianTime = (isoString) => {
@@ -87,43 +102,25 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
         return formatter.format(new Date(isoString));
     };
 
-    const getProjectDescription = (projectId) => {
-        if (!Array.isArray(projectNames) || projectNames.length === 0) {
-            console.error('Projects array is empty or invalid:', projectNames);
-            return 'Unknown';
-        }
-        if (projectId === undefined || projectId === null) {
-            console.error('Project ID is undefined or null:', projectId);
-            return 'Unknown';
-        }
-        const project = projectNames.find(
-            (proj) => proj.id === Number(projectId)
-        );
-        return project ? project.Business_Unit : 'Unknown';
-    };
+    const allowedProjectIds =
+        user && user.projectIds ? JSON.parse(user.projectIds) : [];
+    const allowedDepartmentIds =
+        user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+    const laboursSource =
+        labourlist && labourlist.length > 0 ? labourlist : labours;
 
-    // Helper function to get the Department description
-    const getDepartmentDescription = (departmentId) => {
-        if (!Array.isArray(departments) || departments.length === 0) {
-            return 'Unknown';
-        }
-        const department = departments.find(
-            (dept) => dept.Id === Number(departmentId)
-        );
-        return department ? department.Description : 'Unknown';
-    };
 
-    // Function to fetch labours from API with optional filters
     const fetchLabours = async (filters = {}) => {
         setLoading(true);
         try {
             const response = await axios.get(
-                `${API_BASE_URL}/labours/getWagesAndLabourOnboardingJoin`,
+                `${API_BASE_URL}/api/labours/getWagesAndLabourOnboardingJoin`,
                 {
-                    params: filters, // e.g., { ProjectID: selectedBusinessUnit, DepartmentID: selectedDepartment }
+                    params: filters,
                 }
             );
             setLabours(response.data);
+
         } catch (error) {
             console.error('Error fetching labours:', error);
             toast.error('Failed to fetch data');
@@ -132,12 +129,9 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
         }
     };
 
-    useEffect(() => {
-        fetchLabours();
-    }, []);
+  
 
     const handleApplyFilter = async () => {
-        // Build filter query parameters (only add filters with values)
         const params = {};
         if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
         if (selectedDepartment) params.department = selectedDepartment;
@@ -147,44 +141,64 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
         }
     }
     const handleResetFilter = () => {
-        // Reset all filter fields and refetch the complete data set
-        setSelectedBusinessUnit('');
-        setSelectedDepartment('');
+        // setSelectedBusinessUnit('');
+        setSelectedDepartment([]);
         setSelectedPayStructure('');
         setEmployeeToggle('all');
         setSelectedEmployee('');
+        setSelectedBusinessUnit([]);
         fetchLabours();
         setFilterModalOpen(false);
     };
 
+    // const handleApplyFilters = () => {
+    //     const filters = {};
+    //     if (selectedBusinessUnit) {
+    //         // filters.ProjectID = selectedBusinessUnit;
+    //         filters.ProjectID = selectedBusinessUnit.join(',');
+    //     }
+    //     if (selectedDepartment) {
+    //         filters.DepartmentID = selectedDepartment;
+    //     }
+    //     if (selectedPayStructure) {
+    //         filters.PayStructure = selectedPayStructure;
+    //     }
+    //     if (employeeToggle === 'single' && selectedEmployee) {
+    //         filters.employee = selectedEmployee;
+    //     }
+    //     fetchLabours(filters);
+    //     setFilterModalOpen(false);
+    // };
+
     const handleApplyFilters = () => {
         const filters = {};
-        if (selectedBusinessUnit) {
-            filters.ProjectID = selectedBusinessUnit;
+
+        if (Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0) {
+            filters.ProjectID = selectedBusinessUnit.join(','); 
         }
-        if (selectedDepartment) {
-            filters.DepartmentID = selectedDepartment;
+
+        if (Array.isArray(selectedDepartment) && selectedDepartment.length > 0) {
+            filters.DepartmentID = selectedDepartment.join(',');
         }
         if (selectedPayStructure) {
             filters.PayStructure = selectedPayStructure;
         }
         if (employeeToggle === 'single' && selectedEmployee) {
-            filters.employee = selectedEmployee;
+            filters.EmployeeID = selectedEmployee; 
         }
+
         fetchLabours(filters);
         setFilterModalOpen(false);
     };
 
 
     const handleWageChange = (labourId, value) => {
-        const daysInMonth = getDaysInMonth(); // Check number of days in the current month
-        const hoursPerShift = 8; // Assuming 8 hours per shift
+        const daysInMonth = getDaysInMonth();
+        const hoursPerShift = 8;
 
-        // Set daily wage
         setDailyWages(prev => ({ ...prev, [labourId]: value }));
         setPerDayWages(prev => ({ ...prev, [labourId]: value / hoursPerShift }));
 
-        // Calculate monthly and yearly wages based on days in the current month
         const monthly = value * daysInMonth;
         const yearly = monthly * 12;
 
@@ -192,51 +206,14 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
         setYearlyWages(prev => ({ ...prev, [labourId]: yearly }));
     };
 
-    const handleOvertimeChange = (labourId, value) => {
-        const overtimeRate = perDayWages[labourId] || 0; // Calculate hourly overtime rate
-        const overtimeWages = overtimeRate * value; // Total overtime pay
 
-        setOvertime(prev => ({ ...prev, [labourId]: value }));
-        setTotalOvertimeWages(prev => ({ ...prev, [labourId]: overtimeWages }));
-    };
-
-    const handlePayStructureChange = (labourId, structure) => {
-        setPayStructure(prev => ({ ...prev, [labourId]: structure }));
-    };
-
-    const handleWeakelyOffChange = (labourId, value) => {
-        setWeakelyOff(prev => ({ ...prev, [labourId]: value }));
-    };
-
-    const handleSubmit = async () => {
-        const formData = paginatedLabours.map(labour => ({
-            labourId: labour.LabourID,
-            payStructure: payStructure[labour.LabourID],
-            dailyWages: dailyWages[labour.LabourID],
-            perDayWages: perDayWages[labour.LabourID],
-            monthlyWages: monthlyWages[labour.LabourID],
-            yearlyWages: yearlyWages[labour.LabourID],
-            overtime: overtime[labour.LabourID],
-            totalOvertimeWages: totalOvertimeWages[labour.LabourID],
-            weakelyOff: weakelyOff[labour.LabourID],
-        }));
-
-        try {
-            await axios.post(`${API_BASE_URL}/labours/submitWages`, formData);
-            alert("Data submitted successfully!");
-        } catch (error) {
-            console.error("Error submitting data:", error);
-            alert("Failed to submit data.");
-        }
-    };
-
-    // Utility function to get the number of days in the current month
     const getDaysInMonth = () => {
         const today = new Date();
         return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
     };
     const handleCancel = () => {
         setModalOpen(false); // Close the modal without saving
+        setPayStructure({})
     };
     // const displayLabours = searchResults.length > 0 ? searchResults : labours;
 
@@ -253,198 +230,102 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
         fetchBusinessUnits();
     }, []);
 
-    // const fetchBusinessUnits = async () => {
-    //     try {
-    //         const response = await fetch(`https://api.vjerp.com/api/businessUnit`, {
-    //             method: 'GET',
-    //             headers: {
-    //                 Authorization: `Bearer 20a763e266308b35fc75feca4b053d5ce8ea540dbdaa77ee13b1a5e7ce8aadcf`,
-    //             },
-    // mode: 'no-cors',
-
-    //         });
-
-    //         console.log('Response:', response); // Log response to debug
-
-    //         if (!response.ok) {
-    //             throw new Error(`HTTP error! status: ${response.status}, message: ${response.statusText}`);
-    //         }
-
-    //         const data = await response.json();
-    //         console.log('Business Units fetched:', data);
-    //         setBusinessUnits(data);
-    //     } catch (error) {
-    //         console.error('Error fetching business units:', error);
-    //         toast.error('Error fetching business units.');
-    //     }
-    // };
-    // useEffect(() => {
-    //     fetchBusinessUnits();
-    // }, []);
 
 
-
-
-    const handleBusinessUnitChange = async (event) => {
-        const selectedUnit = event.target.value;
-        setSelectedBusinessUnit(selectedUnit);
-
-        const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
-        if (selectedProject) {
-            setProjectName(selectedProject.ProjectID);
-
-            try {
-                const response = await axios.get(`${API_BASE_URL}/labours`, {
-                    params: { projectName: selectedProject.ProjectID },
-                });
-                setLabours(response.data);
-            } catch (error) {
-                console.error('Error fetching labours for project:', error);
-                toast.error('Error fetching labours for the selected project.');
-            }
-        }
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+        setPage(0);
     };
 
-    const handleExport = async () => {
-        if (!startDate || !endDate) {
-            toast.error('Please select a Business Unit, Start Date, and End Date.');
-            return;
-        }
-        try {
-            const response = await axios.get(`${API_BASE_URL}/labours/exportWagesExcel`, {
-                params: { startDate, endDate },
-                responseType: 'blob',
-            });
+    const isAllSelectedProject = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
 
-            const blob = new Blob([response.data], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            });
+    const handleBusinessUnitChange = (event) => {
+        const value = event.target.value;
 
-            const fileName = `Attendance_${selectedBusinessUnit}_${startDate}_${endDate}.xlsx`;
-
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-
-            link.parentNode.removeChild(link);
-
-            toast.success('Attendance exported successfully!');
-        } catch (error) {
-            console.error('Error exporting data:', error);
-
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(`Export Error: ${error.response.data.message}`);
+        if (value.includes('ALL')) {
+            if (isAllSelectedProject) {
+                setSelectedBusinessUnit([]); // Deselect all
             } else {
-                toast.error('Error exporting data. Please try again later.');
+                const allIds = projectNames.map(p => p.Id);
+                setSelectedBusinessUnit(allIds); // Select all
             }
+        } else {
+            setSelectedBusinessUnit(value);
         }
     };
 
-    // const handleSave = async () => {
-    //     try {
-    //         const onboardName = user.name || null;
-    //         if (!payStructure || !effectiveDate) {
-    //             toast.error("Please fill in all required fields.");
-    //             return;
+    // const handleBusinessUnitChange = async (event) => {
+    //     const selectedUnit = event.target.value;
+    //     setSelectedBusinessUnit(selectedUnit);
+
+    //     const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
+    //     if (selectedProject) {
+    //         setProjectName(selectedProject.ProjectID);
+
+    //         try {
+    //             const response = await axios.get(`${API_BASE_URL}/labours`, {
+    //                 params: { projectName: selectedProject.ProjectID },
+    //             });
+    //             setLabours(response.data);
+    //         } catch (error) {
+    //             console.error('Error fetching labours for project:', error);
+    //             toast.error('Error fetching labours for the selected project.');
     //         }
-    //         // Loop through each selected labour ID
-    //         for (const labourId of selectedLabourIds) {
-    //             const wageData = {
-    //                 labourId,
-    //                 payStructure,
-    //                 effectiveDate,
-    //                 // Only pass wage values for Daily Wages; otherwise, set them to null.
-    //                 dailyWages: payStructure === 'Daily Wages' ? (dailyWages || null) : null,
-    //                 monthlyWages: payStructure === 'Daily Wages' ? (monthlyWages || null) : null,
-    //                 yearlyWages: payStructure === 'Daily Wages' ? (yearlyWages || null) : null,
-    //                 overtime: payStructure === 'Daily Wages' ? (overtime || null) : null,
-    //                 totalOvertimeWages: payStructure === 'Daily Wages' ? (totalOvertimeWages || null) : null,
-    //                 // For Fixed Monthly Wages, pass fixedMonthlyWages and weeklyOff; others set to null.
-    //                 fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? (fixedMonthlyWages || null) : null,
-    //                 weeklyOff: payStructure === 'Fixed Monthly Wages' ? (weeklyOff || null) : null,
-    //                 wagesEditedBy: onboardName,
-    //             };
-
-    //             // Check if wages already exist for the current labour
-    //             const updateResponse =  await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData,
-    //                 { params: { labourId } }
-    //             );
-
-    //             if (updateResponse.status === 200) {
-    //                 toast.success('Labour details updated successfully.');
-    //               } else {
-    //                 toast.error('Failed to update labour details. Please try again.');
-    //               }
-    //             };
-    //         // Refresh the data, close the modal, and reset fields & selections
-    //         fetchLabours();
-    //         setModalOpen(false);
-    //         setWeeklyOff("");
-    //         setEffectiveDate("");
-    //         setFixedMonthlyWages(0);
-    //         setMonthlyWages(0);
-    //         setDailyWages(0);
-    //         setSelectedLabourIds([]);
-    //     } catch (error) {
-    //         console.error("Error saving wages:", error);
-    //         toast.error("Failed to save wages.");
     //     }
     // };
+
+   
 
     const handleSave = async () => {
+        setSaveLoader(true);
         try {
             const onboardName = user.name || null;
-    
+
             if (!payStructure || !effectiveDate) {
                 toast.error("Please fill in all required fields.");
                 return;
             }
-    
-            // Store promises for API calls
+
             const apiPromises = [];
-    
-            // Loop through each selected labour ID
+
             for (const labourId of selectedLabourIds) {
                 const wageData = {
                     labourId,
                     payStructure,
                     effectiveDate,
-                    dailyWages: payStructure === 'Daily Wages' ? dailyWages || null : null,
-                    monthlyWages: payStructure === 'Daily Wages' ? monthlyWages || null : null,
-                    yearlyWages: payStructure === 'Daily Wages' ? yearlyWages || null : null,
-                    overtime: payStructure === 'Daily Wages' ? overtime || null : null,
-                    totalOvertimeWages: payStructure === 'Daily Wages' ? totalOvertimeWages || null : null,
-                    fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? fixedMonthlyWages || null : null,
-                    weeklyOff: payStructure === 'Fixed Monthly Wages' ? weeklyOff || null : null,
+                    dailyWages: payStructure === 'DAILY WAGES' ? dailyWages || null : null,
+                    monthlyWages: payStructure === 'DAILY WAGES' ? monthlyWages || null : null,
+                    yearlyWages: payStructure === 'DAILY WAGES' ? yearlyWages || null : null,
+                    overtime: payStructure === 'DAILY WAGES' ? overtime || null : null,
+                    totalOvertimeWages: payStructure === 'DAILY WAGES' ? totalOvertimeWages || null : null,
+                    fixedMonthlyWages: payStructure === 'FIXED MONTHLY WAGES' ? fixedMonthlyWages || null : null,
+                    weeklyOff: payStructure === 'FIXED MONTHLY WAGES' ? weeklyOff || null : null,
                     wagesEditedBy: onboardName,
                 };
-    
+
                 try {
-                    // **Run upsertLabourMonthlyWages API and wait for WageID**
-                    const upsertResponse = await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-                    
+                    const upsertResponse = await axios.post(`${API_BASE_URL}/api/labours/upsertLabourMonthlyWages`, wageData);
+
                     if (upsertResponse.data && upsertResponse.data.WageID) {
                         wageData.wageId = upsertResponse.data.WageID; // Assign WageID
-    
-                        // **Run sendWagesForApproval API using the received WageID**
-                        apiPromises.push(axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData));
+
+                        apiPromises.push(axios.post(`${API_BASE_URL}/api/labours/sendWagesForApproval`, wageData));
+
+                        // **Wait for all sendWagesForApproval API calls to complete**
+                        await Promise.all(apiPromises);
+
+                        toast.info("Wages sent for admin approval.");
                     } else {
                         console.error(`Failed to get WageID for LabourID ${labourId}`);
+                        toast.error(upsertResponse.data.message);
                     }
                 } catch (error) {
                     console.error(`Error processing LabourID ${labourId}:`, error);
                 }
             }
-    
-            // **Wait for all sendWagesForApproval API calls to complete**
-            await Promise.all(apiPromises);
-    
-            // Show success message after all API calls complete
-            toast.info("Wages sent for admin approval.");
-    
-            // Refresh the data, close the modal, and reset fields & selections
+            setSaveLoader(false);
+            handleCancel();
+
             fetchLabours();
             setModalOpen(false);
             setWeeklyOff("");
@@ -452,78 +333,14 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
             setFixedMonthlyWages(0);
             setMonthlyWages(0);
             setDailyWages(0);
+            setYearlyWages(0);
             setSelectedLabourIds([]);
-    
+            setSelectedLabourWorkingHours("");
         } catch (error) {
             console.error("Error saving wages:", error);
             toast.error("Failed to save wages.");
         }
     };
-    
-    
-
-    // const handleSave = async () => {
-    //     try {
-    //         const onboardName = user.name || null;
-    //         if (!payStructure || !effectiveDate) {
-    //             toast.error("Please fill in all required fields.");
-    //             return;
-    //         }
-    //         // Loop through each selected labour ID
-    //         for (const labourId of selectedLabourIds) {
-    //             const wageData = {
-    //                 labourId,
-    //                 payStructure,
-    //                 effectiveDate,
-    //                 // Only pass wage values for Daily Wages; otherwise, set them to null.
-    //                 dailyWages: payStructure === 'Daily Wages' ? (dailyWages || null) : null,
-    //                 monthlyWages: payStructure === 'Daily Wages' ? (monthlyWages || null) : null,
-    //                 yearlyWages: payStructure === 'Daily Wages' ? (yearlyWages || null) : null,
-    //                 overtime: payStructure === 'Daily Wages' ? (overtime || null) : null,
-    //                 totalOvertimeWages: payStructure === 'Daily Wages' ? (totalOvertimeWages || null) : null,
-    //                 // For Fixed Monthly Wages, pass fixedMonthlyWages and weeklyOff; others set to null.
-    //                 fixedMonthlyWages: payStructure === 'Fixed Monthly Wages' ? (fixedMonthlyWages || null) : null,
-    //                 weeklyOff: payStructure === 'Fixed Monthly Wages' ? (weeklyOff || null) : null,
-    //                 wagesEditedBy: onboardName,
-    //             };
-
-    //             // Check if wages already exist for the current labour
-    //             const { data: existingWagesResponse } = await axios.get(
-    //                 `${API_BASE_URL}/labours/checkExistingWages`,
-    //                 { params: { labourId } }
-    //             );
-
-    //             const { exists, approved, data } = existingWagesResponse;
-
-    //             if (!exists) {
-    //                 await axios.post(`${API_BASE_URL}/labours/upsertLabourMonthlyWages`, wageData);
-    //                 toast.success(`Wages added successfully for labour ${labourId}.`);
-    //             } else if (exists && !approved) {
-    //                 wageData.wageId = data.WageID;
-    //                 await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-    //                 toast.info(`Wages sent for admin approval for labour ${labourId}.`);
-    //             } else if (exists && approved) {
-    //                 wageData.wageId = data.WageID;
-    //                 await axios.post(`${API_BASE_URL}/labours/sendWagesForApproval`, wageData);
-    //                 toast.info(`Wages changes sent for admin approval for labour ${labourId}.`);
-    //             }
-    //         }
-    //         // Refresh the data, close the modal, and reset fields & selections
-    //         fetchLabours();
-    //         setModalOpen(false);
-    //         setWeeklyOff("");
-    //         setEffectiveDate("");
-    //         setFixedMonthlyWages(0);
-    //         setMonthlyWages(0);
-    //         setDailyWages(0);
-    //         setSelectedLabourIds([]);
-    //     } catch (error) {
-    //         console.error("Error saving wages:", error);
-    //         toast.error("Failed to save wages.");
-    //     }
-    // };
-
-
 
     const handleEdit = (labour) => {
         setSelectedLabour(labour);
@@ -539,6 +356,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const handleToast = (type, message) => {
         if (type === 'success') {
             toast.success(message);
+            setModalOpen(false);
         } else if (type === 'error') {
             toast.error(message);
         }
@@ -547,13 +365,14 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
     const handleSearch = async (e) => {
         e.preventDefault();
         if (searchQuery.trim() === '') {
-            fetchLabours();
+            setSearchResults([]);
             return;
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/searchLaboursFromWages?q=${searchQuery}`);
-            setLabours(response.data);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/searchLaboursFromWages?q=${searchQuery}`);
+            setSearchResults(response.data);
+            setPage(0);
         } catch (error) {
             console.error('Error searching:', error);
             toast.error('Search failed');
@@ -561,81 +380,174 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
             setLoading(false);
         }
     };
-
-    const handlePageChange = (e, newPage) => {
-        setPage(newPage);
-    };
-
-    const handleRowsPerPageChange = (e) => {
-        const newRowsPerPage = parseInt(e.target.value, 10);
-        setRowsPerPage(newRowsPerPage);
-        setPage(0); // Reset to the first page
-    };
     const handleSelectLabour = (selectedLabour) => {
         setSelectedLabour(selectedLabour);
     };
 
-    // Data to display on the current page
-    // const paginatedLabours = labours.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
-    const getLatestLabourData = (labours) => {
-        const latestEntries = {};
-        labours.forEach((labour) => {
-            if (
-                !latestEntries[labour.LabourID] ||
-                new Date(labour.CreatedAt) > new Date(latestEntries[labour.LabourID].CreatedAt)
-            ) {
-                latestEntries[labour.LabourID] = labour;
-            }
+    const getFilteredLaboursForTable = () => {
+        let baseLabours = searchResults.length > 0 ? [...searchResults] : [...laboursSource];
+        baseLabours = baseLabours.filter((labour) => {
+            const labourProjectId = Number(labour.ProjectID);
+            const labourDepartmentId = Number(labour.DepartmentID);
+            const projectMatch =
+                allowedProjectIds.length > 0
+                    ? allowedProjectIds.includes(labourProjectId)
+                    : true;
+            const departmentMatch =
+                allowedDepartmentIds.length > 0
+                    ? allowedDepartmentIds.includes(labourDepartmentId)
+                    : true;
+            return projectMatch || departmentMatch;
         });
-        return Object.values(latestEntries);
+        return baseLabours || [];
     };
 
-    // Checkbox handling: select/deselect individual row
-    const handleSelectRow = (event, labourId) => {
+    const getProjectDescription = (ProjectID) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
+        if (ProjectID === undefined || ProjectID === null || ProjectID === '') return 'Unknown';
+        const project = projectNames.find((proj) => proj.Id === Number(ProjectID));
+        return project ? project.Business_Unit : 'Unknown';
+    };
+
+    const getDepartmentDescription = (departmentId) => {
+        if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
+        const department = departments.find((dept) => dept.Id === Number(departmentId));
+        return department ? department.Description : 'Unknown';
+    };
+
+    const filteredLaboursForTable = getFilteredLaboursForTable();
+
+
+    const displayedLabours = filteredLaboursForTable.filter((labour) => {
+        return (
+            getProjectDescription(labour.ProjectID) !== 'Unknown' &&
+            getDepartmentDescription(labour.DepartmentID) !== 'Unknown'
+        );
+    });
+
+    const isAllSelected =
+        filteredLaboursForTable.length > 0 &&
+        filteredLaboursForTable.every((labour) => selectedLabourIds.includes(labour.LabourID));
+
+        const isAllSelectedDep = departments.length > 0 && selectedDepartment.length === departments.length;
+
+    const handleSelectRow = (event, labourId, workingHours) => {
         if (event.target.checked) {
-            setSelectedLabourIds(prev => [...prev, labourId]);
+            setSelectedLabourIds((prev) => [...prev, labourId]);
+            setSelectedLabourWorkingHours(workingHours);
         } else {
-            setSelectedLabourIds(prev => prev.filter(id => id !== labourId));
+            setSelectedLabourIds((prev) => prev.filter((id) => id !== labourId));
         }
     };
 
-    // Checkbox handling: select/deselect all rows on current page
     const handleSelectAllRows = (event) => {
         if (event.target.checked) {
-            const newSelected = paginatedLabours.map(labour => labour.LabourID);
-            setSelectedLabourIds(prev => [...prev, ...newSelected.filter(id => !prev.includes(id))]);
+            const newSelected = filteredLaboursForTable.map((labour) => labour.LabourID);
+            setSelectedLabourIds((prev) => [
+                ...prev,
+                ...newSelected.filter((id) => !prev.includes(id)),
+            ]);
         } else {
-            const newSelected = paginatedLabours.map(labour => labour.LabourID);
-            setSelectedLabourIds(prev => prev.filter(id => !newSelected.includes(id)));
+            const newSelected = filteredLaboursForTable.map((labour) => labour.LabourID);
+            setSelectedLabourIds((prev) =>
+                prev.filter((id) => !newSelected.includes(id))
+            );
+        }
+    };
+
+    const handleDepartmentChange = (event) => {
+        const value = event.target.value;
+        if (value.includes('ALL')) {
+            if (isAllSelectedDep) {
+                setSelectedDepartment([]);
+            } else {
+                const allDeptIds = departments.map(d => d.Id);
+                setSelectedDepartment(allDeptIds);
+            }
+        } else {
+            // setSelectedDepartment(typeof value === 'string' ? value.split(',') : value);
+            setSelectedDepartment(value);
         }
     };
 
     const handleViewHistory = (labourID) => {
         const history = labours.filter((labour) => labour.LabourID === labourID);
+        // console.log('history', history)
         setSelectedHistory(history);
         setOpenModal(true);
     };
 
-    const filteredLabours = getLatestLabourData(labours);
-    const paginatedLabours = filteredLabours.slice(
-        page * rowsPerPage,
-        rowsPerPage === -1 ? filteredLabours.length : (page + 1) * rowsPerPage
-    );
-    const isAllSelected =
-        paginatedLabours.length > 0 &&
-        paginatedLabours.every(labour => selectedLabourIds.includes(labour.LabourID));
+    const handlePageChange = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleRowsPerPageChange = (event) => {
+        const newRows = parseInt(event.target.value, 10);
+        setRowsPerPage(newRows);
+        setPage(0);
+    };
+
+    const pendingCount = displayedLabours.filter(labour =>
+        labour?.ApprovalStatusWages === "null" ||
+        labour?.ApprovalStatusWages === 'Pending' ||
+        labour?.ApprovalStatusWages === null ||
+        labour?.ApprovalStatusWages === ""
+    ).length;
+
+    const approvedCount = displayedLabours.filter(labour =>
+        labour?.ApprovalStatusWages === 'Approved'
+    ).length;
+
+    const fetchWageHistory = async () => {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/api/labours/wages/adminApprovals`);
+          const allWageHistories = response.data;
+      
+          // Assuming selectedHistory[0]?.LabourID is available
+          const targetLabourId = selectedHistory[0]?.LabourID;
+      
+          // Filter to match the LabourID
+          const matchedHistory = allWageHistories.filter(
+            (record) => record.LabourID === targetLabourId
+          );
+      
+          setSelectedHistory(matchedHistory); // Update state to re-render the modal
+        } catch (error) {
+          console.error("Error fetching wage history:", error);
+        }
+      };
+
+    const shouldDisableDate = (date) => {
+        return date.getDate() !== 1;
+      };
+      const handleDateChange = (newDate) => {
+        const formattedDate = format(newDate, 'dd-MM-yyyy');
+        setEffectiveDate(formattedDate);
+      };
+      
+      useEffect(() => {
+        if (openModal) {
+          fetchWageHistory();
+        }
+      }, [openModal]);
+      
+      useEffect(() => {
+        fetchLabours();
+    }, []);
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible', overflowY: 'auto' }}>
             <ToastContainer />
-            <Box ml={-1.5}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Wages Report
+                </Typography>
                 <SearchBar
-                    handleSubmit={handleSubmit}
+                    // handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
                     handleSearch={handleSearch}
-                    // handleSearch={() => {}}
                     searchResults={searchResults}
                     setSearchResults={setSearchResults}
                     handleSelectLabour={handleSelectLabour}
@@ -661,95 +573,82 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                     flexWrap: "wrap",
                 }}
             >
-                <ExportWagesReport />
-                <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} />
 
-                {/* <Box display="flex" alignItems="flex-end" gap={2}>
-                    <Select
-                        value={selectedBusinessUnit}
-                        onChange={handleBusinessUnitChange}
-                        displayEmpty
-                        sx={{ width: '200px' }}
-                    >
-                        <MenuItem value="" disabled>
-                            Select Business Unit
-                        </MenuItem>
-                        {businessUnits.length > 0 ? (
-                            businessUnits.map((unit) => (
-                                <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
-                                    {unit.BusinessUnit}
-                                </MenuItem>
-                            ))
-                        ) : (
-                            <MenuItem value="" disabled>
-                                No Business Units Available
-                            </MenuItem>
-                        )}
-                    </Select>
-                    <TextField
-                        label="Start Date"
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{
-                            padding: '4px 4px 1px 4px',
-                            '& .MuiInputBase-input': {
-                                padding: '8px 8px',
-                            },
-                        }}
-                    />
-                    <TextField
-                        label="End Date"
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{
-                            padding: '4px 4px 1px 4px',
-                            '& .MuiInputBase-input': {
-                                padding: '8px 8px',
-                            },
-                        }}
-                    />
-                    <Button variant="contained" onClick={handleExport} sx={{
-                        fontSize: { xs: '10px', sm: '13px', md: '15px' },
-                        height: { xs: '40px', sm: '38px', md: '38px', lg: '38px' },
-                        width: { xs: '100%', sm: 'auto' },
-                        backgroundColor: 'rgb(229, 255, 225)',
-                        color: 'rgb(43, 217, 144)',
-                        '&:hover': {
-                            backgroundColor: 'rgb(229, 255, 225)',
+                <Tabs
+                    value={tabValue}
+                    onChange={handleTabChange}
+                    aria-label="tabs example"
+                    sx={{
+                        ".MuiTabs-indicator": {
+                            display: "none",
                         },
-                    }}>
-                        Export
-                    </Button>
-                </Box> */}
+                        minHeight: "auto",
+                    }}
+                >
+                    <Tab
+                        label="Pending"
+                        style={{ color: tabValue === 0 ? "#8236BC" : "black" }}
+                        sx={{
+                            color: tabValue === 0 ? "white" : "black",
+                            bgcolor: tabValue === 0 ? "#EFE6F7" : "transparent",
+                            borderRadius: 1,
+                            textTransform: "none",
+                            fontWeight: "bold",
+                            mr: 1,
+                            minHeight: "auto",
+                            minWidth: "auto",
+                            // padding: "6px 12px",
+                            "&:hover": {
+                                bgcolor: tabValue === 0 ? "#EFE6F7" : "#EFE6F7",
+                            },
+                        }}
+                    />
+                    <Tab
+                        label="Approved"
+                        style={{ color: tabValue === 1 ? "rgb(43, 217, 144)" : "black" }}
+                        sx={{
+                            color: tabValue === 1 ? "white" : "black",
+                            bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "transparent",
+                            borderRadius: 1,
+                            textTransform: "none",
+                            mr: 1,
+                            fontWeight: "bold",
+                            minHeight: "auto",
+                            minWidth: "auto",
+                            // padding: "6px 12px",
+                            "&:hover": {
+                                bgcolor: tabValue === 1 ? "rgb(229, 255, 225)" : "rgb(229, 255, 225)",
+                            },
+                        }}
+                    /> </Tabs>
 
-                <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
-                    Filter
-                </Button>
-                {selectedLabourIds.length > 0 && (
-                    <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
-                        Edit ({selectedLabourIds.length})
-                    </Button>
-                )}
+                <ExportWagesReport departments={departments} projectNames={projectNames} />
+                <ImportWagesReport handleToast={handleToast} onboardName={user.name || null} modalOpens={modalOpens} setModalOpens={setModalOpens} />
 
+                <Button
+                                variant="outlined"
+                                color="secondary"
+                                startIcon={<FilterListIcon />}
+                                onClick={() => setFilterModalOpen(true)}
+                            >
+                                Filter
+                            </Button>
 
-                {/* <IconButton onClick={() => setFilterModalOpen(true)} aria-label="Select Filter">
-  <FilterListIcon />
-</IconButton>
-{selectedLabourIds.length > 0 && (
-  <IconButton onClick={() => setModalOpen(true)} aria-label="Edit Wages">
-    <EditIcon />
-  </IconButton>
-)} */}
-
+                            {selectedLabourIds.length > 0 && (
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    startIcon={<EditIcon />}
+                                    onClick={() => setModalOpen(true)}
+                                >
+                                    Edit ({selectedLabourIds.length})
+                                </Button>
+                            )}
 
                 <TablePagination
                     className="custom-pagination"
-                    rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                    count={labours.length}
+                    rowsPerPageOptions={[25, 100, 900, { label: 'All', value: displayedLabours.length }]}
+                    count={tabValue === 0 ? pendingCount : approvedCount}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handlePageChange}
@@ -797,18 +696,19 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                                     },
                                 }}
                             >
-                                <TableCell padding="checkbox">
+                                {/* <TableCell padding="checkbox">
                                     <Checkbox
                                         checked={isAllSelected}
                                         onChange={handleSelectAllRows}
                                         inputProps={{ 'aria-label': 'select all labours' }}
-                                    /></TableCell>
+                                    /></TableCell> */}
                                 <TableCell>Sr No</TableCell>
                                 <TableCell>Labour ID</TableCell>
                                 <TableCell>Name</TableCell>
                                 <TableCell>Business Unit</TableCell>
                                 <TableCell>Department</TableCell>
-                                <TableCell>From Date</TableCell>
+                                {/* <TableCell>From Date</TableCell> */}
+                                <TableCell>Effective From</TableCell>
                                 <TableCell>Pay Structure</TableCell>
                                 <TableCell>Daily Wages</TableCell>
                                 <TableCell>Fixed Monthly Wages</TableCell>
@@ -820,56 +720,79 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {paginatedLabours.map((labour, index) => (
-                                <TableRow key={labour.LabourID}>
-                                    <TableCell padding="checkbox">
-                                        <Checkbox
-                                            checked={selectedLabourIds.includes(labour.LabourID)}
-                                            onChange={(e) => handleSelectRow(e, labour.LabourID)}
-                                            inputProps={{ 'aria-label': `select labour ${labour.LabourID}` }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                    <TableCell>{labour.LabourID}</TableCell>
-                                    <TableCell>{labour.name || '-'}</TableCell>
-                                    <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell>
-                                    <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
-                                    <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell>
-                                    <TableCell>{labour.PayStructure || '-'}</TableCell>
-                                    <TableCell>{labour.DailyWages || '-'}</TableCell>
-                                    <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
-                                    <TableCell>{labour.WeeklyOff || '-'}</TableCell>
-                                    <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
-                                    <TableCell>{labour.CreatedAt ? new Date(labour.CreatedAt).toLocaleDateString() : '-'}</TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            color='rgb(239,230,247)'
-                                            onClick={() => handleViewHistory(labour.LabourID)}
-                                        >
-                                            <VisibilityIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant="contained"
-                                            sx={{
-                                                backgroundColor: 'rgb(239,230,247)',
-                                                color: 'rgb(130,54,188)',
-                                                '&:hover': { backgroundColor: 'rgb(239,230,247)' },
-                                            }}
-                                            onClick={() => {
-                                                // For individual edit, you can add this labour to the selection and open the modal.
-                                                if (!selectedLabourIds.includes(labour.LabourID)) {
-                                                    setSelectedLabourIds([...selectedLabourIds, labour.LabourID]);
-                                                }
-                                                setModalOpen(true);
-                                            }}
-                                        >
-                                            Edit
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                            {displayedLabours
+                                .filter(labour =>
+                                    (tabValue === 0 &&
+                                        (labour?.ApprovalStatusWages === 'Pending' ||
+                                            labour?.ApprovalStatusWages === null ||
+                                            labour?.ApprovalStatusWages === "" || labour?.ApprovalStatusWages === "Rejected")) ||
+                                    (tabValue === 1 && labour?.ApprovalStatusWages === 'Approved')
+                                )
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((labour, index) => {
+                                    const createdAt = new Date(labour.CreatedAt);
+                                    const currentDate = new Date();
+                                    const threeMonthsAgo = new Date();
+                                    threeMonthsAgo.setMonth(currentDate.getMonth() - 3);
+
+                                    const isOlderThan3Months = createdAt < threeMonthsAgo;
+
+                                    let backgroundColor = 'inherit';
+                                    if (!isOlderThan3Months) {
+                                        if (labour?.ApprovalStatusWages === 'Pending') {
+                                            backgroundColor = '#ffe6e6'; // Light red
+                                        } else if (labour?.ApprovalStatusWages === 'Approved') {
+                                            backgroundColor = '#dcfff0'; // Light green
+                                        }
+                                    }
+                                    return (
+                                        <TableRow key={labour.LabourID} sx={{ backgroundColor }}>
+                                            <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                                            <TableCell>{labour.LabourID}</TableCell>
+                                            <TableCell>{labour.name || '-'}</TableCell>
+                                            {/* <TableCell>{getProjectDescription(labour.ProjectID) || '-'}</TableCell> */}
+                                            <TableCell>{labour.businessUnit || '-'}</TableCell>
+                                            <TableCell>{getDepartmentDescription(labour.DepartmentID) || '-'}</TableCell>
+                                            {/* <TableCell>{labour.From_Date ? new Date(labour.From_Date).toLocaleDateString() : '-'}</TableCell> */}
+                                            <TableCell>{labour.EffectiveDate ? format(new Date(labour.EffectiveDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                                            <TableCell>{labour.PayStructure || '-'}</TableCell>
+                                            <TableCell>{labour.DailyWages || '-'}</TableCell>
+                                            <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
+                                            {/* <TableCell>{labour.WeeklyOff || '-'}</TableCell> */}
+                                            <TableCell>{labour.WeeklyOff != null ? labour.WeeklyOff : '-'}</TableCell>
+                                            <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
+                                            <TableCell>{labour.CreatedAt ? format(new Date(labour.CreatedAt), 'dd/MM/yyyy') : '-'}</TableCell>
+                                            <TableCell>
+                                                <IconButton
+                                                    color='rgb(239,230,247)'
+                                                    onClick={() => handleViewHistory(labour.LabourID)}
+                                                >
+                                                    <VisibilityIcon />
+                                                </IconButton>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    variant="contained"
+                                                    sx={{
+                                                        backgroundColor: 'rgb(239,230,247)',
+                                                        color: 'rgb(130,54,188)',
+                                                        '&:hover': { backgroundColor: 'rgb(239,230,247)' },
+                                                    }}
+                                                    onClick={() => {
+                                                        if (!selectedLabourIds.includes(labour.LabourID)) {
+                                                            setSelectedLabourIds([...selectedLabourIds, labour.LabourID]);
+                                                            setSelectedLabourWorkingHours(labour.workingHours);
+                                                        }
+                                                        setModalOpen(true);
+                                                    }}
+                                                >
+                                                    Edit
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+
+                                    )
+                                })}
                         </TableBody>
                     </Table>
                 </Box>
@@ -890,7 +813,6 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                         p: 4,
                     }}
                 >
-                    {/* Modal Header with Title and Close Button */}
                     <Box
                         sx={{
                             display: 'flex',
@@ -907,10 +829,9 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                         </Button>
                     </Box>
 
-                    {/* Business Unit Filter using projectNames from props */}
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="body1">Business Unit</Typography>
-                        <Select
+                        {/* <Select
                             fullWidth
                             value={selectedBusinessUnit}
                             onChange={(e) => setSelectedBusinessUnit(e.target.value)}
@@ -922,8 +843,42 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                             </MenuItem>
                             {Array.isArray(projectNames) && projectNames.length > 0 ? (
                                 projectNames.map((project) => (
-                                    <MenuItem key={project.id} value={project.id}>
+                                    <MenuItem key={project.Id} value={project.Id}>
                                         {project.Business_Unit}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Projects Available
+                                </MenuItem>
+                            )}
+                        </Select> */}
+
+
+                        <Select
+                            fullWidth
+                            multiple
+                            value={selectedBusinessUnit}
+                            onChange={handleBusinessUnitChange}
+                            displayEmpty
+                            renderValue={(selected) => {
+                                if (selected.length === 0) return <em>All</em>;
+                                const selectedLabels = projectNames
+                                    .filter(project => selected.includes(project.Id))
+                                    .map(project => project.Business_Unit);
+                                return selectedLabels.join(', ');
+                            }}
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="ALL">
+                                <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+                                <ListItemText primary="Select All" />
+                            </MenuItem>
+                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                projectNames.map((project) => (
+                                    <MenuItem key={project.Id} value={project.Id}>
+                                        <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                        <ListItemText primary={project.Business_Unit} />
                                     </MenuItem>
                                 ))
                             ) : (
@@ -934,32 +889,45 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                         </Select>
                     </Box>
 
-                    {/* Department Filter using departments from props */}
                     <Box sx={{ mb: 2 }}>
-                        <Typography variant="body1">Department</Typography>
-                        <Select
-                            fullWidth
-                            value={selectedDepartment}
-                            onChange={(e) => setSelectedDepartment(e.target.value)}
-                            displayEmpty
-                            sx={{ mt: 1 }}
-                        >
-                            <MenuItem value="">
-                                <em>All</em>
-                            </MenuItem>
-                            {Array.isArray(departments) && departments.length > 0 ? (
-                                departments.map((department) => (
-                                    <MenuItem key={department.Id} value={department.Id}>
-                                        {department.Description}
-                                    </MenuItem>
-                                ))
-                            ) : (
-                                <MenuItem value="Unknown" disabled>
-                                    No Department Available
-                                </MenuItem>
-                            )}
-                        </Select>
-                    </Box>
+                                           <Typography variant="body1">Department</Typography>
+                                           <Select
+                                               fullWidth
+                                               multiple
+                                               value={selectedDepartment}
+                                               onChange={handleDepartmentChange}
+                                               displayEmpty
+                                               renderValue={(selected) => {
+                                                   if (selected.length === 0) return <em>All</em>;
+                                                   const selectedLabels = departments
+                                                       .filter(dept => selected.includes(dept.Id))
+                                                       .map(dept => dept.Description);
+                                                   return selectedLabels.join(', ');
+                                               }}
+                                               sx={{ mt: 1 }}
+                                           >
+                                               <MenuItem value="ALL">
+                                                   <Checkbox
+                                                       checked={isAllSelectedDep}
+                                                       indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep}
+                                                   />
+                                                   <ListItemText primary="Select All" />
+                                               </MenuItem>
+                   
+                                               {Array.isArray(departments) && departments.length > 0 ? (
+                                                   departments.map((department) => (
+                                                       <MenuItem key={department.Id} value={department.Id}>
+                                                           <Checkbox checked={selectedDepartment.includes(department.Id)} />
+                                                           <ListItemText primary={department.Description} />
+                                                       </MenuItem>
+                                                   ))
+                                               ) : (
+                                                   <MenuItem value="Unknown" disabled>
+                                                       No Department Available
+                                                   </MenuItem>
+                                               )}
+                                           </Select>
+                                       </Box>
 
                     {/* Pay Structure Filter */}
                     <Box sx={{ mb: 2 }}>
@@ -974,30 +942,10 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                             <MenuItem value="">
                                 <em>All</em>
                             </MenuItem>
-                            <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
-                            <MenuItem value="Daily Wages">Daily Wages</MenuItem>
+                            <MenuItem value="FIXED MONTHLY WAGES">Fixed Monthly Wages</MenuItem>
+                            <MenuItem value="DAILY WAGES">Daily Wages</MenuItem>
                         </Select>
                     </Box>
-
-                    {/* Employee Filter Section */}
-                    {/* <Box sx={{ mb: 2 }}>
-      <FormControl component="fieldset">
-        <FormLabel component="legend">Employee Filter</FormLabel>
-        <RadioGroup row value={employeeToggle} onChange={(e) => setEmployeeToggle(e.target.value)}>
-          <FormControlLabel value="all" control={<Radio />} label="All" />
-          <FormControlLabel value="single" control={<Radio />} label="Single" />
-        </RadioGroup>
-      </FormControl>
-      {employeeToggle === 'single' && (
-        <TextField
-          fullWidth
-          label="Employee ID"
-          value={selectedEmployee}
-          onChange={(e) => setSelectedEmployee(e.target.value)}
-          sx={{ mt: 1 }}
-        />
-      )}
-    </Box> */}
 
                     {/* Modal Action Buttons */}
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
@@ -1020,170 +968,6 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                 </Box>
             </Modal>
 
-
-            {/* Modal */}
-            {/* <Modal
-                open={modalOpen}
-                onClose={handleCancel}
-                aria-labelledby="modal-title"
-                aria-describedby="modal-description"
-            >
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 500,
-                        bgcolor: 'background.paper',
-                        boxShadow: 24,
-                        p: 4,
-                        borderRadius: 2,
-                    }}
-                >
-                    <h2 id="modal-title">Edit Pay Structure</h2>
-
-                    <Select
-                        fullWidth
-                        value={payStructure}
-                        onChange={(e) => setPayStructure(e.target.value)}
-                        displayEmpty
-                        sx={{ mb: 2 }}
-                    >
-                        <MenuItem value="" disabled>
-                            Select Pay Structure
-                        </MenuItem>
-                        <MenuItem value="Daily Wages">Daily Wages</MenuItem>
-                        <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
-                    </Select>
-
-                    <TextField
-                        label="Effective Date"
-                        type="date"
-                        fullWidth
-                        value={effectiveDate}
-                        onChange={(e) => setEffectiveDate(e.target.value)}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                        sx={{ mb: 2 }}
-                        required
-                    />
-
-                    {payStructure === 'Daily Wages' && (
-                        <>
-                            <TextField
-                                label="Daily Wages"
-                                type="number"
-                                fullWidth
-                                value={dailyWages || ""} // Display an empty string if the value is 0 or null
-                                onChange={(e) => {
-                                    const value = e.target.value === "" ? null : parseFloat(e.target.value); // Set null for empty input, otherwise parse the number
-                                    setDailyWages(value);
-                                    if (value !== null) {
-                                        setMonthlyWages(value * 30); // Assuming 30 days in a month
-                                        setYearlyWages(value * 30 * 12); // Assuming 12 months in a year
-                                    } else {
-                                        setMonthlyWages(null); // Reset Monthly Wages if Daily Wages is null
-                                        setYearlyWages(null); // Reset Yearly Wages if Daily Wages is null
-                                    }
-                                }}
-                                sx={{ mb: 2 }}
-                            />
-
-                            <TextField
-                                label="Per Hours Wages"
-                                type="number"
-                                fullWidth
-                                value={dailyWages / 8 || 0} // Assuming 8 hours in a workday
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Monthly Wages"
-                                type="number"
-                                fullWidth
-                                value={monthlyWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                            <TextField
-                                label="Yearly Wages"
-                                type="number"
-                                fullWidth
-                                value={yearlyWages || 0}
-                                InputProps={{ readOnly: true }}
-                                sx={{ mb: 2 }}
-                            />
-                        </>
-                    )}
-
-                    {payStructure === 'Fixed Monthly Wages' && (
-                        <>
-                            <Select
-                                label="Weekly Off"
-                                fullWidth
-                                value={weeklyOff || ""}
-                                onChange={(e) => {
-                                    const selectedValue = e.target.value;
-                                    if (selectedValue === "") {
-                                        // Reset related state if needed
-                                        setWeeklyOff("");
-                                        setMonthlyWages(0); // Reset monthly wages or other dependent fields if required
-                                    } else {
-                                        setWeeklyOff(selectedValue);
-                                    }
-                                }}
-                                displayEmpty
-                                sx={{ mb: 2 }}
-                            >
-                                <MenuItem value="" disabled>
-                                    Select Weekly Off
-                                </MenuItem>
-                                <MenuItem value="1">1</MenuItem>
-                                <MenuItem value="2">2</MenuItem>
-                                <MenuItem value="3">3</MenuItem>
-                                <MenuItem value="4">4</MenuItem>
-                            </Select>
-
-                            <TextField
-                                label="Fixed Monthly Wages"
-                                type="number"
-                                fullWidth
-                                value={fixedMonthlyWages || ""} // Display an empty string if the value is 0 or null
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setFixedMonthlyWages(value === "" ? null : parseFloat(value)); // Set null for empty input, otherwise parse the number
-                                }}
-                                sx={{ mb: 2 }}
-                            />
-                        </>
-                    )}
-
-                    <Box display="flex" justifyContent="space-between" mt={2}>
-                        <Button variant="contained" sx={{
-                            backgroundColor: "#fce4ec",
-                            color: "rgb(255, 100, 100)",
-                            width: "100px",
-                            "&:hover": {
-                                backgroundColor: "#f8bbd0",
-                            },
-                        }} onClick={handleCancel}>
-                            Close
-                        </Button>
-                        <Button variant="contained" sx={{
-                            backgroundColor: "rgb(229, 255, 225)",
-                            color: "rgb(43, 217, 144)",
-                            width: "100px",
-                            "&:hover": {
-                                backgroundColor: "rgb(229, 255, 225)",
-                            },
-                        }} onClick={handleSave} disabled={!payStructure || !effectiveDate}>
-                            Save
-                        </Button>
-                    </Box>
-                </Box>
-            </Modal> */}
             {/* Modal for Batch (or Individual) Wage Update */}
             <Modal
                 open={modalOpen}
@@ -1197,7 +981,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        width: 500,
+                        width: 550,
                         bgcolor: 'background.paper',
                         boxShadow: 24,
                         p: 4,
@@ -1205,11 +989,14 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                     }}
                 >
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                        <Typography id="modal-title" variant="h6">
-                            {selectedLabourIds.length > 1
-                                ? 'Update Wages for Selected Labour'
-                                : 'Edit Pay Structure'}
-                        </Typography>
+                        <Box display="flex" flexDirection="column" justifyContent="flex-start" alignItems="flex-start" mb={2}>
+                            <Typography id="modal-title" variant="h6">
+                                {selectedLabourIds.length > 1
+                                    ? 'Update Wages for Selected Labour'
+                                    : 'Edit Pay Structure'}
+                            </Typography>
+                            <Typography>Shift:  <strong>{selectedLabourWorkingHours}</strong></Typography>
+                        </Box>
                         <IconButton onClick={handleCancel}>
                             <CloseIcon />
                         </IconButton>
@@ -1226,24 +1013,27 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                         <MenuItem value="" disabled>
                             Select Pay Structure
                         </MenuItem>
-                        <MenuItem value="Daily Wages">Daily Wages</MenuItem>
-                        <MenuItem value="Fixed Monthly Wages">Fixed Monthly Wages</MenuItem>
+                        <MenuItem value="DAILY WAGES">Daily Wages</MenuItem>
+                        <MenuItem value="FIXED MONTHLY WAGES">Fixed Monthly Wages</MenuItem>
                     </Select>
 
                     {/* Effective Date Picker */}
-                    <TextField
-                        label="Effective Date"
-                        type="date"
-                        fullWidth
-                        value={effectiveDate}
-                        onChange={(e) => setEffectiveDate(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{ mb: 2 }}
-                        required
-                    />
+               <Box sx={{ mb: 2 }}>
+<LocalizationProvider dateAdapter={AdapterDateFns} >
+      <DatePicker
+       label="Effective Date"
+       value={effectiveDate ? new Date(effectiveDate.split("-").reverse().join("-")) : null}  // Parse the formatted date back to Date object
+       onChange={(newDate) => handleDateChange(newDate)}
+       renderInput={(params) => <TextField {...params} fullWidth required />}
+       shouldDisableDate={shouldDisableDate} // Disable all days except the 1st of each month
+       format="dd-MM-yyyy" 
+       mask="__/__/____" // Mask to guide user input
+        sx={{ mb: 2, width: "100%"}} // Adjust width for mobile responsiveness
+      />
+    </LocalizationProvider>
+    </Box>
 
-                    {/* Dynamic Fields based on Pay Structure */}
-                    {payStructure === 'Daily Wages' && (
+                    {payStructure === 'DAILY WAGES' && (
                         <>
                             <TextField
                                 label="Daily Wages"
@@ -1253,12 +1043,17 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                                 onChange={(e) => {
                                     const value = e.target.value === "" ? null : parseFloat(e.target.value);
                                     setDailyWages(value);
+
+                                    // console.log("selectedLabourIds.workingHours", selectedLabourWorkingHours)
                                     if (value !== null) {
-                                        setMonthlyWages(value * 30); // assuming 30 days/month
-                                        setYearlyWages(value * 30 * 12); // assuming 12 months/year
+                                        setMonthlyWages(value * 30); // Assuming 30 days/month
+                                        setYearlyWages(value * 30 * 12); // Assuming 12 months/year
+                                        if (selectedLabourWorkingHours === 'FLEXI SHIFT - 8 HRS') { setPerHourWages(8); } else { setPerHourWages(9); }
+
                                     } else {
                                         setMonthlyWages(null);
                                         setYearlyWages(null);
+                                        setPerHourWages(null);
                                     }
                                 }}
                                 sx={{ mb: 2 }}
@@ -1267,7 +1062,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                                 label="Per Hours Wages"
                                 type="number"
                                 fullWidth
-                                value={dailyWages ? dailyWages / 8 : 0} // assuming 8 hours per day
+                                value={dailyWages ? (dailyWages / perHourWages).toFixed(2) : 0} // assuming 8 hours per day
                                 InputProps={{ readOnly: true }}
                                 sx={{ mb: 2 }}
                             />
@@ -1290,7 +1085,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                         </>
                     )}
 
-                    {payStructure === 'Fixed Monthly Wages' && (
+                    {payStructure === 'FIXED MONTHLY WAGES' && (
                         <>
                             <Select
                                 label="Weekly Off"
@@ -1318,7 +1113,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                                 <MenuItem value="4">4</MenuItem>
                             </Select>
                             <TextField
-                                label="Fixed Monthly Wages"
+                                label="FIXED MONTHLY WAGES"
                                 type="number"
                                 fullWidth
                                 value={fixedMonthlyWages || ""}
@@ -1354,6 +1149,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                             }}
                             onClick={handleSave}
                             disabled={!payStructure || !effectiveDate}
+                            startIcon={saveLoader && <CircularProgress size={30} />}
                         >
                             Save
                         </Button>
@@ -1377,7 +1173,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                         bgcolor: "background.paper",
                         borderRadius: 2,
                         boxShadow: 24,
-                        p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
+                        p: { xs: 2, sm: 3, md: 4 }, 
                         maxHeight: "85vh",
                         overflowY: "auto",
                         "&::-webkit-scrollbar": {
@@ -1392,7 +1188,6 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                         },
                     }}
                 >
-                    {/* Close Icon */}
                     <IconButton
                         onClick={() => setOpenModal(false)}
                         sx={{
@@ -1405,19 +1200,62 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                         <CloseIcon />
                     </IconButton>
 
-                    {/* Modal Header */}
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            mb: 4,
-                            textAlign: "center",
-                            fontSize: { xs: "1rem", sm: "1.25rem" },
-                        }}
-                    >
-                        Wages History Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
-                    </Typography>
+                
+    <Box
+      sx={{
+        mb: 4,
+        textAlign: "center",
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 2,
+        flexWrap: "wrap",
+      }}
+    >
+      <Typography
+        variant="h6"
+        sx={{
+          fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
+          fontWeight: 600,
+          color: "text.primary",
+        }}
+      >
+        Labour ID:{" "}
+        <span style={{ color: "#2e7d32" }}>
+          {selectedHistory[0]?.LabourID || "N/A"}
+        </span>
+      </Typography>
 
-                    {/* Modal Content */}
+      <Typography
+        variant="h6"
+        sx={{
+          fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
+          fontWeight: 600,
+          color: "text.primary",
+        }}
+      >
+        Name:{" "}
+        <span style={{ color: "#1565c0" }}>
+          {selectedHistory[0]?.name || "N/A"}
+        </span>
+      </Typography>
+    </Box>
+
+    {/* Conditional Content */}
+    {selectedHistory.length === 0 ? (
+      <Typography
+        variant="body1"
+        sx={{
+          textAlign: "center",
+          fontSize: { xs: "0.95rem", sm: "1.1rem" },
+          color: "text.secondary",
+          mt: 4,
+        }}
+      >
+        No wages History available for this labour.
+      </Typography>
+    ) : (
                     <Box
                         sx={{
                             display: "flex",
@@ -1435,14 +1273,13 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                                     alignItems: "flex-start",
                                     gap: 4,
                                     position: "relative",
-                                    width: { xs: "100%", md: "70%" }, // Adjust width for responsiveness
+                                    width: { xs: "100%", md: "70%" }, 
                                 }}
                             >
-                                {/* Vertical Line */}
                                 <Box
                                     sx={{
                                         position: "absolute",
-                                        left: { xs: "27%", md: "27.5%" }, // Adjust line position
+                                        left: { xs: "27%", md: "27.5%" }, 
                                         top: 0,
                                         bottom: index !== selectedHistory.length - 0 ? 0 : "auto",
                                         width: 4,
@@ -1451,7 +1288,6 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                                     }}
                                 />
 
-                                {/* Dot for Edited On */}
                                 <Box
                                     sx={{
                                         width: 16,
@@ -1459,17 +1295,16 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                                         bgcolor: "darkgreen",
                                         borderRadius: "50%",
                                         position: "absolute",
-                                        left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, // Adjust dot position
+                                        left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, 
                                     }}
                                 ></Box>
 
-                                {/* Left Side - Edited On */}
                                 <Box
                                     sx={{
                                         flex: 1,
                                         textAlign: "right",
                                         pr: 2,
-                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, 
                                     }}
                                 >
                                     <Typography variant="body2" sx={{ fontWeight: "bold" }}>
@@ -1483,23 +1318,22 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                                     </Typography>
                                 </Box>
 
-                                {/* Right Side - Details */}
                                 <Box
                                     sx={{
                                         flex: 3,
-                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, 
                                     }}
                                 >
                                     <Typography variant="body2" sx={{ mb: 1 }}>
-                                        <strong>Name:</strong> {record.name || "N/A"}
+                                        <strong>Labour ID:</strong> {record.LabourID || "N/A"}
                                     </Typography>
                                     <Typography variant="body2" >
                                         <strong>Edited By:</strong> {record.WagesEditedBy || "N/A"}
                                     </Typography>
                                     <Typography variant="body2">
-                                        <strong>From Date:</strong>{" "}
-                                        {record.From_Date
-                                            ? new Date(record.From_Date).toLocaleDateString()
+                                        <strong>Effective Date:</strong>{" "}
+                                        {record.EffectiveDate
+                                            ? new Date(record.EffectiveDate).toLocaleDateString()
                                             : "N/A"}
                                     </Typography>
                                     <Typography variant="body2">
@@ -1528,6 +1362,7 @@ const AttendanceReport = ({ departments = [], projectNames = [] }) => {
                             </Box>
                         ))}
                     </Box>
+                    )}
                 </Box>
             </Modal>
 

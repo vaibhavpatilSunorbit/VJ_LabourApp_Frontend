@@ -69,12 +69,6 @@ export const SidebarData = [
   },
   {
     icon: UilFileAlt,
-    heading: "People",
-    path: "peopleReport",
-    roles: ["superadmin"],
-  },
-  {
-    icon: UilFileAlt,
     heading: "Admin Approval",
     path: "adminApproval",
     roles: ["superadmin"],
@@ -93,12 +87,6 @@ export const SidebarData = [
   },
   {
     icon: UilFileAlt,
-    heading: "Salary Register",
-    path: "SalaryRejester",
-    roles: ["superadmin"],
-  },
-  {
-    icon: UilFileAlt,
     heading: "Run PayRoll",
     path: "RunPayroll",
     roles: ["superadmin"],
@@ -109,6 +97,18 @@ export const SidebarData = [
     path: "ViewMonthlyPayroll",
     roles: ["superadmin"],
   },
+  // {
+  //   icon: UilFileAlt,
+  //   heading: "People",
+  //   path: "peopleReport",
+  //   roles: ["superadmin"],
+  // },
+   // {
+  //   icon: UilFileAlt,
+  //   heading: "Salary Register",
+  //   path: "SalaryRejester",
+  //   roles: ["superadmin"],
+  // },
 ];
 
 
@@ -149,26 +149,3 @@ export const INDUCTED_BY_OPTIONS = [
 ];
 
 
-
-
-// export const INDUCTED_BY_OPTIONS = [
-// "DHIRAJ DINDIKAR MESHRAM",
-// "SANDIP ADHIKRAV CHAVAN",
-// "OMKAR MAHADEV KADAM",
-// "MAHESH MADHUKAR KATE",
-// "AKSHAY JAYSING SHEDGE",
-// "MANGESH ASHOK PARDHI",
-// "GOUSPAK SALIM PATEL",
-// "AISHWARYA TATYASO SHINDE",
-// "RAHUL KRUSHNARAO DESHMUKH",
-// "CHIRANTAN DEORAM SOMWANSHI",
-// "HARSHAL VIJAY AHIRE",
-// "SANTOSH SADASHIV PATIL",
-// "ANIKET SHIVAJI PARDHI",
-// "ATHAR S SHAIKH",
-// "SATISH SHIVAJI LANDE",
-// "SANKET RAVINDRA HULE",
-// "TUSHAR RAJESH KAMBLE",
-// "VRUSHABH SANJAY KAGNOLE",
-// "SACHIN MAHADU PAPAL",
-// ];

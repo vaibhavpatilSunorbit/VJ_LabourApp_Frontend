@@ -1,39 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    Table, IconButton, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Tab, Typography,
-    InputAdornment,
-    Modal,
-    Grid
+    Table, IconButton, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Typography, TableFooter, Modal,
+    Grid, Checkbox, ListItemText,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import SearchBar from '../SarchBar/SearchBar';
+import SearchBar from '../SarchBar/SearchRegister';
 import Loading from "../Loading/Loading";
 import { API_BASE_URL } from "../../Data";
 import "./attendanceReport.css";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CircleIcon from '@mui/icons-material/Circle';
-import SearchIcon from '@mui/icons-material/Search';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { useUser } from '../../UserContext/UserContext';
 import dayjs from 'dayjs';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-// import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
-// toast.configure();
 import ImportAttendance from './ImportExportAttendance/ImportAttendance';
 import ExportAttendance from './ImportExportAttendance/ExportAttendance';
 import CloseIcon from '@mui/icons-material/Close'
 import SyncIcon from '@mui/icons-material/Sync';
 import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import EditIcon from '@mui/icons-material/Edit';
 
-const AttendanceReport = () => {
+const AttendanceReport = ({ departments, labour, labourlist }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const [labours, setLabours] = useState([]);
+    const [labours, setLabours] = useState(labourlist || []);
     const [attendanceData, setAttendanceData] = useState([]);
     const [selectedLabour, setSelectedLabour] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -46,9 +44,11 @@ const AttendanceReport = () => {
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [searchResults, setSearchResults] = useState([]);
-    const [totalDays, setTotalDays] = useState(0);
-    const [presentDays, setPresentDays] = useState(0);
-    const [totalOvertime, setTotalOvertime] = useState(0);
+    const [totalOvertimehours, setTotalOvertimehours] = useState(0);
+    const [totalOvertimeminute, setTotalOvertimeminute] = useState(0);
+    const [projectNames, setProjectNames] = useState([]);
+    const [totalOvertimehoursManually, setTotalOvertimehoursManually] = useState(0);
+    const [totalOvertimeminuteManually, setTotalOvertimeminuteManually] = useState(0);
     const [tabValue, setTabValue] = useState(0);
     const [selectedLabourId, setSelectedLabourId] = useState('');
     const [editManualDialogOpen, setEditManualDialogOpen] = useState(false);
@@ -62,70 +62,336 @@ const AttendanceReport = () => {
         punchOut: "",
         overtime: "",
         remark: "",
+        shift: "",
+        overtimemanually: "",
     });
     const [error, setError] = useState(null);
     const [filteredIconLabours, setFilteredIconLabours] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [file, setFile] = useState(null);
     const { user } = useUser();
-    const [isAttendanceFetched, setIsAttendanceFetched] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
-    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState('');
-    const [projectName, setProjectName] = useState('');
+    const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-    // const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+    const [isOvertimeDisable, setIsOvertimeDisable] = useState(false);
+    const [isOvertimeError, setIsOvertimeError] = useState(false);
+    const [filterModalOpen, setFilterModalOpen] = useState(false);
+    const [selectedDepartment, setSelectedDepartment] = useState([]);
+    const [selectedLabourIds, setSelectedLabourIds] = useState([]);
+    const [employeeToggle, setEmployeeToggle] = useState('all');
+    const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [filters, setFilters] = useState({});
+    const [laboursAttenadance, setLaboursAttenadance] = useState([]);
+    const [changedFields, setChangedFields] = useState([]);
+    
+    //  const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
+
+    // -----------------------------------------------------  FILTER START ------------------
+
+    // const allowedProjectIds = user && user.projectIds ? JSON.parse(user.projectIds) : [];
+    // const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+
+    const allowedProjectIds =
+        user && user.projectIds ? JSON.parse(user.projectIds) : [];
+    const allowedDepartmentIds =
+        user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+    const laboursSource =
+        labourlist && labourlist.length > 0 ? labourlist : labours;
+
+    const fetchLaboursAttenadance = async (filters = {}) => {
+        setLoading(true);
+        try {
+            const response = await axios.get(
+                `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
+                { params: filters }
+            );
+
+            console.log("Filtered Attendance Response", response.data);
+
+            const uniqueLaboursMap = new Map();
+            console.log("uniqueLaboursMap", uniqueLaboursMap);
+            response.data.forEach(item => {
+                if (!uniqueLaboursMap.has(item.LabourID)) {
+                    uniqueLaboursMap.set(item.LabourID, {
+                        LabourID: item.LabourID,
+                        name: item.name,
+                        projectName: item.projectName,
+                        department: item.department,
+                        workingHours: item.workingHours || item.Shift,
+                        businessUnit: item.businessUnit,
+                        departmentName: item.departmentName,
+                        status: item.status || 'Approved',
+                        PresentDays: item.PresentDays,
+                        AbsentDays: item.AbsentDays,
+                        HalfDays: item.HalfDays,
+                        Overtime: item.RoundOffTotalOvertime
+                    });
+                }
+            });
+
+            const uniqueLabours = Array.from(uniqueLaboursMap.values());
+            console.log("uniqueLabours", uniqueLabours);
+            setLaboursAttenadance(response.data);
+            setLabours(uniqueLabours);
+
+        } catch (error) {
+            console.error('Error fetching labours:', error);
+            toast.error('Failed to fetch data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
+    // setAttendanceData(response.data);
+    // setLabours(uniqueLabours); 
+    //     } catch (error) {
+    //         console.error('Error fetching labours:', error);
+    //         toast.error('Failed to fetch data');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+
+    useEffect(() => {
+        // fetchLaboursAttenadance();
+        fetchProjectNames();
+    }, []);
+
+    // const handleApplyFilter = async () => {
+    //     const params = {};
+    //     if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
+    //     if (selectedDepartment) params.department = selectedDepartment;
+    //     if (employeeToggle === 'single' && selectedEmployee) {
+    //         params.employee = selectedEmployee;
+    //     }
+    // }
+    const handleResetFilter = () => {
+        // setSelectedBusinessUnit('');
+        // setSelectedDepartment('');
+        setSelectedDepartment([]);
+        fetchLaboursAttenadance();
+        setSelectedBusinessUnit([]);
+        setFilterModalOpen(false);
+        setSelectedEmployee('');
+    };
+
+    // const handleApplyFilters = () => {
+    //     const filters = {};
+    //     if (selectedBusinessUnit) {
+    //     //   filters.projectName = selectedBusinessUnit;
+    //     filters.ProjectID = selectedBusinessUnit.join(',');
+    //     }
+    //     if (selectedDepartment) {
+    //       filters.department = selectedDepartment;
+    //     }
+    //     if (employeeToggle === 'single' && selectedEmployee) {
+    //       filters.employee = selectedEmployee;
+    //     }
+    //     fetchLaboursAttenadance(filters);
+    //     setFilterModalOpen(false);
+    //   };
+
+    const handleApplyFilters = () => {
+        const filters = {};
+
+        if (Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0) {
+            filters.ProjectID = selectedBusinessUnit.join(','); // Pass as comma-separated string
+        }
+
+        if (Array.isArray(selectedDepartment) && selectedDepartment.length > 0) {
+            filters.DepartmentID = selectedDepartment.join(',');
+        }
+
+        if (employeeToggle === 'single' && selectedEmployee) {
+            filters.EmployeeID = selectedEmployee; // or filters.employee = ...
+        }
+
+        fetchLaboursAttenadance(filters);
+        setFilterModalOpen(false);
+    };
+
+
+    // ----------------------------------------------     FILTER END ------------------
+
+    const laboursToDisplay = (
+        labours
+    )
+        .filter((labour) => {
+            if (tabValue === 0) return labour.status === 'Pending';
+            if (tabValue === 1) return labour.status === 'Approved';
+            if (tabValue === 2)
+                return (
+                    labour.status === 'Rejected' ||
+                    labour.status === 'Resubmitted' ||
+                    labour.status === 'Disable'
+                );
+            return true;
+        })
+        .filter((labour) => {
+            const labourProjectId = Number(labour.projectName);
+            const labourDepartmentId = Number(labour.department);
+            return (
+                allowedProjectIds.includes(labourProjectId) &&
+                allowedDepartmentIds.includes(labourDepartmentId)
+            );
+        })
+        .sort((a, b) => b.labourID - a.labourID);
 
     function formatOvertime(Overtime) {
-        let hours = Math.floor(Overtime);  // Changed from 'const' to 'let' to allow modification
+        Overtime = Overtime ?? 0;
+        let hours = Math.floor(Overtime);
         let minutes = Math.floor((Overtime - hours) * 60);
-    
+
         if (minutes < 15) {
             minutes = 0;
         } else if (minutes < 45) {
-            minutes = 30;  // 15 to 44 minutes, considered as 30 minutes
+            minutes = 30;
         } else {
-            minutes = 0;  // More than 45 minutes, round to the next hour
-            hours += 1;  // Increase hour by one
+            minutes = 0;
+            hours += 1;
         }
-    
         return { hours, minutes };
     }
-    
+
+    function formatConvertedOverTime(Overtime) {
+        Overtime = Overtime ?? 0;
+        let hours = Math.floor(Overtime);
+        let minutes = Math.round((Overtime - hours) * 60);
+
+        return { hours, minutes };
+    }
+
+    function formatConvertedOvertimemanually(Overtimemanually) {
+        Overtimemanually = Overtimemanually ?? 0;
+        let hours = Math.floor(Overtimemanually);
+        let minutes = Math.round((Overtimemanually - hours) * 60);
+
+        return { hours, minutes };
+    }
+
+
+
     function formatTotalHours(TotalHours) {
-        let hours = Math.floor(TotalHours);  // Changed from 'const' to 'let' to allow modification
+        TotalHours = TotalHours ?? 0;
+        let hours = Math.floor(TotalHours);
         let minutes = Math.floor((TotalHours - hours) * 60);
-    
+
         if (minutes < 15) {
             minutes = 0;
         } else if (minutes < 45) {
-            minutes = 30;  // 15 to 44 minutes, considered as 30 minutes
+            minutes = 30;
         } else {
-            minutes = 0;  // More than 45 minutes, round to the next hour
-            hours += 1;  // Increase hour by one
+            minutes = 0;
+            hours += 1;
         }
-    
+
         return { hours, minutes };
     }
+
+    function formatOvertimeManually(Overtimemanually) {
+        Overtimemanually = Overtimemanually ?? 0;
+        let hours = Math.floor(Overtimemanually);
+        let minutes = Math.floor((Overtimemanually - hours) * 60);
+
+        if (minutes < 15) {
+            minutes = 0;
+        } else if (minutes < 45) {
+            minutes = 30;
+        } else {
+            minutes = 0;
+            hours += 1;
+        }
+        return { hours, minutes };
+    }
+
 
     function formatTotalOvertime(TotalOvertimeHours) {
         let hours = Math.floor(TotalOvertimeHours);
         let minutes = Math.floor((TotalOvertimeHours - hours) * 60);
-    
+
         if (minutes < 15) {
-            minutes = 0; 
+            minutes = 0;
         } else if (minutes < 45) {
-            minutes = 30; // 15 to 44 minutes, consider as 30 minutes
+            minutes = 30;
         } else {
-            minutes = 0; // More than 45 minutes, round to next hour
-            hours += 1; // Increase hour by one
+            minutes = 0;
+            hours += 1;
         }
-    
+
         return { hours, minutes };
     };
-    
-    
+
+    function formatRoundOffTotalOvertime(TotalOvertimeHoursManually) {
+        let hours = Math.floor(TotalOvertimeHoursManually);
+        let minutes = Math.floor((TotalOvertimeHoursManually - hours) * 60);
+
+        if (minutes < 15) {
+            minutes = 0;
+        } else if (minutes < 45) {
+            minutes = 30;
+        } else {
+            minutes = 0;
+            hours += 1;
+        }
+
+        return { hours, minutes };
+    };
+
+    function formatovertimemanually(overtimemanually) {
+        overtimemanually = overtimemanually ?? 0;
+        let hours = Math.floor(overtimemanually);
+        let minutes = Math.floor((overtimemanually - hours) * 60);
+
+        if (minutes < 15) {
+            minutes = 0;
+        } else if (minutes < 45) {
+            minutes = 30;
+        } else {
+            minutes = 0;
+            hours += 1;
+        }
+
+        return hours + (minutes / 60);
+    };
+
+    useEffect(() => {
+        if (manualEditData) {
+            const shiftHours =
+                manualEditData.shift === "FLEXI SHIFT - 9 HRS" ? 9 : 8;
+
+            const commonDate = manualEditData.date;
+
+            const getPunchTime = (punch, dateStr) => {
+                let timeString = "";
+                if (typeof punch === "string") {
+                    timeString = punch;
+                } else if (typeof punch === "object" && punch.$d) {
+                    const d = new Date(punch.$d);
+                    const hours = d.getHours().toString().padStart(2, "0");
+                    const minutes = d.getMinutes().toString().padStart(2, "0");
+                    const seconds = d.getSeconds().toString().padStart(2, "0");
+                    timeString = `${hours}:${minutes}:${seconds}`;
+                }
+                return new Date(`${dateStr}T${timeString}`);
+            };
+
+            const firstPunchTime = getPunchTime(manualEditData.punchIn, commonDate);
+            const lastPunchTime = getPunchTime(manualEditData.punchOut, commonDate);
+
+
+            const todaysHrs =
+                (lastPunchTime.getTime() - firstPunchTime.getTime()) /
+                (1000 * 60 * 60);
+
+            setIsOvertimeDisable(todaysHrs < shiftHours);
+            const totalGetOvertime = todaysHrs - shiftHours;
+            setIsOvertimeError(totalGetOvertime > manualEditData.overtimemanually);
+        }
+    }, [manualEditData]);
+
+
     const handleManualEditDialogOpen = (day) => {
         setSelectedDay(day);
         setManualEditData({
@@ -134,11 +400,14 @@ const AttendanceReport = () => {
             punchIn: day.firstPunch || "",
             punchOut: day.lastPunch || "",
             overtime: day.overtime || "",
-            overtimemanually: day.overtimemanually || "",
+            overtimemanually: day.overtimemanually || 0,
             remark: day.remark || "",
             attendanceStatus: day.status || "",
+            isFinalPayAvailable: day.isFinalPayAvailable || "",
+            shift: day.Shift || ""
         });
         setEditManualDialogOpen(true);
+        setChangedFields([]);
     };
 
     const handleManualEditDialogClose = () => {
@@ -148,14 +417,48 @@ const AttendanceReport = () => {
 
     const handleSaveManualEdit = async () => {
         try {
-            const defaultTime = manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff' ? '00:00:00' : null;
+            if (manualEditData.status === 'weeklyOff') {
+                const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
+                    params: { labourId: selectedDay.labourId }
+                });
+                const wagesData = wagesResponse.data;
+                // console.log("wagesData", wagesData);
 
-            const formattedPunchIn = manualEditData.punchIn && dayjs.isDayjs(manualEditData.punchIn)
-                ? manualEditData.punchIn.format('HH:mm:ss')
+                if (!wagesData || wagesData.length === 0) {
+                    toast.error("Add the wages for that labour then add mark as weeklyOff");
+                    return;
+                }
+                const latestLabourWageRecord = wagesData
+                    .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+                [0];
+
+                if (!latestLabourWageRecord) {
+                    toast.error("Add the wages for that labour then add mark as weeklyOff");
+                    return;
+                }
+
+                if (latestLabourWageRecord.PayStructure === "DAILY WAGES") {
+                    toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
+                    return;
+                }
+            }
+
+
+            if (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4) {
+                toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
+                return;
+            }
+            const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
+
+            const formattedPunchInDayFormat = dayjs(manualEditData.punchIn, 'HH:mm:ss');
+            const formattedPunchOutDayFormat = dayjs(manualEditData.punchOut, 'HH:mm:ss');
+
+            const formattedPunchIn = defaultTime ? defaultTime : manualEditData.punchIn !== "" && formattedPunchInDayFormat.isValid()
+                ? formattedPunchInDayFormat.format('HH:mm:ss')
                 : defaultTime;
 
-            const formattedPunchOut = manualEditData.punchOut && dayjs.isDayjs(manualEditData.punchOut)
-                ? manualEditData.punchOut.format('HH:mm:ss')
+            const formattedPunchOut = defaultTime ? defaultTime : manualEditData.punchOut !== "" && formattedPunchOutDayFormat.isValid()
+                ? formattedPunchOutDayFormat.format('HH:mm:ss')
                 : defaultTime;
 
             const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
@@ -168,25 +471,33 @@ const AttendanceReport = () => {
             }
 
             const onboardName = user.name || null;
-            const workingHours = manualEditData.workingHours || selectedDay.workingHours;
+            const workingHours = manualEditData.shift || selectedDay.workingHours;
             const AttendanceStatus = manualEditData.attendanceStatus || null;
-console.log('AttendanceStatus', AttendanceStatus)
             const payload = {
                 labourId: selectedDay.labourId,
                 date: selectedDay.date,
                 AttendanceId: manualEditData.AttendanceId || "",
                 ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
                 ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
-                ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually }),
+                ...(hasOvertime && { overtimeManually: manualEditData.overtimemanually }),
                 ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
-                workingHours, 
+                workingHours,
                 ...(onboardName && { onboardName }), AttendanceStatus,
                 markWeeklyOff: manualEditData.status === 'weeklyOff',
+                updatedFields: changedFields,
             };
 
-            console.log('Request payload +++++:', payload);
+            console.log("payload for attendance only", payload)
+            // const response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
+              // 🧠 Conditional API logic
+        const isOnlyOvertime = changedFields.length === 1 && changedFields[0] === "overtimemanually";
+        let response;
 
-            const response = await axios.post(`${API_BASE_URL}/labours/upsertAttendance`, payload);
+        if (isOnlyOvertime) {
+            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload);
+        } else {
+            response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
+        }
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
@@ -194,9 +505,9 @@ console.log('AttendanceStatus', AttendanceStatus)
                         ...day,
                         ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
                         ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
-                        ...(hasOvertime && { overtimeManually: manualEditData.overtimeManually || 0 }),
+                        ...(hasOvertime && { overtimemanually: manualEditData.overtimemanually || 0 }),
                         ...(manualEditData.remark && { remark: manualEditData.remark }),
-                        workingHours, AttendanceStatus, 
+                        workingHours, AttendanceStatus,
                         markWeeklyOff: manualEditData.status === 'weeklyOff',
                     }
                     : day
@@ -217,7 +528,6 @@ console.log('AttendanceStatus', AttendanceStatus)
             }
         }
     };
-
 
     const months = [
         { value: 1, label: 'January' },
@@ -241,8 +551,9 @@ console.log('AttendanceStatus', AttendanceStatus)
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/search?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/search?q=${searchQuery}`);
             setSearchResults(response.data);
+            setPage(0);
         } catch (error) {
             setError('Error searching. Please try again.');
         }
@@ -250,8 +561,9 @@ console.log('AttendanceStatus', AttendanceStatus)
     const fetchLabours = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/getAllRecordsLaboursOnboarding`);
             const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID);
+            console.log("sortedLabours for fetchlabours", sortedLabours);
             setLabours(sortedLabours);
             setLoading(false);
         } catch (error) {
@@ -266,19 +578,25 @@ console.log('AttendanceStatus', AttendanceStatus)
         fetchLabours();
     }, []);
 
-    useEffect(() => {
-        if (modalOpen) {
-            fetchAttendanceForMonth();
-        }
-    }, [modalOpen]);
+    // useEffect(() => {
+    //     if (modalOpen) {
+    //         fetchProjectNames();
+    //         fetchAttendanceForMonth();
+    //     }
+    // }, [modalOpen]);
 
-    const handleModalOpen = (labour) => {
+    const handleModalOpen = (labour, totalOvertimeHours, TotalOvertimeHoursManually) => {
+        setModalOpen(true);
+        fetchProjectNames();
+        fetchAttendanceForMonth();
         if (labour && labour.LabourID) {
             setSelectedLabour(labour);
             setSelectedLabourId(labour.LabourID);
-            setModalOpen(true);
-            fetchAttendanceForMonth();
-            // fetchAttendanceData(labour.LabourID, startDate, endDate);
+            setTotalOvertimehours(totalOvertimeHours.hours)
+            setTotalOvertimeminute(totalOvertimeHours.minutes)
+            setTotalOvertimehoursManually(TotalOvertimeHoursManually.hours)
+            setTotalOvertimeminuteManually(TotalOvertimeHoursManually.minutes)
+           
         } else {
             console.error('LabourID is null or undefined for the selected labour.');
         }
@@ -290,8 +608,6 @@ console.log('AttendanceStatus', AttendanceStatus)
             setSelectedLabourId(labour.LabourID);
             setOpen(true);
             fetchAttendance();
-            // handleOpen
-            // fetchAttendanceData(labour.LabourID, startDate, endDate);
         } else {
             console.error('LabourID is null or undefined for the selected labour.');
         }
@@ -303,12 +619,11 @@ console.log('AttendanceStatus', AttendanceStatus)
         if (!selectedLabourId || !selectedMonth) return;
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
+            const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
                 params: { month: selectedMonth, year: selectedYear }
             });
 
             const attendanceList = response.data;
-            console.log('response.data for the labour 16-12-24', response.data)
 
             const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
             const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
@@ -318,24 +633,26 @@ console.log('AttendanceStatus', AttendanceStatus)
                 );
 
                 return {
-                    // date: date.toISOString().split('T')[0], // Format: yyyy-mm-dd
                     date: attendanceRecord?.Date.split('T')[0] || date.toISOString().split('T')[0],
                     status: attendanceRecord ? attendanceRecord.Status : 'NA',
                     firstPunch: attendanceRecord?.FirstPunch || '-',
                     lastPunch: attendanceRecord?.LastPunch || '-',
-                    // totalHours: attendanceRecord?.TotalHours || '0.00',
-                    // overtime: attendanceRecord?.Overtime || '0.0',
-                    totalHours: formatTotalHours(attendanceRecord?.TotalHours || 0),
-                    overtime: formatOvertime(attendanceRecord?.Overtime || 0),
+                    overtime: attendanceRecord?.Overtime || '0.0',
+                    totalHours: formatTotalHours(attendanceRecord?.TotalHours ?? 0),
                     isHoliday: attendanceRecord?.Status === 'H',
                     labourId: attendanceRecord?.LabourId || 'NA',
-                    overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
+                    overtimemanually: formatovertimemanually(attendanceRecord?.OvertimeManually ?? 0),
                     remark: attendanceRecord?.RemarkManually || '-',
                     attendanceId: attendanceRecord?.AttendanceId || '-',
+                    ApprovalStatus: attendanceRecord?.ApprovalStatus || '-',
+                    TotalOvertimeHoursManually: attendanceRecord?.TotalOvertimeHoursManually || '-',
+                    isFinalPayAvailable: attendanceRecord?.isFinalPayAvailable,
+                    Shift: attendanceRecord?.Shift,
+                    projectName: attendanceRecord?.projectName,
                 };
             });
-            console.log('attendanceRecord+++', fullMonthAttendance)
             setAttendanceData(fullMonthAttendance);
+
         } catch (error) {
             console.error('Error fetching attendance data:', error);
 
@@ -361,14 +678,14 @@ console.log('AttendanceStatus', AttendanceStatus)
         setLoading(true);
         try {
             const response = await axios.get(
-                `${API_BASE_URL}/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
+                `${API_BASE_URL}/api/labours/showAttendanceCalenderSingleLabour/${selectedLabourId}`,
                 { params: { month: selectedMonth, year: selectedYear } }
             );
 
             const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
 
             const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
-                const date = new Date(selectedYear, selectedMonth - 1, i + 1)
+                const date = new Date(Date.UTC(selectedYear, selectedMonth - 1, i + 1))
                     .toISOString()
                     .split('T')[0];
                 const record = response.data.find((att) => att.Date.split('T')[0] === date);
@@ -377,7 +694,6 @@ console.log('AttendanceStatus', AttendanceStatus)
                     status: record ? record.Status : 'NA',
                 };
             });
-
             setAttendanceData(fullMonthAttendance);
         } catch (error) {
             console.error('Error fetching attendance:', error);
@@ -415,7 +731,7 @@ console.log('AttendanceStatus', AttendanceStatus)
     const fetchCachedAttendance = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/cachedattendance`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/cachedattendance`);
             const attendanceList = response.data;
 
             const processedAttendance = attendanceList.map(att => ({
@@ -440,15 +756,15 @@ console.log('AttendanceStatus', AttendanceStatus)
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/attendancelabours`, {
+            const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelabours`, {
                 params: { month: selectedMonth, year: selectedYear },
             });
 
             const attendanceList = response.data;
 
             const processedAttendance = attendanceList.map((labour, index) => {
-                const totalOvertime = labour.TotalOvertimeHours ?? 0;  
-    
+                const totalOvertime = labour.TotalOvertimeHours ?? 0;
+
                 return {
                     srNo: index + 1,
                     labourId: labour.LabourId,
@@ -460,7 +776,10 @@ console.log('AttendanceStatus', AttendanceStatus)
                     misspunchDays: labour.MissPunchDays,
                     // totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
                     totalOvertimeHours: formatTotalOvertime(labour.TotalOvertimeHours || 0),
+                    roundOffTotalOvertime: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
+                    TotalOvertimeHoursManually: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
                     shift: labour.Shift,
+                    InApprovalStatus: labour.InApprovalStatus,
                 };
             });
 
@@ -479,82 +798,59 @@ console.log('AttendanceStatus', AttendanceStatus)
     }, [selectedMonth, selectedYear]);
 
 
-    const renderAttendanceForMonth = () => {
-        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-        const result = [];
+    // const getFilteredLaboursForTable = () => {
+    //     let baseLabours = rowsPerPage > 0
+    //         ? (searchResults.length > 0
+    //             ? searchResults
+    //             : (filteredIconLabours.length > 0
+    //                 ? filteredIconLabours
+    //                 : [...labours]))
+    //         : [];
 
-        for (let day = 1; day <= daysInMonth; day++) {
-            const formattedDay = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-            const attendanceForDay = attendanceData.find(a => a.punch_date === formattedDay);
-
-            if (selectedLabour && selectedLabour.workingHours) {
-                const shiftHours = selectedLabour.workingHours.includes('9') ? 9 : 8;
-
-                if (attendanceForDay) {
-                    const totalHours = calculateTotalHours(attendanceForDay);
-                    const overtime = totalHours > shiftHours ? totalHours - shiftHours : 0;
-
-                    result.push({
-                        date: formattedDay,
-                        status: 'P',
-                        firstPunch: attendanceForDay.punch_in || '-',
-                        lastPunch: attendanceForDay.punch_out || '-',
-                        totalHours,
-                        overtime,
-                        shift: selectedLabour.workingHours
-                    });
-                } else {
-                    result.push({
-                        date: formattedDay,
-                        status: 'A',
-                        firstPunch: '-',
-                        lastPunch: '-',
-                        totalHours: '-',
-                        overtime: '-',
-                        shift: selectedLabour.workingHours
-                    });
-                }
-            }
-        }
-
-        return result;
-    };
+    //     baseLabours = baseLabours.filter((labour) => {
+    //         const labourProjectId = Number(labour.projectId);
+    //         const labourDepartmentId = Number(labour.departmentId);
+    //         return (
+    //             allowedProjectIds.includes(labourProjectId) &&
+    //             allowedDepartmentIds.includes(labourDepartmentId)
+    //         );
+    //     });
+    //     baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
+    //     return baseLabours;
+    // };
 
 
-    const handleOverTime = (labourId) => {
-        const labour = labours.find((l) => l.LabourID === labourId);
-        if (!labour || !attendanceData.length) return 0;
+    const getFilteredLaboursForTable = () => {
+        let baseLabours = rowsPerPage > 0
+            ? (searchResults.length > 0
+                ? searchResults
+                : (filteredIconLabours.length > 0
+                    ? filteredIconLabours
+                    : [...labours]))
+            : [];
 
-        let totalOvertime = 0;
-        attendanceData.forEach((entry) => {
-            const punchTime = new Date(`1970-01-01T${entry.punch_time}Z`);
-            const hoursWorked = punchTime.getHours() + punchTime.getMinutes() / 60;
-            if (hoursWorked > 8) {
-                totalOvertime += hoursWorked - 8;
-            }
+        baseLabours = baseLabours.filter((labour) => {
+            const labourProjectId = Number(labour.projectName);
+            const labourDepartmentId = Number(labour.department);
+            return (
+                allowedProjectIds.includes(labourProjectId) &&
+                allowedDepartmentIds.includes(labourDepartmentId)
+            );
         });
-        return totalOvertime;
+
+        baseLabours = baseLabours.filter((labour) => labour.status === 'Approved' || labour.status === 'Disable');
+        return baseLabours;
     };
 
     const handleModalClose = () => {
         setModalOpen(false);
         fetchAttendanceForMonthAll()
-        // setAttendanceData([]);
     };
 
     const handleModalCloseCalender = () => {
         setOpen(false)
         fetchAttendanceForMonthAll()
         // setAttendanceData([]);
-    };
-
-    const handleSearchLabour = (event) => {
-        const searchQuery = event.target.value.toLowerCase();
-        const filteredLabours = labours.filter((labour) =>
-            labour.LabourID && labour.LabourID.toLowerCase().includes(searchQuery)
-        );
-        setLabours(filteredLabours);
     };
 
     const calculateTotalHours = (attendanceEntry) => {
@@ -587,7 +883,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                 year: selectedYear,
                 attendance: attendanceData,
             };
-            await axios.post(`${API_BASE_URL}/labours/saveattendancemonthly`, payload);
+            await axios.post(`${API_BASE_URL}/api/labours/saveattendancemonthly`, payload);
             alert("Attendance saved successfully!");
             handleModalClose();
         } catch (error) {
@@ -728,79 +1024,30 @@ console.log('AttendanceStatus', AttendanceStatus)
         </Box>
     );
 
-    const handleExport = async () => {
-        if (!selectedBusinessUnit || !projectName || !startDate || !endDate) {
-            toast.error('Please select a Business Unit, Start Date, and End Date.');
-            return;
-        }
+
+    const fetchProjectNames = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/labours/export`, {
-                params: { projectName, startDate, endDate },
-                responseType: 'blob',
-            });
-
-            const blob = new Blob([response.data], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            });
-
-            const fileName = `Attendance_${selectedBusinessUnit}_${startDate}_${endDate}.xlsx`;
-
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-
-            link.parentNode.removeChild(link);
-
-            toast.success('Attendance exported successfully!');
+            const response = await axios.get(API_BASE_URL + "/api/project-names");
+            // Expecting response.data to be an array of projects with properties "Id" and "Business_Unit"
+            setProjectNames(response.data);
         } catch (error) {
-            console.error('Error exporting data:', error);
-
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(`Export Error: ${error.response.data.message}`);
-            } else {
-                toast.error('Error exporting data. Please try again later.');
-            }
+            console.error('Error fetching project names:', error);
+            toast.error('Error fetching project names.');
         }
     };
 
-    const handleImport = async () => {
-        if (!file) {
-            alert('Please select an Excel file');
-            return;
+    // Lookup function to get Business_Unit name based on project id
+    const getProjectDescription = (projectId) => {
+        if (!Array.isArray(projectNames) || projectNames.length === 0) {
+            return 'Unknown';
         }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const response = await axios.post(`${API_BASE_URL}/labours/import`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            toast.message(response.data.message);
-        } catch (error) {
-            if (error.response && error.response.data) {
-                const { message, invalidRows } = error.response.data;
-
-                if (invalidRows && invalidRows.length > 0) {
-                    console.error('Invalid rows:', invalidRows);
-
-                    const errorMessage = invalidRows
-                        .map((row) => `Row ${row.index + 1}: ${JSON.stringify(row.row)}`)
-                        .join('\n');
-
-                    console.log(`Error: ${message}\n\nInvalid Rows:\n${errorMessage}`);
-                } else {
-                    toast.message(`Error: ${message}`);
-                }
-            } else {
-                console.error('Unexpected error:', error);
-            }
+        if (projectId === undefined || projectId === null || projectId === '') {
+            return 'Unknown';
         }
+        // Convert projectId to a number if necessary and find the matching project
+        const project = projectNames.find(proj => proj.Id === Number(projectId));
+        return project ? project.Business_Unit : 'Unknown';
     };
-
-    const renderInput = (params) => <TextField {...params} fullWidth />;
 
     const fetchBusinessUnits = async () => {
         try {
@@ -815,25 +1062,59 @@ console.log('AttendanceStatus', AttendanceStatus)
         fetchBusinessUnits();
     }, []);
 
-    const handleBusinessUnitChange = async (event) => {
-        const selectedUnit = event.target.value;
-        setSelectedBusinessUnit(selectedUnit);
+    // const handleBusinessUnitChange = async (event) => {
+    //     const selectedUnit = event.target.value;
+    //     setSelectedBusinessUnit(selectedUnit);
 
-        const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
-        if (selectedProject) {
-            setProjectName(selectedProject.ProjectID);
+    //     const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
+    //     if (selectedProject) {
+    //         setProjectName(selectedProject.ProjectID);
 
-            try {
-                const response = await axios.get(`${API_BASE_URL}/labours`, {
-                    params: { projectName: selectedProject.ProjectID },
-                });
-                setLabours(response.data);
-            } catch (error) {
-                console.error('Error fetching labours for project:', error);
-                toast.error('Error fetching labours for the selected project.');
+    //         try {
+    //             const response = await axios.get(`${API_BASE_URL}/labours`, {
+    //                 params: { projectName: selectedProject.ProjectID },
+    //             });
+    //             setLabours(response.data);
+    //         } catch (error) {
+    //             console.error('Error fetching labours for project:', error);
+    //             toast.error('Error fetching labours for the selected project.');
+    //         }
+    //     }
+    // };
+
+    const isAllSelected = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
+    const isAllSelectedDep = departments.length > 0 && selectedDepartment.length === departments.length;
+
+    const handleBusinessUnitChange = (event) => {
+        const value = event.target.value;
+
+        if (value.includes('ALL')) {
+            if (isAllSelected) {
+                setSelectedBusinessUnit([]); // Deselect all
+            } else {
+                const allIds = projectNames.map(p => p.Id);
+                setSelectedBusinessUnit(allIds); // Select all
             }
+        } else {
+            setSelectedBusinessUnit(value);
         }
     };
+
+    const handleDepartmentChange = (event) => {
+        const value = event.target.value;
+        if (value.includes('ALL')) {
+            if (isAllSelectedDep) {
+                setSelectedDepartment([]);
+            } else {
+                const allDeptIds = departments.map(d => d.Id);
+                setSelectedDepartment(allDeptIds);
+            }
+        } else {
+            // setSelectedDepartment(typeof value === 'string' ? value.split(',') : value);
+            setSelectedDepartment(value);
+        }
+    };
+
 
     const CalendarBox = ({ day, status, margin = '8px', padding = '4px' }) => (
         <Box
@@ -889,20 +1170,81 @@ console.log('AttendanceStatus', AttendanceStatus)
                 }
             }
             calendar.push(week);
-            if (dayCounter > daysInMonth) break;
+            if (dayCounter >= daysInMonth) break;
         }
         return calendar;
     };
 
     const calendar = generateCalendar(attendanceData, selectedYear, selectedMonth);
 
-    const displayLabours = labours;
+    function convertToHoursMinutes(total) {
+        const hours = Math.floor(total);
+        const minutes = Math.round((total - hours) * 60);
+        return { hours, minutes };
+    }
+
+
+    const aggregateTotals = attendanceData.reduce((acc, day) => {
+
+        const dayTotal =
+            (day.totalHours ? day.totalHours.hours : 0) +
+            (day.totalHours ? day.totalHours.minutes / 60 : 0);
+        const dayOvertime =
+            (day.overtime ? day.overtime.hours : 0) +
+            (day.overtime ? day.overtime.minutes / 60 : 0);
+        const dayManualOvertime =
+            day.overtimemanually?.hours || day.overtimemanually?.minutes
+                ? (day.overtimemanually.hours + (day.overtimemanually.minutes / 60))
+                : (day.overtime?.hours + (day.overtime?.minutes / 60) || 0);
+
+
+        return {
+            totalHours: acc.totalHours + dayTotal,
+            overtime: acc.overtime + dayOvertime,
+            manualOvertime: acc.manualOvertime + dayManualOvertime
+        };
+    }, { totalHours: 0, overtime: 0, manualOvertime: 0 });
+
+    const formattedTotalHours = convertToHoursMinutes(aggregateTotals.totalHours);
+    const formattedOvertime = convertToHoursMinutes(aggregateTotals.overtime);
+    const formattedManualOvertime = convertToHoursMinutes(aggregateTotals.manualOvertime);
+
+    // useEffect(() => {
+    //     fetchLaboursAttenadance(filters);
+    //   }, [filters]);
+
+
+    const handleFieldChange = (fieldName, newValue) => {
+        const oldValue = manualEditData?.[fieldName];
+        const isChanged = oldValue !== newValue;
+        setManualEditData((prev) => ({
+          ...prev,
+          [fieldName]: newValue,
+        }));
+      
+        setChangedFields((prevFields) => {
+          if (isChanged && !prevFields.includes(fieldName)) {
+            return [...prevFields, fieldName];
+          } else if (!isChanged && prevFields.includes(fieldName)) {
+            return prevFields.filter((field) => field !== fieldName);
+          }
+          console.log("prevFields---->", prevFields);
+          return prevFields;
+        });
+      };
+      
+    const handleApplyFilter = (newFilters) => {
+        setFilters(newFilters);
+    };
+
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
             <ToastContainer />
-            <Box ml={-1.5}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
+                <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
+                    User | Attendance Report
+                </Typography>
                 <SearchBar
-                    //  handleSubmit={handleSubmit}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
                     handleSearch={handleSearch}
@@ -927,7 +1269,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    flexWrap: { xs: "wrap", sm: "nowrap" }, // Allows items to wrap on extra small devices
+                    flexWrap: { xs: "wrap", sm: "nowrap" },
                 }}
             >
                 <Tabs
@@ -945,7 +1287,7 @@ console.log('AttendanceStatus', AttendanceStatus)
 
                 <Box sx={{
                     display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' }, // Stacks items vertically on small screens
+                    flexDirection: { xs: 'column', sm: 'row' },
                     alignItems: { xs: 'stretch', sm: 'center' },
                     gap: 2,
                     height: 'auto',
@@ -953,10 +1295,10 @@ console.log('AttendanceStatus', AttendanceStatus)
                     justifyContent: { xs: 'flex-start', sm: 'space-between' },
                 }}>
                     <Box sx={{
-                        width: { xs: '100%', sm: '40%' },
+                        width: { xs: '100%', sm: '33%' },
                         gap: '20px',
                         display: 'flex',
-                        flexDirection: 'row', // Stack selectors vertically on all sizes
+                        flexDirection: 'row',
                         alignItems: 'flex-start',
                     }}>
                         <Select
@@ -990,7 +1332,6 @@ console.log('AttendanceStatus', AttendanceStatus)
                         <Button
                             variant="contained"
                             sx={{
-                                //   fontSize: '13px',
                                 fontSize: { xs: '10px', sm: '13px' },
                                 height: '45px',
                                 width: '20%',
@@ -1004,89 +1345,74 @@ console.log('AttendanceStatus', AttendanceStatus)
                             onClick={fetchAttendanceForMonthAll}
                             disabled={loading}
                         >
-                           <SyncIcon/>
+                            <SyncIcon />
                         </Button>
                     </Box>
                     <Box sx={{
                         display: 'flex',
+                        width: '42vw',
                         marginRight: '20px',
                         flexDirection: { xs: 'row', sm: 'row' }
                     }}>
-                        <Box sx={{
-                            width: { xs: '100%', sm: 'auto' },
-                            display: 'flex',
-                            flexDirection: { xs: 'row', sm: 'row' },
-                            gap: '20px',
-                            alignItems: 'center',
-                            justifyContent: 'space-evenly',
-                        }}>
+                        <Box
+                            sx={{
+                                width: { xs: '100%', sm: 'auto' },
+                                display: 'flex',
+                                flexDirection: { xs: 'row', sm: 'row' },
+                                gap: '20px',
+                                alignItems: 'center',
+                                justifyContent: 'space-evenly',
+                                marginRight: '3vw'
+                            }}
+                        >
+                            <Button
+                                variant="outlined"
+                                color="secondary"
+                                startIcon={<FilterListIcon />}
+                                onClick={() => setFilterModalOpen(true)}
+                            >
+                                Filter
+                            </Button>
+
+                            {selectedLabourIds.length > 0 && (
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    startIcon={<EditIcon />}
+                                    onClick={() => setModalOpen(true)}
+                                >
+                                    Edit ({selectedLabourIds.length})
+                                </Button>
+                            )}
+                            {/* </Box> */}
+
+                            {/* {(selectedBusinessUnit.length > 0 || selectedDepartment.length > 0) && (
+                                <Typography
+                                    variant="body2"
+                                    color="textSecondary"
+                                    sx={{ mt: 1, ml: { xs: 2, sm: 'auto' }, textAlign: { xs: 'left', sm: 'right' } }}
+                                >
+                                    Filters applied:
+                                    {selectedBusinessUnit.length > 0 && ` Business Units (${selectedBusinessUnit.length})`}
+                                    {selectedDepartment.length > 0 && ` Departments (${selectedDepartment.length})`}
+                                </Typography>
+                            )} */}
+
+
                             <ExportAttendance />
                             <ImportAttendance /></Box>
+
                         <TablePagination
                             className="custom-pagination"
-                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: -1 }]}
-                            count={attendanceData.length > 0 ? attendanceData.length : labours.length}
+                            rowsPerPageOptions={[25, 100, 200, { label: 'All', value: getFilteredLaboursForTable().length }]}
+                            count={getFilteredLaboursForTable().length}
                             rowsPerPage={rowsPerPage}
                             page={page}
                             onPageChange={handleChangePage}
                             onRowsPerPageChange={handleChangeRowsPerPage}
                         />
                     </Box>
-                    {/* <Box display="flex" alignItems="flex-end" gap={2}>
-                        <Select
-                            value={selectedBusinessUnit}
-                            onChange={handleBusinessUnitChange}
-                            displayEmpty
-                            sx={{ width: '200px' }}
-                        >
-                            <MenuItem value="" disabled>
-                                Select Business Unit
-                            </MenuItem>
-                            {businessUnits.map((unit) => (
-                                <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
-                                    {unit.BusinessUnit}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                        <TextField
-                            label="Start Date"
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            sx={{
-                                padding: '4px 4px 1px 4px', 
-                                '& .MuiInputBase-input': {
-                                    padding: '8px 8px', 
-                                },
-                            }}
-                        />
-                        <TextField
-                            label="End Date"
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            sx={{
-                                padding: '4px 4px 1px 4px',
-                                '& .MuiInputBase-input': {
-                                    padding: '8px 8px', 
-                                },
-                            }}
-                        />
-                        <Button variant="contained" onClick={handleExport} sx={{
-                            fontSize: { xs: '10px', sm: '13px', md: '15px' },
-                            height: { xs: '40px', sm: '38px', md: '38px', lg: '38px' },
-                            width: { xs: '100%', sm: 'auto' },
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            '&:hover': {
-                                backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                        }}>
-                            Export
-                        </Button>
-                    </Box> */}
+
                 </Box>
 
 
@@ -1095,7 +1421,6 @@ console.log('AttendanceStatus', AttendanceStatus)
             <TableContainer component={Paper} sx={{
                 mb: isMobile ? 6 : 0,
                 overflowX: 'auto',
-                // overflowY: 'auto',
                 borderRadius: 2,
                 boxShadow: 3,
                 maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
@@ -1120,15 +1445,15 @@ console.log('AttendanceStatus', AttendanceStatus)
                                         '@media (max-width: 600px)': {
                                             padding: '10px',
                                         },
-                                        backgroundColor: 'white', // Ensure the background color is set
+                                        backgroundColor: 'white',
                                         position: 'sticky',
                                         top: 0,
                                         zIndex: 1,
                                     },
                                     '& td': {
-                                        padding: '16px 9px', // Applying padding to all td elements
+                                        padding: '16px 9px',
                                         '@media (max-width: 600px)': {
-                                            padding: '14px 8px', // Adjust padding for smaller screens if needed
+                                            padding: '14px 8px',
                                         },
                                     },
                                 }}
@@ -1144,27 +1469,28 @@ console.log('AttendanceStatus', AttendanceStatus)
                                 <TableCell>Absent Days</TableCell>
                                 <TableCell>MissPunch Days</TableCell>
                                 <TableCell>Overtime (Hours)</TableCell>
+                                <TableCell>RoundOffTotalOvertime (Hours)</TableCell>
                                 <TableCell>Actions</TableCell>
                             </TableRow>
                         </TableHead>
 
                         <TableBody>
-                            {(
-                                rowsPerPage > 0
-                                    ? (searchResults.length > 0
-                                        ? searchResults
-                                        : (filteredIconLabours.length > 0
-                                            ? filteredIconLabours
-                                            : [...labours]))
-                                    : []
-                            )
-                                .filter((labour) => labour.status === 'Approved')
+
+                            {getFilteredLaboursForTable()
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((labour, index) => {
                                     const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
 
                                     return (
-                                        <TableRow key={labour.LabourID}>
+                                        <TableRow key={labour.LabourID}
+                                        // sx={{
+                                        //     backgroundColor: labourAttendance?.InApprovalStatus === true
+                                        //       ? '#ffe6e6'
+                                        //       : labourAttendance?.InApprovalStatus === false
+                                        //       ? 'inherit'
+                                        //       : 'inherit',
+                                        //   }}
+                                        >
                                             <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                                             <TableCell><CalendarTodayIcon onClick={() => handleModalOpenCalenderAttendance(labour)} style={{ cursor: 'pointer' }} /> </TableCell>
                                             <TableCell>{labour.LabourID}</TableCell>
@@ -1177,25 +1503,47 @@ console.log('AttendanceStatus', AttendanceStatus)
                                             <TableCell>{labourAttendance ? labourAttendance.misspunchDays : '-'}</TableCell>
                                             {/* <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell> */}
                                             <TableCell>
-    {labourAttendance && labourAttendance.totalOvertimeHours ? (
-        <Tooltip title={`${labourAttendance.totalOvertimeHours.hours} hours ${labourAttendance.totalOvertimeHours.minutes} minutes`}>
-            <span>{`${labourAttendance.totalOvertimeHours.hours}h ${labourAttendance.totalOvertimeHours.minutes ? labourAttendance.totalOvertimeHours.minutes + 'm' : ''}`}</span>
-        </Tooltip>
-    ) : "0h"}
-</TableCell>
+                                                {labourAttendance && labourAttendance.totalOvertimeHours ? (
+                                                    <Tooltip title={`${labourAttendance.totalOvertimeHours.hours} hours ${labourAttendance.totalOvertimeHours.minutes} minutes`}>
+                                                        <span>{`${labourAttendance.totalOvertimeHours.hours}h ${labourAttendance.totalOvertimeHours.minutes ? labourAttendance.totalOvertimeHours.minutes + 'm' : ''}`}</span>
+                                                    </Tooltip>
+                                                ) : "0h"}
+                                            </TableCell>
                                             <TableCell>
-                                                <Button
-                                                    onClick={() => handleModalOpen(labour)}
-                                                    sx={{
-                                                        backgroundColor: 'rgb(229, 255, 225)',
-                                                        color: 'rgb(43, 217, 144)',
-                                                        '&:hover': {
-                                                            backgroundColor: 'rgb(229, 255, 225)',
-                                                        },
-                                                    }}
+                                                {labourAttendance && labourAttendance.roundOffTotalOvertime ? (
+                                                    <Tooltip title={`${labourAttendance.roundOffTotalOvertime.hours} hours ${labourAttendance.roundOffTotalOvertime.minutes} minutes`}>
+                                                        <span>{`${labourAttendance.roundOffTotalOvertime.hours}h ${labourAttendance.roundOffTotalOvertime.minutes ? labourAttendance.roundOffTotalOvertime.minutes + 'm' : ''}`}</span>
+                                                    </Tooltip>
+                                                ) : "0h"}
+                                            </TableCell>
+                                            <TableCell>
+
+                                                <Badge
+                                                    anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                                                    overlap="rectangular"
+                                                    color="error"
+                                                    variant="dot"
+                                                    invisible={!labourAttendance?.InApprovalStatus}
                                                 >
-                                                    View
-                                                </Button>
+                                                    <Button
+                                                        onClick={() =>
+                                                            handleModalOpen(
+                                                                labour,
+                                                                labourAttendance.totalOvertimeHours,
+                                                                labourAttendance.TotalOvertimeHoursManually
+                                                            )
+                                                        }
+                                                        sx={{
+                                                            backgroundColor: 'rgb(229, 255, 225)',
+                                                            color: 'rgb(43, 217, 144)',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgb(229, 255, 225)',
+                                                            },
+                                                        }}
+                                                    >
+                                                        View
+                                                    </Button>
+                                                </Badge>
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -1232,6 +1580,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                         fontSize: { xs: "14px", sm: "16px" },
                     }}
                 >
+
                     <Box sx={{
                         display: "flex",
                         flexWrap: { xs: "wrap", sm: "nowrap" },
@@ -1283,7 +1632,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                                     },
                                 }}
                             >
-                                <SyncIcon/>
+                                <SyncIcon />
                             </Button>
                         </Box>
                         <Box
@@ -1308,7 +1657,7 @@ console.log('AttendanceStatus', AttendanceStatus)
                         {isLoading ? (
                             <Loading />
                         ) : (
-                            <Table>
+                            <Table stickyHeader sx={{ minWidth: 800 }}>
                                 <TableHead>
                                     <TableRow>
                                         <TableCell>Sr. No</TableCell>
@@ -1316,20 +1665,55 @@ console.log('AttendanceStatus', AttendanceStatus)
                                         <TableCell>Status</TableCell>
                                         <TableCell>Punch In</TableCell>
                                         <TableCell>Punch Out</TableCell>
-                                        <TableCell>Total Hours</TableCell>
-                                        <TableCell>System Overtime</TableCell>
-                                        <TableCell>Manual Overtime</TableCell>
+                                        <TableCell>Total Hours <br></br>  ( {formattedTotalHours.hours}h {formattedTotalHours.minutes}m )</TableCell>
+                                        <TableCell>System Overtime <br></br> ( {totalOvertimehours}h {totalOvertimeminute}m )</TableCell>
+                                        {/* <TableCell>Manual Overtime <br></br> ( {totalOvertimehoursManually}h {totalOvertimeminuteManually}m )</TableCell> */}
+                                        <TableCell>
+                                            Manual Overtime <br />
+                                            (
+                                            {
+                                                ((!totalOvertimehoursManually && totalOvertimehoursManually !== 0) ||
+                                                    (totalOvertimehoursManually === 0 && !totalOvertimeminuteManually))
+                                                    ? `${totalOvertimehours}h ${totalOvertimeminute}m`
+                                                    : `${totalOvertimehoursManually}h ${totalOvertimeminuteManually}m`
+                                            }
+                                            )
+                                        </TableCell>
+
+                                        {/* <TableCell>Manual Overtime <br></br> ({isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h  
+  {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m)</TableCell> */}
                                         {/* <TableCell>Holiday</TableCell> */}
                                         <TableCell>Remark</TableCell>
+                                        <TableCell>Project Name</TableCell>
                                         <TableCell>Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {attendanceData.length > 0 ? (
                                         attendanceData.map((day, index) => (
-                                            <TableRow key={index}>
+                                            <TableRow key={index}
+                                                sx={{
+                                                    backgroundColor:
+                                                        new Date(day.date).getDay() === 0
+                                                            ? '#e6e6fa'
+                                                            : day?.ApprovalStatus === 'Pending'
+                                                                ? '#ffe6e6'
+                                                                : day?.ApprovalStatus === 'Approved'
+                                                                    ? '#dcfff0'
+                                                                    : day?.ApprovalStatus === 'Rejected'
+                                                                        ? '#ffcccc'
+                                                                        : 'inherit',
+                                                    outline:
+                                                        new Date(day.date).getDay() === 0
+                                                            ? '1px solid red'
+                                                            : !day.remark
+                                                                ? '1px solid purple'
+                                                                : 'none',
+                                                }}
+                                            >
                                                 <TableCell>{index + 1}</TableCell>
-                                                <TableCell>{day.date}</TableCell>
+                                                <TableCell>{day.date ? new Date(day.date).toLocaleDateString('en-GB') : '-'}</TableCell>
+
                                                 <TableCell>
                                                     <Box
                                                         sx={{
@@ -1360,6 +1744,10 @@ console.log('AttendanceStatus', AttendanceStatus)
                                                                 backgroundColor: 'rgb(197 186 255 / 30%)',
                                                                 color: '#005cff',
                                                             }),
+                                                            ...(day.status === 'WO' && {
+                                                                backgroundColor: 'rgb(255 237 186 / 40%)',
+                                                                color: '#ff9900',
+                                                            }),
                                                             ...(day.status === 'NA' && {
                                                                 backgroundColor: '#f0f0f0',
                                                                 color: '#b0b0b0',
@@ -1373,23 +1761,31 @@ console.log('AttendanceStatus', AttendanceStatus)
                                                 <TableCell>{day.lastPunch || "-"}</TableCell>
                                                 {/* <TableCell>{day.totalHours || "0.00"}</TableCell> */}
                                                 <TableCell>
-    {day.totalHours && (day.totalHours.hours > 0 || day.totalHours.minutes > 0) ? (
-        <Tooltip title={`${day.totalHours.hours} hours ${day.totalHours.minutes} minutes`}>
-            <span>{`${day.totalHours.hours}h ${day.totalHours.minutes}m`}</span>
-        </Tooltip>
-    ) : "0h"}
-</TableCell>
+                                                    {day.totalHours && (day.totalHours.hours > 0 || day.totalHours.minutes > 0) ? (
+                                                        <Tooltip title={`${day.totalHours.hours} hours ${day.totalHours.minutes} minutes`}>
+                                                            <span>{`${day.totalHours.hours}h ${day.totalHours.minutes}m`}</span>
+                                                        </Tooltip>
+                                                    ) : "0h"}
+                                                </TableCell>
                                                 {/* <TableCell>{day.overtime ? parseFloat(day.overtime).toFixed(1) : "0.0"}</TableCell> */}
                                                 <TableCell>
-    {day.overtime && (day.overtime.hours > 0 || day.overtime.minutes > 0) ? (
-        <Tooltip title={`${day.overtime.hours} hours ${day.overtime.minutes} minutes`}>
-            <span>{`${day.overtime.hours}h ${day.overtime.minutes}m`}</span>
-        </Tooltip>
-    ) : "0h"}
-</TableCell>
-                                                <TableCell>{day.overtimemanually || "-"}</TableCell>
+                                                    {day.overtime && (day.overtime) ? (
+                                                        <Tooltip title={`${formatConvertedOverTime(day.overtime).hours}hours ${formatConvertedOverTime(day.overtime).minutes}minutes`}>
+                                                            <span>{`${formatOvertime(day.overtime).hours}h ${formatOvertime(day.overtime).minutes}m`}</span>
+                                                        </Tooltip>
+                                                    ) : "0h"}
+                                                </TableCell>
+                                                {/* <TableCell>{day.overtimemanually || "-"}</TableCell> */}
+                                                <TableCell>
+                                                    {day.overtimemanually && (day.overtimemanually) ? (
+                                                        <Tooltip title={`${formatConvertedOvertimemanually(day.overtimemanually).hours}hours ${formatConvertedOvertimemanually(day.overtimemanually).minutes}minutes`}>
+                                                            <span>{`${formatOvertimeManually(day.overtimemanually).hours}h ${formatOvertimeManually(day.overtimemanually).minutes}m`}</span>
+                                                        </Tooltip>
+                                                    ) : "0h"}
+                                                </TableCell>
                                                 {/* <TableCell>{day.isHoliday ? "Yes" : "No"}</TableCell> */}
                                                 <TableCell>{day.remark || "-"}</TableCell>
+                                                <TableCell>{getProjectDescription(day.projectName)}</TableCell>
                                                 <TableCell>
                                                     <Button
                                                         sx={{
@@ -1400,7 +1796,9 @@ console.log('AttendanceStatus', AttendanceStatus)
                                                             },
                                                         }}
                                                         onClick={() => handleManualEditDialogOpen(day)}
+                                                        disabled={day.isFinalPayAvailable}
                                                     >
+
                                                         Edit
                                                     </Button>
                                                 </TableCell>
@@ -1408,6 +1806,31 @@ console.log('AttendanceStatus', AttendanceStatus)
                                         ))
                                     ) : null}
                                 </TableBody>
+                                <TableFooter>
+                                    <TableRow>
+                                        <TableCell colSpan={5} align="right">
+                                            <strong>Totals:</strong>
+                                        </TableCell>
+                                        <TableCell>
+                                            <strong>
+                                                {formattedTotalHours.hours}h {formattedTotalHours.minutes}m
+                                            </strong>
+                                        </TableCell>
+                                        <TableCell>
+                                            <strong>
+                                                {totalOvertimehours}h {totalOvertimeminute}m
+                                            </strong>
+                                        </TableCell>
+                                        <TableCell>
+                                            <strong>
+                                                {totalOvertimehoursManually}h {totalOvertimeminuteManually}m
+                                                {/* {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).hours}h
+                                            {isNaN(formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes)? 0: formatConvertedOverTime(attendanceData[0]?.TotalOvertimeHoursManually).minutes}m */}
+                                            </strong>
+                                        </TableCell>
+                                        <TableCell colSpan={2} />
+                                    </TableRow>
+                                </TableFooter>
                             </Table>
                         )}
                     </Box>
@@ -1429,171 +1852,297 @@ console.log('AttendanceStatus', AttendanceStatus)
                     >
                         Close
                     </Button>
-                    {/* <Button
-                        variant="contained"
-                        sx={{
-                            backgroundColor: "rgb(229, 255, 225)",
-                            color: "rgb(43, 217, 144)",
-                            width: "100px",
-                            "&:hover": {
-                                backgroundColor: "rgb(229, 255, 225)",
-                            },
-                        }}
-                        onClick={saveFullMonthAttendance}
-                    >
-                        Save
-                    </Button> */}
                 </DialogActions>
             </Dialog>
 
+
+            {/* ===== FILTER MODAL ===== */}
+            <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: 4,
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            mb: 2,
+                        }}
+                    >
+                        <Typography variant="h6" gutterBottom>
+                            Filter Options
+                        </Typography>
+                        <Button onClick={() => setFilterModalOpen(false)}>
+                            <CloseIcon />
+                        </Button>
+                    </Box>
+
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="body1">Business Unit</Typography>
+                        
+
+                        <Select
+                            fullWidth
+                            multiple
+                            value={selectedBusinessUnit}
+                            onChange={handleBusinessUnitChange}
+                            displayEmpty
+                            renderValue={(selected) => {
+                                if (selected.length === 0) return <em>All</em>;
+                                const selectedLabels = projectNames
+                                    .filter(project => selected.includes(project.Id))
+                                    .map(project => project.Business_Unit);
+                                return selectedLabels.join(', ');
+                            }}
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="ALL">
+                                <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+                                <ListItemText primary="Select All" />
+                            </MenuItem>
+                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                projectNames.map((project) => (
+                                    <MenuItem key={project.Id} value={project.Id}>
+                                        <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                        <ListItemText primary={project.Business_Unit} />
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Projects Available
+                                </MenuItem>
+                            )}
+                        </Select>
+                    </Box>
+
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="body1">Department</Typography>
+                        <Select
+                            fullWidth
+                            multiple
+                            value={selectedDepartment}
+                            onChange={handleDepartmentChange}
+                            displayEmpty
+                            renderValue={(selected) => {
+                                if (selected.length === 0) return <em>All</em>;
+                                const selectedLabels = departments
+                                    .filter(dept => selected.includes(dept.Id))
+                                    .map(dept => dept.Description);
+                                return selectedLabels.join(', ');
+                            }}
+                            sx={{ mt: 1 }}
+                        >
+                            <MenuItem value="ALL">
+                                <Checkbox
+                                    checked={isAllSelectedDep}
+                                    indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep}
+                                />
+                                <ListItemText primary="Select All" />
+                            </MenuItem>
+
+                            {Array.isArray(departments) && departments.length > 0 ? (
+                                departments.map((department) => (
+                                    <MenuItem key={department.Id} value={department.Id}>
+                                        <Checkbox checked={selectedDepartment.includes(department.Id)} />
+                                        <ListItemText primary={department.Description} />
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem value="Unknown" disabled>
+                                    No Department Available
+                                </MenuItem>
+                            )}
+                        </Select>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        <Button variant="outlined" color="secondary" onClick={handleResetFilter}>
+                            Reset
+                        </Button>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                backgroundColor: 'rgb(229, 255, 225)',
+                                color: 'rgb(43, 217, 144)',
+                                width: '100px',
+                                marginRight: '10px',
+                                marginBottom: '3px',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}
+                            onClick={handleApplyFilters}
+                        >
+                            Apply
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
 
 
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Dialog
-                open={editManualDialogOpen}
-                onClose={handleManualEditDialogClose}
-                fullWidth
-                maxWidth="sm"
-            >
-                <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
-                    Edit Attendance for {manualEditData.date}
-                </DialogTitle>
-                <DialogContent
-                    sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2, paddingTop: 1 }}
+                <Dialog
+                    open={editManualDialogOpen}
+                    onClose={handleManualEditDialogClose}
+                    fullWidth
+                    maxWidth="sm"
                 >
-                    {/* Dropdown for Mark Attendance As */}
-                    <Box>
-                        <TextField
-                            select
-                            label="Mark Attendance As"
-                            value={manualEditData.status}
-                            onChange={(e) =>
-                                setManualEditData({ ...manualEditData, status: e.target.value })
-                            }
-                            fullWidth
-                        >
-                            <MenuItem value="present">Mark As Present</MenuItem>
-                            <MenuItem value="absent">Mark As Absent</MenuItem>
-                            <MenuItem value="weeklyOff">Mark As WeeklyOff</MenuItem>
-                        </TextField>
-                    </Box>
-
-                    {/* Conditionally render Punch In/Out and Overtime fields */}
-                    {(manualEditData.status === 'present') && (
-                        <>
-                            <Box>
-                                <TimePicker
-                                    label="Punch In (Manually)"
-                                    value={
-                                        manualEditData?.punchIn
-                                            ? dayjs(manualEditData.punchIn, 'HH:mm:ss')
-                                            : selectedDay?.firstPunch
-                                                ? dayjs(selectedDay.firstPunch, 'HH:mm:ss')
-                                                : null
-                                    }
-                                    onChange={(newValue) =>
-                                        setManualEditData({ ...manualEditData, punchIn: newValue })
-                                    }
-                                    views={['hours', 'minutes', 'seconds']}
-                                    ampm={false}
-                                    inputFormat="HH:mm:ss"
-                                    renderInput={(params) => <TextField {...params} fullWidth />}
-                                />
-                            </Box>
-
-                            <Box>
-                                <TimePicker
-                                    label="Punch Out (Manually)"
-                                    value={
-                                        manualEditData?.punchOut
-                                            ? dayjs(manualEditData.punchOut, 'HH:mm:ss')
-                                            : selectedDay?.lastPunch
-                                                ? dayjs(selectedDay.lastPunch, 'HH:mm:ss')
-                                                : null
-                                    }
-                                    onChange={(newValue) =>
-                                        setManualEditData({ ...manualEditData, punchOut: newValue })
-                                    }
-                                    views={['hours', 'minutes', 'seconds']}
-                                    ampm={false}
-                                    inputFormat="HH:mm:ss"
-                                    renderInput={(params) => <TextField {...params} fullWidth />}
-                                />
-                            </Box>
-
+                    <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+                        Edit Attendance for {manualEditData.date}
+                    </DialogTitle>
+                    <DialogContent
+                        sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2, paddingTop: 1 }}
+                    >
+                        <Box>
                             <TextField
-                                label="Overtime (Manually)"
-                                type="number"
+                                select
+                                label="Mark Attendance As"
+                                value={manualEditData.status}
+                                onChange={(e) =>
+                                    setManualEditData({ ...manualEditData, status: e.target.value })
+                                }
+                                fullWidth
+                            >
+                                <MenuItem value="present">Mark As Present</MenuItem>
+                                <MenuItem value="absent">Mark As Absent</MenuItem>
+                                <MenuItem value="weeklyOff">Mark As WeeklyOff</MenuItem>
+                            </TextField>
+                        </Box>
+
+                        {(manualEditData.status === 'present') && (
+                            <>
+                                <Box>
+                                    <TimePicker
+                                        label="Punch In (Manually)"
+                                        value={
+                                            manualEditData?.punchIn !== ""
+                                                ? dayjs(manualEditData.punchIn, 'HH:mm:ss') : null
+                                        }
+                                        onChange={(newValue) =>
+                                            // setManualEditData({ ...manualEditData, punchIn: newValue })
+                                            handleFieldChange('punchIn', newValue)
+                                        }
+                                        views={['hours', 'minutes', 'seconds']}
+                                        ampm={false}
+                                        inputFormat="HH:mm:ss"
+                                        renderInput={(params) => <TextField {...params} fullWidth />}
+                                    />
+                                </Box>
+
+                                <Box>
+                                    <TimePicker
+                                        label="Punch Out (Manually)"
+                                        value={
+                                            manualEditData?.punchOut !== ""
+                                                ? dayjs(manualEditData.punchOut, 'HH:mm:ss') : null
+                                        }
+                                        onChange={(newValue) =>
+                                            // setManualEditData({ ...manualEditData, punchOut: newValue })
+                                            handleFieldChange('punchOut', newValue)
+                                        }
+                                        views={['hours', 'minutes', 'seconds']}
+                                        ampm={false}
+                                        inputFormat="HH:mm:ss"
+                                        renderInput={(params) => <TextField {...params} fullWidth />}
+                                    />
+                                </Box>
+                                {!isOvertimeDisable && (
+                                    <TextField
+                                        label="Overtime (Manually)"
+                                        type="number"
+                                        variant="outlined"
+                                        fullWidth
+                                        value={manualEditData.overtimemanually}
+                                        error={isOvertimeError}
+                                        helperText={
+                                            isOvertimeError
+                                                ? `Add Overtime up to ${formatConvertedOverTime(manualEditData.overtime).hours} hours and ${formatConvertedOverTime(manualEditData.overtime).minutes} minutes`
+                                                : ""
+                                        }
+                                        // inputProps={{ min: 0 }}
+                                        onChange={(e) => {
+                                            const value = Number(e.target.value);
+                                            // Prevent negative values from being set
+                                            if (value >= 0 || e.target.value !== "") {
+                                                // setManualEditData({ ...manualEditData, overtimemanually: e.target.value });
+                                                handleFieldChange('overtimemanually', e.target.value);
+                                            }
+                                        }}
+                                    />
+                                )}
+                            </>
+                        )}
+
+                        {(manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff' || manualEditData.status === 'present') && (
+                            <TextField
+                                select
+                                label="Remark"
                                 variant="outlined"
                                 fullWidth
-                                value={manualEditData.overtimeManually}
+                                value={manualEditData.remark || ""}
                                 onChange={(e) =>
-                                    setManualEditData({ ...manualEditData, overtimeManually: e.target.value })
+                                    setManualEditData({ ...manualEditData, remark: e.target.value })
                                 }
-                            />
-                        </>
-                    )}
-
-                    {/* Remark dropdown for Absent or WeeklyOff */}
-                    {(manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff' || manualEditData.status === 'present') && (
-                        <TextField
-                            select
-                            label="Remark"
-                            variant="outlined"
-                            fullWidth
-                            value={manualEditData.remark}
-                            onChange={(e) =>
-                                setManualEditData({ ...manualEditData, remark: e.target.value })
-                            }
+                            >
+                                <MenuItem value="Technical Error">Technical Error</MenuItem>
+                                <MenuItem value="Miss Punch">Miss Punch</MenuItem>
+                                <MenuItem value="Forge Punch">Forge Punch</MenuItem>
+                                <MenuItem value="Wrong Punch">Wrong Punch</MenuItem>
+                                <MenuItem value="Forgot To Punch">Forgot To Punch</MenuItem>
+                                <MenuItem value="Weekly Off">Weekly Off</MenuItem>
+                            </TextField>
+                        )}
+                    </DialogContent>
+                    <DialogActions
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            mt: 2,
+                            px: 2,
+                            gap: 0,
+                        }}
+                    >
+                        <Button
+                            onClick={handleManualEditDialogClose}
+                            sx={{
+                                backgroundColor: '#fce4ec',
+                                color: 'rgb(255, 100, 100)',
+                                width: '100px',
+                                '&:hover': {
+                                    backgroundColor: '#f8bbd0',
+                                },
+                            }}
                         >
-                            <MenuItem value="Technical Error">Technical Error</MenuItem>
-                            <MenuItem value="Miss Punch">Miss Punch</MenuItem>
-                            <MenuItem value="Forge Punch">Forge Punch</MenuItem>
-                            <MenuItem value="Wrong Punch">Wrong Punch</MenuItem>
-                            <MenuItem value="Forgot To Punch">Forgot To Punch</MenuItem>
-                            <MenuItem value="Weekly Off">Weekly Off</MenuItem>
-                        </TextField>
-                    )}
-                </DialogContent>
-                <DialogActions
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        mt: 2,
-                        px: 2,
-                        gap: 0,
-                    }}
-                >
-                    <Button
-                        onClick={handleManualEditDialogClose}
-                        sx={{
-                            backgroundColor: '#fce4ec',
-                            color: 'rgb(255, 100, 100)',
-                            width: '100px',
-                            '&:hover': {
-                                backgroundColor: '#f8bbd0',
-                            },
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleSaveManualEdit}
-                        sx={{
-                            backgroundColor: 'rgb(229, 255, 225)',
-                            color: 'rgb(43, 217, 144)',
-                            width: '100px',
-                            '&:hover': {
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={handleSaveManualEdit}
+                            sx={{
                                 backgroundColor: 'rgb(229, 255, 225)',
-                            },
-                        }}
-                    >
-                        Save
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </LocalizationProvider>
+                                color: 'rgb(43, 217, 144)',
+                                width: '100px',
+                                '&:hover': {
+                                    backgroundColor: 'rgb(229, 255, 225)',
+                                },
+                            }}
+                            disabled={manualEditData.remark === "" || manualEditData.remark === null || manualEditData.remark === undefined || manualEditData.remark === "-"}
+                        >
+                            Save
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </LocalizationProvider>
 
             <Modal open={open} onClose={handleModalCloseCalender}>
                 <Box
