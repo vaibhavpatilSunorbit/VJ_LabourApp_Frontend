@@ -758,7 +758,8 @@ const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => 
                                             <TableCell>{labour.PayStructure || '-'}</TableCell>
                                             <TableCell>{labour.DailyWages || '-'}</TableCell>
                                             <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
-                                            <TableCell>{labour.WeeklyOff || '-'}</TableCell>
+                                            {/* <TableCell>{labour.WeeklyOff || '-'}</TableCell> */}
+                                            <TableCell>{labour.WeeklyOff != null ? labour.WeeklyOff : '-'}</TableCell>
                                             <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
                                             <TableCell>{labour.CreatedAt ? format(new Date(labour.CreatedAt), 'dd/MM/yyyy') : '-'}</TableCell>
                                             <TableCell>

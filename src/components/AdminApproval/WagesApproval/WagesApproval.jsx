@@ -746,7 +746,8 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
                   <TableCell>{labour.DailyWages || '-'}</TableCell>
                   <TableCell>{labour.MonthlyWages || '-'}</TableCell>
                   <TableCell>{labour.FixedMonthlyWages || '-'}</TableCell>
-                  <TableCell>{labour.WeeklyOff || '-'}</TableCell>
+                  {/* <TableCell>{labour.WeeklyOff || '-'}</TableCell> */}
+                  <TableCell>{labour.WeeklyOff != null ? labour.WeeklyOff : '-'}</TableCell>
                   <TableCell>{labour.WagesEditedBy || '-'}</TableCell>
                   {/* <TableCell>{labour.status}</TableCell> */}
 
