@@ -712,10 +712,9 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton }) => {
                     src={selectedLabour.photoSrc}
                     alt={`${selectedLabour.name}'s Photo`}
                     style={{
-                      width: '120px',
-                      height: '120px',
-                      borderRadius: '10px',
-                      objectFit: 'cover',
+                      width: '190px',
+                      height: '200px',
+                      borderRadius: '10px',                 
                       border: '3px solid rgb(117, 119, 121)'
                     }}
                   />
