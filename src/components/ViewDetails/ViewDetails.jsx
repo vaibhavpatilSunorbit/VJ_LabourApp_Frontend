@@ -12,9 +12,9 @@
 
 
 // const trimUrl = (url) => {
-//   // const baseUrl = "http://localhost:4000/uploads/";
-//   const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
-//   // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
+  // // const baseUrl = "http://localhost:4000/uploads/";
+  // const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
+  // // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
 
 
 
@@ -371,7 +371,9 @@ import './ViewDetails.css';
 import { API_BASE_URL } from '../../Data';
 
 const trimUrl = (url) => {
-  const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
+  const baseUrl = "http://localhost:4000/uploads/";
+  // const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
+  // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
   return typeof url === 'string' ? url.replace(baseUrl, '') : '';
 };
 
@@ -778,7 +780,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton }) => {
                   },
                   '& .MuiTabs-indicator': {
                     backgroundColor: '#1976d2',
-                    height: 3,
+                    height:2,
                   }
                 }}
               >
@@ -800,7 +802,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton }) => {
                   backgroundColor: "#888",
                   borderRadius: "4px",
                 },
-                p: 3,
+                p: 2,
                 bgcolor: '#ffffff'
               }}
             >
