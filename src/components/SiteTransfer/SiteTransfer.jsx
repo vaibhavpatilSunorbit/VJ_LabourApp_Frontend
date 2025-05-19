@@ -404,7 +404,23 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     fetchCompanyNames();
   }, [formData.projectId]);  // 🔥 Trigger API when projectId updates
   
-  
+    const fetchTransferSiteNames = async (labourIds) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
+      // console.log('API Response:', response.data); // Debug response
+      return response.data.map((item) => ({
+        LabourID: item.LabourID,
+        transferSiteName: item.transferSiteName,
+        currentSiteName: item.currentSiteName,
+        createdAt: item.createdAt,
+        esslResponseStatus: item.esslResponseStatus,
+        siteTransferBy: item.siteTransferBy,
+      }));
+    } catch (error) {
+      console.error('Error fetching transfer site names:', error);
+      return [];
+    }
+  };
 
 
   const handleInputChange = (e) => {
@@ -493,107 +509,203 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     }));
   };
 
-    const confirmTransfer = async () => {
-        setOpenDialogSite(false);
-        if (!selectedLabourIds || selectedLabourIds.length === 0) {
-          toast.error("No labour(s) selected to transfer.");
-          return;
-        }
+    // const confirmTransfer = async () => {
+    //     setOpenDialogSite(false);
+    //     if (!selectedLabourIds || selectedLabourIds.length === 0) {
+    //       toast.error("No labour(s) selected to transfer.");
+    //       return;
+    //     }
     
-        try {
-          // Build payload for each selected labour
-          const selectedLaboursData = labours
-            .filter((labour) => selectedLabourIds.includes(labour.LabourID))
-            .map((labour) => {
-              const currentSiteName =
-                projectNames.find((p) => p.Id === labour.projectName)?.Business_Unit ||
-                "Unknown";
-              const transferSiteName =
-                projectNames.find((p) => p.Id === Number(newSite))
-                  ?.Business_Unit || "Unknown";
+    //     try {
+    //       // Build payload for each selected labour
+    //       const selectedLaboursData = labours
+    //         .filter((labour) => selectedLabourIds.includes(labour.LabourID))
+    //         .map((labour) => {
+    //           const currentSiteName =
+    //             projectNames.find((p) => p.Id === labour.projectName)?.Business_Unit ||
+    //             "Unknown";
+    //           const transferSiteName =
+    //             projectNames.find((p) => p.Id === Number(newSite))
+    //               ?.Business_Unit || "Unknown";
     
-              return {
-                userId: labour.id, // if needed
-                LabourID: labour.LabourID,
-                name: labour.name,
-                currentSite: labour.projectName,
-                transferSite: newSite,
-                currentSiteName,
-                transferSiteName,
-                transferDate,
-                siteTransferBy: user.name || null,
-              };
-            });
+    //           return {
+    //             userId: labour.id, // if needed
+    //             LabourID: labour.LabourID,
+    //             name: labour.name,
+    //             currentSite: labour.projectName,
+    //             transferSite: newSite,
+    //             currentSiteName,
+    //             transferSiteName,
+    //             transferDate,
+    //             siteTransferBy: user.name || null,
+    //           };
+    //         });
            
-                 // Send them all in one request (adapt as needed for your API)
-            const response = await axios.post(
-              `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
-              {
-                labours: selectedLaboursData,
-              }
-            );
+    //              // Send them all in one request (adapt as needed for your API)
+    //         const response = await axios.post(
+    //           `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
+    //           {
+    //             labours: selectedLaboursData,
+    //           }
+    //         );
       
-            if (response.status === 201) {
-              // Update local state for all selected labours
-              const transferSiteName =
-                projectNames.find((p) => p.Id === Number(newSite))?.Business_Unit ||
-                "Unknown";
+    //         if (response.status === 201) {
+    //           // Update local state for all selected labours
+    //           const transferSiteName =
+    //             projectNames.find((p) => p.Id === Number(newSite))?.Business_Unit ||
+    //             "Unknown";
       
-              setLabours((prev) =>
-                prev.map((labour) => {
-                  if (selectedLabourIds.includes(labour.LabourID)) {
-                    return {
-                      ...labour,
-                      projectName: newSite,
-                      Business_Unit: transferSiteName,
-                    };
-                  }
-                  return labour;
-                })
-              );
+    //           setLabours((prev) =>
+    //             prev.map((labour) => {
+    //               if (selectedLabourIds.includes(labour.LabourID)) {
+    //                 return {
+    //                   ...labour,
+    //                   projectName: newSite,
+    //                   Business_Unit: transferSiteName,
+    //                 };
+    //               }
+    //               return labour;
+    //             })
+    //           );
 
-              setFormData({
-                projectName: "",
-                projectId: null,
-                companyName: "",
-              });
-              setTransferDate("");
-              setNewSite(null);
-              toast.success(
-                `Site transfer send ${selectedLabourIds.length} labour(s) for Admin Approval.`
-              );
-              setSelectedLabourIds([]); // clear the selection
+    //           setFormData({
+    //             projectName: "",
+    //             projectId: null,
+    //             companyName: "",
+    //           });
+    //           setTransferDate("");
+    //           setNewSite(null);
+    //           toast.success(
+    //             `Site transfer send ${selectedLabourIds.length} labour(s) for Admin Approval.`
+    //           );
+    //           setSelectedLabourIds([]); // clear the selection
                   
             
-            } else {
-              setFormData({
-                projectName: "",
-                projectId: null,
-                companyName: "",
-              });
-              setTransferDate("");
-              setNewSite(null);
-              toast.error(
-                `${
-                  response.data.message || "Failed to transfer labour(s). Unexpected error occurred."
-                }`
-              );
-              setSelectedLabourIds([]);
-            }
+    //         } else {
+    //           setFormData({
+    //             projectName: "",
+    //             projectId: null,
+    //             companyName: "",
+    //           });
+    //           setTransferDate("");
+    //           setNewSite(null);
+    //           toast.error(
+    //             `${
+    //               response.data.message || "Failed to transfer labour(s). Unexpected error occurred."
+    //             }`
+    //           );
+    //           setSelectedLabourIds([]);
+    //         }
                                  
-        } catch (error) {
-          setFormData({
-            projectName: "",
-            projectId: null,
-            companyName: "",
-          });
-          setTransferDate("");
-          setNewSite(null);
-          console.error("Error during site transfer:", error);
-          toast.error("Failed to transfer labour(s).");
-        }
-      };
-      const selectedLabours = labours.filter((l) =>
+    //     } catch (error) {
+    //       setFormData({
+    //         projectName: "",
+    //         projectId: null,
+    //         companyName: "",
+    //       });
+    //       setTransferDate("");
+    //       setNewSite(null);
+    //       console.error("Error during site transfer:", error);
+    //       toast.error("Failed to transfer labour(s).");
+    //     }
+    //   };
+      
+    const confirmTransfer = async () => {
+  setOpenDialogSite(false);
+
+  if (!selectedLabourIds || selectedLabourIds.length === 0) {
+    toast.error("No labour(s) selected to transfer.");
+    return;
+  }
+
+  // Check if any selected labour is being transferred to the same site
+  const sameSiteLabours = labours.filter((labour) => {
+    if (!selectedLabourIds.includes(labour.LabourID)) return false;
+
+    const currentSiteName = projectNames.find((p) => p.Id === labour.projectName)?.Business_Unit || "Unknown";
+    const transferSiteName = projectNames.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
+
+    return currentSiteName === transferSiteName;
+  });
+
+  if (sameSiteLabours.length > 0) {
+    toast.error("Same Busineess unit site, Cannot transfer For selected LabourID. Transfer aborted.");
+    return;
+  }
+
+  try {
+    // Build payload for each selected labour
+    const selectedLaboursData = labours
+      .filter((labour) => selectedLabourIds.includes(labour.LabourID))
+      .map((labour) => {
+        const currentSiteName = projectNames.find((p) => p.Id === labour.projectName)?.Business_Unit || "Unknown";
+        const transferSiteName = projectNames.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
+
+        return {
+          userId: labour.id,
+          LabourID: labour.LabourID,
+          name: labour.name,
+          currentSite: labour.projectName,
+          transferSite: newSite,
+          currentSiteName,
+          transferSiteName,
+          transferDate,
+          siteTransferBy: user.name || null,
+        };
+      });
+
+    const response = await axios.post(
+      `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
+      { labours: selectedLaboursData }
+    );
+
+    if (response.status === 201) {
+      const transferSiteName = projectNames.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
+
+      setLabours((prev) =>
+        prev.map((labour) => {
+          if (selectedLabourIds.includes(labour.LabourID)) {
+            return {
+              ...labour,
+              projectName: newSite,
+              Business_Unit: transferSiteName,
+            };
+          }
+          return labour;
+        })
+      );
+
+      setFormData({
+        projectName: "",
+        projectId: null,
+        companyName: "",
+      });
+      setTransferDate("");
+      setNewSite(null);
+      toast.success(`Site transfer sent for ${selectedLabourIds.length} labour(s) for Admin Approval.`);
+      setSelectedLabourIds([]);
+    } else {
+      // throw new Error(response.data?.details?.pendingApprovalErrors[0].error || "Unexpected error occurred.");
+              const pendingErrors = response.data?.details?.pendingApprovalErrors[0].error || [];
+    toast.error( pendingErrors ||"Failed to transfer labour(s).");
+    }
+
+  } catch (error) {
+    setFormData({
+      projectName: "",
+      projectId: null,
+      companyName: "",
+    });
+    setTransferDate("");
+    setNewSite(null);
+    console.error("Error during site transfer:", error);
+    toast.error("Failed to transfer labour(s).");
+    setSelectedLabourIds([]);
+  }
+};
+
+    
+    const selectedLabours = labours.filter((l) =>
         selectedLabourIds.includes(l.LabourID)
       );
       const selectedNames = selectedLabours.map((l) => l.LabourID).join(", ");
@@ -709,21 +821,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
       
 
 
-  const fetchTransferSiteNames = async (labourIds) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
-      // console.log('API Response:', response.data); // Debug response
-      return response.data.map((item) => ({
-        LabourID: item.LabourID,
-        transferSiteName: item.transferSiteName,
-        currentSiteName: item.currentSiteName,
-        createdAt: item.createdAt,
-      }));
-    } catch (error) {
-      console.error('Error fetching transfer site names:', error);
-      return [];
-    }
-  };
+
 
 
   // Fetch and map transfer site names
@@ -908,11 +1006,33 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     }
   };
 
-  const handleViewHistory = (labourID) => {
-    const history = labours.filter((labour) => labour.LabourID === labourID);
-    setSelectedHistory(history);
-    setOpenModal(true);
-  };
+  // const handleViewHistory = (labourID) => {
+  //   const history = labours.filter((labour) => labour.LabourID === labourID);
+  //   setSelectedHistory(history);
+  //   setOpenModal(true);
+  // };
+
+  const handleViewHistory = async (labourID) => {
+  const history = labours.filter((labour) => labour.LabourID === labourID);
+
+  const transferData = await fetchTransferSiteNames([labourID]);
+
+  const mergedHistory = history.map((item) => {
+    const transferInfo = transferData.find(t => t.LabourID === item.LabourID);
+    return {
+      ...item,
+      transferSiteName: transferInfo?.transferSiteName || null,
+      currentSiteName: transferInfo?.currentSiteName || null,
+      createdAt: transferInfo?.createdAt || null,
+      esslResponseStatus: transferInfo?.esslResponseStatus || null,
+      siteTransferBy: transferInfo?.siteTransferBy || null,
+    };
+  });
+
+  setSelectedHistory(mergedHistory);
+  setOpenModal(true);
+};
+
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -1056,7 +1176,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
                 <TableCell>Sr No</TableCell>
                 <TableCell>Labour ID</TableCell>
                 <TableCell>Name</TableCell>
-                {/* <TableCell>Project</TableCell> */}
+                <TableCell>Project</TableCell>
                 <TableCell>Previous Site</TableCell>
                 <TableCell>New Site</TableCell>
                 <TableCell>Transfer Date</TableCell>
@@ -1092,7 +1212,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
                   <TableCell>{labour.LabourID}</TableCell>
                   <TableCell>{labour.name || '-'}</TableCell>
                   {/* <TableCell>{getProjectDescription(labour.projectName)}</TableCell> */}
-                  {/* <TableCell>{labour.businessUnit}</TableCell> */}
+                  <TableCell>{labour.businessUnit}</TableCell>
                   <TableCell>
                     {(() => {
                       return statusesSite[labour.LabourID]?.currentSiteName || '-';
@@ -1534,132 +1654,205 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
       </Modal>
       {/* ------------------------------------------------------------------------------------------- */}
 
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: {
-              xs: "90%", // Mobile screens
-              sm: "80%", // Tablet screens
-              md: "70%", // Laptop screens
-              lg: "60%", // Large screens
-            },
-            bgcolor: "background.paper",
-            borderRadius: 2,
-            boxShadow: 24,
-            p: { xs: 2, sm: 3, md: 4 }, // Adjust padding for different devices
-            maxHeight: "85vh",
-            overflowY: "auto",
-            "&::-webkit-scrollbar": {
-              width: "8px",
-            },
-            "&::-webkit-scrollbar-track": {
-              backgroundColor: "#f1f1f1",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              backgroundColor: "#888",
-              borderRadius: "4px",
-            },
-          }}
-        >
-          {/* Close Icon */}
-          <IconButton
-            onClick={() => setOpenModal(false)}
-            sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              color: "gray",
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-
-          {/* Modal Header */}
-          <Typography
-            variant="h6"
-            sx={{
-              mb: 4,
-              textAlign: "center",
-              fontSize: { xs: "1rem", sm: "1.25rem" },
-            }}
-          >
-            Wages History Labour ID: {selectedHistory[0]?.LabourID || "N/A"}
-          </Typography>
-
-          {/* Modal Content */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 4,
-              position: "relative",
-              alignItems: "center",
-            }}
-          >
-            {selectedHistory.map((record, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 4,
-                  position: "relative",
-                  width: { xs: "100%", md: "70%" }, // Adjust width for responsiveness
-                }}
-              >
-                {/* Vertical Line */}
+           <Modal open={openModal} onClose={() => setOpenModal(false)}>
                 <Box
-                  sx={{
-                    position: "absolute",
-                    left: { xs: "27%", md: "27.5%" }, // Adjust line position
-                    top: 0,
-                    bottom: index !== selectedHistory.length - 0 ? 0 : "auto",
-                    width: 4,
-                    bgcolor: "green",
-                    zIndex: -1,
-                  }}
-                />
-
-                {/* Dot for Edited On */}
-                <Box
-                  sx={{
-                    width: 16,
-                    height: 16,
-                    bgcolor: "darkgreen",
-                    borderRadius: "50%",
-                    position: "absolute",
-                    left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, // Adjust dot position
-                  }}
-                ></Box>
-
-                {/* Left Side - Edited On */}
-                <Box
-                  sx={{
-                    flex: 1,
-                    textAlign: "right",
-                    pr: 2,
-                    fontSize: { xs: "0.75rem", sm: "0.875rem" }, // Adjust font size
-                  }}
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: {
+                            xs: "90%", // Mobile screens
+                            sm: "80%", // Tablet screens
+                            md: "70%", // Laptop screens
+                            lg: "60%", // Large screens
+                        },
+                        bgcolor: "background.paper",
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: { xs: 2, sm: 3, md: 4 }, 
+                        maxHeight: "85vh",
+                        overflowY: "auto",
+                        "&::-webkit-scrollbar": {
+                            width: "8px",
+                        },
+                        "&::-webkit-scrollbar-track": {
+                            backgroundColor: "#f1f1f1",
+                        },
+                        "&::-webkit-scrollbar-thumb": {
+                            backgroundColor: "#888",
+                            borderRadius: "4px",
+                        },
+                    }}
                 >
-                  <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                    Edited On:
-                  </Typography>
-                  <Typography variant="body2">
-                    {new Date(record.CreatedAt).toLocaleDateString()}
-                  </Typography>
-                  <Typography variant="body2">
-                    {new Date(record.CreatedAt).toLocaleTimeString()}
-                  </Typography>
+                    <IconButton
+                        onClick={() => setOpenModal(false)}
+                        sx={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            color: "gray",
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+
+                
+    <Box
+      sx={{
+        mb: 4,
+        textAlign: "center",
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 2,
+        flexWrap: "wrap",
+      }}
+    >
+      <Typography
+        variant="h6"
+        sx={{
+          fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
+          fontWeight: 600,
+          color: "text.primary",
+        }}
+      >
+        Labour ID:{" "}
+        <span style={{ color: "#2e7d32" }}>
+          {selectedHistory[0]?.LabourID || "N/A"}
+        </span>
+      </Typography>
+
+      <Typography
+        variant="h6"
+        sx={{
+          fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
+          fontWeight: 600,
+          color: "text.primary",
+        }}
+      >
+        Name:{" "}
+        <span style={{ color: "#1565c0" }}>
+          {selectedHistory[0]?.name || "N/A"}
+        </span>
+      </Typography>
+    </Box>
+
+    {/* Conditional Content */}
+    {selectedHistory.length === 0 ? (
+      <Typography
+        variant="body1"
+        sx={{
+          textAlign: "center",
+          fontSize: { xs: "0.95rem", sm: "1.1rem" },
+          color: "text.secondary",
+          mt: 4,
+        }}
+      >
+        No wages History available for this labour.
+      </Typography>
+    ) : (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 4,
+                            position: "relative",
+                            alignItems: "center",
+                        }}
+                    >
+                        {selectedHistory.map((record, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    gap: 4,
+                                    position: "relative",
+                                    width: { xs: "100%", md: "70%" }, 
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        left: { xs: "27%", md: "27.5%" }, 
+                                        top: 0,
+                                        bottom: index !== selectedHistory.length - 0 ? 0 : "auto",
+                                        width: 4,
+                                        bgcolor: "green",
+                                        zIndex: -1,
+                                    }}
+                                />
+
+                                <Box
+                                    sx={{
+                                        width: 16,
+                                        height: 16,
+                                        bgcolor: "darkgreen",
+                                        borderRadius: "50%",
+                                        position: "absolute",
+                                        left: { xs: "calc(28% - 9px)", md: "calc(28% - 9px)" }, 
+                                    }}
+                                ></Box>
+
+                                <Box
+                                    sx={{
+                                        flex: 1,
+                                        textAlign: "right",
+                                        pr: 2,
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, 
+                                    }}
+                                >
+                                    <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                                        Edited On:
+                                    </Typography>
+                                    <Typography variant="body2">
+                                      {console.log("record.createdAt, ",record.createdAt)}
+                                        {new Date(record.createdAt).toLocaleDateString()}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        {new Date(record.createdAt).toLocaleTimeString()}
+                                    </Typography>
+                                </Box>
+
+                                <Box
+                                    sx={{
+                                        flex: 3,
+                                        fontSize: { xs: "0.75rem", sm: "0.875rem" }, 
+                                    }}
+                                >
+                                    <Typography variant="body2" sx={{ mb: 1 }}>
+                                        <strong>Labour ID:</strong> {record.LabourID || "N/A"}
+                                    </Typography>
+                                    <Typography variant="body2" >
+                                        <strong>Edited By:</strong> {record.siteTransferBy || "N/A"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Transfer Date:</strong>{" "}
+                                        {record.createdAt
+                                            ? new Date(record.createdAt).toLocaleDateString()
+                                            : "N/A"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Previous Site:</strong> {record.currentSiteName || "N/A"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>New Site:</strong> {record.transferSiteName || "0"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Transfer Date:</strong> {record.createdAt || "0"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        <strong>Essl Response:</strong> {record.esslResponseStatus || "0"}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        ))}
+                    </Box>
+                    )}
                 </Box>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-      </Modal>
+            </Modal>
 
     </Box>
   );

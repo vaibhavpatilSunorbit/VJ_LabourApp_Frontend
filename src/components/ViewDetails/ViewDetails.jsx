@@ -371,7 +371,9 @@ import './ViewDetails.css';
 import { API_BASE_URL } from '../../Data';
 
 const trimUrl = (url) => {
+//   const baseUrl = "http://localhost:4000/uploads/";
   const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
+  // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
   return typeof url === 'string' ? url.replace(baseUrl, '') : '';
 };
 
@@ -690,7 +692,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton }) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            bgcolor: '#1976d2',
+            bgcolor: '#13315c',
             color: 'white',
             p: 2
           }}
@@ -698,7 +700,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton }) => {
           <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
             Labour Details
           </Typography>
-          <IconButton aria-label="close" onClick={onClose} sx={{ color: 'white' }}>
+          <IconButton aria-label="close" onClick={onClose} sx={{ color: 'white', backgroundColor:'#082d52' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
@@ -712,8 +714,8 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton }) => {
                     src={selectedLabour.photoSrc}
                     alt={`${selectedLabour.name}'s Photo`}
                     style={{
-                      width: '190px',
-                      height: '200px',
+                      width: '153px',
+                      height: '148px',
                       borderRadius: '10px',                 
                       border: '3px solid rgb(117, 119, 121)'
                     }}
@@ -738,9 +740,9 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton }) => {
               <Box
                 sx={{
                   display: 'flex',
-                  flexDirection: { xs: 'column', sm: 'row' },
+                  flexDirection: { xs: 'column', sm: 'column' },
                   flexWrap: 'wrap',
-                  gap: 2,
+                  gap: 1,
                 }}
               >
                 <Typography variant="body1" sx={{ color: '#555' }}>
@@ -770,7 +772,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton }) => {
                   '& .MuiTab-root': {
                     minWidth: 'auto',
                     px: 3,
-                    py: 1.5,
+                    py: 1,
                     fontWeight: 'bold',
                   },
                   '& .Mui-selected': {
@@ -778,7 +780,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton }) => {
                   },
                   '& .MuiTabs-indicator': {
                     backgroundColor: '#1976d2',
-                    height: 3,
+                    height: 2,
                   }
                 }}
               >
