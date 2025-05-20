@@ -38,6 +38,7 @@ const accessPages = [
   "Salary Register",
   "Run PayRoll",
   "View Payroll",
+  "Dashboard",
   // "Salary Generation",
   // "People",
 ];
