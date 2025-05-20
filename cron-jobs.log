@@ -1,0 +1,1229 @@
+[2024-09-11T05:08:25.501Z] INFO: Connection lost - read ECONNRESET
+[2024-09-11T05:08:46.677Z] INFO: Invalid object name 'Finance.Ledger'.
+[2024-09-11T05:08:55.768Z] INFO: Invalid object name 'Finance.Ledger'.
+[2024-09-11T05:36:54.509Z] INFO: Messages sent successfully.
+[2024-09-11T09:45:00.359Z] INFO: Running daily scheduled jobs at 8:00
+[2024-09-11T09:45:00.767Z] INFO: Number of records found : 23
+[2024-09-11T09:45:00.769Z] INFO: BirthdayWish : Mr. ABHISHEK BAJPAI
+[2024-09-11T09:45:00.771Z] INFO: BirthdayWish : Mr. KRISHNA KANT KUMAR SINGH
+[2024-09-11T09:45:00.772Z] INFO: BirthdayWish : Mr. UDIT RAJENDRA WADGAONKAR
+[2024-09-11T09:45:00.773Z] INFO: BirthdayWish : Mr. ANIL KUMAR GUPTA
+[2024-09-11T09:45:00.773Z] INFO: BirthdayWish : Mrs VARSHA MACHHINDRA KULDHARME
+[2024-09-11T09:45:00.774Z] INFO: BirthdayWish : Mrs. SHIVIKA SHARMA
+[2024-09-11T09:45:00.774Z] INFO: BirthdayWish : Mr. KRISHNA GAJANAN CHALIKWAR
+[2024-09-11T09:45:00.775Z] INFO: BirthdayWish : Mr. DILIPKUMAR SHIVARAM KADAM
+[2024-09-11T09:45:00.775Z] INFO: BirthdayWish : Mr. VIRAJ HEMCHANDRA KELUSKAR
+[2024-09-11T09:45:00.776Z] INFO: BirthdayWish : Mr. VAIBHAV RUPESH DOSHI
+[2024-09-11T09:45:00.776Z] INFO: BirthdayWish : Mr. LALIT LAXMAN YEROKAR
+[2024-09-11T09:45:00.777Z] INFO: BirthdayWish : Mr. SANDEEP BARAPATRE
+[2024-09-11T09:45:00.777Z] INFO: BirthdayWish : Mr. ROHIT BALASAHEB KADLAG
+[2024-09-11T09:45:00.777Z] INFO: BirthdayWish : Mr. ABHIJEET ASHOK MORASKAR
+[2024-09-11T09:45:00.777Z] INFO: BirthdayWish : Mr. MOHIT JAIN
+[2024-09-11T09:45:00.777Z] INFO: BirthdayWish : Mr. SHITAL SWAPNIL WALUNJ
+[2024-09-11T09:45:00.778Z] INFO: BirthdayWish : Mr. RAHUL ASHOKRAO TAMBAKHE
+[2024-09-11T09:45:00.778Z] INFO: BirthdayWish : Mr. ASHISH PRADIP CHOUDHARI
+[2024-09-11T09:45:00.779Z] INFO: BirthdayWish : Mr. OMKAR PRAKASHRAO SONPETHKAR
+[2024-09-11T09:45:00.780Z] INFO: BirthdayWish : Ms. ASMITA VIVEKANAND KULKARNI
+[2024-09-11T09:45:00.780Z] INFO: BirthdayWish : Mr. VISHVAJIT HARISHCHANDRA PATHAK
+[2024-09-11T09:45:00.781Z] INFO: BirthdayWish : Mr. VISHVAJIT HARISHCHANDRA PATHAK
+[2024-09-11T09:45:00.781Z] INFO: BirthdayWish : Mr. RAVI RANJAN SHAHI
+[2024-09-11T09:45:00.782Z] INFO: API run successfully, 23 birthday wishes sent.
+[2024-09-11T09:45:00.783Z] INFO: Completed BirthdayWish job
+[2024-09-11T09:45:02.549Z] ERROR: Failed to insert logs into CronJobLogs: Invalid object name 'CronJobLogs'.
+[2024-09-11T09:47:00.561Z] INFO: Running daily scheduled jobs at 8:00
+[2024-09-11T09:47:00.999Z] INFO: Number of records found : 23
+[2024-09-11T09:47:01.000Z] INFO: BirthdayWish : Mr. ABHISHEK BAJPAI
+[2024-09-11T09:47:01.000Z] INFO: BirthdayWish : Mr. KRISHNA KANT KUMAR SINGH
+[2024-09-11T09:47:01.000Z] INFO: BirthdayWish : Mr. UDIT RAJENDRA WADGAONKAR
+[2024-09-11T09:47:01.001Z] INFO: BirthdayWish : Mr. ANIL KUMAR GUPTA
+[2024-09-11T09:47:01.001Z] INFO: BirthdayWish : Mrs VARSHA MACHHINDRA KULDHARME
+[2024-09-11T09:47:01.001Z] INFO: BirthdayWish : Mrs. SHIVIKA SHARMA
+[2024-09-11T09:47:01.002Z] INFO: BirthdayWish : Mr. KRISHNA GAJANAN CHALIKWAR
+[2024-09-11T09:47:01.002Z] INFO: BirthdayWish : Mr. DILIPKUMAR SHIVARAM KADAM
+[2024-09-11T09:47:01.002Z] INFO: BirthdayWish : Mr. VIRAJ HEMCHANDRA KELUSKAR
+[2024-09-11T09:47:01.003Z] INFO: BirthdayWish : Mr. VAIBHAV RUPESH DOSHI
+[2024-09-11T09:47:01.003Z] INFO: BirthdayWish : Mr. LALIT LAXMAN YEROKAR
+[2024-09-11T09:47:01.003Z] INFO: BirthdayWish : Mr. SANDEEP BARAPATRE
+[2024-09-11T09:47:01.003Z] INFO: BirthdayWish : Mr. ROHIT BALASAHEB KADLAG
+[2024-09-11T09:47:01.003Z] INFO: BirthdayWish : Mr. ABHIJEET ASHOK MORASKAR
+[2024-09-11T09:47:01.004Z] INFO: BirthdayWish : Mr. MOHIT JAIN
+[2024-09-11T09:47:01.004Z] INFO: BirthdayWish : Mr. SHITAL SWAPNIL WALUNJ
+[2024-09-11T09:47:01.004Z] INFO: BirthdayWish : Mr. RAHUL ASHOKRAO TAMBAKHE
+[2024-09-11T09:47:01.004Z] INFO: BirthdayWish : Mr. ASHISH PRADIP CHOUDHARI
+[2024-09-11T09:47:01.004Z] INFO: BirthdayWish : Mr. OMKAR PRAKASHRAO SONPETHKAR
+[2024-09-11T09:47:01.004Z] INFO: BirthdayWish : Ms. ASMITA VIVEKANAND KULKARNI
+[2024-09-11T09:47:01.005Z] INFO: BirthdayWish : Mr. VISHVAJIT HARISHCHANDRA PATHAK
+[2024-09-11T09:47:01.005Z] INFO: BirthdayWish : Mr. VISHVAJIT HARISHCHANDRA PATHAK
+[2024-09-11T09:47:01.005Z] INFO: BirthdayWish : Mr. RAVI RANJAN SHAHI
+[2024-09-11T09:47:01.005Z] INFO: API run successfully, 23 birthday wishes sent.
+[2024-09-11T09:47:01.006Z] INFO: Completed BirthdayWish job
+[2024-09-11T09:47:02.221Z] INFO: All logs have been inserted into CronJobLogs.
+[2024-09-11T09:49:00.680Z] INFO: Running daily scheduled jobs at 8:00
+[2024-09-11T09:49:01.871Z] INFO: Number of records found : 23
+[2024-09-11T09:49:01.871Z] INFO: BirthdayWish : Mr. ABHISHEK BAJPAI
+[2024-09-11T09:49:01.872Z] INFO: BirthdayWish : Mr. KRISHNA KANT KUMAR SINGH
+[2024-09-11T09:49:01.872Z] INFO: BirthdayWish : Mr. UDIT RAJENDRA WADGAONKAR
+[2024-09-11T09:49:01.872Z] INFO: BirthdayWish : Mr. ANIL KUMAR GUPTA
+[2024-09-11T09:49:01.872Z] INFO: BirthdayWish : Mrs VARSHA MACHHINDRA KULDHARME
+[2024-09-11T09:49:01.873Z] INFO: BirthdayWish : Mrs. SHIVIKA SHARMA
+[2024-09-11T09:49:01.873Z] INFO: BirthdayWish : Mr. KRISHNA GAJANAN CHALIKWAR
+[2024-09-11T09:49:01.874Z] INFO: BirthdayWish : Mr. DILIPKUMAR SHIVARAM KADAM
+[2024-09-11T09:49:01.874Z] INFO: BirthdayWish : Mr. VIRAJ HEMCHANDRA KELUSKAR
+[2024-09-11T09:49:01.875Z] INFO: BirthdayWish : Mr. VAIBHAV RUPESH DOSHI
+[2024-09-11T09:49:01.875Z] INFO: BirthdayWish : Mr. LALIT LAXMAN YEROKAR
+[2024-09-11T09:49:01.875Z] INFO: BirthdayWish : Mr. SANDEEP BARAPATRE
+[2024-09-11T09:49:01.876Z] INFO: BirthdayWish : Mr. ROHIT BALASAHEB KADLAG
+[2024-09-11T09:49:01.876Z] INFO: BirthdayWish : Mr. ABHIJEET ASHOK MORASKAR
+[2024-09-11T09:49:01.876Z] INFO: BirthdayWish : Mr. MOHIT JAIN
+[2024-09-11T09:49:01.876Z] INFO: BirthdayWish : Mr. SHITAL SWAPNIL WALUNJ
+[2024-09-11T09:49:01.876Z] INFO: BirthdayWish : Mr. RAHUL ASHOKRAO TAMBAKHE
+[2024-09-11T09:49:01.877Z] INFO: BirthdayWish : Mr. ASHISH PRADIP CHOUDHARI
+[2024-09-11T09:49:01.877Z] INFO: BirthdayWish : Mr. OMKAR PRAKASHRAO SONPETHKAR
+[2024-09-11T09:49:01.877Z] INFO: BirthdayWish : Ms. ASMITA VIVEKANAND KULKARNI
+[2024-09-11T09:49:01.877Z] INFO: BirthdayWish : Mr. VISHVAJIT HARISHCHANDRA PATHAK
+[2024-09-11T09:49:01.877Z] INFO: BirthdayWish : Mr. VISHVAJIT HARISHCHANDRA PATHAK
+[2024-09-11T09:49:01.878Z] INFO: BirthdayWish : Mr. RAVI RANJAN SHAHI
+[2024-09-11T09:49:01.878Z] INFO: API run successfully, 23 birthday wishes sent.
+[2024-09-11T09:49:01.879Z] INFO: Completed BirthdayWish job
+[2024-09-11T09:49:02.307Z] INFO: All logs have been inserted into CronJobLogs.
+[2024-09-11T12:02:57.935Z] INFO: SystemEnrollment BookingID: 976295949
+[2024-09-11T12:02:57.983Z] INFO: SystemEnrollment BookingID: 976295577
+[2024-09-11T12:02:58.022Z] INFO: SystemEnrollment BookingID: 976295366
+[2024-09-11T12:04:21.901Z] INFO: SystemEnrollment BookingID: 976295949
+[2024-09-11T12:04:21.953Z] INFO: SystemEnrollment BookingID: 976295577
+[2024-09-11T12:04:22.009Z] INFO: SystemEnrollment BookingID: 976295366
+[2024-09-11T12:04:59.271Z] INFO: SystemEnrollment BookingID: 976295949
+[2024-09-11T12:04:59.300Z] INFO: SystemEnrollment BookingID: 976295577
+[2024-09-11T12:04:59.338Z] INFO: SystemEnrollment BookingID: 976295366
+[2024-09-12T05:56:28.212Z] INFO: Table Created SuccessFully.
+[2024-09-16T07:00:51.583Z] INFO: Table Created SuccessFully.
+[2024-09-18T05:07:02.662Z] INFO: Connection lost - read ECONNRESET
+[2024-09-18T05:09:20.338Z] INFO: Invalid object name 'Finance.Ledger'.
+[2024-09-18T05:09:26.334Z] INFO: Invalid object name 'Finance.Ledger'.
+[2024-09-18T05:57:19.229Z] INFO: Connection lost - read ECONNRESET
+[2024-09-18T05:57:41.856Z] INFO: Invalid object name 'Finance.Ledger'.
+[2024-09-18T06:23:29.576Z] INFO: Table Created SuccessFully.
+[2024-09-20T05:54:18.493Z] INFO: Primary Result Length : 84
+[2024-09-20T05:54:25.602Z] INFO: 12 messages sent today for registration reminders
+[2024-09-20T05:55:35.492Z] INFO: Primary Result Length : 84
+[2024-09-20T05:55:41.495Z] INFO: 12 messages sent today for registration reminders
+[2024-09-20T05:56:27.438Z] INFO: Primary Result Length : 84
+[2024-09-20T05:56:34.982Z] INFO: 12 messages sent today for registration reminders
+[2024-09-20T05:59:39.095Z] INFO: Primary Result Length : 84
+[2024-09-20T05:59:46.441Z] INFO: 12 messages sent today for registration reminders
+[2024-09-20T06:02:41.098Z] INFO: Primary Result Length : 84
+[2024-09-20T06:02:47.935Z] INFO: 12 messages sent today for registration reminders
+[2024-09-20T06:12:56.997Z] INFO: Starting the process of Daily Table Creation.
+[2024-09-20T06:13:12.469Z] ERROR: Error in DailyTableCreation: Timeout: Request failed to complete in 15000ms
+[2024-09-20T06:13:40.056Z] INFO: Starting the process of Daily Table Creation.
+[2024-09-20T06:13:55.558Z] ERROR: Error in DailyTableCreation: Timeout: Request failed to complete in 15000ms
+[2024-09-20T06:15:27.118Z] INFO: Starting the process of Daily Table Creation.
+[2024-09-20T06:37:00.240Z] INFO: Running daily scheduled jobs at 8:00
+[2024-09-20T07:01:57.012Z] INFO: Table Created SuccessFully.
+[2024-09-20T07:01:57.014Z] INFO: Completed DailyTableCreation job
+[2024-09-20T07:01:57.373Z] INFO: All logs have been inserted into CronJobLogs.
+[2025-02-26T05:00:00.484Z] INFO: Running daily scheduled jobs at 8:00
+[2025-02-26T05:00:00.929Z] INFO: Number of records found : 32
+[2025-02-26T05:00:00.930Z] INFO: BirthdayWish : Mr. SACHIN TUKARAM HASE
+[2025-02-26T05:00:00.931Z] INFO: BirthdayWish : Mrs RUJUTA VASANT RAORANE
+[2025-02-26T05:00:00.931Z] INFO: BirthdayWish : Mr. CHANDRASEKHAR SUKUMAR
+[2025-02-26T05:00:00.932Z] INFO: BirthdayWish : Ms. RAJESHREE SUSHIL DHOK
+[2025-02-26T05:00:00.932Z] INFO: BirthdayWish : Mrs. VRUSHALI HEMANT MANJARE
+[2025-02-26T05:00:00.933Z] INFO: BirthdayWish : Mr. SACHIN SHRIKANT JOSHI
+[2025-02-26T05:00:00.933Z] INFO: BirthdayWish : Mrs. PRIYA GANESHJI SOMANI
+[2025-02-26T05:00:00.934Z] INFO: BirthdayWish : Mr. ANSHUL MUDGAL
+[2025-02-26T05:00:00.934Z] INFO: BirthdayWish : Mr. RAHUL BATHWAL
+[2025-02-26T05:00:00.934Z] INFO: BirthdayWish : Mr. HITESH NANUBHAI PATADIA
+[2025-02-26T05:00:00.935Z] INFO: BirthdayWish : Mr. AVINASH DAS
+[2025-02-26T05:00:00.935Z] INFO: BirthdayWish : Mrs. Akanksha Singh
+[2025-02-26T05:00:00.935Z] INFO: BirthdayWish : Mr. AKHILESH PANDEY
+[2025-02-26T05:00:00.935Z] INFO: BirthdayWish : Mr. SUMIT NAIR
+[2025-02-26T05:00:00.936Z] INFO: BirthdayWish : Mr. AFTAB MEHENDI DHANANI
+[2025-02-26T05:00:00.936Z] INFO: BirthdayWish : Mr. SACHIN BABAJI LANKE
+[2025-02-26T05:00:00.936Z] INFO: BirthdayWish : Mr. BHUSHAN SUBHASH JOSHI
+[2025-02-26T05:00:00.936Z] INFO: BirthdayWish : Mrs. MEDINI RAGHAVENDRA
+[2025-02-26T05:00:00.937Z] INFO: BirthdayWish : Mrs. RUTUJA SAGAR RANAWARE
+[2025-02-26T05:00:00.937Z] INFO: BirthdayWish : Mr. RAVINDRA VITTHAL KUMBHARDE
+[2025-02-26T05:00:00.937Z] INFO: BirthdayWish : Mr. YOGESH CHINTAMAN BHALERAO
+[2025-02-26T05:00:00.937Z] INFO: BirthdayWish : Mr. YASHPAL PRATAPSING PATIL
+[2025-02-26T05:00:00.937Z] INFO: BirthdayWish : Mr. VIVEK ARUN BHOSALE
+[2025-02-26T05:00:00.938Z] INFO: BirthdayWish : Ms. SHEETAL YOGESH BAVISKAR
+[2025-02-26T05:00:00.938Z] INFO: BirthdayWish : Mr. RAHUL PRABHULING ZORI
+[2025-02-26T05:00:00.938Z] INFO: BirthdayWish : Mr. MONARK DESHMUKH
+[2025-02-26T05:00:00.938Z] INFO: BirthdayWish : Mr. VIKRAM NARAYAN PATIL
+[2025-02-26T05:00:00.938Z] INFO: BirthdayWish : Mr. ROHIT VINOD DHARMALE
+[2025-02-26T05:00:00.938Z] INFO: BirthdayWish : Mrs. HEMLATA KISHOR JANGLE
+[2025-02-26T05:00:00.939Z] INFO: BirthdayWish : Mrs. SMITA SATISH PAWAR
+[2025-02-26T05:00:00.939Z] INFO: BirthdayWish : DEEPAK AGARWAL
+[2025-02-26T05:00:00.939Z] INFO: BirthdayWish : Mr. BHAVESH JIVRAJ RATOLA
+[2025-02-26T05:00:00.939Z] INFO: API run successfully, 32 birthday wishes sent.
+[2025-02-26T05:00:00.940Z] INFO: Completed BirthdayWish job
+[2025-02-26T05:00:01.743Z] INFO: SystemEnrollment BookingID: 1080221338
+[2025-02-26T05:00:01.777Z] INFO: SystemEnrollment BookingID: 1080220300
+[2025-02-26T05:00:01.811Z] INFO: SystemEnrollment BookingID: 1080219441
+[2025-02-26T05:00:01.846Z] INFO: SystemEnrollment BookingID: 1080218755
+[2025-02-26T05:00:01.889Z] INFO: SystemEnrollment BookingID: 1080218234
+[2025-02-26T05:00:01.922Z] INFO: SystemEnrollment BookingID: 1080217881
+[2025-02-26T05:00:01.950Z] INFO: SystemEnrollment BookingID: 1080217686
+[2025-02-26T05:00:01.951Z] INFO: Completed SystemEnrollment job
+[2025-02-26T05:00:02.387Z] INFO: Primary Result Length : 159
+[2025-02-26T05:00:04.848Z] INFO: 8 days Booking Id RegistrationReminders: 1079302740
+[2025-02-26T05:00:04.913Z] INFO: 8 days Booking Id RegistrationReminders: 1079301528
+[2025-02-26T05:00:04.984Z] INFO: 8 days Booking Id RegistrationReminders: 1079300502
+[2025-02-26T05:00:05.066Z] INFO: 8 days Booking Id RegistrationReminders: 1079299644
+[2025-02-26T05:00:05.271Z] INFO: 8 days Booking Id RegistrationReminders: 1079298114
+[2025-02-26T05:00:05.328Z] INFO: 8 days Booking Id RegistrationReminders: 1079297946
+[2025-02-26T05:00:07.665Z] INFO: 15 days Booking Id RegistrationReminders: 1078460702
+[2025-02-26T05:00:07.708Z] INFO: 15 days Booking Id RegistrationReminders: 1078458191
+[2025-02-26T05:00:07.754Z] INFO: 15 days Booking Id RegistrationReminders: 1078456702
+[2025-02-26T05:00:08.005Z] INFO: 15 days Booking Id RegistrationReminders: 1078452135
+[2025-02-26T05:00:08.276Z] INFO: 15 days Booking Id RegistrationReminders: 1078378649
+[2025-02-26T05:00:08.396Z] INFO: 15 days Booking Id RegistrationReminders: 1078369541
+[2025-02-26T05:00:08.560Z] INFO: 15 days Booking Id RegistrationReminders: 1078339446
+[2025-02-26T05:00:11.126Z] INFO: 13 messages sent today for registration reminders
+[2025-02-26T05:00:11.126Z] INFO: Completed RegistrationReminders job
+[2025-02-26T05:00:11.731Z] INFO: 14
+[2025-02-26T05:00:11.732Z] INFO: Booking Id RegistrationCompleted: 1079595648
+[2025-02-26T05:00:11.733Z] INFO: Booking Id RegistrationCompleted: 1079207035
+[2025-02-26T05:00:11.733Z] INFO: Booking Id RegistrationCompleted: 1078525820
+[2025-02-26T05:00:11.734Z] INFO: Booking Id RegistrationCompleted: 1079208413
+[2025-02-26T05:00:11.735Z] INFO: Booking Id RegistrationCompleted: 1079596255
+[2025-02-26T05:00:11.735Z] INFO: Booking Id RegistrationCompleted: 1079666547
+[2025-02-26T05:00:11.736Z] INFO: Booking Id RegistrationCompleted: 908259707
+[2025-02-26T05:00:11.737Z] INFO: Booking Id RegistrationCompleted: 1076479720
+[2025-02-26T05:00:11.737Z] INFO: Booking Id RegistrationCompleted: 1078451763
+[2025-02-26T05:00:11.738Z] INFO: Booking Id RegistrationCompleted: 1079298450
+[2025-02-26T05:00:11.739Z] INFO: Booking Id RegistrationCompleted: 1079606489
+[2025-02-26T05:00:11.739Z] INFO: Booking Id RegistrationCompleted: 1076490144
+[2025-02-26T05:00:11.740Z] INFO: Booking Id RegistrationCompleted: 1078455417
+[2025-02-26T05:00:11.741Z] INFO: Booking Id RegistrationCompleted: 1079208408
+[2025-02-26T05:00:11.741Z] INFO: 14 Messages Sent Successfully for Registration Completed
+[2025-02-26T05:00:11.741Z] INFO: Completed RegistrationCompleted job
+[2025-02-26T05:32:05.875Z] INFO: Table Created SuccessFully.
+[2025-02-26T05:32:05.875Z] INFO: Completed DailyTableCreation job
+[2025-02-26T05:32:06.397Z] INFO: All logs have been inserted into CronJobLogs.[2025-05-13T02:30:00.456Z] INFO: Running daily scheduled jobs at 8:00
+[2025-05-13T02:30:00.829Z] INFO: Number of records found : 45
+[2025-05-13T02:30:00.830Z] INFO: BirthdayWish : Miss. ASMITA GARDE
+[2025-05-13T02:30:01.604Z] INFO: BirthdayWish : Mr. AKSHAY PRAMOD MENKUDALE
+[2025-05-13T02:30:02.399Z] INFO: BirthdayWish : Mrs LATA MAHENDRA INGALE
+[2025-05-13T02:30:03.133Z] INFO: BirthdayWish : Mr. VYANKATESH DINKAR KESKAR
+[2025-05-13T02:30:03.863Z] INFO: BirthdayWish : Mrs. SHALINI SINGH
+[2025-05-13T02:30:04.972Z] INFO: BirthdayWish : Mr. SIDDHARTH GUPTA
+[2025-05-13T02:30:05.813Z] INFO: BirthdayWish : Mrs. PRIYANKA SONI
+[2025-05-13T02:30:06.939Z] INFO: BirthdayWish : Mr. KISHORE PREMSUKH JHAMVAR
+[2025-05-13T02:30:07.647Z] INFO: BirthdayWish : Mr. SACHIN CHANDRAKANT KHANDAVE
+[2025-05-13T02:30:08.371Z] INFO: BirthdayWish : Mr. MAYUR C KHANDVE
+[2025-05-13T02:30:09.091Z] INFO: BirthdayWish : Mrs. PRACHI NIKHIL PATHARE
+[2025-05-13T02:30:09.811Z] INFO: BirthdayWish : Mr. RAJAT DIWANSINGH THAKUR
+[2025-05-13T02:30:10.537Z] INFO: BirthdayWish : Mrs. PALLAVI RAHUL PATIL
+[2025-05-13T02:30:11.264Z] INFO: BirthdayWish : Mr. GURUSIDHA AMOGSIDHA KORE
+[2025-05-13T02:30:11.978Z] INFO: BirthdayWish : Mrs. SMITA LONDHE
+[2025-05-13T02:30:12.686Z] INFO: BirthdayWish : Mrs. ARCHANA MAHAJAN
+[2025-05-13T02:30:13.825Z] INFO: BirthdayWish : Mr. SHIRISH SHANKAR GAVHANE
+[2025-05-13T02:30:14.540Z] INFO: BirthdayWish : Mr. ANIL MADHAVRAO TADMARI
+[2025-05-13T02:30:15.674Z] INFO: BirthdayWish : Ms. SHIRIN KAMALUDDIN BARDAI
+[2025-05-13T02:30:16.387Z] INFO: BirthdayWish : Mrs. PRIYANKA HANSRAJ JADHAV
+[2025-05-13T02:30:17.535Z] INFO: BirthdayWish : Mr. PRASAD PRAKASH JAGANADE
+[2025-05-13T02:30:18.665Z] INFO: BirthdayWish : Mrs. VISHAKHA NEIL KADU
+[2025-05-13T02:30:19.389Z] INFO: BirthdayWish : Mr. AKSHAY JAIN
+[2025-05-13T02:30:20.104Z] INFO: BirthdayWish : Mr. SAGAR ARUN JAWALE
+[2025-05-13T02:30:20.823Z] INFO: BirthdayWish : Mr. RATNADEEP BHARAT VIBHUTE
+[2025-05-13T02:30:21.531Z] INFO: BirthdayWish : Mr. MAROTI TUKARAM SURYAWANSHI
+[2025-05-13T02:30:22.248Z] INFO: BirthdayWish : Mr. ADARSH GURUNATH BHALKE
+[2025-05-13T02:30:23.398Z] INFO: BirthdayWish : Ms. CHANCHAL RAMESH KAKDE
+[2025-05-13T02:30:24.117Z] INFO: BirthdayWish : Mr. SIDRAM SHANKAR PATIL
+[2025-05-13T02:30:24.836Z] INFO: BirthdayWish : Mr. MANOJ DATTATRAY MORE
+[2025-05-13T02:30:25.551Z] INFO: BirthdayWish : Ms. MANISHA VIJAYRAO UMAK
+[2025-05-13T02:30:26.260Z] INFO: BirthdayWish : Mr. PRASHANT KOTI
+[2025-05-13T02:30:27.394Z] INFO: BirthdayWish : Mr. ASIF IJAJ NAGIWALE
+[2025-05-13T02:30:28.519Z] INFO: BirthdayWish : Mrs. DARSHANA PRASAD JOSHI
+[2025-05-13T02:30:29.243Z] INFO: BirthdayWish : Mrs. UJWALA SAMADHAN RAKHONDE
+[2025-05-13T02:30:29.960Z] INFO: BirthdayWish : Mrs. AMRUTA RISHIKESH MALWADE
+[2025-05-13T02:30:30.675Z] INFO: BirthdayWish : Mr. PRADEEP PRAKASH PATIL
+[2025-05-13T02:30:31.387Z] INFO: BirthdayWish : Mr. NAVNEET NAVAL PAWAR
+[2025-05-13T02:30:32.092Z] INFO: BirthdayWish : Mrs. RUCHIKA SAXENA
+[2025-05-13T02:30:32.911Z] INFO: BirthdayWish : MANGESH PRABHAKAR BALPANDE
+[2025-05-13T02:30:33.622Z] INFO: BirthdayWish : PRASAD BHIKA MAHAJAN
+[2025-05-13T02:30:34.344Z] INFO: BirthdayWish : PRIYANKA MANOJ KARPE
+[2025-05-13T02:30:35.073Z] INFO: BirthdayWish : MR. ASHISH AVDHOOT BAKHALE
+[2025-05-13T02:30:36.218Z] INFO: BirthdayWish : ANKIT GUPTA
+[2025-05-13T02:30:36.931Z] INFO: BirthdayWish : LAXMIKANT HEMANTKUMAR JOSHI
+[2025-05-13T02:30:37.643Z] INFO: API run successfully, 45 birthday wishes sent.
+[2025-05-13T02:30:37.644Z] INFO: Completed BirthdayWish job
+[2025-05-13T02:30:38.218Z] INFO: SystemEnrollment BookingID: 1116235960
+[2025-05-13T02:30:39.350Z] INFO: SystemEnrollment BookingID: 1116235823
+[2025-05-13T02:30:40.072Z] INFO: SystemEnrollment BookingID: 1116233774
+[2025-05-13T02:30:40.792Z] INFO: SystemEnrollment BookingID: 1116233070
+[2025-05-13T02:30:41.510Z] INFO: SystemEnrollment BookingID: 1116232551
+[2025-05-13T02:30:42.658Z] INFO: SystemEnrollment BookingID: 1116232215
+[2025-05-13T02:30:43.374Z] INFO: SystemEnrollment BookingID: 1116232037
+[2025-05-13T02:30:44.102Z] INFO: SystemEnrollment BookingID: 1116228415
+[2025-05-13T02:30:44.819Z] INFO: Completed SystemEnrollment job
+[2025-05-13T02:30:45.131Z] INFO: Primary Result Length : 128
+[2025-05-13T02:30:46.142Z] INFO: 8 days Booking Id RegistrationReminders: 1114595151
+[2025-05-13T02:30:46.903Z] INFO: 8 days Booking Id RegistrationReminders: 1114593357
+[2025-05-13T02:30:48.806Z] INFO: 15 days Booking Id RegistrationReminders: 1109720252
+[2025-05-13T02:30:53.089Z] INFO: 3 messages sent today for registration reminders
+[2025-05-13T02:30:53.090Z] INFO: Completed RegistrationReminders job
+[2025-05-13T02:30:53.411Z] INFO: 3
+[2025-05-13T02:30:53.411Z] INFO: Booking Id RegistrationCompleted: 1116235823
+[2025-05-13T02:30:54.124Z] INFO: Booking Id RegistrationCompleted: 1104679777
+[2025-05-13T02:30:54.837Z] INFO: Booking Id RegistrationCompleted: 1098206244
+[2025-05-13T02:30:55.545Z] INFO: 3 Messages Sent Successfully for Registration Completed
+[2025-05-13T02:30:55.545Z] INFO: Completed RegistrationCompleted job
+[2025-05-13T02:51:01.827Z] INFO: Table Created SuccessFully.
+[2025-05-13T02:51:01.827Z] INFO: Completed DailyTableCreation job
+[2025-05-13T02:51:02.180Z] INFO: All logs have been inserted into CronJobLogs.
+[2025-05-13T03:30:01.353Z] INFO: Paid TDS value is greater than 0 for BookingId 174039964 in TDSBookingPending
+[2025-05-13T03:30:01.437Z] INFO: Paid TDS value is greater than 0 for BookingId 174000291 in TDSBookingPending
+[2025-05-13T03:30:01.519Z] INFO: Paid TDS value is greater than 0 for BookingId 174007859 in TDSBookingPending
+[2025-05-13T03:30:01.607Z] INFO: Paid TDS value is greater than 0 for BookingId 172492425 in TDSBookingPending
+[2025-05-13T03:30:01.692Z] INFO: Paid TDS value is greater than 0 for BookingId 174275035 in TDSBookingPending
+[2025-05-13T03:30:01.774Z] INFO: Paid TDS value is greater than 0 for BookingId 172496514 in TDSBookingPending
+[2025-05-13T03:30:01.858Z] INFO: Paid TDS value is greater than 0 for BookingId 173996771 in TDSBookingPending
+[2025-05-13T03:30:01.951Z] INFO: Paid TDS value is greater than 0 for BookingId 174020541 in TDSBookingPending
+[2025-05-13T03:30:02.032Z] INFO: Paid TDS value is greater than 0 for BookingId 172488938 in TDSBookingPending
+[2025-05-13T03:30:02.127Z] INFO: Paid TDS value is greater than 0 for BookingId 174050710 in TDSBookingPending
+[2025-05-13T03:30:02.215Z] INFO: Paid TDS value is greater than 0 for BookingId 174087156 in TDSBookingPending
+[2025-05-13T03:30:02.301Z] INFO: Paid TDS value is greater than 0 for BookingId 174307247 in TDSBookingPending
+[2025-05-13T03:30:02.386Z] INFO: Paid TDS value is greater than 0 for BookingId 173987200 in TDSBookingPending
+[2025-05-13T03:30:02.484Z] INFO: Paid TDS value is greater than 0 for BookingId 172498805 in TDSBookingPending
+[2025-05-13T03:30:02.585Z] INFO: Paid TDS value is greater than 0 for BookingId 174285595 in TDSBookingPending
+[2025-05-13T03:30:02.677Z] INFO: Paid TDS value is greater than 0 for BookingId 172480550 in TDSBookingPending
+[2025-05-13T03:30:02.767Z] INFO: Paid TDS value is greater than 0 for BookingId 174318336 in TDSBookingPending
+[2025-05-13T03:30:02.855Z] INFO: Paid TDS value is greater than 0 for BookingId 174107781 in TDSBookingPending
+[2025-05-13T03:30:02.979Z] INFO: Paid TDS value is greater than 0 for BookingId 173984375 in TDSBookingPending
+[2025-05-13T03:30:03.092Z] INFO: Paid TDS value is greater than 0 for BookingId 219665899 in TDSBookingPending
+[2025-05-13T03:30:03.179Z] INFO: Paid TDS value is greater than 0 for BookingId 174187882 in TDSBookingPending
+[2025-05-13T03:30:03.264Z] INFO: Paid TDS value is greater than 0 for BookingId 174179082 in TDSBookingPending
+[2025-05-13T03:30:03.345Z] INFO: Paid TDS value is greater than 0 for BookingId 174045244 in TDSBookingPending
+[2025-05-13T03:30:03.425Z] INFO: Paid TDS value is greater than 0 for BookingId 172485066 in TDSBookingPending
+[2025-05-13T03:30:03.503Z] INFO: Paid TDS value is greater than 0 for BookingId 172501448 in TDSBookingPending
+[2025-05-13T03:30:03.582Z] INFO: Paid TDS value is greater than 0 for BookingId 173974852 in TDSBookingPending
+[2025-05-13T03:30:03.666Z] INFO: Paid TDS value is greater than 0 for BookingId 174080640 in TDSBookingPending
+[2025-05-13T03:30:03.746Z] INFO: Paid TDS value is greater than 0 for BookingId 174011916 in TDSBookingPending
+[2025-05-13T03:30:03.827Z] INFO: Paid TDS value is greater than 0 for BookingId 174153737 in TDSBookingPending
+[2025-05-13T03:30:03.911Z] INFO: Paid TDS value is greater than 0 for BookingId 174074304 in TDSBookingPending
+[2025-05-13T03:30:03.990Z] INFO: Paid TDS value is greater than 0 for BookingId 172486132 in TDSBookingPending
+[2025-05-13T03:30:04.073Z] INFO: Paid TDS value is greater than 0 for BookingId 172487385 in TDSBookingPending
+[2025-05-13T03:30:04.185Z] INFO: Paid TDS value is greater than 0 for BookingId 173963351 in TDSBookingPending
+[2025-05-13T03:30:04.281Z] INFO: Paid TDS value is greater than 0 for BookingId 174056342 in TDSBookingPending
+[2025-05-13T03:30:04.377Z] INFO: Paid TDS value is greater than 0 for BookingId 173976964 in TDSBookingPending
+[2025-05-13T03:30:04.487Z] INFO: Paid TDS value is greater than 0 for BookingId 174062150 in TDSBookingPending
+[2025-05-13T03:30:04.583Z] INFO: Paid TDS value is greater than 0 for BookingId 173162474 in TDSBookingPending
+[2025-05-13T03:30:04.680Z] INFO: Paid TDS value is greater than 0 for BookingId 172926760 in TDSBookingPending
+[2025-05-13T03:30:04.766Z] INFO: Paid TDS value is greater than 0 for BookingId 172883088 in TDSBookingPending
+[2025-05-13T03:30:04.846Z] INFO: Paid TDS value is greater than 0 for BookingId 173715415 in TDSBookingPending
+[2025-05-13T03:30:04.951Z] INFO: Paid TDS value is greater than 0 for BookingId 173223802 in TDSBookingPending
+[2025-05-13T03:30:05.037Z] INFO: Paid TDS value is greater than 0 for BookingId 173690468 in TDSBookingPending
+[2025-05-13T03:30:05.131Z] INFO: Paid TDS value is greater than 0 for BookingId 173693108 in TDSBookingPending
+[2025-05-13T03:30:05.241Z] INFO: Paid TDS value is greater than 0 for BookingId 173137705 in TDSBookingPending
+[2025-05-13T03:30:05.324Z] INFO: Paid TDS value is greater than 0 for BookingId 173677191 in TDSBookingPending
+[2025-05-13T03:30:05.408Z] INFO: Paid TDS value is greater than 0 for BookingId 173664763 in TDSBookingPending
+[2025-05-13T03:30:05.488Z] INFO: Paid TDS value is greater than 0 for BookingId 173873333 in TDSBookingPending
+[2025-05-13T03:30:05.573Z] INFO: Paid TDS value is greater than 0 for BookingId 172937266 in TDSBookingPending
+[2025-05-13T03:30:05.656Z] INFO: Paid TDS value is greater than 0 for BookingId 173866948 in TDSBookingPending
+[2025-05-13T03:30:05.750Z] INFO: Paid TDS value is greater than 0 for BookingId 173014629 in TDSBookingPending
+[2025-05-13T03:30:05.833Z] INFO: Paid TDS value is greater than 0 for BookingId 173719609 in TDSBookingPending
+[2025-05-13T03:30:05.940Z] INFO: Paid TDS value is greater than 0 for BookingId 173148913 in TDSBookingPending
+[2025-05-13T03:30:06.026Z] INFO: Paid TDS value is greater than 0 for BookingId 172886623 in TDSBookingPending
+[2025-05-13T03:30:06.128Z] INFO: Paid TDS value is greater than 0 for BookingId 173900437 in TDSBookingPending
+[2025-05-13T03:30:06.212Z] INFO: Paid TDS value is greater than 0 for BookingId 173641373 in TDSBookingPending
+[2025-05-13T03:30:06.299Z] INFO: Paid TDS value is greater than 0 for BookingId 173058278 in TDSBookingPending
+[2025-05-13T03:30:06.386Z] INFO: Paid TDS value is greater than 0 for BookingId 173632588 in TDSBookingPending
+[2025-05-13T03:30:06.487Z] INFO: Paid TDS value is greater than 0 for BookingId 173765622 in TDSBookingPending
+[2025-05-13T03:30:06.574Z] INFO: Paid TDS value is greater than 0 for BookingId 173730899 in TDSBookingPending
+[2025-05-13T03:30:06.666Z] INFO: Paid TDS value is greater than 0 for BookingId 173816263 in TDSBookingPending
+[2025-05-13T03:30:06.746Z] INFO: Paid TDS value is 0 of agreement value for BookingId 173938335 in TDSBookingPending
+[2025-05-13T03:30:06.810Z] ERROR: Error in TDSBookingPending:
+[2025-05-14T02:30:00.167Z] INFO: Running daily scheduled jobs at 8:00
+[2025-05-14T02:30:00.524Z] INFO: Number of records found : 27
+[2025-05-14T02:30:00.525Z] INFO: BirthdayWish : Mrs. JAYA RAJU KAWAD
+[2025-05-14T02:30:01.709Z] INFO: BirthdayWish : Mr. NITIN CHANDRAKANTAPPA SAMSHATTE
+[2025-05-14T02:30:02.451Z] INFO: BirthdayWish : Mr. VIRENDRA KUMAR SURYAWANSHI
+[2025-05-14T02:30:03.219Z] INFO: BirthdayWish : Mrs. SANTOSH MEHARWAL
+[2025-05-14T02:30:03.992Z] INFO: BirthdayWish : Mr. RAVINDRA YASHWANT GHORPADE
+[2025-05-14T02:30:05.132Z] INFO: BirthdayWish : Mr. AJIT TUKARAM BOMBLE
+[2025-05-14T02:30:05.872Z] INFO: BirthdayWish : Mrs. PRITI ASHISH BARGAJE
+[2025-05-14T02:30:07.008Z] INFO: BirthdayWish : Mr. SAMADHAN DIGAMBAR SHEJUL
+[2025-05-14T02:30:07.722Z] INFO: BirthdayWish : Mr. APRATIM PADMAKAR CHAUDHARY
+[2025-05-14T02:30:08.464Z] INFO: BirthdayWish : Mr. PRAVER CHAWLA
+[2025-05-14T02:30:09.202Z] INFO: BirthdayWish : Mrs. SAMRUDDHI SAMAR SAPRE
+[2025-05-14T02:30:09.927Z] INFO: BirthdayWish : Mrs. SAMRUDDHI SAMAR SAPRE
+[2025-05-14T02:30:11.096Z] INFO: BirthdayWish : Mrs. SHRUTI HRISHIKESH INGOLE
+[2025-05-14T02:30:12.242Z] INFO: BirthdayWish : Mrs. RAJESWARI ARUNACHALAM
+[2025-05-14T02:30:12.978Z] INFO: BirthdayWish : Mr. PRABHAKAR SUKHADEV SULTANE
+[2025-05-14T02:30:13.686Z] INFO: BirthdayWish : Mr. PRATIK BHIVAJI HADAWALE
+[2025-05-14T02:30:14.411Z] INFO: BirthdayWish : Mr. RAVIKUMAR NAULURI
+[2025-05-14T02:30:15.134Z] INFO: BirthdayWish : Mr. ASHOK BRIJLAL JAISWAL
+[2025-05-14T02:30:15.846Z] INFO: BirthdayWish : Mr. KUNAL CHHABU PATIL
+[2025-05-14T02:30:16.988Z] INFO: BirthdayWish : Mr. SANKALPA SANJAY BHAWALKAR
+[2025-05-14T02:30:17.712Z] INFO: BirthdayWish : Mr. DAYANAND VISHWANATH JEWALE
+[2025-05-14T02:30:18.867Z] INFO: BirthdayWish : Mr. PRASHANT JAIWANT KADAM
+[2025-05-14T02:30:19.590Z] INFO: BirthdayWish : Mr. TANMAY VIVEK THAKAR
+[2025-05-14T02:30:20.321Z] INFO: BirthdayWish : Mr. KAILAS GENABA UBHE
+[2025-05-14T02:30:21.557Z] INFO: BirthdayWish : ROHAN SURYAKANT JADHAV
+[2025-05-14T02:30:22.285Z] INFO: BirthdayWish : MR. ANSAR KASAM SHAIKH
+[2025-05-14T02:30:23.016Z] INFO: BirthdayWish : Mr. HRUSHIKESH RATHA
+[2025-05-14T02:30:24.231Z] INFO: API run successfully, 27 birthday wishes sent.
+[2025-05-14T02:30:24.231Z] INFO: Completed BirthdayWish job
+[2025-05-14T02:30:24.777Z] INFO: SystemEnrollment BookingID: 1116252016
+[2025-05-14T02:30:25.530Z] INFO: SystemEnrollment BookingID: 1116251470
+[2025-05-14T02:30:26.247Z] INFO: SystemEnrollment BookingID: 1116251108
+[2025-05-14T02:30:27.574Z] INFO: SystemEnrollment BookingID: 1116250914
+[2025-05-14T02:30:28.312Z] INFO: Completed SystemEnrollment job
+[2025-05-14T02:30:28.630Z] INFO: Primary Result Length : 132
+[2025-05-14T02:30:29.375Z] INFO: 8 days Booking Id RegistrationReminders: 1114634356
+[2025-05-14T02:30:34.523Z] INFO: 1 messages sent today for registration reminders
+[2025-05-14T02:30:34.523Z] INFO: Completed RegistrationReminders job
+[2025-05-14T02:30:34.864Z] INFO: 20
+[2025-05-14T02:30:34.865Z] INFO: Booking Id RegistrationCompleted: 1114585785
+[2025-05-14T02:30:36.031Z] INFO: Booking Id RegistrationCompleted: 1114633332
+[2025-05-14T02:30:36.765Z] INFO: Booking Id RegistrationCompleted: 1114586331
+[2025-05-14T02:30:37.498Z] INFO: Booking Id RegistrationCompleted: 1114635908
+[2025-05-14T02:30:38.223Z] INFO: Booking Id RegistrationCompleted: 1114635038
+[2025-05-14T02:30:39.360Z] INFO: Booking Id RegistrationCompleted: 1086888317
+[2025-05-14T02:30:40.089Z] INFO: Booking Id RegistrationCompleted: 1097767244
+[2025-05-14T02:30:41.260Z] INFO: Booking Id RegistrationCompleted: 1114591742
+[2025-05-14T02:30:42.423Z] INFO: Booking Id RegistrationCompleted: 1098162808
+[2025-05-14T02:30:43.146Z] INFO: Booking Id RegistrationCompleted: 1108768142
+[2025-05-14T02:30:43.888Z] INFO: Booking Id RegistrationCompleted: 1114826631
+[2025-05-14T02:30:44.614Z] INFO: Booking Id RegistrationCompleted: 1107443389
+[2025-05-14T02:30:45.368Z] INFO: Booking Id RegistrationCompleted: 1098247884
+[2025-05-14T02:30:46.081Z] INFO: Booking Id RegistrationCompleted: 1108869930
+[2025-05-14T02:30:46.814Z] INFO: Booking Id RegistrationCompleted: 1109918567
+[2025-05-14T02:30:47.975Z] INFO: Booking Id RegistrationCompleted: 1114590298
+[2025-05-14T02:30:48.686Z] INFO: Booking Id RegistrationCompleted: 1114633517
+[2025-05-14T02:30:49.422Z] INFO: Booking Id RegistrationCompleted: 1116233070
+[2025-05-14T02:30:50.149Z] INFO: Booking Id RegistrationCompleted: 1092374917
+[2025-05-14T02:30:51.280Z] INFO: Booking Id RegistrationCompleted: 1114633859
+[2025-05-14T02:30:51.988Z] INFO: 20 Messages Sent Successfully for Registration Completed
+[2025-05-14T02:30:51.989Z] INFO: Completed RegistrationCompleted job
+[2025-05-14T02:50:45.367Z] INFO: Table Created SuccessFully.
+[2025-05-14T02:50:45.367Z] INFO: Completed DailyTableCreation job
+[2025-05-14T02:50:45.737Z] INFO: All logs have been inserted into CronJobLogs.
+[2025-05-14T03:30:00.746Z] INFO: Paid TDS value is greater than 0 for BookingId 174039964 in TDSBookingPending
+[2025-05-14T03:30:00.828Z] INFO: Paid TDS value is greater than 0 for BookingId 174000291 in TDSBookingPending
+[2025-05-14T03:30:00.913Z] INFO: Paid TDS value is greater than 0 for BookingId 174007859 in TDSBookingPending
+[2025-05-14T03:30:00.995Z] INFO: Paid TDS value is greater than 0 for BookingId 172492425 in TDSBookingPending
+[2025-05-14T03:30:01.083Z] INFO: Paid TDS value is greater than 0 for BookingId 174275035 in TDSBookingPending
+[2025-05-14T03:30:01.168Z] INFO: Paid TDS value is greater than 0 for BookingId 172496514 in TDSBookingPending
+[2025-05-14T03:30:01.248Z] INFO: Paid TDS value is greater than 0 for BookingId 173996771 in TDSBookingPending
+[2025-05-14T03:30:01.350Z] INFO: Paid TDS value is greater than 0 for BookingId 174020541 in TDSBookingPending
+[2025-05-14T03:30:01.461Z] INFO: Paid TDS value is greater than 0 for BookingId 172488938 in TDSBookingPending
+[2025-05-14T03:30:01.547Z] INFO: Paid TDS value is greater than 0 for BookingId 174050710 in TDSBookingPending
+[2025-05-14T03:30:01.641Z] INFO: Paid TDS value is greater than 0 for BookingId 174087156 in TDSBookingPending
+[2025-05-14T03:30:01.726Z] INFO: Paid TDS value is greater than 0 for BookingId 174307247 in TDSBookingPending
+[2025-05-14T03:30:01.808Z] INFO: Paid TDS value is greater than 0 for BookingId 173987200 in TDSBookingPending
+[2025-05-14T03:30:01.891Z] INFO: Paid TDS value is greater than 0 for BookingId 172498805 in TDSBookingPending
+[2025-05-14T03:30:01.977Z] INFO: Paid TDS value is greater than 0 for BookingId 174285595 in TDSBookingPending
+[2025-05-14T03:30:02.060Z] INFO: Paid TDS value is greater than 0 for BookingId 172480550 in TDSBookingPending
+[2025-05-14T03:30:02.143Z] INFO: Paid TDS value is greater than 0 for BookingId 174318336 in TDSBookingPending
+[2025-05-14T03:30:02.228Z] INFO: Paid TDS value is greater than 0 for BookingId 174107781 in TDSBookingPending
+[2025-05-14T03:30:02.310Z] INFO: Paid TDS value is greater than 0 for BookingId 173984375 in TDSBookingPending
+[2025-05-14T03:30:02.433Z] INFO: Paid TDS value is greater than 0 for BookingId 219665899 in TDSBookingPending
+[2025-05-14T03:30:02.531Z] INFO: Paid TDS value is greater than 0 for BookingId 174187882 in TDSBookingPending
+[2025-05-14T03:30:02.666Z] INFO: Paid TDS value is greater than 0 for BookingId 174179082 in TDSBookingPending
+[2025-05-14T03:30:02.931Z] INFO: Paid TDS value is greater than 0 for BookingId 174045244 in TDSBookingPending
+[2025-05-14T03:30:03.052Z] INFO: Paid TDS value is greater than 0 for BookingId 172485066 in TDSBookingPending
+[2025-05-14T03:30:03.142Z] INFO: Paid TDS value is greater than 0 for BookingId 172501448 in TDSBookingPending
+[2025-05-14T03:30:03.246Z] INFO: Paid TDS value is greater than 0 for BookingId 173974852 in TDSBookingPending
+[2025-05-14T03:30:03.346Z] INFO: Paid TDS value is greater than 0 for BookingId 174080640 in TDSBookingPending
+[2025-05-14T03:30:03.478Z] INFO: Paid TDS value is greater than 0 for BookingId 174011916 in TDSBookingPending
+[2025-05-14T03:30:03.560Z] INFO: Paid TDS value is greater than 0 for BookingId 174153737 in TDSBookingPending
+[2025-05-14T03:30:03.660Z] INFO: Paid TDS value is greater than 0 for BookingId 174074304 in TDSBookingPending
+[2025-05-14T03:30:03.757Z] INFO: Paid TDS value is greater than 0 for BookingId 172486132 in TDSBookingPending
+[2025-05-14T03:30:03.854Z] INFO: Paid TDS value is greater than 0 for BookingId 172487385 in TDSBookingPending
+[2025-05-14T03:30:03.940Z] INFO: Paid TDS value is greater than 0 for BookingId 173963351 in TDSBookingPending
+[2025-05-14T03:30:04.020Z] INFO: Paid TDS value is greater than 0 for BookingId 174056342 in TDSBookingPending
+[2025-05-14T03:30:04.102Z] INFO: Paid TDS value is greater than 0 for BookingId 173976964 in TDSBookingPending
+[2025-05-14T03:30:04.187Z] INFO: Paid TDS value is greater than 0 for BookingId 174062150 in TDSBookingPending
+[2025-05-14T03:30:04.269Z] INFO: Paid TDS value is greater than 0 for BookingId 173162474 in TDSBookingPending
+[2025-05-14T03:30:04.367Z] INFO: Paid TDS value is greater than 0 for BookingId 172926760 in TDSBookingPending
+[2025-05-14T03:30:04.472Z] INFO: Paid TDS value is greater than 0 for BookingId 172883088 in TDSBookingPending
+[2025-05-14T03:30:04.576Z] INFO: Paid TDS value is greater than 0 for BookingId 173715415 in TDSBookingPending
+[2025-05-14T03:30:04.666Z] INFO: Paid TDS value is greater than 0 for BookingId 173223802 in TDSBookingPending
+[2025-05-14T03:30:04.752Z] INFO: Paid TDS value is greater than 0 for BookingId 173690468 in TDSBookingPending
+[2025-05-14T03:30:04.837Z] INFO: Paid TDS value is greater than 0 for BookingId 173693108 in TDSBookingPending
+[2025-05-14T03:30:04.926Z] INFO: Paid TDS value is greater than 0 for BookingId 173137705 in TDSBookingPending
+[2025-05-14T03:30:05.010Z] INFO: Paid TDS value is greater than 0 for BookingId 173677191 in TDSBookingPending
+[2025-05-14T03:30:05.088Z] INFO: Paid TDS value is greater than 0 for BookingId 173664763 in TDSBookingPending
+[2025-05-14T03:30:05.168Z] INFO: Paid TDS value is greater than 0 for BookingId 173873333 in TDSBookingPending
+[2025-05-14T03:30:05.257Z] INFO: Paid TDS value is greater than 0 for BookingId 172937266 in TDSBookingPending
+[2025-05-14T03:30:05.339Z] INFO: Paid TDS value is greater than 0 for BookingId 173866948 in TDSBookingPending
+[2025-05-14T03:30:05.424Z] INFO: Paid TDS value is greater than 0 for BookingId 173014629 in TDSBookingPending
+[2025-05-14T03:30:05.503Z] INFO: Paid TDS value is greater than 0 for BookingId 173719609 in TDSBookingPending
+[2025-05-14T03:30:05.589Z] INFO: Paid TDS value is greater than 0 for BookingId 173148913 in TDSBookingPending
+[2025-05-14T03:30:05.682Z] INFO: Paid TDS value is greater than 0 for BookingId 172886623 in TDSBookingPending
+[2025-05-14T03:30:05.775Z] INFO: Paid TDS value is greater than 0 for BookingId 173900437 in TDSBookingPending
+[2025-05-14T03:30:05.860Z] INFO: Paid TDS value is greater than 0 for BookingId 173641373 in TDSBookingPending
+[2025-05-14T03:30:05.940Z] INFO: Paid TDS value is greater than 0 for BookingId 173058278 in TDSBookingPending
+[2025-05-14T03:30:06.023Z] INFO: Paid TDS value is greater than 0 for BookingId 173632588 in TDSBookingPending
+[2025-05-14T03:30:06.112Z] INFO: Paid TDS value is greater than 0 for BookingId 173765622 in TDSBookingPending
+[2025-05-14T03:30:06.195Z] INFO: Paid TDS value is greater than 0 for BookingId 173730899 in TDSBookingPending
+[2025-05-14T03:30:06.282Z] INFO: Paid TDS value is greater than 0 for BookingId 173816263 in TDSBookingPending
+[2025-05-14T03:30:06.366Z] INFO: Paid TDS value is 0 of agreement value for BookingId 173938335 in TDSBookingPending
+[2025-05-14T03:30:06.428Z] ERROR: Error in TDSBookingPending:
+[2025-05-15T02:30:00.798Z] INFO: Running daily scheduled jobs at 8:00
+[2025-05-15T02:30:01.183Z] INFO: Number of records found : 45
+[2025-05-15T02:30:01.184Z] INFO: BirthdayWish : Mr. AMOL DEEPAKRAO MULEY
+[2025-05-15T02:30:01.962Z] INFO: BirthdayWish : Mr. PRASAD SAMPAT BORATE
+[2025-05-15T02:30:03.357Z] INFO: BirthdayWish : Mr. YOGESH KUMAR PAL
+[2025-05-15T02:30:04.083Z] INFO: BirthdayWish : Mr. Tanaji Shankar Sawant
+[2025-05-15T02:30:05.253Z] INFO: BirthdayWish : Mr. PANKAJ SOPANRAO GIRAM
+[2025-05-15T02:30:05.998Z] INFO: BirthdayWish : Mrs. SMITA PRASHANT GAIKWAD
+[2025-05-15T02:30:07.201Z] INFO: BirthdayWish : Mr. ABID SALIM SHAIKH
+[2025-05-15T02:30:07.958Z] INFO: BirthdayWish : Mr. SAGAR SADASHIV GHONGE
+[2025-05-15T02:30:09.125Z] INFO: BirthdayWish : Mr. PUSHPAKETAN LILADHAR DEOTALE
+[2025-05-15T02:30:10.314Z] INFO: BirthdayWish : Mr. SAMPAT MUKUND SOMANI
+[2025-05-15T02:30:11.470Z] INFO: BirthdayWish : Mr. MANISH RAIKAR
+[2025-05-15T02:30:12.183Z] INFO: BirthdayWish : Mr. SURAJ PRABHAKAR DAKALE
+[2025-05-15T02:30:12.912Z] INFO: BirthdayWish : Mrs. VARSHA CHIMNANI
+[2025-05-15T02:30:13.644Z] INFO: BirthdayWish : Ms. PAYAL PRIYA
+[2025-05-15T02:30:14.385Z] INFO: BirthdayWish : Mr. NILESHCHANDRA BABARAO BOKAN
+[2025-05-15T02:30:15.139Z] INFO: BirthdayWish : Ms. REEMA RAMDAS DICHOLKAR
+[2025-05-15T02:30:16.292Z] INFO: BirthdayWish : Mr. AMIT DILIP PARSHIONIKAR
+[2025-05-15T02:30:17.023Z] INFO: BirthdayWish : Mr. SANTOSH MURLIDHAR AHIRE
+[2025-05-15T02:30:17.759Z] INFO: BirthdayWish : Mr. SIDDHARTH PURANDARE HUF
+[2025-05-15T02:30:18.925Z] INFO: BirthdayWish : Mrs. KIRAN HEMANT SABLE
+[2025-05-15T02:30:19.644Z] INFO: BirthdayWish : Mr. PRATIK PRABHAKAR DESHMUKH
+[2025-05-15T02:30:20.811Z] INFO: BirthdayWish : Mrs. SHALU AGARWAL
+[2025-05-15T02:30:21.543Z] INFO: BirthdayWish : SANJAY KUMAR KHATRI
+[2025-05-15T02:30:22.719Z] INFO: BirthdayWish : Mr. ABHINAV PRAKASH NIGAM
+[2025-05-15T02:30:23.426Z] INFO: BirthdayWish : Mr. ABHINAV PRAKASH NIGAM
+[2025-05-15T02:30:24.574Z] INFO: BirthdayWish : Mr. DAYANAND VISHVANATH JEWALE
+[2025-05-15T02:30:25.318Z] INFO: BirthdayWish : Mr. SWAPNIL PRALHAD BUNDE
+[2025-05-15T02:30:26.039Z] INFO: BirthdayWish : Mr. DEEPAK SINGH
+[2025-05-15T02:30:27.187Z] INFO: BirthdayWish : Mrs. REETA PAWANKUMAR SHARMA
+[2025-05-15T02:30:27.941Z] INFO: BirthdayWish : Mr. NITISH DINKAR SANGALE
+[2025-05-15T02:30:28.671Z] INFO: BirthdayWish : Mr. ROHIT JAIN
+[2025-05-15T02:30:29.407Z] INFO: BirthdayWish : Mr. SURAJ ASARAJI WAGH
+[2025-05-15T02:30:30.119Z] INFO: BirthdayWish : Mr. SUNIL SURESH KHAIRNAR
+[2025-05-15T02:30:30.863Z] INFO: BirthdayWish : Mr. NIKESH COOMAR
+[2025-05-15T02:30:32.014Z] INFO: BirthdayWish : Mr. VIKAS HARI DHOTE
+[2025-05-15T02:30:32.756Z] INFO: BirthdayWish : Mrs. RITIKA SRIVASTAVA
+[2025-05-15T02:30:33.478Z] INFO: BirthdayWish : Mr. PRATIK PRABHAKAR DESHMUKH
+[2025-05-15T02:30:34.212Z] INFO: BirthdayWish : Ms. NIRMALA PANDURANG SHINDE
+[2025-05-15T02:30:35.370Z] INFO: BirthdayWish : Mr. HITESH PAHUJA
+[2025-05-15T02:30:36.539Z] INFO: BirthdayWish : Mr. RAHUL SHANTARAM DHUMAL
+[2025-05-15T02:30:37.265Z] INFO: BirthdayWish : SUDHIR MADANRAO WAKODIKAR
+[2025-05-15T02:30:38.421Z] INFO: BirthdayWish : MR. NITIN YASHWANT NIMBALKAR
+[2025-05-15T02:30:39.147Z] INFO: BirthdayWish : Mr. DARSHAN ASHOK MALWADKAR
+[2025-05-15T02:30:40.320Z] INFO: BirthdayWish : RITIKA SRIVASTAVA
+[2025-05-15T02:30:41.030Z] INFO: BirthdayWish : ABHAYKUMAR SUKHANANDAN PANDEY
+[2025-05-15T02:30:41.771Z] INFO: API run successfully, 45 birthday wishes sent.
+[2025-05-15T02:30:41.771Z] INFO: Completed BirthdayWish job
+[2025-05-15T02:30:42.482Z] INFO: SystemEnrollment BookingID: 1116303017
+[2025-05-15T02:30:43.651Z] INFO: SystemEnrollment BookingID: 1116302849
+[2025-05-15T02:30:44.378Z] INFO: Completed SystemEnrollment job
+[2025-05-15T02:30:44.680Z] INFO: Primary Result Length : 120
+[2025-05-15T02:30:45.343Z] INFO: 8 days Booking Id RegistrationReminders: 1114826820
+[2025-05-15T02:30:47.279Z] INFO: 15 days Booking Id RegistrationReminders: 1109914687
+[2025-05-15T02:30:48.029Z] INFO: 15 days Booking Id RegistrationReminders: 1109913762
+[2025-05-15T02:30:50.621Z] INFO: 25 days Booking Id RegistrationReminders: 1107398633
+[2025-05-15T02:30:51.478Z] INFO: 25 days Booking Id RegistrationReminders: 1107395312
+[2025-05-15T02:30:52.322Z] INFO: 25 days Booking Id RegistrationReminders: 1107393599
+[2025-05-15T02:30:53.479Z] INFO: 31 days Booking Id RegistrationReminders: 1104759372
+[2025-05-15T02:30:54.401Z] INFO: 7 messages sent today for registration reminders
+[2025-05-15T02:30:54.402Z] INFO: Completed RegistrationReminders job
+[2025-05-15T02:30:54.750Z] INFO: 1
+[2025-05-15T02:30:54.751Z] INFO: Booking Id RegistrationCompleted: 1098532805
+[2025-05-15T02:30:55.480Z] INFO: 1 Messages Sent Successfully for Registration Completed
+[2025-05-15T02:30:55.480Z] INFO: Completed RegistrationCompleted job
+[2025-05-15T02:54:58.367Z] INFO: Table Created SuccessFully.
+[2025-05-15T02:54:58.367Z] INFO: Completed DailyTableCreation job
+[2025-05-15T02:54:58.701Z] INFO: All logs have been inserted into CronJobLogs.
+[2025-05-15T03:30:00.715Z] INFO: Paid TDS value is greater than 0 for BookingId 174039964 in TDSBookingPending
+[2025-05-15T03:30:00.807Z] INFO: Paid TDS value is greater than 0 for BookingId 174000291 in TDSBookingPending
+[2025-05-15T03:30:00.899Z] INFO: Paid TDS value is greater than 0 for BookingId 174007859 in TDSBookingPending
+[2025-05-15T03:30:00.989Z] INFO: Paid TDS value is greater than 0 for BookingId 172492425 in TDSBookingPending
+[2025-05-15T03:30:01.080Z] INFO: Paid TDS value is greater than 0 for BookingId 174275035 in TDSBookingPending
+[2025-05-15T03:30:01.171Z] INFO: Paid TDS value is greater than 0 for BookingId 172496514 in TDSBookingPending
+[2025-05-15T03:30:01.260Z] INFO: Paid TDS value is greater than 0 for BookingId 173996771 in TDSBookingPending
+[2025-05-15T03:30:01.351Z] INFO: Paid TDS value is greater than 0 for BookingId 174020541 in TDSBookingPending
+[2025-05-15T03:30:01.443Z] INFO: Paid TDS value is greater than 0 for BookingId 172488938 in TDSBookingPending
+[2025-05-15T03:30:01.534Z] INFO: Paid TDS value is greater than 0 for BookingId 174050710 in TDSBookingPending
+[2025-05-15T03:30:01.624Z] INFO: Paid TDS value is greater than 0 for BookingId 174087156 in TDSBookingPending
+[2025-05-15T03:30:01.714Z] INFO: Paid TDS value is greater than 0 for BookingId 174307247 in TDSBookingPending
+[2025-05-15T03:30:01.804Z] INFO: Paid TDS value is greater than 0 for BookingId 173987200 in TDSBookingPending
+[2025-05-15T03:30:01.939Z] INFO: Paid TDS value is greater than 0 for BookingId 172498805 in TDSBookingPending
+[2025-05-15T03:30:02.028Z] INFO: Paid TDS value is greater than 0 for BookingId 174285595 in TDSBookingPending
+[2025-05-15T03:30:02.117Z] INFO: Paid TDS value is greater than 0 for BookingId 172480550 in TDSBookingPending
+[2025-05-15T03:30:02.206Z] INFO: Paid TDS value is greater than 0 for BookingId 174318336 in TDSBookingPending
+[2025-05-15T03:30:02.296Z] INFO: Paid TDS value is greater than 0 for BookingId 174107781 in TDSBookingPending
+[2025-05-15T03:30:02.385Z] INFO: Paid TDS value is greater than 0 for BookingId 173984375 in TDSBookingPending
+[2025-05-15T03:30:02.484Z] INFO: Paid TDS value is greater than 0 for BookingId 219665899 in TDSBookingPending
+[2025-05-15T03:30:02.579Z] INFO: Paid TDS value is greater than 0 for BookingId 174187882 in TDSBookingPending
+[2025-05-15T03:30:02.671Z] INFO: Paid TDS value is greater than 0 for BookingId 174179082 in TDSBookingPending
+[2025-05-15T03:30:02.765Z] INFO: Paid TDS value is greater than 0 for BookingId 174045244 in TDSBookingPending
+[2025-05-15T03:30:02.858Z] INFO: Paid TDS value is greater than 0 for BookingId 172485066 in TDSBookingPending
+[2025-05-15T03:30:02.951Z] INFO: Paid TDS value is greater than 0 for BookingId 172501448 in TDSBookingPending
+[2025-05-15T03:30:03.040Z] INFO: Paid TDS value is greater than 0 for BookingId 173974852 in TDSBookingPending
+[2025-05-15T03:30:03.131Z] INFO: Paid TDS value is greater than 0 for BookingId 174080640 in TDSBookingPending
+[2025-05-15T03:30:03.227Z] INFO: Paid TDS value is greater than 0 for BookingId 174011916 in TDSBookingPending
+[2025-05-15T03:30:03.320Z] INFO: Paid TDS value is greater than 0 for BookingId 174153737 in TDSBookingPending
+[2025-05-15T03:30:03.411Z] INFO: Paid TDS value is greater than 0 for BookingId 174074304 in TDSBookingPending
+[2025-05-15T03:30:03.504Z] INFO: Paid TDS value is greater than 0 for BookingId 172486132 in TDSBookingPending
+[2025-05-15T03:30:03.598Z] INFO: Paid TDS value is greater than 0 for BookingId 172487385 in TDSBookingPending
+[2025-05-15T03:30:03.706Z] INFO: Paid TDS value is greater than 0 for BookingId 173963351 in TDSBookingPending
+[2025-05-15T03:30:03.805Z] INFO: Paid TDS value is greater than 0 for BookingId 174056342 in TDSBookingPending
+[2025-05-15T03:30:03.900Z] INFO: Paid TDS value is greater than 0 for BookingId 173976964 in TDSBookingPending
+[2025-05-15T03:30:04.003Z] INFO: Paid TDS value is greater than 0 for BookingId 174062150 in TDSBookingPending
+[2025-05-15T03:30:04.096Z] INFO: Paid TDS value is greater than 0 for BookingId 173162474 in TDSBookingPending
+[2025-05-15T03:30:04.200Z] INFO: Paid TDS value is greater than 0 for BookingId 172926760 in TDSBookingPending
+[2025-05-15T03:30:04.293Z] INFO: Paid TDS value is greater than 0 for BookingId 172883088 in TDSBookingPending
+[2025-05-15T03:30:04.387Z] INFO: Paid TDS value is greater than 0 for BookingId 173715415 in TDSBookingPending
+[2025-05-15T03:30:04.482Z] INFO: Paid TDS value is greater than 0 for BookingId 173223802 in TDSBookingPending
+[2025-05-15T03:30:04.573Z] INFO: Paid TDS value is greater than 0 for BookingId 173690468 in TDSBookingPending
+[2025-05-15T03:30:04.662Z] INFO: Paid TDS value is greater than 0 for BookingId 173693108 in TDSBookingPending
+[2025-05-15T03:30:04.753Z] INFO: Paid TDS value is greater than 0 for BookingId 173137705 in TDSBookingPending
+[2025-05-15T03:30:04.844Z] INFO: Paid TDS value is greater than 0 for BookingId 173677191 in TDSBookingPending
+[2025-05-15T03:30:04.941Z] INFO: Paid TDS value is greater than 0 for BookingId 173664763 in TDSBookingPending
+[2025-05-15T03:30:05.034Z] INFO: Paid TDS value is greater than 0 for BookingId 173873333 in TDSBookingPending
+[2025-05-15T03:30:05.132Z] INFO: Paid TDS value is greater than 0 for BookingId 172937266 in TDSBookingPending
+[2025-05-15T03:30:05.227Z] INFO: Paid TDS value is greater than 0 for BookingId 173866948 in TDSBookingPending
+[2025-05-15T03:30:05.318Z] INFO: Paid TDS value is greater than 0 for BookingId 173014629 in TDSBookingPending
+[2025-05-15T03:30:05.407Z] INFO: Paid TDS value is greater than 0 for BookingId 173719609 in TDSBookingPending
+[2025-05-15T03:30:05.500Z] INFO: Paid TDS value is greater than 0 for BookingId 173148913 in TDSBookingPending
+[2025-05-15T03:30:05.594Z] INFO: Paid TDS value is greater than 0 for BookingId 172886623 in TDSBookingPending
+[2025-05-15T03:30:05.691Z] INFO: Paid TDS value is greater than 0 for BookingId 173900437 in TDSBookingPending
+[2025-05-15T03:30:05.789Z] INFO: Paid TDS value is greater than 0 for BookingId 173641373 in TDSBookingPending
+[2025-05-15T03:30:05.886Z] INFO: Paid TDS value is greater than 0 for BookingId 173058278 in TDSBookingPending
+[2025-05-15T03:30:05.981Z] INFO: Paid TDS value is greater than 0 for BookingId 173632588 in TDSBookingPending
+[2025-05-15T03:30:06.099Z] INFO: Paid TDS value is greater than 0 for BookingId 173765622 in TDSBookingPending
+[2025-05-15T03:30:06.194Z] INFO: Paid TDS value is greater than 0 for BookingId 173730899 in TDSBookingPending
+[2025-05-15T03:30:06.284Z] INFO: Paid TDS value is greater than 0 for BookingId 173816263 in TDSBookingPending
+[2025-05-15T03:30:06.378Z] INFO: Paid TDS value is 0 of agreement value for BookingId 173938335 in TDSBookingPending
+[2025-05-15T03:30:06.435Z] ERROR: Error in TDSBookingPending:
+[2025-05-16T02:30:00.865Z] INFO: Running daily scheduled jobs at 8:00
+[2025-05-16T02:30:01.252Z] INFO: Number of records found : 33
+[2025-05-16T02:30:01.253Z] INFO: BirthdayWish : Mr. ADITYA SURESHRAO ANNADATE
+[2025-05-16T02:30:02.424Z] INFO: BirthdayWish : Mr. AMIT VIKAS BALKI
+[2025-05-16T02:30:03.164Z] INFO: BirthdayWish : Mrs. ANITA KAWADKAR
+[2025-05-16T02:30:04.305Z] INFO: BirthdayWish : Mr. KARAN SANJEEV THAKUR
+[2025-05-16T02:30:05.018Z] INFO: BirthdayWish : Mr. SHRIPAD DATTATRAYA BHANDARE
+[2025-05-16T02:30:05.765Z] INFO: BirthdayWish : Mr. AKSHAY BALASAHEB WAGH
+[2025-05-16T02:30:06.489Z] INFO: BirthdayWish : Mr. ANIKET BHALE
+[2025-05-16T02:30:07.230Z] INFO: BirthdayWish : Mr. NIKESH THAKRE
+[2025-05-16T02:30:07.951Z] INFO: BirthdayWish : Ms. VARSHA ASHOK KATKAR
+[2025-05-16T02:30:08.670Z] INFO: BirthdayWish : Mrs. ANURADHA PANKAJ GARULE
+[2025-05-16T02:30:09.772Z] INFO: BirthdayWish : Mrs. SUVARNA TUKARAM BHOR
+[2025-05-16T02:30:10.481Z] INFO: BirthdayWish : Mr. SHIVAJI KONDIBHAU GHULE
+[2025-05-16T02:30:11.201Z] INFO: BirthdayWish : Mr. GHANASHAM JALINDAR LAVAND
+[2025-05-16T02:30:12.331Z] INFO: BirthdayWish : Mr. AKASH RAMRAO MUNFAN
+[2025-05-16T02:30:13.058Z] INFO: BirthdayWish : Mr. SAMADHAN JALINDER GHADGE
+[2025-05-16T02:30:14.159Z] INFO: BirthdayWish : Mrs. TRUPTI SUNIL BODKE
+[2025-05-16T02:30:14.890Z] INFO: BirthdayWish : Mr. ASHWIN SHIVAYOGI HASBI
+[2025-05-16T02:30:15.612Z] INFO: BirthdayWish : Mr. Vikramraj Krishnat Patil
+[2025-05-16T02:30:16.328Z] INFO: BirthdayWish : Mrs. NEHA RAJU MORE
+[2025-05-16T02:30:17.045Z] INFO: BirthdayWish : Mrs. VRUSHALI RAMESH CHAUDHARI
+[2025-05-16T02:30:18.147Z] INFO: BirthdayWish : Mr. PRATIK SUHAS UPARE
+[2025-05-16T02:30:19.273Z] INFO: BirthdayWish : Mr. MANOJ KUMAR
+[2025-05-16T02:30:20.403Z] INFO: BirthdayWish : Ms. PUNAM ASHOK MAHAJAN
+[2025-05-16T02:30:21.505Z] INFO: BirthdayWish : Mr. HEMANT BAPUSAHEB BHOSALE
+[2025-05-16T02:30:22.222Z] INFO: BirthdayWish : Mrs. NAMITA SHARAD PATIL
+[2025-05-16T02:30:23.342Z] INFO: BirthdayWish : Mr. NARENDRA PRABHAKAR AAGE
+[2025-05-16T02:30:24.447Z] INFO: BirthdayWish : Mr. SHITALKUMAR UMAKANT PATANGE
+[2025-05-16T02:30:25.161Z] INFO: BirthdayWish : Mr. MANOJ MANOHAR KATIKAR
+[2025-05-16T02:30:25.883Z] INFO: BirthdayWish : Mr. AMIN NIZAM SHAIKH
+[2025-05-16T02:30:26.985Z] INFO: BirthdayWish : Mr. AMOL VITTHALRAO CHARATE
+[2025-05-16T02:30:27.723Z] INFO: BirthdayWish : Mr. GAJANAN PUNDALIK NIKUMBH
+[2025-05-16T02:30:28.822Z] INFO: BirthdayWish : CHINMAYA KUMAR TRIPATHY
+[2025-05-16T02:30:29.535Z] INFO: BirthdayWish : MANISHA PRASHANT PETKAR
+[2025-05-16T02:30:30.636Z] INFO: API run successfully, 33 birthday wishes sent.
+[2025-05-16T02:30:30.636Z] INFO: Completed BirthdayWish job
+[2025-05-16T02:30:31.213Z] INFO: SystemEnrollment BookingID: 1116781115
+[2025-05-16T02:30:32.343Z] INFO: SystemEnrollment BookingID: 1116780920
+[2025-05-16T02:30:33.455Z] INFO: Completed SystemEnrollment job
+[2025-05-16T02:30:33.752Z] INFO: Primary Result Length : 116
+[2025-05-16T02:30:34.396Z] INFO: 8 days Booking Id RegistrationReminders: 1114875301
+[2025-05-16T02:30:35.140Z] INFO: 8 days Booking Id RegistrationReminders: 1114874894
+[2025-05-16T02:30:39.586Z] INFO: 2 messages sent today for registration reminders
+[2025-05-16T02:30:39.586Z] INFO: Completed RegistrationReminders job
+[2025-05-16T02:30:39.895Z] INFO: 4
+[2025-05-16T02:30:39.895Z] INFO: Booking Id RegistrationCompleted: 1108674766
+[2025-05-16T02:30:41.005Z] INFO: Booking Id RegistrationCompleted: 1113952725
+[2025-05-16T02:30:41.734Z] INFO: Booking Id RegistrationCompleted: 1116233774
+[2025-05-16T02:30:42.453Z] INFO: Booking Id RegistrationCompleted: 1113954377
+[2025-05-16T02:30:43.166Z] INFO: 4 Messages Sent Successfully for Registration Completed
+[2025-05-16T02:30:43.166Z] INFO: Completed RegistrationCompleted job
+[2025-05-16T02:48:53.782Z] INFO: Table Created SuccessFully.
+[2025-05-16T02:48:53.783Z] INFO: Completed DailyTableCreation job
+[2025-05-16T02:48:54.377Z] INFO: All logs have been inserted into CronJobLogs.
+[2025-05-16T03:30:01.107Z] INFO: Paid TDS value is greater than 0 for BookingId 174039964 in TDSBookingPending
+[2025-05-16T03:30:01.199Z] INFO: Paid TDS value is greater than 0 for BookingId 174000291 in TDSBookingPending
+[2025-05-16T03:30:01.288Z] INFO: Paid TDS value is greater than 0 for BookingId 174007859 in TDSBookingPending
+[2025-05-16T03:30:01.368Z] INFO: Paid TDS value is greater than 0 for BookingId 172492425 in TDSBookingPending
+[2025-05-16T03:30:01.452Z] INFO: Paid TDS value is greater than 0 for BookingId 174275035 in TDSBookingPending
+[2025-05-16T03:30:01.530Z] INFO: Paid TDS value is greater than 0 for BookingId 172496514 in TDSBookingPending
+[2025-05-16T03:30:01.609Z] INFO: Paid TDS value is greater than 0 for BookingId 173996771 in TDSBookingPending
+[2025-05-16T03:30:01.690Z] INFO: Paid TDS value is greater than 0 for BookingId 174020541 in TDSBookingPending
+[2025-05-16T03:30:01.778Z] INFO: Paid TDS value is greater than 0 for BookingId 172488938 in TDSBookingPending
+[2025-05-16T03:30:01.857Z] INFO: Paid TDS value is greater than 0 for BookingId 174050710 in TDSBookingPending
+[2025-05-16T03:30:01.939Z] INFO: Paid TDS value is greater than 0 for BookingId 174087156 in TDSBookingPending
+[2025-05-16T03:30:02.016Z] INFO: Paid TDS value is greater than 0 for BookingId 174307247 in TDSBookingPending
+[2025-05-16T03:30:02.093Z] INFO: Paid TDS value is greater than 0 for BookingId 173987200 in TDSBookingPending
+[2025-05-16T03:30:02.172Z] INFO: Paid TDS value is greater than 0 for BookingId 172498805 in TDSBookingPending
+[2025-05-16T03:30:02.248Z] INFO: Paid TDS value is greater than 0 for BookingId 174285595 in TDSBookingPending
+[2025-05-16T03:30:02.326Z] INFO: Paid TDS value is greater than 0 for BookingId 172480550 in TDSBookingPending
+[2025-05-16T03:30:02.403Z] INFO: Paid TDS value is greater than 0 for BookingId 174318336 in TDSBookingPending
+[2025-05-16T03:30:02.484Z] INFO: Paid TDS value is greater than 0 for BookingId 174107781 in TDSBookingPending
+[2025-05-16T03:30:02.565Z] INFO: Paid TDS value is greater than 0 for BookingId 173984375 in TDSBookingPending
+[2025-05-16T03:30:02.710Z] INFO: Paid TDS value is greater than 0 for BookingId 219665899 in TDSBookingPending
+[2025-05-16T03:30:02.846Z] INFO: Paid TDS value is greater than 0 for BookingId 174187882 in TDSBookingPending
+[2025-05-16T03:30:02.945Z] INFO: Paid TDS value is greater than 0 for BookingId 174179082 in TDSBookingPending
+[2025-05-16T03:30:03.044Z] INFO: Paid TDS value is greater than 0 for BookingId 174045244 in TDSBookingPending
+[2025-05-16T03:30:03.130Z] INFO: Paid TDS value is greater than 0 for BookingId 172485066 in TDSBookingPending
+[2025-05-16T03:30:03.217Z] INFO: Paid TDS value is greater than 0 for BookingId 172501448 in TDSBookingPending
+[2025-05-16T03:30:03.305Z] INFO: Paid TDS value is greater than 0 for BookingId 173974852 in TDSBookingPending
+[2025-05-16T03:30:03.389Z] INFO: Paid TDS value is greater than 0 for BookingId 174080640 in TDSBookingPending
+[2025-05-16T03:30:03.474Z] INFO: Paid TDS value is greater than 0 for BookingId 174011916 in TDSBookingPending
+[2025-05-16T03:30:03.565Z] INFO: Paid TDS value is greater than 0 for BookingId 174153737 in TDSBookingPending
+[2025-05-16T03:30:03.659Z] INFO: Paid TDS value is greater than 0 for BookingId 174074304 in TDSBookingPending
+[2025-05-16T03:30:03.760Z] INFO: Paid TDS value is greater than 0 for BookingId 172486132 in TDSBookingPending
+[2025-05-16T03:30:03.873Z] INFO: Paid TDS value is greater than 0 for BookingId 172487385 in TDSBookingPending
+[2025-05-16T03:30:03.964Z] INFO: Paid TDS value is greater than 0 for BookingId 173963351 in TDSBookingPending
+[2025-05-16T03:30:04.046Z] INFO: Paid TDS value is greater than 0 for BookingId 174056342 in TDSBookingPending
+[2025-05-16T03:30:04.133Z] INFO: Paid TDS value is greater than 0 for BookingId 173976964 in TDSBookingPending
+[2025-05-16T03:30:04.211Z] INFO: Paid TDS value is greater than 0 for BookingId 174062150 in TDSBookingPending
+[2025-05-16T03:30:04.292Z] INFO: Paid TDS value is greater than 0 for BookingId 173162474 in TDSBookingPending
+[2025-05-16T03:30:04.371Z] INFO: Paid TDS value is greater than 0 for BookingId 172926760 in TDSBookingPending
+[2025-05-16T03:30:04.451Z] INFO: Paid TDS value is greater than 0 for BookingId 172883088 in TDSBookingPending
+[2025-05-16T03:30:04.561Z] INFO: Paid TDS value is greater than 0 for BookingId 173715415 in TDSBookingPending
+[2025-05-16T03:30:04.651Z] INFO: Paid TDS value is greater than 0 for BookingId 173223802 in TDSBookingPending
+[2025-05-16T03:30:04.752Z] INFO: Paid TDS value is greater than 0 for BookingId 173690468 in TDSBookingPending
+[2025-05-16T03:30:04.846Z] INFO: Paid TDS value is greater than 0 for BookingId 173693108 in TDSBookingPending
+[2025-05-16T03:30:04.928Z] INFO: Paid TDS value is greater than 0 for BookingId 173137705 in TDSBookingPending
+[2025-05-16T03:30:05.018Z] INFO: Paid TDS value is greater than 0 for BookingId 173677191 in TDSBookingPending
+[2025-05-16T03:30:05.117Z] INFO: Paid TDS value is greater than 0 for BookingId 173664763 in TDSBookingPending
+[2025-05-16T03:30:05.218Z] INFO: Paid TDS value is greater than 0 for BookingId 173873333 in TDSBookingPending
+[2025-05-16T03:30:05.295Z] INFO: Paid TDS value is greater than 0 for BookingId 172937266 in TDSBookingPending
+[2025-05-16T03:30:05.371Z] INFO: Paid TDS value is greater than 0 for BookingId 173866948 in TDSBookingPending
+[2025-05-16T03:30:05.451Z] INFO: Paid TDS value is greater than 0 for BookingId 173014629 in TDSBookingPending
+[2025-05-16T03:30:05.534Z] INFO: Paid TDS value is greater than 0 for BookingId 173719609 in TDSBookingPending
+[2025-05-16T03:30:05.615Z] INFO: Paid TDS value is greater than 0 for BookingId 173148913 in TDSBookingPending
+[2025-05-16T03:30:05.710Z] INFO: Paid TDS value is greater than 0 for BookingId 172886623 in TDSBookingPending
+[2025-05-16T03:30:05.793Z] INFO: Paid TDS value is greater than 0 for BookingId 173900437 in TDSBookingPending
+[2025-05-16T03:30:05.878Z] INFO: Paid TDS value is greater than 0 for BookingId 173641373 in TDSBookingPending
+[2025-05-16T03:30:05.963Z] INFO: Paid TDS value is greater than 0 for BookingId 173058278 in TDSBookingPending
+[2025-05-16T03:30:06.057Z] INFO: Paid TDS value is greater than 0 for BookingId 173632588 in TDSBookingPending
+[2025-05-16T03:30:06.159Z] INFO: Paid TDS value is greater than 0 for BookingId 173765622 in TDSBookingPending
+[2025-05-16T03:30:06.259Z] INFO: Paid TDS value is greater than 0 for BookingId 173730899 in TDSBookingPending
+[2025-05-16T03:30:06.343Z] INFO: Paid TDS value is greater than 0 for BookingId 173816263 in TDSBookingPending
+[2025-05-16T03:30:06.431Z] INFO: Paid TDS value is 0 of agreement value for BookingId 173938335 in TDSBookingPending
+[2025-05-16T03:30:06.490Z] ERROR: Error in TDSBookingPending:
+[2025-05-17T02:30:00.887Z] INFO: Running daily scheduled jobs at 8:00
+[2025-05-17T02:30:01.250Z] INFO: Number of records found : 40
+[2025-05-17T02:30:01.250Z] INFO: BirthdayWish : Ms. RESHMA RAMAKRISHNA SHETTY
+[2025-05-17T02:30:02.414Z] INFO: BirthdayWish : Mrs. PRAGYA MALVIYA
+[2025-05-17T02:30:03.140Z] INFO: BirthdayWish : Mr. SACHIN SANDIP PATIL
+[2025-05-17T02:30:03.880Z] INFO: BirthdayWish : Mr. SAUNDARYA KUMAR
+[2025-05-17T02:30:05.059Z] INFO: BirthdayWish : Mrs. SUNITA AJAY KALE
+[2025-05-17T02:30:05.811Z] INFO: BirthdayWish : Ms. ABHA SHANTANU KURHEKAR
+[2025-05-17T02:30:06.534Z] INFO: BirthdayWish : Mrs SHWETA NAYAK
+[2025-05-17T02:30:07.277Z] INFO: BirthdayWish : Mr. Nitin Dnyandeo Khedkar
+[2025-05-17T02:30:08.029Z] INFO: BirthdayWish : Mr. ANGKAN GAYEN
+[2025-05-17T02:30:09.195Z] INFO: BirthdayWish : Mr. YOGESH SUBHASH NIRMAL
+[2025-05-17T02:30:09.919Z] INFO: BirthdayWish : Mr. BIPIN SUNIL PAWAR
+[2025-05-17T02:30:10.681Z] INFO: BirthdayWish : Mrs. SWATI SINGH
+[2025-05-17T02:30:11.415Z] INFO: BirthdayWish : Mr. HEMANT SURVE
+[2025-05-17T02:30:12.515Z] INFO: BirthdayWish : Mrs. PUJA ROHIT MANE
+[2025-05-17T02:30:13.231Z] INFO: BirthdayWish : Mrs. POOJA PRADIP GALI
+[2025-05-17T02:30:13.958Z] INFO: BirthdayWish : Ms. DESHANA WANKAR
+[2025-05-17T02:30:14.690Z] INFO: BirthdayWish : Mrs. ANJALI KARPE
+[2025-05-17T02:30:15.401Z] INFO: BirthdayWish : Mr. BANAJA KUMAR BAL
+[2025-05-17T02:30:16.136Z] INFO: BirthdayWish : Mr. DHIRAJ VIJAY PATIL
+[2025-05-17T02:30:16.843Z] INFO: BirthdayWish : Mr. VINEESH V V
+[2025-05-17T02:30:17.564Z] INFO: BirthdayWish : Mrs. GEETANJALI PRASHANT GALLEWALE
+[2025-05-17T02:30:18.317Z] INFO: BirthdayWish : Mr. RAHUL JOSHI
+[2025-05-17T02:30:19.037Z] INFO: BirthdayWish : Mr. SHAILESH SHIVAJI BORUDE
+[2025-05-17T02:30:19.748Z] INFO: BirthdayWish : Mr. SHAILESH SHIVAJI BORUDE
+[2025-05-17T02:30:20.472Z] INFO: BirthdayWish : Mr. SANJAY MADHUKAR PATIL
+[2025-05-17T02:30:21.200Z] INFO: BirthdayWish : Mr. RAHUL JOSHI
+[2025-05-17T02:30:22.355Z] INFO: BirthdayWish : Mr. RAHUL JOSHI
+[2025-05-17T02:30:23.079Z] INFO: BirthdayWish : Mr. MANGAL SINGH BHATI
+[2025-05-17T02:30:23.811Z] INFO: BirthdayWish : Mrs. SONUPRIYA BEHERA
+[2025-05-17T02:30:24.531Z] INFO: BirthdayWish : Mr. ABHISHEK RAJENDRA YETWEKAR
+[2025-05-17T02:30:25.663Z] INFO: BirthdayWish : Mrs. PRATIBHA SURESH KHANDARE
+[2025-05-17T02:30:26.834Z] INFO: BirthdayWish : Mr. PRATHAMESH SHIVAJIRAO PUJARI
+[2025-05-17T02:30:27.554Z] INFO: BirthdayWish : SHEKHAR MANGALDAS JADHAV
+[2025-05-17T02:30:28.672Z] INFO: BirthdayWish : MR. ABHAY MURLIDHAR  ZODAPE
+[2025-05-17T02:30:29.818Z] INFO: BirthdayWish : UTKARSH SUDHIR BHAKARE
+[2025-05-17T02:30:30.932Z] INFO: BirthdayWish : NISHANT CHHABRA
+[2025-05-17T02:30:31.653Z] INFO: BirthdayWish : ABHIJEET GOVIND KATKAR
+[2025-05-17T02:30:32.827Z] INFO: BirthdayWish : JITESH SINGH KANWAL
+[2025-05-17T02:30:33.537Z] INFO: BirthdayWish : AKSHAY RAVINDRA GOVINDWAR
+[2025-05-17T02:30:34.258Z] INFO: BirthdayWish : MR. ANISH SURESH NADKARNI
+[2025-05-17T02:30:35.418Z] INFO: API run successfully, 40 birthday wishes sent.
+[2025-05-17T02:30:35.418Z] INFO: Completed BirthdayWish job
+[2025-05-17T02:30:36.381Z] INFO: SystemEnrollment BookingID: 1116860689
+[2025-05-17T02:30:37.561Z] INFO: SystemEnrollment BookingID: 1116860335
+[2025-05-17T02:30:38.311Z] INFO: SystemEnrollment BookingID: 1116860167
+[2025-05-17T02:30:39.028Z] INFO: Completed SystemEnrollment job
+[2025-05-17T02:30:39.345Z] INFO: Primary Result Length : 114
+[2025-05-17T02:30:43.286Z] INFO: 25 days Booking Id RegistrationReminders: 1108857732
+[2025-05-17T02:30:44.088Z] INFO: 25 days Booking Id RegistrationReminders: 1108857176
+[2025-05-17T02:30:46.333Z] INFO: 2 messages sent today for registration reminders
+[2025-05-17T02:30:46.333Z] INFO: Completed RegistrationReminders job
+[2025-05-17T02:30:46.744Z] INFO: No records found
+[2025-05-17T02:30:46.744Z] INFO: No records for Today
+[2025-05-17T02:30:46.744Z] INFO: Completed RegistrationCompleted job
+[2025-05-17T02:48:55.371Z] INFO: Table Created SuccessFully.
+[2025-05-17T02:48:55.371Z] INFO: Completed DailyTableCreation job
+[2025-05-17T02:48:55.749Z] INFO: All logs have been inserted into CronJobLogs.
+[2025-05-17T03:30:00.831Z] INFO: Paid TDS value is greater than 0 for BookingId 174039964 in TDSBookingPending
+[2025-05-17T03:30:00.924Z] INFO: Paid TDS value is greater than 0 for BookingId 174000291 in TDSBookingPending
+[2025-05-17T03:30:01.018Z] INFO: Paid TDS value is greater than 0 for BookingId 174007859 in TDSBookingPending
+[2025-05-17T03:30:01.120Z] INFO: Paid TDS value is greater than 0 for BookingId 172492425 in TDSBookingPending
+[2025-05-17T03:30:01.220Z] INFO: Paid TDS value is greater than 0 for BookingId 174275035 in TDSBookingPending
+[2025-05-17T03:30:01.326Z] INFO: Paid TDS value is greater than 0 for BookingId 172496514 in TDSBookingPending
+[2025-05-17T03:30:01.423Z] INFO: Paid TDS value is greater than 0 for BookingId 173996771 in TDSBookingPending
+[2025-05-17T03:30:01.515Z] INFO: Paid TDS value is greater than 0 for BookingId 174020541 in TDSBookingPending
+[2025-05-17T03:30:01.607Z] INFO: Paid TDS value is greater than 0 for BookingId 172488938 in TDSBookingPending
+[2025-05-17T03:30:01.697Z] INFO: Paid TDS value is greater than 0 for BookingId 174050710 in TDSBookingPending
+[2025-05-17T03:30:01.787Z] INFO: Paid TDS value is greater than 0 for BookingId 174087156 in TDSBookingPending
+[2025-05-17T03:30:01.880Z] INFO: Paid TDS value is greater than 0 for BookingId 174307247 in TDSBookingPending
+[2025-05-17T03:30:01.973Z] INFO: Paid TDS value is greater than 0 for BookingId 173987200 in TDSBookingPending
+[2025-05-17T03:30:02.062Z] INFO: Paid TDS value is greater than 0 for BookingId 172498805 in TDSBookingPending
+[2025-05-17T03:30:02.154Z] INFO: Paid TDS value is greater than 0 for BookingId 174285595 in TDSBookingPending
+[2025-05-17T03:30:02.248Z] INFO: Paid TDS value is greater than 0 for BookingId 172480550 in TDSBookingPending
+[2025-05-17T03:30:02.340Z] INFO: Paid TDS value is greater than 0 for BookingId 174318336 in TDSBookingPending
+[2025-05-17T03:30:02.432Z] INFO: Paid TDS value is greater than 0 for BookingId 174107781 in TDSBookingPending
+[2025-05-17T03:30:02.528Z] INFO: Paid TDS value is greater than 0 for BookingId 173984375 in TDSBookingPending
+[2025-05-17T03:30:02.633Z] INFO: Paid TDS value is greater than 0 for BookingId 219665899 in TDSBookingPending
+[2025-05-17T03:30:02.735Z] INFO: Paid TDS value is greater than 0 for BookingId 174187882 in TDSBookingPending
+[2025-05-17T03:30:02.831Z] INFO: Paid TDS value is greater than 0 for BookingId 174179082 in TDSBookingPending
+[2025-05-17T03:30:02.931Z] INFO: Paid TDS value is greater than 0 for BookingId 174045244 in TDSBookingPending
+[2025-05-17T03:30:03.041Z] INFO: Paid TDS value is greater than 0 for BookingId 172485066 in TDSBookingPending
+[2025-05-17T03:30:03.133Z] INFO: Paid TDS value is greater than 0 for BookingId 172501448 in TDSBookingPending
+[2025-05-17T03:30:03.230Z] INFO: Paid TDS value is greater than 0 for BookingId 173974852 in TDSBookingPending
+[2025-05-17T03:30:03.345Z] INFO: Paid TDS value is greater than 0 for BookingId 174080640 in TDSBookingPending
+[2025-05-17T03:30:03.447Z] INFO: Paid TDS value is greater than 0 for BookingId 174011916 in TDSBookingPending
+[2025-05-17T03:30:03.545Z] INFO: Paid TDS value is greater than 0 for BookingId 174153737 in TDSBookingPending
+[2025-05-17T03:30:03.647Z] INFO: Paid TDS value is greater than 0 for BookingId 174074304 in TDSBookingPending
+[2025-05-17T03:30:03.749Z] INFO: Paid TDS value is greater than 0 for BookingId 172486132 in TDSBookingPending
+[2025-05-17T03:30:03.885Z] INFO: Paid TDS value is greater than 0 for BookingId 172487385 in TDSBookingPending
+[2025-05-17T03:30:03.999Z] INFO: Paid TDS value is greater than 0 for BookingId 173963351 in TDSBookingPending
+[2025-05-17T03:30:04.123Z] INFO: Paid TDS value is greater than 0 for BookingId 174056342 in TDSBookingPending
+[2025-05-17T03:30:04.216Z] INFO: Paid TDS value is greater than 0 for BookingId 173976964 in TDSBookingPending
+[2025-05-17T03:30:04.314Z] INFO: Paid TDS value is greater than 0 for BookingId 174062150 in TDSBookingPending
+[2025-05-17T03:30:04.421Z] INFO: Paid TDS value is greater than 0 for BookingId 173162474 in TDSBookingPending
+[2025-05-17T03:30:04.518Z] INFO: Paid TDS value is greater than 0 for BookingId 172926760 in TDSBookingPending
+[2025-05-17T03:30:04.614Z] INFO: Paid TDS value is greater than 0 for BookingId 172883088 in TDSBookingPending
+[2025-05-17T03:30:04.716Z] INFO: Paid TDS value is greater than 0 for BookingId 173715415 in TDSBookingPending
+[2025-05-17T03:30:04.824Z] INFO: Paid TDS value is greater than 0 for BookingId 173223802 in TDSBookingPending
+[2025-05-17T03:30:04.932Z] INFO: Paid TDS value is greater than 0 for BookingId 173690468 in TDSBookingPending
+[2025-05-17T03:30:05.034Z] INFO: Paid TDS value is greater than 0 for BookingId 173693108 in TDSBookingPending
+[2025-05-17T03:30:05.138Z] INFO: Paid TDS value is greater than 0 for BookingId 173137705 in TDSBookingPending
+[2025-05-17T03:30:05.233Z] INFO: Paid TDS value is greater than 0 for BookingId 173677191 in TDSBookingPending
+[2025-05-17T03:30:05.335Z] INFO: Paid TDS value is greater than 0 for BookingId 173664763 in TDSBookingPending
+[2025-05-17T03:30:05.428Z] INFO: Paid TDS value is greater than 0 for BookingId 173873333 in TDSBookingPending
+[2025-05-17T03:30:05.520Z] INFO: Paid TDS value is greater than 0 for BookingId 172937266 in TDSBookingPending
+[2025-05-17T03:30:05.610Z] INFO: Paid TDS value is greater than 0 for BookingId 173866948 in TDSBookingPending
+[2025-05-17T03:30:05.702Z] INFO: Paid TDS value is greater than 0 for BookingId 173014629 in TDSBookingPending
+[2025-05-17T03:30:05.798Z] INFO: Paid TDS value is greater than 0 for BookingId 173719609 in TDSBookingPending
+[2025-05-17T03:30:05.889Z] INFO: Paid TDS value is greater than 0 for BookingId 173148913 in TDSBookingPending
+[2025-05-17T03:30:05.980Z] INFO: Paid TDS value is greater than 0 for BookingId 172886623 in TDSBookingPending
+[2025-05-17T03:30:06.076Z] INFO: Paid TDS value is greater than 0 for BookingId 173900437 in TDSBookingPending
+[2025-05-17T03:30:06.171Z] INFO: Paid TDS value is greater than 0 for BookingId 173641373 in TDSBookingPending
+[2025-05-17T03:30:06.262Z] INFO: Paid TDS value is greater than 0 for BookingId 173058278 in TDSBookingPending
+[2025-05-17T03:30:06.353Z] INFO: Paid TDS value is greater than 0 for BookingId 173632588 in TDSBookingPending
+[2025-05-17T03:30:06.448Z] INFO: Paid TDS value is greater than 0 for BookingId 173765622 in TDSBookingPending
+[2025-05-17T03:30:06.543Z] INFO: Paid TDS value is greater than 0 for BookingId 173730899 in TDSBookingPending
+[2025-05-17T03:30:06.636Z] INFO: Paid TDS value is greater than 0 for BookingId 173816263 in TDSBookingPending
+[2025-05-17T03:30:06.728Z] INFO: Paid TDS value is 0 of agreement value for BookingId 173938335 in TDSBookingPending
+[2025-05-17T03:30:06.792Z] ERROR: Error in TDSBookingPending:
+[2025-05-18T02:30:00.675Z] INFO: Running daily scheduled jobs at 8:00
+[2025-05-18T02:30:00.988Z] INFO: Number of records found : 42
+[2025-05-18T02:30:00.988Z] INFO: BirthdayWish : Mr. SUCHETH MARIGIO DSOUZA
+[2025-05-18T02:30:01.801Z] INFO: BirthdayWish : Mr. KIRAN ARUN SUTAR
+[2025-05-18T02:30:02.609Z] INFO: BirthdayWish : Mr. VISHAL VIJAYANAND PALKAR
+[2025-05-18T02:30:03.421Z] INFO: BirthdayWish : Mr. SURAJ KISHOR KHATRI
+[2025-05-18T02:30:04.182Z] INFO: BirthdayWish : Mrs. MRUNALINI SAIPRASAD PARTE
+[2025-05-18T02:30:04.969Z] INFO: BirthdayWish : Mrs. MRUNALINI SAIPRASAD PARTE
+[2025-05-18T02:30:05.770Z] INFO: BirthdayWish : Mr. MUKUL APTE
+[2025-05-18T02:30:06.739Z] INFO: BirthdayWish : Mrs. NEHA DIPESH PATEL
+[2025-05-18T02:30:07.524Z] INFO: BirthdayWish : Mr. JAYESH BHASKAR BAVISKAR
+[2025-05-18T02:30:08.304Z] INFO: BirthdayWish : Mr. ARPIT NAGAR
+[2025-05-18T02:30:09.095Z] INFO: BirthdayWish : Mr. VICKY SATRAMDAS CHAWLA
+[2025-05-18T02:30:09.855Z] INFO: BirthdayWish : Mrs. PRAJAKTA SANJAY NIKAM
+[2025-05-18T02:30:10.791Z] INFO: BirthdayWish : Mr. SACHIN NAMDEV JADHAV
+[2025-05-18T02:30:11.559Z] INFO: BirthdayWish : Ms. SNEHAL RAJENDRA BHALERAO
+[2025-05-18T02:30:12.326Z] INFO: BirthdayWish : Mr. GANESH RODE
+[2025-05-18T02:30:13.099Z] INFO: BirthdayWish : Mr. PRAFUL PRABHAKAR THAKARE
+[2025-05-18T02:30:13.871Z] INFO: BirthdayWish : Mr. GANESH MANARAM CHOUDHARY
+[2025-05-18T02:30:14.695Z] INFO: BirthdayWish : Mrs. SANGITA DHARMARAJ GANDHI
+[2025-05-18T02:30:15.468Z] INFO: BirthdayWish : Mrs. ASHWINI VIJAY KURHADE
+[2025-05-18T02:30:16.234Z] INFO: BirthdayWish : Ms. SNEHAL VINAYAK HAWAL
+[2025-05-18T02:30:17.018Z] INFO: BirthdayWish : Mr. BHUPESH GOKUL PATIL
+[2025-05-18T02:30:17.793Z] INFO: BirthdayWish : Mr. RAHUL MURLIDHAR DOPHE
+[2025-05-18T02:30:18.565Z] INFO: BirthdayWish : Mrs. LATA ASHOK SONAVANE
+[2025-05-18T02:30:19.327Z] INFO: BirthdayWish : Mrs. Shubhangi Suraj Patil
+[2025-05-18T02:30:20.088Z] INFO: BirthdayWish : Mr. AKSHAY ANIL KORANNE
+[2025-05-18T02:30:20.839Z] INFO: BirthdayWish : Mr. GANESH ARJUN JADHAV
+[2025-05-18T02:30:21.623Z] INFO: BirthdayWish : Ms. BHARATI DINESH DARJI
+[2025-05-18T02:30:22.386Z] INFO: BirthdayWish : Mrs. PRIYANKA SANDEEP SHINDE
+[2025-05-18T02:30:23.148Z] INFO: BirthdayWish : Mr. AMAN  GARG
+[2025-05-18T02:30:23.912Z] INFO: BirthdayWish : Mr. AMAN  GARG
+[2025-05-18T02:30:24.664Z] INFO: BirthdayWish : Ms. SWAPNALI RAJARAM SHINGARE
+[2025-05-18T02:30:25.431Z] INFO: BirthdayWish : NEHA YADAV
+[2025-05-18T02:30:26.211Z] INFO: BirthdayWish : SHREYASH DNYANESHWAR SHINDE
+[2025-05-18T02:30:26.990Z] INFO: BirthdayWish : Mr. SACHIN DEV TRIPATHI
+[2025-05-18T02:30:27.774Z] INFO: BirthdayWish : LALIT RAVIKANT BARHATE
+[2025-05-18T02:30:28.557Z] INFO: BirthdayWish : RAHUL BANGA
+[2025-05-18T02:30:29.327Z] INFO: BirthdayWish : MR.ROHAN DEEPAK PURANIK
+[2025-05-18T02:30:30.103Z] INFO: BirthdayWish : ANIKET DHANANJAY TIWATANE
+[2025-05-18T02:30:30.927Z] INFO: BirthdayWish : KULBHUSHAN SINGH
+[2025-05-18T02:30:31.696Z] INFO: BirthdayWish : BHOJLING VISHNU DODMISE
+[2025-05-18T02:30:32.472Z] INFO: BirthdayWish : Mr. ANKUR PATEL
+[2025-05-18T02:30:33.247Z] INFO: API run successfully, 41 birthday wishes sent.
+[2025-05-18T02:30:33.247Z] INFO: Completed BirthdayWish job
+[2025-05-18T02:30:33.746Z] INFO: NO Records For Today
+[2025-05-18T02:30:33.746Z] INFO: Completed SystemEnrollment job
+[2025-05-18T02:30:34.047Z] INFO: Primary Result Length : 114
+[2025-05-18T02:30:35.765Z] INFO: 15 days Booking Id RegistrationReminders: 1113953454
+[2025-05-18T02:30:39.034Z] INFO: 31 days Booking Id RegistrationReminders: 1107070775
+[2025-05-18T02:30:39.851Z] INFO: 2 messages sent today for registration reminders
+[2025-05-18T02:30:39.851Z] INFO: Completed RegistrationReminders job
+[2025-05-18T02:30:40.160Z] INFO: 14
+[2025-05-18T02:30:40.160Z] INFO: Booking Id RegistrationCompleted: 1116235960
+[2025-05-18T02:30:40.921Z] INFO: Booking Id RegistrationCompleted: 1113951612
+[2025-05-18T02:30:41.686Z] INFO: Booking Id RegistrationCompleted: 1116232037
+[2025-05-18T02:30:42.457Z] INFO: Booking Id RegistrationCompleted: 1113951797
+[2025-05-18T02:30:43.227Z] INFO: Booking Id RegistrationCompleted: 1104759372
+[2025-05-18T02:30:44.012Z] INFO: Booking Id RegistrationCompleted: 1114585433
+[2025-05-18T02:30:44.805Z] INFO: Booking Id RegistrationCompleted: 1116251470
+[2025-05-18T02:30:45.589Z] INFO: Booking Id RegistrationCompleted: 1116302849
+[2025-05-18T02:30:46.366Z] INFO: Booking Id RegistrationCompleted: 1108857732
+[2025-05-18T02:30:47.133Z] INFO: Booking Id RegistrationCompleted: 1109584501
+[2025-05-18T02:30:47.899Z] INFO: Booking Id RegistrationCompleted: 1116250914
+[2025-05-18T02:30:48.699Z] INFO: Booking Id RegistrationCompleted: 1113952168
+[2025-05-18T02:30:49.493Z] INFO: Booking Id RegistrationCompleted: 1114875301
+[2025-05-18T02:30:50.266Z] INFO: Booking Id RegistrationCompleted: 1109720252
+[2025-05-18T02:30:51.033Z] INFO: 14 Messages Sent Successfully for Registration Completed
+[2025-05-18T02:30:51.034Z] INFO: Completed RegistrationCompleted job
+[2025-05-18T02:49:11.508Z] INFO: Table Created SuccessFully.
+[2025-05-18T02:49:11.508Z] INFO: Completed DailyTableCreation job
+[2025-05-18T02:49:11.972Z] INFO: All logs have been inserted into CronJobLogs.
+[2025-05-18T03:30:00.704Z] INFO: Paid TDS value is greater than 0 for BookingId 174039964 in TDSBookingPending
+[2025-05-18T03:30:00.806Z] INFO: Paid TDS value is greater than 0 for BookingId 174000291 in TDSBookingPending
+[2025-05-18T03:30:00.899Z] INFO: Paid TDS value is greater than 0 for BookingId 174007859 in TDSBookingPending
+[2025-05-18T03:30:00.994Z] INFO: Paid TDS value is greater than 0 for BookingId 172492425 in TDSBookingPending
+[2025-05-18T03:30:01.095Z] INFO: Paid TDS value is greater than 0 for BookingId 174275035 in TDSBookingPending
+[2025-05-18T03:30:01.191Z] INFO: Paid TDS value is greater than 0 for BookingId 172496514 in TDSBookingPending
+[2025-05-18T03:30:01.285Z] INFO: Paid TDS value is greater than 0 for BookingId 173996771 in TDSBookingPending
+[2025-05-18T03:30:01.383Z] INFO: Paid TDS value is greater than 0 for BookingId 174020541 in TDSBookingPending
+[2025-05-18T03:30:01.476Z] INFO: Paid TDS value is greater than 0 for BookingId 172488938 in TDSBookingPending
+[2025-05-18T03:30:01.568Z] INFO: Paid TDS value is greater than 0 for BookingId 174050710 in TDSBookingPending
+[2025-05-18T03:30:01.664Z] INFO: Paid TDS value is greater than 0 for BookingId 174087156 in TDSBookingPending
+[2025-05-18T03:30:01.756Z] INFO: Paid TDS value is greater than 0 for BookingId 174307247 in TDSBookingPending
+[2025-05-18T03:30:01.845Z] INFO: Paid TDS value is greater than 0 for BookingId 173987200 in TDSBookingPending
+[2025-05-18T03:30:01.936Z] INFO: Paid TDS value is greater than 0 for BookingId 172498805 in TDSBookingPending
+[2025-05-18T03:30:02.030Z] INFO: Paid TDS value is greater than 0 for BookingId 174285595 in TDSBookingPending
+[2025-05-18T03:30:02.120Z] INFO: Paid TDS value is greater than 0 for BookingId 172480550 in TDSBookingPending
+[2025-05-18T03:30:02.210Z] INFO: Paid TDS value is greater than 0 for BookingId 174318336 in TDSBookingPending
+[2025-05-18T03:30:02.304Z] INFO: Paid TDS value is greater than 0 for BookingId 174107781 in TDSBookingPending
+[2025-05-18T03:30:02.401Z] INFO: Paid TDS value is greater than 0 for BookingId 173984375 in TDSBookingPending
+[2025-05-18T03:30:02.504Z] INFO: Paid TDS value is greater than 0 for BookingId 219665899 in TDSBookingPending
+[2025-05-18T03:30:02.602Z] INFO: Paid TDS value is greater than 0 for BookingId 174187882 in TDSBookingPending
+[2025-05-18T03:30:02.704Z] INFO: Paid TDS value is greater than 0 for BookingId 174179082 in TDSBookingPending
+[2025-05-18T03:30:02.801Z] INFO: Paid TDS value is greater than 0 for BookingId 174045244 in TDSBookingPending
+[2025-05-18T03:30:02.909Z] INFO: Paid TDS value is greater than 0 for BookingId 172485066 in TDSBookingPending
+[2025-05-18T03:30:03.005Z] INFO: Paid TDS value is greater than 0 for BookingId 172501448 in TDSBookingPending
+[2025-05-18T03:30:03.108Z] INFO: Paid TDS value is greater than 0 for BookingId 173974852 in TDSBookingPending
+[2025-05-18T03:30:03.204Z] INFO: Paid TDS value is greater than 0 for BookingId 174080640 in TDSBookingPending
+[2025-05-18T03:30:03.298Z] INFO: Paid TDS value is greater than 0 for BookingId 174011916 in TDSBookingPending
+[2025-05-18T03:30:03.401Z] INFO: Paid TDS value is greater than 0 for BookingId 174153737 in TDSBookingPending
+[2025-05-18T03:30:03.496Z] INFO: Paid TDS value is greater than 0 for BookingId 174074304 in TDSBookingPending
+[2025-05-18T03:30:03.598Z] INFO: Paid TDS value is greater than 0 for BookingId 172486132 in TDSBookingPending
+[2025-05-18T03:30:03.692Z] INFO: Paid TDS value is greater than 0 for BookingId 172487385 in TDSBookingPending
+[2025-05-18T03:30:03.798Z] INFO: Paid TDS value is greater than 0 for BookingId 173963351 in TDSBookingPending
+[2025-05-18T03:30:03.899Z] INFO: Paid TDS value is greater than 0 for BookingId 174056342 in TDSBookingPending
+[2025-05-18T03:30:04.016Z] INFO: Paid TDS value is greater than 0 for BookingId 173976964 in TDSBookingPending
+[2025-05-18T03:30:04.117Z] INFO: Paid TDS value is greater than 0 for BookingId 174062150 in TDSBookingPending
+[2025-05-18T03:30:04.214Z] INFO: Paid TDS value is greater than 0 for BookingId 173162474 in TDSBookingPending
+[2025-05-18T03:30:04.314Z] INFO: Paid TDS value is greater than 0 for BookingId 172926760 in TDSBookingPending
+[2025-05-18T03:30:04.420Z] INFO: Paid TDS value is greater than 0 for BookingId 172883088 in TDSBookingPending
+[2025-05-18T03:30:04.517Z] INFO: Paid TDS value is greater than 0 for BookingId 173715415 in TDSBookingPending
+[2025-05-18T03:30:04.624Z] INFO: Paid TDS value is greater than 0 for BookingId 173223802 in TDSBookingPending
+[2025-05-18T03:30:04.723Z] INFO: Paid TDS value is greater than 0 for BookingId 173690468 in TDSBookingPending
+[2025-05-18T03:30:04.823Z] INFO: Paid TDS value is greater than 0 for BookingId 173693108 in TDSBookingPending
+[2025-05-18T03:30:04.925Z] INFO: Paid TDS value is greater than 0 for BookingId 173137705 in TDSBookingPending
+[2025-05-18T03:30:05.042Z] INFO: Paid TDS value is greater than 0 for BookingId 173677191 in TDSBookingPending
+[2025-05-18T03:30:05.151Z] INFO: Paid TDS value is greater than 0 for BookingId 173664763 in TDSBookingPending
+[2025-05-18T03:30:05.260Z] INFO: Paid TDS value is greater than 0 for BookingId 173873333 in TDSBookingPending
+[2025-05-18T03:30:05.380Z] INFO: Paid TDS value is greater than 0 for BookingId 172937266 in TDSBookingPending
+[2025-05-18T03:30:05.487Z] INFO: Paid TDS value is greater than 0 for BookingId 173866948 in TDSBookingPending
+[2025-05-18T03:30:05.609Z] INFO: Paid TDS value is greater than 0 for BookingId 173014629 in TDSBookingPending
+[2025-05-18T03:30:05.708Z] INFO: Paid TDS value is greater than 0 for BookingId 173719609 in TDSBookingPending
+[2025-05-18T03:30:05.804Z] INFO: Paid TDS value is greater than 0 for BookingId 173148913 in TDSBookingPending
+[2025-05-18T03:30:05.895Z] INFO: Paid TDS value is greater than 0 for BookingId 172886623 in TDSBookingPending
+[2025-05-18T03:30:05.988Z] INFO: Paid TDS value is greater than 0 for BookingId 173900437 in TDSBookingPending
+[2025-05-18T03:30:06.078Z] INFO: Paid TDS value is greater than 0 for BookingId 173641373 in TDSBookingPending
+[2025-05-18T03:30:06.172Z] INFO: Paid TDS value is greater than 0 for BookingId 173058278 in TDSBookingPending
+[2025-05-18T03:30:06.263Z] INFO: Paid TDS value is greater than 0 for BookingId 173632588 in TDSBookingPending
+[2025-05-18T03:30:06.360Z] INFO: Paid TDS value is greater than 0 for BookingId 173765622 in TDSBookingPending
+[2025-05-18T03:30:06.454Z] INFO: Paid TDS value is greater than 0 for BookingId 173730899 in TDSBookingPending
+[2025-05-18T03:30:06.554Z] INFO: Paid TDS value is greater than 0 for BookingId 173816263 in TDSBookingPending
+[2025-05-18T03:30:06.648Z] INFO: Paid TDS value is 0 of agreement value for BookingId 173938335 in TDSBookingPending
+[2025-05-18T03:30:06.707Z] ERROR: Error in TDSBookingPending:
+[2025-05-19T02:30:00.214Z] INFO: Running daily scheduled jobs at 8:00
+[2025-05-19T02:30:00.534Z] INFO: Number of records found : 45
+[2025-05-19T02:30:00.534Z] INFO: BirthdayWish : Mrs. NEERAJ DEENDAYAL NAWANDHAR
+[2025-05-19T02:30:01.363Z] INFO: BirthdayWish : Mr. GAURAV PORWAL HUF
+[2025-05-19T02:30:02.153Z] INFO: BirthdayWish : Mr. SACHIN NANDU BODKHE
+[2025-05-19T02:30:02.967Z] INFO: BirthdayWish : Mr. MUKUL APTE
+[2025-05-19T02:30:03.739Z] INFO: BirthdayWish : Mr. VINAYAK VISHWAS BARI
+[2025-05-19T02:30:04.579Z] INFO: BirthdayWish : Mrs. POONAM ARVIND GOYAL
+[2025-05-19T02:30:05.366Z] INFO: BirthdayWish : Ms. JENYA NUTRITION PRIVATE LIMITED
+[2025-05-19T02:30:06.139Z] INFO: BirthdayWish : Ms. JENYA NUTRITION PRIVATE LIMITED
+[2025-05-19T02:30:07.390Z] INFO: BirthdayWish : Mr. ANKUR SURESHKUMAR SABHARWAL
+[2025-05-19T02:30:08.174Z] INFO: BirthdayWish : Mr. SHRIDIP BHATTACHARYA
+[2025-05-19T02:30:08.958Z] INFO: BirthdayWish : Mr. ANUJ K JADHAV
+[2025-05-19T02:30:09.738Z] INFO: BirthdayWish : Mrs. NEHA ABHIJIT PATIL
+[2025-05-19T02:30:10.487Z] INFO: BirthdayWish : Mrs. RACHITA KEJRIWAL
+[2025-05-19T02:30:11.288Z] INFO: BirthdayWish : Mr. AMEY VINAYAK NAGARKAR
+[2025-05-19T02:30:12.043Z] INFO: BirthdayWish : Mr. TANMAY DINESH KULKARNI
+[2025-05-19T02:30:12.826Z] INFO: BirthdayWish : Mrs GOURI SWAPNEEL YERAWAR
+[2025-05-19T02:30:13.599Z] INFO: BirthdayWish : Mrs. SHILPA RAVINDRA PAWAR
+[2025-05-19T02:30:14.354Z] INFO: BirthdayWish : Mr. ASHISH GADEKAR
+[2025-05-19T02:30:15.194Z] INFO: BirthdayWish : Mr. VIJAYENDRA ASHOK PATIL
+[2025-05-19T02:30:15.948Z] INFO: BirthdayWish : Mrs. SHILPA TOMAR
+[2025-05-19T02:30:16.739Z] INFO: BirthdayWish : Mr. BHARAT DIXIT
+[2025-05-19T02:30:17.523Z] INFO: BirthdayWish : Mr. GAURAV NARESH BAJAJ
+[2025-05-19T02:30:18.297Z] INFO: BirthdayWish : Mr. GANESH RAMCHANDRA GOUD
+[2025-05-19T02:30:19.048Z] INFO: BirthdayWish : Mr. SAMIE AHMED KAZI
+[2025-05-19T02:30:19.818Z] INFO: BirthdayWish : Mrs. NISHA MAHENDRA CHALKE
+[2025-05-19T02:30:20.587Z] INFO: BirthdayWish : Mr. PRASAD MANIK DAHIWADKAR
+[2025-05-19T02:30:21.365Z] INFO: BirthdayWish : Md. NAJIR MD. MANSOOR ABLA
+[2025-05-19T02:30:22.133Z] INFO: BirthdayWish : Mr. VISHAL BALASAHEB JAGTAP
+[2025-05-19T02:30:22.902Z] INFO: BirthdayWish : Mr. PARISH PRAVIN GALAIYA
+[2025-05-19T02:30:23.683Z] INFO: BirthdayWish : Mr. SHEKHAR NILESH WAGH
+[2025-05-19T02:30:24.469Z] INFO: BirthdayWish : Mr. GAURAV UNHELKAR
+[2025-05-19T02:30:25.230Z] INFO: BirthdayWish : Mr. PRASAD PATIL
+[2025-05-19T02:30:26.049Z] INFO: BirthdayWish : Mr. PRASANTH AYIKKARA
+[2025-05-19T02:30:26.817Z] INFO: BirthdayWish : Mr. SUNIL MALIK
+[2025-05-19T02:30:27.576Z] INFO: BirthdayWish : Mr. ABHISHEK KUMAR MALVIYA
+[2025-05-19T02:30:28.345Z] INFO: BirthdayWish : Mr. ANAND KASHIRAM SHIRSAT
+[2025-05-19T02:30:29.112Z] INFO: BirthdayWish : Mr. RAHUL DIGAMBAR SONAWANE
+[2025-05-19T02:30:29.888Z] INFO: BirthdayWish : Mr. SAGAR MANIKRAO DAMEDHAR
+[2025-05-19T02:30:30.669Z] INFO: BirthdayWish : Ms. PRIYANKA VIJAY GURAV
+[2025-05-19T02:30:31.442Z] INFO: BirthdayWish : PRASANTH A
+[2025-05-19T02:30:32.190Z] INFO: BirthdayWish : HEMA MHATRE
+[2025-05-19T02:30:32.974Z] INFO: BirthdayWish : MR. TRUSHAL AJABRAO DHOBALE
+[2025-05-19T02:30:33.757Z] INFO: BirthdayWish : NILESH SUDAM TAKTODE
+[2025-05-19T02:30:34.505Z] INFO: BirthdayWish : ARVIND R PATIL
+[2025-05-19T02:30:35.258Z] INFO: BirthdayWish : MRS. RAJANI SANTOSH JADHAV
+[2025-05-19T02:30:36.030Z] INFO: API run successfully, 45 birthday wishes sent.
+[2025-05-19T02:30:36.031Z] INFO: Completed BirthdayWish job
+[2025-05-19T02:30:36.803Z] INFO: NO Records For Today
+[2025-05-19T02:30:36.804Z] INFO: Completed SystemEnrollment job
+[2025-05-19T02:30:37.105Z] INFO: Primary Result Length : 110
+[2025-05-19T02:30:37.706Z] INFO: 8 days Booking Id RegistrationReminders: 1116232551
+[2025-05-19T02:30:38.582Z] INFO: 8 days Booking Id RegistrationReminders: 1116232215
+[2025-05-19T02:30:39.438Z] INFO: 8 days Booking Id RegistrationReminders: 1116228415
+[2025-05-19T02:30:40.860Z] INFO: 15 days Booking Id RegistrationReminders: 1114589034
+[2025-05-19T02:30:41.654Z] INFO: 15 days Booking Id RegistrationReminders: 1114587953
+[2025-05-19T02:30:42.451Z] INFO: 15 days Booking Id RegistrationReminders: 1114587060
+[2025-05-19T02:30:45.864Z] INFO: 6 messages sent today for registration reminders
+[2025-05-19T02:30:45.865Z] INFO: Completed RegistrationReminders job
+[2025-05-19T02:30:46.224Z] INFO: No records found
+[2025-05-19T02:30:46.224Z] INFO: No records for Today
+[2025-05-19T02:30:46.224Z] INFO: Completed RegistrationCompleted job
+[2025-05-19T02:45:52.078Z] INFO: Table Created SuccessFully.
+[2025-05-19T02:45:52.078Z] INFO: Completed DailyTableCreation job
+[2025-05-19T02:45:52.484Z] INFO: All logs have been inserted into CronJobLogs.
+[2025-05-19T03:30:01.308Z] INFO: Paid TDS value is greater than 0 for BookingId 174039964 in TDSBookingPending
+[2025-05-19T03:30:01.395Z] INFO: Paid TDS value is greater than 0 for BookingId 174000291 in TDSBookingPending
+[2025-05-19T03:30:01.469Z] INFO: Paid TDS value is greater than 0 for BookingId 174007859 in TDSBookingPending
+[2025-05-19T03:30:01.542Z] INFO: Paid TDS value is greater than 0 for BookingId 172492425 in TDSBookingPending
+[2025-05-19T03:30:01.617Z] INFO: Paid TDS value is greater than 0 for BookingId 174275035 in TDSBookingPending
+[2025-05-19T03:30:01.692Z] INFO: Paid TDS value is greater than 0 for BookingId 172496514 in TDSBookingPending
+[2025-05-19T03:30:01.775Z] INFO: Paid TDS value is greater than 0 for BookingId 173996771 in TDSBookingPending
+[2025-05-19T03:30:01.860Z] INFO: Paid TDS value is greater than 0 for BookingId 174020541 in TDSBookingPending
+[2025-05-19T03:30:01.967Z] INFO: Paid TDS value is greater than 0 for BookingId 172488938 in TDSBookingPending
+[2025-05-19T03:30:02.048Z] INFO: Paid TDS value is greater than 0 for BookingId 174050710 in TDSBookingPending
+[2025-05-19T03:30:02.131Z] INFO: Paid TDS value is greater than 0 for BookingId 174087156 in TDSBookingPending
+[2025-05-19T03:30:02.206Z] INFO: Paid TDS value is greater than 0 for BookingId 174307247 in TDSBookingPending
+[2025-05-19T03:30:02.288Z] INFO: Paid TDS value is greater than 0 for BookingId 173987200 in TDSBookingPending
+[2025-05-19T03:30:02.369Z] INFO: Paid TDS value is greater than 0 for BookingId 172498805 in TDSBookingPending
+[2025-05-19T03:30:02.455Z] INFO: Paid TDS value is greater than 0 for BookingId 174285595 in TDSBookingPending
+[2025-05-19T03:30:02.543Z] INFO: Paid TDS value is greater than 0 for BookingId 172480550 in TDSBookingPending
+[2025-05-19T03:30:02.627Z] INFO: Paid TDS value is greater than 0 for BookingId 174318336 in TDSBookingPending
+[2025-05-19T03:30:02.717Z] INFO: Paid TDS value is greater than 0 for BookingId 174107781 in TDSBookingPending
+[2025-05-19T03:30:02.798Z] INFO: Paid TDS value is greater than 0 for BookingId 173984375 in TDSBookingPending
+[2025-05-19T03:30:02.877Z] INFO: Paid TDS value is greater than 0 for BookingId 219665899 in TDSBookingPending
+[2025-05-19T03:30:02.957Z] INFO: Paid TDS value is greater than 0 for BookingId 174187882 in TDSBookingPending
+[2025-05-19T03:30:03.034Z] INFO: Paid TDS value is greater than 0 for BookingId 174179082 in TDSBookingPending
+[2025-05-19T03:30:03.115Z] INFO: Paid TDS value is greater than 0 for BookingId 174045244 in TDSBookingPending
+[2025-05-19T03:30:03.189Z] INFO: Paid TDS value is greater than 0 for BookingId 172485066 in TDSBookingPending
+[2025-05-19T03:30:03.272Z] INFO: Paid TDS value is greater than 0 for BookingId 172501448 in TDSBookingPending
+[2025-05-19T03:30:03.356Z] INFO: Paid TDS value is greater than 0 for BookingId 173974852 in TDSBookingPending
+[2025-05-19T03:30:03.445Z] INFO: Paid TDS value is greater than 0 for BookingId 174080640 in TDSBookingPending
+[2025-05-19T03:30:03.536Z] INFO: Paid TDS value is greater than 0 for BookingId 174011916 in TDSBookingPending
+[2025-05-19T03:30:03.639Z] INFO: Paid TDS value is greater than 0 for BookingId 174153737 in TDSBookingPending
+[2025-05-19T03:30:03.739Z] INFO: Paid TDS value is greater than 0 for BookingId 174074304 in TDSBookingPending
+[2025-05-19T03:30:03.843Z] INFO: Paid TDS value is greater than 0 for BookingId 172486132 in TDSBookingPending
+[2025-05-19T03:30:03.922Z] INFO: Paid TDS value is greater than 0 for BookingId 172487385 in TDSBookingPending
+[2025-05-19T03:30:04.014Z] INFO: Paid TDS value is greater than 0 for BookingId 173963351 in TDSBookingPending
+[2025-05-19T03:30:04.092Z] INFO: Paid TDS value is greater than 0 for BookingId 174056342 in TDSBookingPending
+[2025-05-19T03:30:04.170Z] INFO: Paid TDS value is greater than 0 for BookingId 173976964 in TDSBookingPending
+[2025-05-19T03:30:04.251Z] INFO: Paid TDS value is greater than 0 for BookingId 174062150 in TDSBookingPending
+[2025-05-19T03:30:04.340Z] INFO: Paid TDS value is greater than 0 for BookingId 173162474 in TDSBookingPending
+[2025-05-19T03:30:04.434Z] INFO: Paid TDS value is greater than 0 for BookingId 172926760 in TDSBookingPending
+[2025-05-19T03:30:04.524Z] INFO: Paid TDS value is greater than 0 for BookingId 172883088 in TDSBookingPending
+[2025-05-19T03:30:04.602Z] INFO: Paid TDS value is greater than 0 for BookingId 173715415 in TDSBookingPending
+[2025-05-19T03:30:04.691Z] INFO: Paid TDS value is greater than 0 for BookingId 173223802 in TDSBookingPending
+[2025-05-19T03:30:04.776Z] INFO: Paid TDS value is greater than 0 for BookingId 173690468 in TDSBookingPending
+[2025-05-19T03:30:04.857Z] INFO: Paid TDS value is greater than 0 for BookingId 173693108 in TDSBookingPending
+[2025-05-19T03:30:04.946Z] INFO: Paid TDS value is greater than 0 for BookingId 173137705 in TDSBookingPending
+[2025-05-19T03:30:05.023Z] INFO: Paid TDS value is greater than 0 for BookingId 173677191 in TDSBookingPending
+[2025-05-19T03:30:05.107Z] INFO: Paid TDS value is greater than 0 for BookingId 173664763 in TDSBookingPending
+[2025-05-19T03:30:05.192Z] INFO: Paid TDS value is greater than 0 for BookingId 173873333 in TDSBookingPending
+[2025-05-19T03:30:05.280Z] INFO: Paid TDS value is greater than 0 for BookingId 172937266 in TDSBookingPending
+[2025-05-19T03:30:05.370Z] INFO: Paid TDS value is greater than 0 for BookingId 173866948 in TDSBookingPending
+[2025-05-19T03:30:05.456Z] INFO: Paid TDS value is greater than 0 for BookingId 173014629 in TDSBookingPending
+[2025-05-19T03:30:05.536Z] INFO: Paid TDS value is greater than 0 for BookingId 173719609 in TDSBookingPending
+[2025-05-19T03:30:05.610Z] INFO: Paid TDS value is greater than 0 for BookingId 173148913 in TDSBookingPending
+[2025-05-19T03:30:05.686Z] INFO: Paid TDS value is greater than 0 for BookingId 172886623 in TDSBookingPending
+[2025-05-19T03:30:05.762Z] INFO: Paid TDS value is greater than 0 for BookingId 173900437 in TDSBookingPending
+[2025-05-19T03:30:05.838Z] INFO: Paid TDS value is greater than 0 for BookingId 173641373 in TDSBookingPending
+[2025-05-19T03:30:05.922Z] INFO: Paid TDS value is greater than 0 for BookingId 173058278 in TDSBookingPending
+[2025-05-19T03:30:05.999Z] INFO: Paid TDS value is greater than 0 for BookingId 173632588 in TDSBookingPending
+[2025-05-19T03:30:06.074Z] INFO: Paid TDS value is greater than 0 for BookingId 173765622 in TDSBookingPending
+[2025-05-19T03:30:06.157Z] INFO: Paid TDS value is greater than 0 for BookingId 173730899 in TDSBookingPending
+[2025-05-19T03:30:06.250Z] INFO: Paid TDS value is greater than 0 for BookingId 173816263 in TDSBookingPending
+[2025-05-19T03:30:06.326Z] INFO: Paid TDS value is 0 of agreement value for BookingId 173938335 in TDSBookingPending
+[2025-05-19T03:30:06.378Z] ERROR: Error in TDSBookingPending:
+[2025-05-20T02:30:00.933Z] INFO: Running daily scheduled jobs at 8:00
+[2025-05-20T02:30:01.271Z] INFO: Number of records found : 50
+[2025-05-20T02:30:01.271Z] INFO: BirthdayWish : Mr. MUBASHIR MUKHTAR MISKEEN
+[2025-05-20T02:30:02.178Z] INFO: BirthdayWish : Mr SUMIT SUDHAKAR MALPEKAR
+[2025-05-20T02:30:03.038Z] INFO: BirthdayWish : Mr. VYANKATESH RAJKUMAR MANE
+[2025-05-20T02:30:04.221Z] INFO: BirthdayWish : Mr. NILANG MAHENDRABHAI PATEL
+[2025-05-20T02:30:05.115Z] INFO: BirthdayWish : Ms. GEETANJALI VALECHA
+[2025-05-20T02:30:05.942Z] INFO: BirthdayWish : Mr. ABHIJIT SHANKARRAO KULKARNI
+[2025-05-20T02:30:06.802Z] INFO: BirthdayWish : Mr. BHUSHAN PRAKASH MANDLIK
+[2025-05-20T02:30:07.651Z] INFO: BirthdayWish : Mr. HIMANSHU BHAGIRATH JOSHI
+[2025-05-20T02:30:08.466Z] INFO: BirthdayWish : Mr. PRASHANT SHIVGONDA PATIL
+[2025-05-20T02:30:09.324Z] INFO: BirthdayWish : Mr. VIVEKANAND RAM BHIKKA
+[2025-05-20T02:30:10.143Z] INFO: BirthdayWish : Mrs. MRUGNAYANI ROHIT WAVHAL
+[2025-05-20T02:30:10.979Z] INFO: BirthdayWish : Mr. ASHOK SHIVAJI CHAVAN
+[2025-05-20T02:30:11.792Z] INFO: BirthdayWish : Mrs. RINA SHRIRAM PATOND
+[2025-05-20T02:30:12.631Z] INFO: BirthdayWish : Mr. SAIPRASAD VISHWANATH VYAWAHARE
+[2025-05-20T02:30:13.467Z] INFO: BirthdayWish : Mr. RAJRATNA TRYAMBAKRAO WAGHMARE
+[2025-05-20T02:30:14.260Z] INFO: BirthdayWish : Mrs. SMITA SINHA
+[2025-05-20T02:30:15.108Z] INFO: BirthdayWish : Mr. MILIND DNYANESHWAR CHAUDHARI
+[2025-05-20T02:30:16.537Z] INFO: BirthdayWish : Mrs. SHOBHA RAVI BAGADE
+[2025-05-20T02:30:17.379Z] INFO: BirthdayWish : Mrs. VASANTI YASHWANT GHORPADE
+[2025-05-20T02:30:18.195Z] INFO: BirthdayWish : Mrs. VIDYA SUDHIR SONAWANE
+[2025-05-20T02:30:19.028Z] INFO: BirthdayWish : Mr. KIRAN BAJIRAO PATIL
+[2025-05-20T02:30:19.860Z] INFO: BirthdayWish : Mr. VISHAL BALASO JAGTAP
+[2025-05-20T02:30:20.686Z] INFO: BirthdayWish : Mr. SACHIN ASHOKRAO NAKHATE
+[2025-05-20T02:30:21.516Z] INFO: BirthdayWish : Ms. APARNA TODWAL
+[2025-05-20T02:30:22.351Z] INFO: BirthdayWish : Mr. NIKHIL DEEPAKRAO JOSHI
+[2025-05-20T02:30:23.194Z] INFO: BirthdayWish : Mr. PRANAY CHARUDATTA HALGEKAR
+[2025-05-20T02:30:24.034Z] INFO: BirthdayWish : Mr. AJAY ASHOK TARAPURE
+[2025-05-20T02:30:24.884Z] INFO: BirthdayWish : Ms. Parigha Ravindra Nawale
+[2025-05-20T02:30:25.725Z] INFO: BirthdayWish : Mr. PRAVEEN PANDYA
+[2025-05-20T02:30:26.575Z] INFO: BirthdayWish : Mr. PARIMAL HILAL PATIL
+[2025-05-20T02:30:27.398Z] INFO: BirthdayWish : Mr. OMPRAKASH SIDRAM KONKA
+[2025-05-20T02:30:28.250Z] INFO: BirthdayWish : Ms. RITU BAHARANI
+[2025-05-20T02:30:29.071Z] INFO: BirthdayWish : Mr. SHREYAS ASHOK MAPUSKAR
+[2025-05-20T02:30:29.910Z] INFO: BirthdayWish : Mr. KAPIL PARASNATH JAIN
+[2025-05-20T02:30:30.737Z] INFO: BirthdayWish : Mr. AKSHAY VIJAYCHAND BORA
+[2025-05-20T02:30:31.588Z] INFO: BirthdayWish : Mr. MANDAR DURGADAS JOSHI
+[2025-05-20T02:30:32.421Z] INFO: BirthdayWish : Mr. SUSHIL  VIJAYVARGIYA
+[2025-05-20T02:30:33.245Z] INFO: BirthdayWish : ASHUTOSH DILIP JOSHI
+[2025-05-20T02:30:34.083Z] INFO: BirthdayWish : Mrs. HINA GAURAV NAWANDAR
+[2025-05-20T02:30:34.896Z] INFO: BirthdayWish : MRS. ANITA AJAY SALUNKE
+[2025-05-20T02:30:35.738Z] INFO: BirthdayWish : ANIKET JITENDRA SINGH
+[2025-05-20T02:30:36.556Z] INFO: BirthdayWish : SANJAY RAJARAM PHADTARE
+[2025-05-20T02:30:37.391Z] INFO: BirthdayWish : MR. KIRAN BAJIRAO PATIL
+[2025-05-20T02:30:38.210Z] INFO: BirthdayWish : BHARAT JETHWANI
+[2025-05-20T02:30:39.014Z] INFO: BirthdayWish : Mr. ABHIJIT SHANKARRAO KULKARNI
+[2025-05-20T02:30:39.834Z] INFO: BirthdayWish : ISHWARJEET SINGH
+[2025-05-20T02:30:40.661Z] INFO: BirthdayWish : DIMPAL SUDHIR PATIL
+[2025-05-20T02:30:41.462Z] INFO: BirthdayWish : DIMPAL SUDHIR PATIL
+[2025-05-20T02:30:42.285Z] INFO: BirthdayWish : YASHDEEP JAMANBHAI PATEL
+[2025-05-20T02:30:43.097Z] INFO: BirthdayWish : POOJA PRABHAKAR BORAWAKE
+[2025-05-20T02:30:43.931Z] INFO: API run successfully, 50 birthday wishes sent.
+[2025-05-20T02:30:43.932Z] INFO: Completed BirthdayWish job
+[2025-05-20T02:30:44.448Z] INFO: SystemEnrollment BookingID: 1116943087
+[2025-05-20T02:30:45.268Z] INFO: SystemEnrollment BookingID: 1116928849
+[2025-05-20T02:30:46.091Z] INFO: Completed SystemEnrollment job
+[2025-05-20T02:30:46.380Z] INFO: Primary Result Length : 112
+[2025-05-20T02:30:46.771Z] INFO: 8 days Booking Id RegistrationReminders: 1116252016
+[2025-05-20T02:30:47.667Z] INFO: 8 days Booking Id RegistrationReminders: 1116251108
+[2025-05-20T02:30:49.358Z] INFO: 15 days Booking Id RegistrationReminders: 1114595151
+[2025-05-20T02:30:50.224Z] INFO: 15 days Booking Id RegistrationReminders: 1114593357
+[2025-05-20T02:30:53.986Z] INFO: 4 messages sent today for registration reminders
+[2025-05-20T02:30:53.986Z] INFO: Completed RegistrationReminders job
+[2025-05-20T02:30:54.317Z] INFO: No records found
+[2025-05-20T02:30:54.317Z] INFO: No records for Today
+[2025-05-20T02:30:54.318Z] INFO: Completed RegistrationCompleted job
+[2025-05-20T02:49:32.650Z] INFO: Table Created SuccessFully.
+[2025-05-20T02:49:32.650Z] INFO: Completed DailyTableCreation job
+[2025-05-20T02:49:33.058Z] INFO: All logs have been inserted into CronJobLogs.
+[2025-05-20T03:30:00.860Z] INFO: Paid TDS value is greater than 0 for BookingId 174039964 in TDSBookingPending
+[2025-05-20T03:30:00.936Z] INFO: Paid TDS value is greater than 0 for BookingId 174000291 in TDSBookingPending
+[2025-05-20T03:30:01.023Z] INFO: Paid TDS value is greater than 0 for BookingId 174007859 in TDSBookingPending
+[2025-05-20T03:30:01.102Z] INFO: Paid TDS value is greater than 0 for BookingId 172492425 in TDSBookingPending
+[2025-05-20T03:30:01.178Z] INFO: Paid TDS value is greater than 0 for BookingId 174275035 in TDSBookingPending
+[2025-05-20T03:30:01.256Z] INFO: Paid TDS value is greater than 0 for BookingId 172496514 in TDSBookingPending
+[2025-05-20T03:30:01.353Z] INFO: Paid TDS value is greater than 0 for BookingId 173996771 in TDSBookingPending
+[2025-05-20T03:30:01.442Z] INFO: Paid TDS value is greater than 0 for BookingId 174020541 in TDSBookingPending
+[2025-05-20T03:30:01.535Z] INFO: Paid TDS value is greater than 0 for BookingId 172488938 in TDSBookingPending
+[2025-05-20T03:30:01.608Z] INFO: Paid TDS value is greater than 0 for BookingId 174050710 in TDSBookingPending
+[2025-05-20T03:30:01.684Z] INFO: Paid TDS value is greater than 0 for BookingId 174087156 in TDSBookingPending
+[2025-05-20T03:30:01.758Z] INFO: Paid TDS value is greater than 0 for BookingId 174307247 in TDSBookingPending
+[2025-05-20T03:30:01.831Z] INFO: Paid TDS value is greater than 0 for BookingId 173987200 in TDSBookingPending
+[2025-05-20T03:30:01.905Z] INFO: Paid TDS value is greater than 0 for BookingId 172498805 in TDSBookingPending
+[2025-05-20T03:30:01.985Z] INFO: Paid TDS value is greater than 0 for BookingId 174285595 in TDSBookingPending
+[2025-05-20T03:30:02.067Z] INFO: Paid TDS value is greater than 0 for BookingId 172480550 in TDSBookingPending
+[2025-05-20T03:30:02.139Z] INFO: Paid TDS value is greater than 0 for BookingId 174318336 in TDSBookingPending
+[2025-05-20T03:30:02.212Z] INFO: Paid TDS value is greater than 0 for BookingId 174107781 in TDSBookingPending
+[2025-05-20T03:30:02.286Z] INFO: Paid TDS value is greater than 0 for BookingId 173984375 in TDSBookingPending
+[2025-05-20T03:30:02.369Z] INFO: Paid TDS value is greater than 0 for BookingId 219665899 in TDSBookingPending
+[2025-05-20T03:30:02.442Z] INFO: Paid TDS value is greater than 0 for BookingId 174187882 in TDSBookingPending
+[2025-05-20T03:30:02.528Z] INFO: Paid TDS value is greater than 0 for BookingId 174179082 in TDSBookingPending
+[2025-05-20T03:30:02.603Z] INFO: Paid TDS value is greater than 0 for BookingId 174045244 in TDSBookingPending
+[2025-05-20T03:30:02.694Z] INFO: Paid TDS value is greater than 0 for BookingId 172485066 in TDSBookingPending
+[2025-05-20T03:30:02.769Z] INFO: Paid TDS value is greater than 0 for BookingId 172501448 in TDSBookingPending
+[2025-05-20T03:30:02.853Z] INFO: Paid TDS value is greater than 0 for BookingId 173974852 in TDSBookingPending
+[2025-05-20T03:30:02.926Z] INFO: Paid TDS value is greater than 0 for BookingId 174080640 in TDSBookingPending
+[2025-05-20T03:30:03.008Z] INFO: Paid TDS value is greater than 0 for BookingId 174011916 in TDSBookingPending
+[2025-05-20T03:30:03.081Z] INFO: Paid TDS value is greater than 0 for BookingId 174153737 in TDSBookingPending
+[2025-05-20T03:30:03.163Z] INFO: Paid TDS value is greater than 0 for BookingId 174074304 in TDSBookingPending
+[2025-05-20T03:30:03.264Z] INFO: Paid TDS value is greater than 0 for BookingId 172486132 in TDSBookingPending
+[2025-05-20T03:30:03.348Z] INFO: Paid TDS value is greater than 0 for BookingId 172487385 in TDSBookingPending
+[2025-05-20T03:30:03.436Z] INFO: Paid TDS value is greater than 0 for BookingId 173963351 in TDSBookingPending
+[2025-05-20T03:30:03.518Z] INFO: Paid TDS value is greater than 0 for BookingId 174056342 in TDSBookingPending
+[2025-05-20T03:30:03.608Z] INFO: Paid TDS value is greater than 0 for BookingId 173976964 in TDSBookingPending
+[2025-05-20T03:30:03.692Z] INFO: Paid TDS value is greater than 0 for BookingId 174062150 in TDSBookingPending
+[2025-05-20T03:30:03.777Z] INFO: Paid TDS value is greater than 0 for BookingId 173162474 in TDSBookingPending
+[2025-05-20T03:30:03.860Z] INFO: Paid TDS value is greater than 0 for BookingId 172926760 in TDSBookingPending
+[2025-05-20T03:30:03.958Z] INFO: Paid TDS value is greater than 0 for BookingId 172883088 in TDSBookingPending
+[2025-05-20T03:30:04.058Z] INFO: Paid TDS value is greater than 0 for BookingId 173715415 in TDSBookingPending
+[2025-05-20T03:30:04.154Z] INFO: Paid TDS value is greater than 0 for BookingId 173223802 in TDSBookingPending
+[2025-05-20T03:30:04.246Z] INFO: Paid TDS value is greater than 0 for BookingId 173690468 in TDSBookingPending
+[2025-05-20T03:30:04.329Z] INFO: Paid TDS value is greater than 0 for BookingId 173693108 in TDSBookingPending
+[2025-05-20T03:30:04.423Z] INFO: Paid TDS value is greater than 0 for BookingId 173137705 in TDSBookingPending
+[2025-05-20T03:30:04.505Z] INFO: Paid TDS value is greater than 0 for BookingId 173677191 in TDSBookingPending
+[2025-05-20T03:30:04.603Z] INFO: Paid TDS value is greater than 0 for BookingId 173664763 in TDSBookingPending
+[2025-05-20T03:30:04.690Z] INFO: Paid TDS value is greater than 0 for BookingId 173873333 in TDSBookingPending
+[2025-05-20T03:30:04.783Z] INFO: Paid TDS value is greater than 0 for BookingId 172937266 in TDSBookingPending
+[2025-05-20T03:30:04.866Z] INFO: Paid TDS value is greater than 0 for BookingId 173866948 in TDSBookingPending
+[2025-05-20T03:30:04.950Z] INFO: Paid TDS value is greater than 0 for BookingId 173014629 in TDSBookingPending
+[2025-05-20T03:30:05.025Z] INFO: Paid TDS value is greater than 0 for BookingId 173719609 in TDSBookingPending
+[2025-05-20T03:30:05.117Z] INFO: Paid TDS value is greater than 0 for BookingId 173148913 in TDSBookingPending
+[2025-05-20T03:30:05.196Z] INFO: Paid TDS value is greater than 0 for BookingId 172886623 in TDSBookingPending
+[2025-05-20T03:30:05.287Z] INFO: Paid TDS value is greater than 0 for BookingId 173900437 in TDSBookingPending
+[2025-05-20T03:30:05.367Z] INFO: Paid TDS value is greater than 0 for BookingId 173641373 in TDSBookingPending
+[2025-05-20T03:30:05.447Z] INFO: Paid TDS value is greater than 0 for BookingId 173058278 in TDSBookingPending
+[2025-05-20T03:30:05.528Z] INFO: Paid TDS value is greater than 0 for BookingId 173632588 in TDSBookingPending
+[2025-05-20T03:30:05.606Z] INFO: Paid TDS value is greater than 0 for BookingId 173765622 in TDSBookingPending
+[2025-05-20T03:30:05.685Z] INFO: Paid TDS value is greater than 0 for BookingId 173730899 in TDSBookingPending
+[2025-05-20T03:30:05.789Z] INFO: Paid TDS value is greater than 0 for BookingId 173816263 in TDSBookingPending
+[2025-05-20T03:30:05.866Z] INFO: Paid TDS value is 0 of agreement value for BookingId 173938335 in TDSBookingPending
+[2025-05-20T03:30:05.913Z] ERROR: Error in TDSBookingPending:
