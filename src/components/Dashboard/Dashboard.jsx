@@ -530,7 +530,7 @@ const Dashboard = () => {
                   display: 'flex',
                   flexDirection: 'column',
                 }}>
-                <Typography variant="h6" fontWeight={700} mb={2} color="text.primary">Today's Attendance Summary</Typography>
+                <Typography variant="h6" fontWeight={700} mb={2} color="text.primary">Yesterday Attendance Summary</Typography>
                 <Divider sx={{ mb: 3 }} />
                 <Box sx={{ mb: 3 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>

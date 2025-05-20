@@ -54,7 +54,7 @@ const TodayAttendanceBarChart = ({ data }) => {
       },
       title: {
         display: true,
-        text: "Today's Labour Attendance",
+        text: "Yesterday's Labour Attendance",
         font: {
           size: 16
         }
