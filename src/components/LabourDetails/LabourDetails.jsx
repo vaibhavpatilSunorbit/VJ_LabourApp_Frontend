@@ -204,11 +204,44 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const approveLabour = async (id, departmentId) => {
     try {
-      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});
-      const labourID = nextID;
+      // const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});
+      // const labourID = nextID;
 
-      const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
-      const labour = labourResponse.data;
+      // const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
+      // const labour = labourResponse.data;
+
+ // 1. Get labour details
+    const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
+    const labour = labourResponse.data;
+
+    let labourID;
+
+    if (!labour.LabourID || labour.LabourID.trim() === '') {
+      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+        params: { departmentId }
+      });
+      labourID = nextID;
+    } else {
+      const attendanceCheck = await axios.get(`${API_BASE_URL}/api/admin/attendance-check`, {
+        params: { labourId: labour.LabourID }
+      });
+
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      if (
+        attendanceCheck.data?.lastAttendanceDate &&
+        new Date(attendanceCheck.data.lastAttendanceDate) > threeMonthsAgo
+      ) {
+        labourID = labour.LabourID;
+      } else {
+        const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+          params: { departmentId }
+        });
+        labourID = nextID;
+      }
+    }
+
       const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus/${labour.projectName}`);
       const serialNumber = response.data.serialNumber;
 
