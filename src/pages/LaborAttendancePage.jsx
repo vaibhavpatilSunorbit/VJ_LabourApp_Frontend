@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Card, CardContent, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { Line } from 'react-chartjs-2';
+import axios from 'axios';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,7 +13,6 @@ import {
   Legend,
 } from 'chart.js';
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -23,48 +23,81 @@ ChartJS.register(
   Legend
 );
 
-const AttendanceLineGraph = ({ attendanceData = sampleAttendanceData }) => {
-  const [timeRange, setTimeRange] = useState('week');
+const AttendanceLineGraph = () => {
+  const [timeRange, setTimeRange] = useState('lastWeek'); // Set default to lastWeek
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Filter data based on selected time range
-  const getFilteredData = () => {
-    const currentDate = new Date();
-    let filteredData = [...attendanceData];
-    
-    if (timeRange === 'week') {
-      const oneWeekAgo = new Date(currentDate.setDate(currentDate.getDate() - 7));
-      filteredData = attendanceData.filter(item => new Date(item.date) >= oneWeekAgo);
-    } else if (timeRange === 'month') {
-      const oneMonthAgo = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
-      filteredData = attendanceData.filter(item => new Date(item.date) >= oneMonthAgo);
-    }
-    
-    return filteredData;
-  };
+  // Fetch data when component mounts or timeRange changes
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Change this URL to your actual backend API URL
+        const response = await axios.get('http://localhost:4000/dashboard/getAllAPM', {
+          params: { period: timeRange } // lastWeek, lastMonth, allTime as per your backend
+        });
 
-  const filteredData = getFilteredData();
-  
-  // Prepare data for Chart.js
+        if (response.data.success) {
+          // The API should return an array like:
+          // [{ Date: '2025-05-01', Status: 'P', Count: 40 }, ...]
+          const rawData = response.data.data;
+          
+          // Transform raw data to { date, present, absent, onLeave } format
+          const groupedByDate = {};
+          rawData.forEach(item => {
+            // Extract only the date part (YYYY-MM-DD) from the full date string
+            const fullDate = item.Date || item.date;
+            const date = fullDate.split('T')[0]; // This will extract only the date part
+            
+            if (!groupedByDate[date]) {
+              groupedByDate[date] = { date, present: 0, absent: 0, missPunch: 0 };
+            }
+            
+            if (item.Status === 'P') groupedByDate[date].present = item.Count;
+            else if (item.Status === 'A') groupedByDate[date].absent = item.Count;
+            else if (item.Status === 'MP') groupedByDate[date].missPunch = item.Count;
+          });
+          
+          setAttendanceData(Object.values(groupedByDate));
+        } else {
+          setError('Failed to fetch data');
+          setAttendanceData([]);
+        }
+      } catch (err) {
+        setError('Error loading attendance data');
+        setAttendanceData([]);
+        console.error(err);
+      }
+      setLoading(false);
+    };
+
+    fetchAttendanceData();
+  }, [timeRange]);
+
+  // Chart data setup
   const chartData = {
-    labels: filteredData.map(item => item.date),
+    labels: attendanceData.map(item => item.date),
     datasets: [
       {
         label: 'Present',
-        data: filteredData.map(item => item.present),
+        data: attendanceData.map(item => item.present),
         borderColor: 'rgba(75, 192, 192, 1)',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         tension: 0.4,
       },
       {
         label: 'Absent',
-        data: filteredData.map(item => item.absent),
+        data: attendanceData.map(item => item.absent),
         borderColor: 'rgba(255, 99, 132, 1)',
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         tension: 0.4,
       },
       {
-        label: 'On Leave',
-        data: filteredData.map(item => item.onLeave),
+        label: 'Miss Punch',
+        data: attendanceData.map(item => item.missPunch),
         borderColor: 'rgba(255, 206, 86, 1)',
         backgroundColor: 'rgba(255, 206, 86, 0.2)',
         tension: 0.4,
@@ -76,40 +109,26 @@ const AttendanceLineGraph = ({ attendanceData = sampleAttendanceData }) => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        position: 'top',
-      },
+      legend: { position: 'top' },
       title: {
         display: true,
         text: 'Daily Labor Attendance',
-        font: {
-          size: 16,
-        },
+        font: { size: 16 },
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
-            return `${context.dataset.label}: ${context.raw} workers`;
-          }
-        }
-      }
+          label: context => `${context.dataset.label}: ${context.raw} workers`,
+        },
+      },
     },
     scales: {
       y: {
         beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Number of Workers',
-        },
-        ticks: {
-          precision: 0,
-        },
+        title: { display: true, text: 'Number of Workers' },
+        ticks: { precision: 0 },
       },
       x: {
-        title: {
-          display: true,
-          text: 'Date',
-        },
+        title: { display: true, text: 'Date' },
       },
     },
   };
@@ -118,62 +137,33 @@ const AttendanceLineGraph = ({ attendanceData = sampleAttendanceData }) => {
     <Card elevation={3}>
       <CardContent>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" component="div">
-            Labor Attendance Trends
-          </Typography>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
+          <Typography variant="h6">Labor Attendance Trends</Typography>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
             <InputLabel>Time Range</InputLabel>
             <Select
               value={timeRange}
               label="Time Range"
-              onChange={(e) => setTimeRange(e.target.value)}
+              onChange={e => setTimeRange(e.target.value)}
+              disabled={loading}
             >
-              <MenuItem value="week">Last Week</MenuItem>
-              <MenuItem value="month">Last Month</MenuItem>
-              <MenuItem value="all">All Time</MenuItem>
+              <MenuItem value="lastWeek">Last Week</MenuItem>
+              <MenuItem value="lastMonth">Last Month</MenuItem>
+              <MenuItem value="allTime">All Time</MenuItem>
             </Select>
           </FormControl>
         </Box>
-        <Box sx={{ height: 400 }}>
-          <Line data={chartData} options={options} />
-        </Box>
+        {loading ? (
+          <Typography>Loading attendance data...</Typography>
+        ) : error ? (
+          <Typography color="error">{error}</Typography>
+        ) : (
+          <Box sx={{ height: 400 }}>
+            <Line data={chartData} options={options} />
+          </Box>
+        )}
       </CardContent>
     </Card>
   );
 };
-
-// Sample attendance data (30 days)
-const sampleAttendanceData = [
-  { date: '2023-05-01', present: 45, absent: 5, onLeave: 2 },
-  { date: '2023-05-02', present: 48, absent: 3, onLeave: 1 },
-  { date: '2023-05-03', present: 42, absent: 7, onLeave: 3 },
-  { date: '2023-05-04', present: 46, absent: 4, onLeave: 2 },
-  { date: '2023-05-05', present: 44, absent: 6, onLeave: 2 },
-  { date: '2023-05-06', present: 40, absent: 8, onLeave: 4 },
-  { date: '2023-05-07', present: 38, absent: 10, onLeave: 4 },
-  { date: '2023-05-08', present: 47, absent: 3, onLeave: 2 },
-  { date: '2023-05-09', present: 49, absent: 2, onLeave: 1 },
-  { date: '2023-05-10', present: 50, absent: 1, onLeave: 1 },
-  { date: '2023-05-11', present: 48, absent: 3, onLeave: 1 },
-  { date: '2023-05-12', present: 47, absent: 4, onLeave: 1 },
-  { date: '2023-05-13', present: 45, absent: 5, onLeave: 2 },
-  { date: '2023-05-14', present: 43, absent: 6, onLeave: 3 },
-  { date: '2023-05-15', present: 46, absent: 4, onLeave: 2 },
-  { date: '2023-05-16', present: 47, absent: 3, onLeave: 2 },
-  { date: '2023-05-17', present: 49, absent: 2, onLeave: 1 },
-  { date: '2023-05-18', present: 48, absent: 3, onLeave: 1 },
-  { date: '2023-05-19', present: 47, absent: 4, onLeave: 1 },
-  { date: '2023-05-20', present: 42, absent: 7, onLeave: 3 },
-  { date: '2023-05-21', present: 40, absent: 8, onLeave: 4 },
-  { date: '2023-05-22', present: 44, absent: 5, onLeave: 3 },
-  { date: '2023-05-23', present: 46, absent: 4, onLeave: 2 },
-  { date: '2023-05-24', present: 48, absent: 3, onLeave: 1 },
-  { date: '2023-05-25', present: 49, absent: 2, onLeave: 1 },
-  { date: '2023-05-26', present: 47, absent: 3, onLeave: 2 },
-  { date: '2023-05-27', present: 45, absent: 5, onLeave: 2 },
-  { date: '2023-05-28', present: 43, absent: 6, onLeave: 3 },
-  { date: '2023-05-29', present: 46, absent: 4, onLeave: 2 },
-  { date: '2023-05-30', present: 48, absent: 3, onLeave: 1 },
-];
 
 export default AttendanceLineGraph;

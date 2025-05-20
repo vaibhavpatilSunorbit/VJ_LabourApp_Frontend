@@ -2002,7 +2002,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
 
-
                         <div className="contact">
                           <InputLabel id="demo-simple-select-label" sx={{ color: "black" }}>
                             Contact Number{renderRequiredAsterisk(true)}
