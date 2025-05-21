@@ -54,7 +54,7 @@ const ApproveLabours = () => {
     newDeviceId: ''
   });
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -285,7 +285,7 @@ const ApproveLabours = () => {
       <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
         <TableContainer component={Paper} sx={{ height: '72vh', overflow: 'auto' }}>
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
+            rowsPerPageOptions={[15, 50, { label: 'All', value: -1 }]}
             component="div"
             count={projectDeviceStatus.length}
             rowsPerPage={rowsPerPage}

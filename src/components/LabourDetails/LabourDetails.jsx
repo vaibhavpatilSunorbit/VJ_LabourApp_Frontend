@@ -204,11 +204,44 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
 
   const approveLabour = async (id, departmentId) => {
     try {
-      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});
-      const labourID = nextID;
+      // const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});
+      // const labourID = nextID;
 
-      const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
-      const labour = labourResponse.data;
+      // const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
+      // const labour = labourResponse.data;
+
+ // 1. Get labour details
+    const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
+    const labour = labourResponse.data;
+
+    let labourID;
+
+    if (!labour.LabourID || labour.LabourID.trim() === '') {
+      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+        params: { departmentId }
+      });
+      labourID = nextID;
+    } else {
+      const attendanceCheck = await axios.get(`${API_BASE_URL}/api/admin/attendance-check`, {
+        params: { labourId: labour.LabourID }
+      });
+
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      if (
+        attendanceCheck.data?.lastAttendanceDate &&
+        new Date(attendanceCheck.data.lastAttendanceDate) > threeMonthsAgo
+      ) {
+        labourID = labour.LabourID;
+      } else {
+        const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+          params: { departmentId }
+        });
+        labourID = nextID;
+      }
+    }
+
       const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus/${labour.projectName}`);
       const serialNumber = response.data.serialNumber;
 
@@ -2049,7 +2082,70 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     }
   }, [searchResults, filteredIconLabours, labours]);
 
+// useEffect(() => {
+//   const fetchStatuses = async (labourIds) => {
+//     try {
+//       const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
+//       return response.data;
+//     } catch (error) {
+//       console.error('Error fetching statuses:', error);
+//       return [];
+//     }
+//   };
+
+//   const fetchDisableAttendance = async (labourIds) => {
+//     try {
+//       const response = await axios.post(`${API_BASE_URL}/api/labours/getDisableLaborsAttendance`, { labourIds });
+//       return response.data;
+//     } catch (error) {
+//       console.error('Error fetching disable attendance:', error);
+//       return [];
+//     }
+//   };
+
+//   const updateStatuses = async () => {
+//     const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
+//     const labourIds = labourList.map(labour => labour.LabourID || labour.id);
+
+//     if (labourIds.length === 0) return;
+
+//     const [statuses, disabledStatuses] = await Promise.all([
+//       fetchStatuses(labourIds),
+//       fetchDisableAttendance(labourIds),
+//     ]);
+
+//     const updatedStatuses = {};
+
+//     // Process statuses from `getCombinedStatuses`
+//     statuses.forEach(status => {
+//       updatedStatuses[status.LabourID] = {
+//         esslStatus: status.esslStatus === 'success',
+//         employeeMasterStatus: status.employeeMasterStatus === 'true',
+//         // disabledAttendanceCreatedAt to be updated from second API
+//         disabledAttendanceCreatedAt: null,
+//       };
+//     });
+
+//     // Merge with disabled attendance data
+//     disabledStatuses.forEach(disabled => {
+//       const id = disabled.LabourID;
+//       if (!updatedStatuses[id]) {
+//         updatedStatuses[id] = {};
+//       }
+//       updatedStatuses[id].disabledAttendanceCreatedAt = disabled.CreatedAt ? new Date(disabled.CreatedAt) : null;
+//     });
+
+//     setStatuses(updatedStatuses);
+//   };
+
+//   updateStatuses();
+// }, []);
+
+
+
   // Filter icon with filter the labours for tha icon.....................
+ 
+ 
   const handleFilterClick = (event) => {
     setAnchorEl(event.currentTarget);
   };

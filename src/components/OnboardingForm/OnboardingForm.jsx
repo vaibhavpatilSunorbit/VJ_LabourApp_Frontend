@@ -1599,6 +1599,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                               <option value="">Select Labour Ownership</option>
                               <option value="VJ" style={{ width: 'calc(100% - 20px)' }}>VJ</option>
                               <option value="CONTRACTOR" style={{ width: 'calc(100% - 20px)' }}>CONTRACTOR</option>
+                              <option value="CONTRACTOR" style={{ width: 'calc(100% - 20px)' }}>SCPL</option>
                             </select>
                           </div>
                         </div>
