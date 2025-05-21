@@ -2045,105 +2045,107 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     }
   };
   // Show here to status of Employee master api and Essl api..............................
-  // useEffect(() => {
-  //   const fetchStatuses = async (labourIds) => {
-  //     try {
-  //       const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
-  //       return response.data;
-  //     } catch (error) {
-  //       console.error('Error fetching statuses:', error);
-  //       return [];
-  //     }
-  //   };
-
-  //   const updateStatuses = async () => {
-  //     const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
-  //     const labourIds = labourList.map(labour => labour.LabourID || labour.id);
-
-  //     if (labourIds.length > 0) {
-  //       const statuses = await fetchStatuses(labourIds);
-
-  //       const updatedStatuses = {};
-  //       statuses.forEach(status => {
-  //         updatedStatuses[status.LabourID] = {
-  //           esslStatus: status.esslStatus === 'success',
-  //           employeeMasterStatus: status.employeeMasterStatus === 'true',
-  //           disabledAttendanceCreatedAt: status.disabledAttendanceCreatedAt ? new Date(status.disabledAttendanceCreatedAt) : null,
-  //         };
-  //       });
-
-  //       setStatuses(updatedStatuses);
-  //     }
-  //   };
-
-  //   if (!hasFetchedStatuses.current && labours.length > 0) {
-  //     updateStatuses();
-  //     hasFetchedStatuses.current = true;
-  //   }
-  // }, [searchResults, filteredIconLabours, labours]);
-
-useEffect(() => {
-  const fetchStatuses = async (labourIds) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching statuses:', error);
-      return [];
-    }
-  };
-
-  const fetchDisableAttendance = async (labourIds) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/labours/getDisableLaborsAttendance`, { labourIds });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching disable attendance:', error);
-      return [];
-    }
-  };
-
-  const updateStatuses = async () => {
-    const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
-    const labourIds = labourList.map(labour => labour.LabourID || labour.id);
-
-    if (labourIds.length === 0) return;
-
-    const [statuses, disabledStatuses] = await Promise.all([
-      fetchStatuses(labourIds),
-      fetchDisableAttendance(labourIds),
-    ]);
-
-    const updatedStatuses = {};
-
-    // Process statuses from `getCombinedStatuses`
-    statuses.forEach(status => {
-      updatedStatuses[status.LabourID] = {
-        esslStatus: status.esslStatus === 'success',
-        employeeMasterStatus: status.employeeMasterStatus === 'true',
-        // disabledAttendanceCreatedAt to be updated from second API
-        disabledAttendanceCreatedAt: null,
-      };
-    });
-
-    // Merge with disabled attendance data
-    disabledStatuses.forEach(disabled => {
-      const id = disabled.LabourID;
-      if (!updatedStatuses[id]) {
-        updatedStatuses[id] = {};
+  useEffect(() => {
+    const fetchStatuses = async (labourIds) => {
+      try {
+        const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching statuses:', error);
+        return [];
       }
-      updatedStatuses[id].disabledAttendanceCreatedAt = disabled.CreatedAt ? new Date(disabled.CreatedAt) : null;
-    });
+    };
 
-    setStatuses(updatedStatuses);
-  };
+    const updateStatuses = async () => {
+      const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
+      const labourIds = labourList.map(labour => labour.LabourID || labour.id);
 
-  updateStatuses();
-}, []);
+      if (labourIds.length > 0) {
+        const statuses = await fetchStatuses(labourIds);
+
+        const updatedStatuses = {};
+        statuses.forEach(status => {
+          updatedStatuses[status.LabourID] = {
+            esslStatus: status.esslStatus === 'success',
+            employeeMasterStatus: status.employeeMasterStatus === 'true',
+            disabledAttendanceCreatedAt: status.disabledAttendanceCreatedAt ? new Date(status.disabledAttendanceCreatedAt) : null,
+          };
+        });
+
+        setStatuses(updatedStatuses);
+      }
+    };
+
+    if (!hasFetchedStatuses.current && labours.length > 0) {
+      updateStatuses();
+      hasFetchedStatuses.current = true;
+    }
+  }, [searchResults, filteredIconLabours, labours]);
+
+// useEffect(() => {
+//   const fetchStatuses = async (labourIds) => {
+//     try {
+//       const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
+//       return response.data;
+//     } catch (error) {
+//       console.error('Error fetching statuses:', error);
+//       return [];
+//     }
+//   };
+
+//   const fetchDisableAttendance = async (labourIds) => {
+//     try {
+//       const response = await axios.post(`${API_BASE_URL}/api/labours/getDisableLaborsAttendance`, { labourIds });
+//       return response.data;
+//     } catch (error) {
+//       console.error('Error fetching disable attendance:', error);
+//       return [];
+//     }
+//   };
+
+//   const updateStatuses = async () => {
+//     const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
+//     const labourIds = labourList.map(labour => labour.LabourID || labour.id);
+
+//     if (labourIds.length === 0) return;
+
+//     const [statuses, disabledStatuses] = await Promise.all([
+//       fetchStatuses(labourIds),
+//       fetchDisableAttendance(labourIds),
+//     ]);
+
+//     const updatedStatuses = {};
+
+//     // Process statuses from `getCombinedStatuses`
+//     statuses.forEach(status => {
+//       updatedStatuses[status.LabourID] = {
+//         esslStatus: status.esslStatus === 'success',
+//         employeeMasterStatus: status.employeeMasterStatus === 'true',
+//         // disabledAttendanceCreatedAt to be updated from second API
+//         disabledAttendanceCreatedAt: null,
+//       };
+//     });
+
+//     // Merge with disabled attendance data
+//     disabledStatuses.forEach(disabled => {
+//       const id = disabled.LabourID;
+//       if (!updatedStatuses[id]) {
+//         updatedStatuses[id] = {};
+//       }
+//       updatedStatuses[id].disabledAttendanceCreatedAt = disabled.CreatedAt ? new Date(disabled.CreatedAt) : null;
+//     });
+
+//     setStatuses(updatedStatuses);
+//   };
+
+//   updateStatuses();
+// }, []);
 
 
 
   // Filter icon with filter the labours for tha icon.....................
+ 
+ 
   const handleFilterClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
