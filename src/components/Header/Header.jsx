@@ -1,13 +1,82 @@
 
-import React from 'react'
-import { BsFillBellFill, BsIconName, BsFillEnvelopeFill, BsPersonCircle, BsSearch, BsJustify }
-  from 'react-icons/bs';
-import { GrLogout } from "react-icons/gr";
+// import React from 'react'
+// import { BsFillBellFill, BsIconName, BsFillEnvelopeFill, BsPersonCircle, BsSearch, BsJustify }
+//   from 'react-icons/bs';
+// import { GrLogout } from "react-icons/gr";
+// import { useNavigate } from 'react-router-dom';
+// import Tooltip from '@mui/material/Tooltip';
+// import { useUser } from '../../UserContext/UserContext';
+
+// function Header({ OpenSidebar }) {
+//   const navigate = useNavigate();
+//   const { user } = useUser();
+//   const isMobile = window.innerWidth <= 768;
+//   const spanStyle = {
+//     marginTop: '2px',
+//     fontSize: isMobile ? '14px' : '14px',
+//     color: '#000',
+//   };
+
+//   const handleLogout = () => {
+//     localStorage.removeItem("token");
+//     navigate('/');
+//   };
+
+//   return (
+//     <header className='header'>
+//       <div className='menu-icon'>
+//         <BsJustify className='icon' onClick={OpenSidebar} />
+//       </div>
+//       <div className='header-left'>
+
+//       </div>
+//       <div className='header-right headericon' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
+//         <div style={{ display: 'flex', alignItems: 'center' }}>
+//           <BsFillBellFill className='icon' style={{ margin: '0 10px', cursor: 'pointer' }} />
+//           <Tooltip title="Logout" arrow>
+//             <GrLogout
+//               className='icon'
+//               onClick={handleLogout}
+//               style={{ margin: '0 10px', cursor: 'pointer' }}
+//             />
+//           </Tooltip>
+//           <BsPersonCircle className='icon' style={{ margin: '0 12px', cursor: 'pointer' }} />
+//         </div>
+//         <span style={spanStyle}>
+//           {user ? user.name : "Guest"}
+//         </span>
+//       </div>
+
+//     </header>
+//   )
+// }
+
+// export default Header;
+
+
+
+
+
+import React, { useState, useEffect } from 'react';
+import { BsFillBellFill, BsPersonCircle, BsJustify } from 'react-icons/bs';
+import { GrLogout } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '@mui/material/Tooltip';
+import Popover from '@mui/material/Popover';
+import Typography from '@mui/material/Typography';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Badge from '@mui/material/Badge';
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
+import Button from '@mui/material/Button';
+import Avatar from '@mui/material/Avatar';
 import { useUser } from '../../UserContext/UserContext';
+import { API_BASE_URL } from '../../Data';
+import axios from 'axios';
 
 function Header({ OpenSidebar }) {
+
   const navigate = useNavigate();
   const { user } = useUser();
   const isMobile = window.innerWidth <= 768;
@@ -17,23 +86,81 @@ function Header({ OpenSidebar }) {
     color: '#000',
   };
 
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const open = Boolean(anchorEl);
+  const id = open ? 'notifications-popover' : undefined;
+
+  const handleBellClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Fetch notifications data from the API
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getnotification`); // Replace with your API URL
+      if (response.data.success) {
+        setNotifications(response.data.data);
+        const unread = response.data.data.filter((notif) => notif.PendingCount > 0).length;
+        setUnreadCount(unread);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchNotifications();
+    }
+  }, [open]);
+
+  const handleNotificationClick = () => {
+    navigate(`/adminApproval`);
+    handlePopoverClose();
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem('token');
     navigate('/');
   };
 
   return (
-    <header className='header'>
+    <header className='header' style={{ position: 'relative' }}>
       <div className='menu-icon'>
         <BsJustify className='icon' onClick={OpenSidebar} />
       </div>
-      <div className='header-left'>
-
-      </div>
-      <div className='header-right headericon' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
+      <div className='header-left'></div>
+      <div
+        className='header-right headericon'
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          justifyContent: 'flex-end',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <BsFillBellFill className='icon' style={{ margin: '0 10px', cursor: 'pointer' }} />
-          <Tooltip title="Logout" arrow>
+          {/* Badge wrapped around bell icon */}
+          <Badge
+            badgeContent={unreadCount}
+            color='error'
+            overlap='circular'
+            invisible={unreadCount === 0}
+          >
+            <BsFillBellFill
+              className='icon'
+              style={{ margin: '0 10px', cursor: 'pointer' }}
+              aria-describedby={id}
+              onClick={handleBellClick}
+            />
+          </Badge>
+          <Tooltip title='Logout' arrow>
             <GrLogout
               className='icon'
               onClick={handleLogout}
@@ -42,28 +169,138 @@ function Header({ OpenSidebar }) {
           </Tooltip>
           <BsPersonCircle className='icon' style={{ margin: '0 12px', cursor: 'pointer' }} />
         </div>
-        <span style={spanStyle}>
-          {user ? user.name : "Guest"}
-        </span>
+        <span style={spanStyle}>{user ? user.name : 'Guest'}</span>
       </div>
 
+      <Popover
+        id={id}
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handlePopoverClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        PaperProps={{
+          elevation: 4,
+          style: {
+            width: '350px',
+            maxHeight: '450px',
+            overflowY: 'auto',
+            borderRadius: '12px',
+          },
+        }}
+      >
+        <Box
+          sx={{
+            p: 2,
+            backgroundColor: '#f8f9fa',
+            borderBottom: '1px solid #eaeaea',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Typography variant='h6' sx={{ fontWeight: 600, color: '#333' }}>
+            Site Transfer Notifications
+          </Typography>
+          {unreadCount > 0 && (
+            <Badge badgeContent={unreadCount} color='error'>
+              <Typography variant='body2' sx={{ color: '#666' }}>
+                New
+              </Typography>
+            </Badge>
+          )}
+        </Box>
+
+        {notifications.length === 0 ? (
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant='body1' color='textSecondary'>
+              No pending site transfer requests
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <List sx={{ p: 0 }}>
+              {notifications.map((notif) => (
+                <React.Fragment key={notif.currentSiteName}>
+                  <ListItem
+                    button
+                    onClick={() => handleNotificationClick()}
+                    sx={{
+                      p: 2,
+                      backgroundColor: 'transparent',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      },
+                      position: 'relative',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', width: '100%' }}>
+                      <Avatar
+                        sx={{
+                          mr: 2,
+                          bgcolor: '#9e9e9e',
+                          width: 40,
+                          height: 40,
+                        }}
+                      >
+                        {notif.currentSiteName.charAt(0)}
+                      </Avatar>
+
+                      <Box sx={{ flex: 1 }}>
+                        <Typography
+                          variant='subtitle2'
+                          sx={{
+                            fontWeight: 500,
+                            color: '#333',
+                          }}
+                        >
+                          {notif.currentSiteName}
+                        </Typography>
+
+                        <Typography
+                          variant='body2'
+                          color='textSecondary'
+                          sx={{
+                            mt: 0.5,
+                          }}
+                        >
+                          Pending Count: {notif.PendingCount}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </ListItem>
+                  <Divider component='li' />
+                </React.Fragment>
+              ))}
+            </List>
+
+            <Box sx={{ p: 1.5, textAlign: 'center', borderTop: '1px solid #eaeaea' }}>
+              <Button
+                size='small'
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  color: '#1976d2',
+                }}
+                onClick={() => navigate('/adminApproval')}
+              >
+                View All Notifications
+              </Button>
+            </Box>
+          </>
+        )}
+      </Popover>
     </header>
-  )
+  );
 }
 
 export default Header;
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
