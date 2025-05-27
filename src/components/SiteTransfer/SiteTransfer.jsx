@@ -86,7 +86,51 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     companyName: "",
   });
   const [companyNames, setCompanyNames] = useState([]);
+
+   const [departmentsNew, setDepartments] = useState(departments);
+    const [projectNamesNew, setProjectNames] = useState(projectNames);
+      const [superAdminUser, setSuperAdminUser] = useState(null);
  
+  useEffect(() => {
+    const fetchSuperAdminProjects = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/admin/getSuperAdminProjectNames`);
+        if (response.data.length > 0) {
+          setSuperAdminUser(response.data[0]); // ✅ use local state
+        }
+      } catch (error) {
+        console.error('Error fetching super admin project names:', error);
+      }
+    };
+
+    fetchSuperAdminProjects();
+  }, []);
+
+  const allowedProjectIds = superAdminUser?.projectIds
+    ? JSON.parse(superAdminUser.projectIds)
+    : [];
+
+  const allowedDepartmentIds = superAdminUser?.departmentIds
+    ? JSON.parse(superAdminUser.departmentIds)
+    : [];
+
+     useEffect(() => {
+          const fetchMetadata = async () => {
+            try {
+              const [deptRes, projRes] = await Promise.all([
+                axios.get(`${API_BASE_URL}/api/departments`),
+                axios.get(`${API_BASE_URL}/api/project-names`)
+              ]);
+      
+              setDepartments(deptRes.data);
+              setProjectNames(projRes.data);
+            } catch (err) {
+              console.error('Metadata load failed:', err);
+            }
+          };
+      
+          fetchMetadata();
+        }, []);
 
   const fetchLabours = async (filters = {}) => {
     setLoading(true);
@@ -109,10 +153,13 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
   }, []);
 
 
-  const allowedProjectIds =
-    user && user.projectIds ? JSON.parse(user.projectIds) : [];
-  const allowedDepartmentIds =
-    user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+  // const allowedProjectIds =
+  //   user && user.projectIds ? JSON.parse(user.projectIds) : [];
+  // const allowedDepartmentIds =
+  //   user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
+
+
+
   // console.log('allowedProjectIds: SiteTransfer', allowedProjectIds);
   // console.log('allowedDepartmentIds:SiteTransfer', allowedDepartmentIds);
   // Use labourlist prop if available, otherwise use state labours
@@ -953,20 +1000,35 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     return baseLabours;
   };
 
-  // Helper: Get project description
-  const getProjectDescription = (projectName) => {
-    if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
-    if (projectName === undefined || projectName === null || projectName === '') return 'Unknown';
-    const project = projectNames.find((proj) => proj.Id === Number(projectName));
-    return project ? project.Business_Unit : 'Unknown';
+
+   const getDepartmentDescription = (departmentId) => {
+    if (!departmentsNew.length) return 'Unknown';
+    const dept = departmentsNew.find(d => d.Id === Number(departmentId));
+    return dept?.Description ?? 'Unknown';
   };
 
-  // Helper: Get department description
-  const getDepartmentDescription = (departmentId) => {
-    if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
-    const department = departments.find((dept) => dept.Id === Number(departmentId));
-    return department ? department.Description : 'Unknown';
+  const getProjectDescription = (projectId) => {
+    if (!projectNamesNew.length || projectId == null || projectId === '') {
+      return 'Unknown';
+    }
+    const proj = projectNamesNew.find(p => p.Id === Number(projectId));
+    return proj?.Business_Unit ?? 'Unknown';
   };
+
+  // Helper: Get project description
+  // const getProjectDescription = (projectName) => {
+  //   if (!Array.isArray(projectNames) || projectNames.length === 0) return 'Unknown';
+  //   if (projectName === undefined || projectName === null || projectName === '') return 'Unknown';
+  //   const project = projectNames.find((proj) => proj.Id === Number(projectName));
+  //   return project ? project.Business_Unit : 'Unknown';
+  // };
+
+  // // Helper: Get department description
+  // const getDepartmentDescription = (departmentId) => {
+  //   if (!Array.isArray(departments) || departments.length === 0) return 'Unknown';
+  //   const department = departments.find((dept) => dept.Id === Number(departmentId));
+  //   return department ? department.Description : 'Unknown';
+  // };
 
   const filteredLaboursForTable = getFilteredLaboursForTable();
   // console.log('filteredLaboursForTable}}SiteTransfer',filteredLaboursForTable)
@@ -985,7 +1047,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
   );
   //   console.log('Paginated Labours:', paginatedLabours);
 
-  const displayedLabours = paginatedLabours.filter((labour) => {
+  const displayedLabours = ( searchResults.length > 0 ? searchResults : labours).filter((labour) => {
     const labourProjectId = Number(labour.projectName);
     const labourDepartmentId = Number(labour.departmentId);
     return (
@@ -993,8 +1055,8 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
       allowedDepartmentIds.includes(labourDepartmentId)
     );
   });
-  // console.log('Displayed Labours:SiteTransfer', displayedLabours);
-  // console.log('Displayed Labours:SiteTransfer', JSON.stringify(displayedLabours));
+  console.log('Displayed Labours:SiteTransfer', displayedLabours);
+  console.log('Displayed Labours:SiteTransfer', JSON.stringify(displayedLabours));
 
   const isAllSelected =
     paginatedLabours.length > 0 &&
@@ -1133,6 +1195,7 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
           flexWrap: "wrap",
         }}
       >
+        
         <ExportSiteTransfer />
         <ImportSiteTransfer handleToast={handleToast} onboardName={user.name || null} />
         <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
@@ -1169,8 +1232,8 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
 
         <TablePagination
           className="custom-pagination"
-          rowsPerPageOptions={[25, 100, 200, { label: 'All', value: labours.length }]}
-          count={labours.length}
+          rowsPerPageOptions={[25, 100, 200, { label: 'All', value: displayedLabours.length }]}
+          count={displayedLabours.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handlePageChange}
@@ -1246,11 +1309,11 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
                 },
               }}
             >
-              {/* {(rowsPerPage > 0
+              {(rowsPerPage > 0
                                 ? paginatedLabours // Use the paginatedLabours directly for pagination
-                                : filteredLabours // Fallback to filteredLabours if no pagination is applied
-                            ).map((labour, index) => ( */}
-              {displayedLabours.map((labour, index) => (
+                                : displayedLabours // Fallback to filteredLabours if no pagination is applied
+                            ).map((labour, index) => (
+              // {displayedLabours.map((labour, index) => (
                 <TableRow key={labour.LabourID}>
                   <TableCell padding="checkbox">
                     <Checkbox
