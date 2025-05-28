@@ -23,12 +23,13 @@ import {
   Tabs
 } from '@mui/material';
 import axios from 'axios';
+import { API_BASE_URL } from '../Data';
 
 // Function to format currency
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
@@ -37,36 +38,45 @@ const formatCurrency = (amount) => {
 const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
   // State for tab selection
   const [tabValue, setTabValue] = useState(0);
-  
+
   // Department Wage data states
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
+  // Machine data states
+  const [machineData, setMachineData] = useState([]);
+  const [machineLoading, setMachineLoading] = useState(false);
+  const [machineError, setMachineError] = useState(null);
+
   // Common states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState('wageMonth');
   const [order, setOrder] = useState('desc');
-  
+
   // Filter states for wage data
   const [filterMonth, setFilterMonth] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
-  
+
   // Filter states for machine data
   const [filterMachineStatus, setFilterMachineStatus] = useState('');
   const [filterMachineName, setFilterMachineName] = useState('');
 
-  // Get unique values for filters
+  // Get unique values for filters - Fixed to use correct field names
   const uniqueMonths = [...new Set(data.map(item => item.wageMonth))].sort().reverse();
   const uniqueDepartments = [...new Set(data.map(item => item.departmentName))].sort();
-  const uniqueMachineNames = [...new Set(staticMachineData.map(item => item.machineName))].sort();
+  
+  // Fixed: Use correct field names for machine data
+  const uniqueMachineNames = [...new Set(machineData.map(item => item.DeviceSName))].sort();
+  const uniqueMachineStatuses = [...new Set(machineData.map(item => item.Status))].sort();
 
+  // Fetch wage data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:4000/dashboard/deptPercentageCount');
+        const response = await axios.get(`${API_BASE_URL}/dashboard/deptPercentageCount`);
         if (response.data.success) {
           setData(response.data.data);
         } else {
@@ -82,13 +92,37 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
     fetchData();
   }, []);
 
+  // Fetch machine data when tab switches to machine view
+  useEffect(() => {
+    if (tabValue === 1) {
+      const fetchMachineData = async () => {
+        try {
+          setMachineLoading(true);
+          // Replace this URL with your actual machine data endpoint
+          const response = await axios.get(`${API_BASE_URL}/dashboard/getDevices`);
+          if (response.data) {
+            setMachineData(response.data);
+          } else {
+            setMachineError('Failed to fetch machine data');
+          }
+        } catch (err) {
+          setMachineError('Error fetching machine data: ' + err.message);
+        } finally {
+          setMachineLoading(false);
+        }
+      };
+
+      fetchMachineData();
+    }
+  }, [tabValue]);
+
   // Reset page when changing tabs
   useEffect(() => {
     setPage(0);
     if (tabValue === 0) {
       setOrderBy('wageMonth');
     } else {
-      setOrderBy('machineName');
+      setOrderBy('DeviceSName');
     }
   }, [tabValue]);
 
@@ -114,25 +148,28 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
     setPage(0);
   };
 
-  // Filter data based on active tab
-  const filteredData = tabValue === 0 
+  // Fixed: Filter data based on active tab with correct field names
+  const filteredData = tabValue === 0
     ? data.filter(item => {
         return (
           (filterMonth === '' || item.wageMonth === filterMonth) &&
           (filterDepartment === '' || item.departmentName === filterDepartment)
         );
       })
-    : staticMachineData.filter(item => {
+    : machineData.filter(item => {
+        console.log('Filtering item:', item); // Debug log
+        console.log('Filter status:', filterMachineStatus, 'Item status:', item.Status); // Debug log
+        console.log('Filter name:', filterMachineName, 'Item name:', item.DeviceSName); // Debug log
+        
         return (
-          (filterMachineStatus === '' || item.status === filterMachineStatus) &&
-          (filterMachineName === '' || item.machineName === filterMachineName)
+          (filterMachineStatus === '' || item.Status === filterMachineStatus) &&
+          (filterMachineName === '' || item.DeviceSName === filterMachineName)
         );
       });
 
   // Sort data based on active tab
   const sortedData = filteredData.sort((a, b) => {
     const isAsc = order === 'asc';
-    
     if (tabValue === 0) {
       // Sorting for wage data
       if (orderBy === 'WagePayPercentage' || orderBy === 'totalWages') {
@@ -144,10 +181,12 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
       }
     } else {
       // Sorting for machine data
-      if (orderBy === 'lastPingTime') {
-        return isAsc 
-          ? new Date(a.lastPingTime) - new Date(b.lastPingTime) 
-          : new Date(b.lastPingTime) - new Date(a.lastPingTime);
+      if (orderBy === 'LastPing') {
+        return isAsc
+          ? new Date(a.LastPing) - new Date(b.LastPing)
+          : new Date(b.LastPing) - new Date(a.LastPing);
+      } else if (orderBy === 'DeviceId') {
+        return isAsc ? a.DeviceId - b.DeviceId : b.DeviceId - a.DeviceId;
       } else {
         return isAsc
           ? String(a[orderBy] || '').localeCompare(String(b[orderBy] || ''))
@@ -174,8 +213,18 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
     return status === 'Online' ? '#4caf50' : '#f44336';
   };
 
-  // Loading state for wage data
-  if (tabValue === 0 && loading) {
+  // Format last ping time
+  const formatLastPing = (lastPing) => {
+    const date = new Date(lastPing);
+    // Check if it's the default "1900-01-01" date
+    if (date.getFullYear() === 1900) {
+      return 'Never';
+    }
+    return date.toLocaleString();
+  };
+
+  // Loading state
+  if ((tabValue === 0 && loading) || (tabValue === 1 && machineLoading)) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
         <CircularProgress />
@@ -183,11 +232,11 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
     );
   }
 
-  // Error state for wage data
-  if (tabValue === 0 && error) {
+  // Error state
+  if ((tabValue === 0 && error) || (tabValue === 1 && machineError)) {
     return (
       <Box sx={{ p: 2 }}>
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error">{tabValue === 0 ? error : machineError}</Alert>
       </Box>
     );
   }
@@ -195,9 +244,9 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
   return (
     <Box sx={{ width: '100%' }}>
       {/* Tabs for switching between data types */}
-      <Tabs 
-        value={tabValue} 
-        onChange={handleTabChange} 
+      <Tabs
+        value={tabValue}
+        onChange={handleTabChange}
         sx={{ mb: 2 }}
         variant="fullWidth"
       >
@@ -211,7 +260,7 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
           <Typography variant="h6" component="h2" gutterBottom>
             Department-wise Wage Pay Percentage
           </Typography>
-          
+
           {/* Filters for Wage Data */}
           <Grid container spacing={1} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={6} md={3}>
@@ -225,7 +274,10 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
                   <MenuItem value="">All Months</MenuItem>
                   {uniqueMonths.map((month) => (
                     <MenuItem key={month} value={month}>
-                      {new Date(month + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}
+                      {new Date(month + '-01').toLocaleString('default', { 
+                        month: 'long', 
+                        year: 'numeric' 
+                      })}
                     </MenuItem>
                   ))}
                 </Select>
@@ -300,7 +352,10 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
                     paginatedData.map((row, index) => (
                       <TableRow key={`${row.wageMonth}-${row.departmentName}-${index}`} hover>
                         <TableCell>
-                          {new Date(row.wageMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}
+                          {new Date(row.wageMonth + '-01').toLocaleString('default', { 
+                            month: 'long', 
+                            year: 'numeric' 
+                          })}
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -351,7 +406,7 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
                             >
                               <Typography variant="caption" component="div" color="text.secondary">
                                 {Math.round(row.WagePayPercentage)}%
-                              </Typography>
+                                </Typography>
                             </Box>
                           </Box>
                         </TableCell>
@@ -359,7 +414,9 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">No data found</TableCell>
+                      <TableCell colSpan={5} align="center">
+                        No data found
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -382,20 +439,34 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
           <Typography variant="h6" component="h2" gutterBottom>
             ESSL Machine Status
           </Typography>
-          
-          {/* Filters for Machine Data */}
+
+          {/* Debug info - Remove this in production */}
+          <Box sx={{ mb: 2, p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+            <Typography variant="caption">
+              Debug: Total machines: {machineData.length}, Filtered: {filteredData.length}
+            </Typography>
+          </Box>
+
+          {/* Filters for Machine Data - Fixed */}
           <Grid container spacing={1} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth variant="outlined" size="small">
                 <InputLabel>Filter by Status</InputLabel>
                 <Select
                   value={filterMachineStatus}
-                  onChange={(e) => setFilterMachineStatus(e.target.value)}
+                  onChange={(e) => {
+                    console.log('Status filter changed to:', e.target.value); // Debug log
+                    setFilterMachineStatus(e.target.value);
+                    setPage(0); // Reset page when filter changes
+                  }}
                   label="Filter by Status"
                 >
                   <MenuItem value="">All Statuses</MenuItem>
-                  <MenuItem value="Online">Online</MenuItem>
-                  <MenuItem value="Offline">Offline</MenuItem>
+                  {uniqueMachineStatuses.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status} ({machineData.filter(item => item.Status === status).length})
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
@@ -404,7 +475,11 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
                 <InputLabel>Filter by Machine</InputLabel>
                 <Select
                   value={filterMachineName}
-                  onChange={(e) => setFilterMachineName(e.target.value)}
+                  onChange={(e) => {
+                    console.log('Machine filter changed to:', e.target.value); // Debug log
+                    setFilterMachineName(e.target.value);
+                    setPage(0); // Reset page when filter changes
+                  }}
                   label="Filter by Machine"
                 >
                   <MenuItem value="">All Machines</MenuItem>
@@ -415,7 +490,21 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
                   ))}
                 </Select>
               </FormControl>
-              </Grid>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip 
+                  label={`Online: ${machineData.filter(item => item.Status === 'Online').length}`}
+                  color="success"
+                  size="small"
+                />
+                <Chip 
+                  label={`Offline: ${machineData.filter(item => item.Status === 'Offline').length}`}
+                  color="error"
+                  size="small"
+                />
+              </Box>
+            </Grid>
           </Grid>
 
           {/* Machine Status Table */}
@@ -426,47 +515,56 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
                   <TableRow>
                     <TableCell>
                       <TableSortLabel
-                        active={orderBy === 'machineName'}
-                        direction={orderBy === 'machineName' ? order : 'asc'}
-                        onClick={() => handleRequestSort('machineName')}
+                        active={orderBy === 'DeviceId'}
+                        direction={orderBy === 'DeviceId' ? order : 'asc'}
+                        onClick={() => handleRequestSort('DeviceId')}
                       >
-                        Machine Name
+                        Device ID
                       </TableSortLabel>
                     </TableCell>
                     <TableCell>
                       <TableSortLabel
-                        active={orderBy === 'location'}
-                        direction={orderBy === 'location' ? order : 'asc'}
-                        onClick={() => handleRequestSort('location')}
+                        active={orderBy === 'DeviceSName'}
+                        direction={orderBy === 'DeviceSName' ? order : 'asc'}
+                        onClick={() => handleRequestSort('DeviceSName')}
+                      >
+                        Device Name
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell>
+                      <TableSortLabel
+                        active={orderBy === 'DeviceLocation'}
+                        direction={orderBy === 'DeviceLocation' ? order : 'asc'}
+                        onClick={() => handleRequestSort('DeviceLocation')}
                       >
                         Location
                       </TableSortLabel>
                     </TableCell>
                     <TableCell>
                       <TableSortLabel
-                        active={orderBy === 'status'}
-                        direction={orderBy === 'status' ? order : 'asc'}
-                        onClick={() => handleRequestSort('status')}
+                        active={orderBy === 'Status'}
+                        direction={orderBy === 'Status' ? order : 'asc'}
+                        onClick={() => handleRequestSort('Status')}
                       >
                         Status
                       </TableSortLabel>
                     </TableCell>
                     <TableCell>
                       <TableSortLabel
-                        active={orderBy === 'lastPingTime'}
-                        direction={orderBy === 'lastPingTime' ? order : 'asc'}
-                        onClick={() => handleRequestSort('lastPingTime')}
+                        active={orderBy === 'LastPing'}
+                        direction={orderBy === 'LastPing' ? order : 'asc'}
+                        onClick={() => handleRequestSort('LastPing')}
                       >
                         Last Ping
                       </TableSortLabel>
                     </TableCell>
                     <TableCell>
                       <TableSortLabel
-                        active={orderBy === 'ipAddress'}
-                        direction={orderBy === 'ipAddress' ? order : 'asc'}
-                        onClick={() => handleRequestSort('ipAddress')}
+                        active={orderBy === 'SerialNumber'}
+                        direction={orderBy === 'SerialNumber' ? order : 'asc'}
+                        onClick={() => handleRequestSort('SerialNumber')}
                       >
-                        IP Address
+                        Serial Number
                       </TableSortLabel>
                     </TableCell>
                   </TableRow>
@@ -474,34 +572,59 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
                 <TableBody>
                   {paginatedData.length > 0 ? (
                     paginatedData.map((row, index) => (
-                      <TableRow key={`${row.machineName}-${index}`} hover>
+                      <TableRow key={`${row.DeviceId}-${index}`} hover>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                            {row.DeviceId}
+                          </Typography>
+                        </TableCell>
                         <TableCell>
                           <Chip
-                            label={row.machineName}
+                            label={row.DeviceSName}
                             size="small"
                             variant="outlined"
                           />
                         </TableCell>
-                        <TableCell>{row.location}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {row.DeviceLocation || 'Not specified'}
+                          </Typography>
+                        </TableCell>
                         <TableCell>
                           <Chip
-                            label={row.status}
+                            label={row.Status}
                             size="small"
                             sx={{
-                              backgroundColor: getStatusColor(row.status),
-                              color: 'white'
+                              backgroundColor: getStatusColor(row.Status),
+                              color: 'white',
+                              fontWeight: 'bold'
                             }}
                           />
                         </TableCell>
                         <TableCell>
-                          {new Date(row.lastPingTime).toLocaleString()}
+                          <Typography 
+                            variant="body2"
+                            sx={{
+                              color: row.Status === 'Online' ? 'success.main' : 'error.main'
+                            }}
+                          >
+                            {formatLastPing(row.LastPing)}
+                          </Typography>
                         </TableCell>
-                        <TableCell>{row.ipAddress}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                            {row.SerialNumber || 'N/A'}
+                          </Typography>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">No data found</TableCell>
+                      <TableCell colSpan={6} align="center">
+                        <Typography variant="body1" color="text.secondary">
+                          {machineData.length === 0 ? 'No machine data available' : 'No machines match the current filters'}
+                        </Typography>
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
