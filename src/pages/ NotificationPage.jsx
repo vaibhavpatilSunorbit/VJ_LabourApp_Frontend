@@ -25,7 +25,7 @@ const NotificationPage = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/dashboard/getnotification`);
+      const response = await axios.get(`${API_BASE_URL}/api/getnotification`);
       if (response.data.success) {
         setNotifications(response.data.data);
       }

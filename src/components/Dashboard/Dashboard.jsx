@@ -178,7 +178,7 @@ const Dashboard = () => {
     const fetchLabourCounts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/dashboard/getAllLaboursCount`);
+        const response = await axios.get(`${API_BASE_URL}/api/getAllLaboursCount`);
         if (response.data.success) {
           setLabourCount({
             Approved: response.data.data.Approved || 0,
@@ -201,9 +201,9 @@ const Dashboard = () => {
       try {
         setLoading(true);
         const [wagesRes, siteTransferRes, variablePayRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/dashboard/getWagesCount`),
-          axios.get(`${API_BASE_URL}/dashboard/getAllSiteTransferCount`),
-          axios.get(`${API_BASE_URL}/dashboard/getAllVariableCount`)
+          axios.get(`${API_BASE_URL}/api/getWagesCount`),
+          axios.get(`${API_BASE_URL}/api/getAllSiteTransferCount`),
+          axios.get(`${API_BASE_URL}/api/getAllVariableCount`)
         ]);
         if (wagesRes.data.success) {
           setWagesData(wagesRes.data.data);
@@ -229,7 +229,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchActiveWorkers = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/dashboard/getAllActive')
+        const response = await axios.get(`${API_BASE_URL}/api/getAllActive`)
         if (response.data.success) {
           setActiveWorker(response.data.data.ActiveWorkersAllTime);
         }
@@ -245,7 +245,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchAttendanceRates = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/dashboard/getAllActivep`);
+        const response = await axios.get(`${API_BASE_URL}/api/getAllActivep`);
         if (response.data.success) {
           setAttendanceRates(response.data.data.PresentPercentageOfAllActiveWorkers);
         }
@@ -401,7 +401,7 @@ const Dashboard = () => {
     const fetchAttendance = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/dashboard/getAPM`);
+        const response = await axios.get(`${API_BASE_URL}/api/getAPM`);
         if (response.data.success) {
           const data = response.data.data;
           setAttendanceData({
