@@ -11,6 +11,12 @@ export const API_BASE_URL = "http://localhost:4000";
 // Data.js
 export const SidebarData = [
   {
+    icon: UilFileAlt,
+    heading: "Dashboard",
+    path: "Dashboard",
+    roles: ["superadmin","admin", "user"],
+  },
+  {
     icon: UilUniversity,
     heading: "Application",
     roles: ["admin", "user"],
@@ -97,12 +103,7 @@ export const SidebarData = [
     path: "ViewMonthlyPayroll",
     roles: ["superadmin"],
   },
-  {
-    icon: UilFileAlt,
-    heading: "Dashboard",
-    path: "Dashboard",
-    roles: ["superadmin","admin", "user"],
-  },
+  
   // {
   //   icon: UilFileAlt,
   //   heading: "People",

@@ -1,11 +1,39 @@
-
-import React from 'react'
-import { BsFillBellFill, BsIconName, BsFillEnvelopeFill, BsPersonCircle, BsSearch, BsJustify }
-  from 'react-icons/bs';
-import { GrLogout } from "react-icons/gr";
+import React, { useState, useEffect } from 'react';
+import { BsFillBellFill, BsPersonCircle, BsJustify } from 'react-icons/bs';
+import { GrLogout } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '@mui/material/Tooltip';
+import Popover from '@mui/material/Popover';
+import Typography from '@mui/material/Typography';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Badge from '@mui/material/Badge';
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
+import Button from '@mui/material/Button';
+import Avatar from '@mui/material/Avatar';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 import { useUser } from '../../UserContext/UserContext';
+import { API_BASE_URL } from '../../Data';
+import axios from 'axios';
+
+// Define notification type colors
+const notificationColors = {
+  siteTransfer: '#1976d2', // blue
+  warning: '#ff9800', // orange
+  error: '#f44336', // red
+  success: '#4caf50', // green
+  info: '#2196f3', // light blue
+  attendanceApproval: '#9c27b0', // purple
+  alert: '#e91e63', // pink
+  update: '#009688', // teal
+  advance: '#8bc34a', // light green
+  debit: '#f44336', // red
+  incentive: '#ffc107', // amber
+  wagesApproval: '#673ab7', // deep purple
+  default: '#9e9e9e' // grey
+};
 
 function Header({ OpenSidebar }) {
   const navigate = useNavigate();
@@ -16,446 +44,666 @@ function Header({ OpenSidebar }) {
     fontSize: isMobile ? '14px' : '14px',
     color: '#000',
   };
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [siteTransferNotifications, setSiteTransferNotifications] = useState([]);
+  const [attendanceNotifications, setAttendanceNotifications] = useState([]);
+  const [otherNotifications, setOtherNotifications] = useState([]);
+  const [alertNotifications, setAlertNotifications] = useState([]);
+  const [updateNotifications, setUpdateNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [tabValue, setTabValue] = useState(0);
+  const open = Boolean(anchorEl);
+  const id = open ? 'notifications-popover' : undefined;
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate('/');
+  const handleBellClick = (event) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  return (
-    <header className='header'>
-      <div className='menu-icon'>
-        <BsJustify className='icon' onClick={OpenSidebar} />
-      </div>
-      <div className='header-left'>
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
 
-      </div>
-      <div className='header-right headericon' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <BsFillBellFill className='icon' style={{ margin: '0 10px', cursor: 'pointer' }} />
-          <Tooltip title="Logout" arrow>
-            <GrLogout
-              className='icon'
-              onClick={handleLogout}
-              style={{ margin: '0 10px', cursor: 'pointer' }}
-            />
-          </Tooltip>
-          <BsPersonCircle className='icon' style={{ margin: '0 12px', cursor: 'pointer' }} />
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  // Fetch site transfer notifications
+  const fetchSiteTransferNotifications = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getnotification`);
+      if (response.data.success) {
+        const notifications = response.data.data.map(notif => ({
+          id: `site-${notif.currentSiteName}`,
+          type: 'siteTransfer',
+          title: notif.currentSiteName,
+          message: `Pending site transfer requests: ${notif.PendingCount}`,
+          siteName: notif.currentSiteName,
+          pendingCount: notif.PendingCount,
+          isRead: notif.PendingCount === 0,
+          timestamp: new Date().toISOString()
+        }));
+        setSiteTransferNotifications(notifications);
+      }
+    } catch (error) {
+      console.error('Failed to fetch site transfer notifications:', error);
+    }
+  };
+
+  // Fetch attendance approval notifications
+  const fetchAttendanceNotifications = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getAllNotification`);
+      if (response.data.success) {
+        const notifications = response.data.data.map(notif => {
+          return {
+            id: `attendance-${notif.AttendanceId || notif.id}`,
+            type: 'attendanceApproval',
+            title: `Attendance for ${notif.name || notif.LabourId}`,
+            // Include all relevant fields
+            AttendanceId: notif.AttendanceId,
+            LabourId: notif.LabourId,
+            FirstPunchManually: notif.FirstPunchManually,
+            LastPunchManually: notif.LastPunchManually,
+            RemarkManually: notif.RemarkManually,
+            // Generate message
+            message: generateAttendanceMessage(notif),
+            isRead: false,
+            timestamp: notif.LastUpdatedDate || new Date().toISOString()
+          };
+        });
+        console.log('Attendance notifications:', notifications);
+        setAttendanceNotifications(notifications);
+      }
+    } catch (error) {
+      console.error('Failed to fetch attendance notifications:', error);
+    }
+  };
+
+  // Fetch variable pay notifications for the Alerts tab
+  const fetchAlertNotifications = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getNotificationVariablePay`);
+      if (response.data.success) {
+        const notifications = response.data.data.map(notif => {
+          // Create a formatted message with the required fields
+          const message = `${notif.LabourID}: ${notif.name} (${notif.companyName}) - ${notif.businessUnit}, ${notif.departmentName}. ${notif.PayStructure} pay: ₹${notif.VariablepayAmount}. Status: ${notif.ApprovalStatusPay}`;
+          
+          // Create a title based on pay structure
+          let title = '';
+          let type = 'alert';
+          
+          if (notif.AdvancePay) {
+            title = `Advance Pay Request`;
+            type = 'advance';
+          } else if (notif.DebitPay) {
+            title = `Debit Pay Request`;
+            type = 'debit';
+          } else if (notif.IncentivePay) {
+            title = `Incentive Pay Request`;
+            type = 'incentive';
+          } else {
+            title = `Variable Pay Request`;
+          }
+          
+          return {
+            id: `variable-pay-${notif.VariablePayId}`,
+            type: type,
+            title: title,
+            // Include all the fields we need
+            LabourID: notif.LabourID,
+            name: notif.name,
+            companyName: notif.companyName,
+            businessUnit: notif.businessUnit,
+            departmentName: notif.departmentName,
+            PayStructure: notif.PayStructure,
+            VariablepayAmount: notif.VariablepayAmount,
+            ApprovalStatusPay: notif.ApprovalStatusPay,
+            // Generate message
+            message: message,
+            isRead: false,
+            timestamp: notif.CreatedAt || new Date().toISOString()
+          };
+        });
+        
+        console.log('Variable Pay notifications:', notifications);
+        setAlertNotifications(notifications);
+      }
+    } catch (error) {
+      console.error('Failed to fetch variable pay notifications:', error);
+    }
+  };
+
+  // Fetch wages approval notifications for the Updates tab
+  const fetchUpdateNotifications = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getNotificationWagesApproval`);
+      if (response.data.success) {
+        const notifications = response.data.data.map(notif => {
+          // Determine which wage value to display based on PayStructure
+          let wageValue = '';
+          let wageType = '';
+          
+          if (notif.PayStructure === 'DAILY WAGES') {
+            wageValue = notif.DailyWages ? `₹${notif.DailyWages}/day` : '';
+            wageType = 'Daily';
+          } else if (notif.PayStructure === 'FIXED MONTHLY WAGES') {
+            wageValue = notif.FixedMonthlyWages ? `₹${notif.FixedMonthlyWages}/month` : '';
+            wageType = 'Monthly';
+          } else if (notif.PayStructure === 'MONTHLY WAGES') {
+            wageValue = notif.MonthlyWages ? `₹${notif.MonthlyWages}/month` : '';
+            wageType = 'Monthly';
+          }
+          
+          // Include per hour wages if available
+          const hourlyRate = notif.PerHourWages ? ` (₹${notif.PerHourWages}/hr)` : '';
+          
+          // Create a formatted message with the required fields
+          const message = `${notif.LabourID}: ${notif.name} - ${wageType} wage ${wageValue}${hourlyRate}. Status: ${notif.ApprovalStatus}`;
+          
+          return {
+            id: `wages-approval-${notif.ApprovalID}`,
+            type: 'wagesApproval',
+            title: `Wages Approval - ${notif.PayStructure}`,
+            // Include all the fields we need
+            LabourID: notif.LabourID,
+            name: notif.name,
+            PayStructure: notif.PayStructure,
+            PerHourWages: notif.PerHourWages,
+            ApprovalStatus: notif.ApprovalStatus,
+            DailyWages: notif.DailyWages,
+            MonthlyWages: notif.MonthlyWages,
+            FixedMonthlyWages: notif.FixedMonthlyWages,
+            // Generate message
+            message: message,
+            isRead: false,
+            timestamp: notif.CreatedAt || new Date().toISOString()
+          };
+        });
+        
+        console.log('Wages Approval notifications:', notifications);
+        setUpdateNotifications(notifications);
+      }
+    } catch (error) {
+      console.error('Failed to fetch wages approval notifications:', error);
+    }
+  };
+
+  // Generate message specifically for attendance notifications
+  const generateAttendanceMessage = (notif) => {
+    const labourId = notif.LabourId ? `${notif.LabourId}` : '';
+    const timeInfo = notif.FirstPunchManually && notif.LastPunchManually
+      ? `${notif.FirstPunchManually} - ${notif.LastPunchManually}`
+      : '';
+    const remarkInfo = notif.RemarkManually
+      ? `(${notif.RemarkManually})`
+      : '';
+    
+    return `${labourId}: ${timeInfo} ${remarkInfo}`;
+  };
+
+  // Generate appropriate message based on notification type
+  const generateMessage = (notification) => {
+    // If notification already has a message, use it
+    if (notification.message) return notification.message;
+
+    // For attendance approval notifications
+    if (notification.type === 'attendanceApproval') {
+      return generateAttendanceMessage(notification);
+    }
+
+    // For other notification types
+    switch(notification.type) {
+      case 'warning':
+        return `Warning: ${notification.title || 'Action required'}`;
+      case 'error':
+        return `Error: ${notification.title || 'Something went wrong'}`;
+      case 'success':
+        return `Success: ${notification.title || 'Operation completed'}`;
+      case 'info':
+        return `Info: ${notification.title || 'For your information'}`;
+      case 'advance':
+        return `Advance Pay: ${notification.LabourID || ''} - ₹${notification.VariablepayAmount || 0}`;
+      case 'debit':
+        return `Debit Pay: ${notification.LabourID || ''} - ₹${notification.VariablepayAmount || 0}`;
+      case 'incentive':
+        return `Incentive Pay: ${notification.LabourID || ''} - ₹${notification.VariablepayAmount || 0}`;
+      case 'wagesApproval':
+        return `Wages Approval: ${notification.LabourID || ''} - ${notification.PayStructure || ''}`;
+      default:
+        return notification.title || 'New notification';
+    }
+  };
+
+  // Fetch all other notifications
+  const fetchOtherNotifications = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getAllNotification`);
+      if (response.data.success) {
+        // Process all notifications to ensure they have proper messages
+        const processedNotifications = response.data.data.filter(notif => 
+          notif.type !== 'siteTransfer' && 
+          notif.type !== 'attendanceApproval' &&
+          notif.type !== 'alert' &&
+          notif.type !== 'update' &&
+          notif.type !== 'wagesApproval'
+        ).map(notif => {
+          // Create a processed notification with all the original data
+          const processedNotif = { ...notif };
+          
+          // Ensure we have a message for each notification
+          if (!processedNotif.message) {
+            processedNotif.message = generateMessage(processedNotif);
+          }
+          
+          // Ensure we have a timestamp
+          if (!processedNotif.timestamp) {
+            processedNotif.timestamp = new Date().toISOString();
+          }
+          
+          // Set isRead property if not provided
+          if (processedNotif.isRead === undefined) {
+            processedNotif.isRead = false;
+          }
+          
+          return processedNotif;
+        });
+        
+        setOtherNotifications(processedNotifications);
+      }
+    } catch (error) {
+      console.error('Failed to fetch other notifications:', error);
+    }
+  };
+
+  // Calculate total unread count
+  useEffect(() => {
+    const siteTransferUnread = siteTransferNotifications.filter(notif => !notif.isRead).length;
+    const attendanceUnread = attendanceNotifications.filter(notif => !notif.isRead).length;
+    const alertUnread = alertNotifications.filter(notif => !notif.isRead).length;
+    const updateUnread = updateNotifications.filter(notif => !notif.isRead).length;
+    const otherUnread = otherNotifications.filter(notif => !notif.isRead).length;
+    setUnreadCount(siteTransferUnread + attendanceUnread + alertUnread + updateUnread + otherUnread);
+  }, [siteTransferNotifications, attendanceNotifications, alertNotifications, updateNotifications, otherNotifications]);
+
+  // Fetch notifications when popover opens
+  useEffect(() => {
+    if (open) {
+      fetchSiteTransferNotifications();
+      fetchAttendanceNotifications();
+      fetchAlertNotifications();
+      fetchUpdateNotifications();
+      fetchOtherNotifications();
+    }
+  }, [open]);
+
+  const handleNotificationClick = (notif) => {
+    // Navigate based on notification type
+    switch(notif.type) {
+      case 'siteTransfer':
+        navigate('/adminApproval/siteTransferApproval');
+        break;
+        case 'attendanceApproval':
+          navigate('/adminApproval/adminAttendanceApproval');
+          break;
+        case 'advance':
+        case 'debit':
+        case 'incentive':
+        case 'alert':
+          navigate('/adminApproval/variableInputApproval');
+          break;
+        case 'wagesApproval':
+          navigate('/adminApproval/wagesApproval');
+          break;
+        case 'update':
+          navigate('/adminApproval/adminAttendanceApproval');
+          break;
+        case 'warning':
+        case 'error':
+        case 'info':
+        case 'success':
+          navigate(`/notifications/${notif.id}`);
+          break;
+        default:
+          navigate('/notifications');
+      }
+      handlePopoverClose();
+    };
+  
+    const handleLogout = () => {
+      localStorage.removeItem('token');
+      navigate('/');
+    };
+  
+    // Get avatar color based on notification type
+    const getAvatarColor = (type) => {
+      return notificationColors[type] || notificationColors.default;
+    };
+  
+    // Get avatar letter based on notification type
+    const getAvatarLetter = (notif) => {
+      if (notif.type === 'siteTransfer') {
+        return notif.siteName?.charAt(0) || 'S';
+      }
+      switch(notif.type) {
+        case 'attendanceApproval': return 'A';
+        case 'warning': return 'W';
+        case 'error': return 'E';
+        case 'success': return 'S';
+        case 'info': return 'I';
+        case 'alert': return '!';
+        case 'update': return 'U';
+        case 'advance': return 'A+';
+        case 'debit': return 'D-';
+        case 'incentive': return 'I+';
+        case 'wagesApproval': return 'W$';
+        default: return 'N';
+      }
+    };
+  
+    // Format timestamp
+    const formatTimestamp = (timestamp) => {
+      if (!timestamp) return '';
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+  
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} min ago`;
+      if (diffHours < 24) return `${diffHours} hr ago`;
+      if (diffDays < 7) return `${diffDays} day ago`;
+      return date.toLocaleDateString();
+    };
+  
+    // Render notification list
+    const renderNotificationList = (notifications, emptyMessage) => {
+      if (!notifications || notifications.length === 0) {
+        return (
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant='body1' color='textSecondary'>{emptyMessage}</Typography>
+          </Box>
+        );
+      }
+  
+      return (
+        <List sx={{ p: 0 }}>
+          {notifications.map((notif, index) => (
+            <React.Fragment key={notif.id || index}>
+              <ListItem
+                button
+                onClick={() => handleNotificationClick(notif)}
+                sx={{
+                  p: 2,
+                  backgroundColor: notif.isRead ? 'transparent' : 'rgba(25, 118, 210, 0.08)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  },
+                  position: 'relative',
+                }}
+              >
+                <Box sx={{ display: 'flex', width: '100%' }}>
+                  <Avatar
+                    sx={{
+                      mr: 2,
+                      bgcolor: getAvatarColor(notif.type),
+                      width: 40,
+                      height: 40,
+                    }}
+                  >
+                    {getAvatarLetter(notif)}
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant='subtitle2'
+                      sx={{
+                        fontWeight: notif.isRead ? 400 : 600,
+                        color: '#333',
+                      }}
+                    >
+                      {notif.title || (
+                        notif.type === 'attendanceApproval'
+                          ? 'Attendance Approval'
+                          : notif.type === 'siteTransfer'
+                            ? 'Site Transfer'
+                            : notif.type === 'alert'
+                              ? 'Alert'
+                              : notif.type === 'wagesApproval'
+                                ? 'Wages Approval'
+                                : notif.type === 'advance'
+                                  ? 'Advance Pay'
+                                  : notif.type === 'debit'
+                                    ? 'Debit Pay'
+                                    : notif.type === 'incentive'
+                                      ? 'Incentive Pay'
+                                      : 'Notification'
+                      )}
+                    </Typography>
+                    <Typography
+                      variant='body2'
+                      color='textSecondary'
+                      sx={{
+                        mt: 0.5,
+                      }}
+                    >
+                      {notif.message || generateMessage(notif)}
+                    </Typography>
+                    <Typography
+                      variant='caption'
+                      color='textSecondary'
+                      sx={{ display: 'block', mt: 0.5 }}
+                    >
+                      {formatTimestamp(notif.timestamp)}
+                    </Typography>
+                  </Box>
+                </Box>
+              </ListItem>
+              <Divider component='li' />
+            </React.Fragment>
+          ))}
+        </List>
+      );
+    };
+  
+    return (
+      <header className='header' style={{ position: 'relative' }}>
+        <div className='menu-icon'>
+          <BsJustify className='icon' onClick={OpenSidebar} />
         </div>
-        <span style={spanStyle}>
-          {user ? user.name : "Guest"}
-        </span>
-      </div>
-
-    </header>
-  )
-}
-
-export default Header;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useState, useEffect } from 'react';
-// import PropTypes from 'prop-types';
-// import { useNavigate } from 'react-router-dom';
-// import { useUser } from '../../UserContext/UserContext';
-
-// // MUI Components
-// import AppBar from '@mui/material/AppBar';
-// import Box from '@mui/material/Box';
-// import Toolbar from '@mui/material/Toolbar';
-// import IconButton from '@mui/material/IconButton';
-// import Typography from '@mui/material/Typography';
-// import Tooltip from '@mui/material/Tooltip';
-// import Badge from '@mui/material/Badge';
-// import Menu from '@mui/material/Menu';
-// import MenuItem from '@mui/material/MenuItem';
-// import InputBase from '@mui/material/InputBase';
-// import CircularProgress from '@mui/material/CircularProgress';
-// import { styled, alpha } from '@mui/material/styles';
-
-// // MUI Icons
-// import MenuIcon from '@mui/icons-material/Menu';
-// import NotificationsIcon from '@mui/icons-material/Notifications';
-// import LogoutIcon from '@mui/icons-material/Logout';
-// import AccountCircle from '@mui/icons-material/AccountCircle';
-// import SearchIcon from '@mui/icons-material/Search';
-
-// const Search = styled('div')(({ theme }) => ({
-//   position: 'relative',
-//   borderRadius: theme.shape.borderRadius,
-//   backgroundColor: alpha(theme.palette.common.white, 0.15),
-//   '&:hover': {
-//     backgroundColor: alpha(theme.palette.common.white, 0.25),
-//   },
-//   marginLeft: theme.spacing(3),
-//   marginRight: theme.spacing(3),
-//   width: '100%',
-//   [theme.breakpoints.up('sm')]: {
-//     marginLeft: theme.spacing(6),
-//     marginRight: theme.spacing(6),
-//     width: 'auto',
-//   },
-// }));
-
-// const SearchIconWrapper = styled('div')(({ theme }) => ({
-//   padding: theme.spacing(0, 2),
-//   height: '100%',
-//   position: 'absolute',
-//   pointerEvents: 'none',
-//   display: 'flex',
-//   alignItems: 'center',
-//   justifyContent: 'center',
-// }));
-
-// const StyledInputBase = styled(InputBase)(({ theme }) => ({
-//   color: 'inherit',
-//   width: '100%',
-//   '& .MuiInputBase-input': {
-//     padding: theme.spacing(1.2, 1, 1.2, 0),
-//     // vertical padding + font size from searchIcon
-//     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-//     paddingRight: theme.spacing(4),
-//     transition: theme.transitions.create('width'),
-//     width: '100%',
-//     [theme.breakpoints.up('md')]: {
-//       width: '30ch',
-//     },
-//   },
-// }));
-
-// const Header = ({
-//   OpenSidebar,
-//   searchQuery,
-//   setSearchQuery,
-//   handleSearch,
-//   searchResults,
-//   setSearchResults,
-//   handleSelectLabour,
-//   showResults,
-// }) => {
-//   const navigate = useNavigate();
-//   const { user } = useUser();
-
-//   // State for user menu
-//   const [anchorEl, setAnchorEl] = useState(null);
-//   const isMenuOpen = Boolean(anchorEl);
-
-//   // State for loading indicator in search
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [debounceTimer, setDebounceTimer] = useState(null);
-
-//   // Handlers for user menu
-//   const handleProfileMenuOpen = (event) => {
-//     setAnchorEl(event.currentTarget);
-//   };
-
-//   const handleMenuClose = () => {
-//     setAnchorEl(null);
-//   };
-
-//   // Handler for logout
-//   const handleLogout = () => {
-//     localStorage.removeItem('token'); // Clear token from localStorage
-//     navigate('/'); // Redirect to home or login page
-//   };
-
-//   // Auto-search with debouncing
-//   useEffect(() => {
-//     if (typeof searchQuery !== 'string' || searchQuery.trim() === '') {
-//       // setSearchResults([]);
-//       return;
-//     }
-
-//     setIsLoading(true);
-
-//     if (debounceTimer) {
-//       clearTimeout(debounceTimer);
-//     }
-
-//     const timer = setTimeout(() => {
-//       handleSearch(searchQuery)
-//         .then((results) => {
-//           setSearchResults(results);
-//         })
-//         .catch((error) => {
-//           console.error('Search error:', error);
-//           setSearchResults([]);
-//         })
-//         .finally(() => setIsLoading(false));
-//     }, 500); // 500ms debounce
-
-//     setDebounceTimer(timer);
-
-//     // Cleanup on unmount or when searchQuery changes
-//     return () => clearTimeout(timer);
-//   }, [searchQuery, handleSearch, setSearchResults, debounceTimer]);
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-//     if (debounceTimer) {
-//       clearTimeout(debounceTimer);
-//     }
-//     setIsLoading(true);
-//     handleSearch(searchQuery)
-//       .then((results) => {
-//         setSearchResults(results);
-//       })
-//       .catch((error) => {
-//         console.error('Search error:', error);
-//         setSearchResults([]);
-//       })
-//       .finally(() => setIsLoading(false));
-//   };
-
-//   // Menu ID
-//   const menuId = 'primary-search-account-menu';
-
-//   // Render Menu
-//   const renderMenu = (
-//     <Menu
-//       anchorEl={anchorEl}
-//       anchorOrigin={{
-//         vertical: 'top',
-//         horizontal: 'right',
-//       }}
-//       id={menuId}
-//       keepMounted
-//       transformOrigin={{
-//         vertical: 'top',
-//         horizontal: 'right',
-//       }}
-//       open={isMenuOpen}
-//       onClose={handleMenuClose}
-//     >
-//       {/* You can add more menu items here */}
-//       <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-//       <MenuItem onClick={handleLogout}>
-//         <LogoutIcon fontSize="small" style={{ marginRight: 8 }} />
-//         Logout
-//       </MenuItem>
-//     </Menu>
-//   );
-
-//   return (
-//     <Box sx={{ flexGrow: 1, position: 'relative' }}>
-//       <AppBar position="static">
-//         <Toolbar>
-//           {/* Left Side: Menu Icon and Optional Logo */}
-//           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-//             <IconButton
-//               size="large"
-//               edge="start"
-//               color="inherit"
-//               aria-label="open sidebar"
-//               onClick={OpenSidebar}
-//               sx={{ mr: 2 }}
-//             >
-//               <MenuIcon />
-//             </IconButton>
-//             {/* Optional Logo */}
-//             {/* <Box component="img" src={VJLogo} alt="Logo" sx={{ height: 40 }} /> */}
-//             <Typography
-//               variant="h6"
-//               noWrap
-//               component="div"
-//               sx={{ display: { xs: 'none', sm: 'block' } }}
-//             >
-//               VJ App
-//             </Typography>
-//           </Box>
-
-//           {/* Search Bar */}
-//           <Box sx={{ flexGrow: 1 }}>
-//             <form onSubmit={handleSubmit}>
-//               <Search>
-//                 <SearchIconWrapper>
-//                   <SearchIcon />
-//                 </SearchIconWrapper>
-//                 <StyledInputBase
-//                   placeholder="Search by Name, Labour ID, Department, Pay Structure, or Added By"
-//                   inputProps={{ 'aria-label': 'search' }}
-//                   value={searchQuery}
-//                   onChange={(e) => {
-//                     setSearchQuery(e.target.value);
-//                     if (e.target.value.trim() === '') {
-//                       setSearchResults([]);
-//                     }
-//                   }}
-//                 />
-//                 {isLoading && (
-//                   <CircularProgress
-//                     size={24}
-//                     sx={{
-//                       position: 'absolute',
-//                       right: (theme) => theme.spacing(1),
-//                       top: '50%',
-//                       transform: 'translateY(-50%)',
-//                       color: 'inherit',
-//                     }}
-//                   />
-//                 )}
-//               </Search>
-//             </form>
-//           </Box>
-
-//           {/* Right Side: Notifications, Logout, User Icon, and Username */}
-//           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-//             {/* Notifications */}
-//             <IconButton size="large" aria-label="show new notifications" color="inherit">
-//               <Badge badgeContent={4} color="error">
-//                 <NotificationsIcon />
-//               </Badge>
-//             </IconButton>
-
-//             {/* Logout */}
-//             <Tooltip title="Logout" arrow>
-//               <IconButton
-//                 size="large"
-//                 color="inherit"
-//                 onClick={handleLogout}
-//                 sx={{ ml: 1 }}
-//               >
-//                 <LogoutIcon />
-//               </IconButton>
-//             </Tooltip>
-
-//             {/* User Account */}
-//             <Tooltip title="Account settings" arrow>
-//               <IconButton
-//                 size="large"
-//                 edge="end"
-//                 aria-label="account of current user"
-//                 aria-controls={menuId}
-//                 aria-haspopup="true"
-//                 onClick={handleProfileMenuOpen}
-//                 color="inherit"
-//                 sx={{ ml: 1 }}
-//               >
-//                 <AccountCircle />
-//               </IconButton>
-//             </Tooltip>
-
-//             {/* Username */}
-//             <Typography variant="body1" sx={{ ml: 2, display: { xs: 'none', sm: 'block' } }}>
-//               {user ? user.name : 'Guest'}
-//             </Typography>
-//           </Box>
-//         </Toolbar>
-//       </AppBar>
-//       {renderMenu}
-
-//       {/* Search Results Dropdown */}
-//       {showResults && searchResults.length > 0 && (
-//         <Box
-//           sx={{
-//             position: 'absolute',
-//             top: '64px', // Height of AppBar
-//             left: '50%',
-//             transform: 'translateX(-50%)',
-//             width: { xs: '90%', sm: '80%', md: '60%', lg: '50%' },
-//             bgcolor: 'background.paper',
-//             boxShadow: 3,
-//             borderRadius: 1,
-//             zIndex: 10,
-//             maxHeight: '400px',
-//             overflowY: 'auto',
-//           }}
-//         >
-//           <Box sx={{ p: 2 }}>
-//             <Typography variant="h6" gutterBottom>
-//               Search Results
-//             </Typography>
-//             <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-//               {searchResults.map((result) => (
-//                 <Box
-//                   key={result.id}
-//                   sx={{
-//                     display: 'flex',
-//                     justifyContent: 'space-between',
-//                     alignItems: 'center',
-//                     p: 1,
-//                     borderBottom: '1px solid #e0e0e0',
-//                     '&:hover': {
-//                       backgroundColor: '#f5f5f5',
-//                       cursor: 'pointer',
-//                     },
-//                   }}
-//                   onClick={() => handleSelectLabour(result)}
-//                 >
-//                   <Box>
-//                     <Typography variant="subtitle1">
-//                       {result.LabourID} - {result.name}
-//                     </Typography>
-//                     <Typography variant="body2" color="text.secondary">
-//                       Company: {result.companyName} | Department: {result.departmentName}
-//                     </Typography>
-//                     <Typography variant="body2" color="text.secondary">
-//                       Pay Structure: {result.PayStructure} | Added By: {result.payAddedBy}
-//                     </Typography>
-//                   </Box>
-//                   {/* Optional: Add an icon or button if needed */}
-//                 </Box>
-//               ))}
-//             </Box>
-//           </Box>
-//         </Box>
-//       )}
-
-//       {/* No Results Found */}
-//       {showResults && searchResults.length === 0 && !isLoading && (
-//         <Box
-//           sx={{
-//             position: 'absolute',
-//             top: '64px',
-//             left: '50%',
-//             transform: 'translateX(-50%)',
-//             width: { xs: '90%', sm: '80%', md: '60%', lg: '50%' },
-//             bgcolor: 'background.paper',
-//             boxShadow: 3,
-//             borderRadius: 1,
-//             zIndex: 10,
-//             p: 2,
-//             textAlign: 'center',
-//           }}
-//         >
-//           <Typography variant="body1" color="text.secondary">
-//             No results found.
-//           </Typography>
-//         </Box>
-//       )}
-//     </Box>
-//   );
-// };
-
-// // Define PropTypes
-// Header.propTypes = {
-//   OpenSidebar: PropTypes.func.isRequired,
-//   searchQuery: PropTypes.string.isRequired,
-//   setSearchQuery: PropTypes.func.isRequired,
-//   handleSearch: PropTypes.func.isRequired,
-//   searchResults: PropTypes.array.isRequired,
-//   setSearchResults: PropTypes.func.isRequired,
-//   handleSelectLabour: PropTypes.func.isRequired,
-//   showResults: PropTypes.bool.isRequired,
-// };
-
-// // Define Default Props
-// Header.defaultProps = {
-//   searchResults: [],
-// };
-
-// export default Header;
+        <div className='header-left'></div>
+        <div
+          className='header-right headericon'
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {/* Badge wrapped around bell icon */}
+            <Badge
+              badgeContent={unreadCount}
+              color='error'
+              overlap='circular'
+              invisible={unreadCount === 0}
+            >
+              <BsFillBellFill
+                className='icon'
+                style={{ margin: '0 10px', cursor: 'pointer' }}
+                aria-describedby={id}
+                onClick={handleBellClick}
+              />
+            </Badge>
+            <Tooltip title='Logout' arrow>
+              <GrLogout
+                className='icon'
+                onClick={handleLogout}
+                style={{ margin: '0 10px', cursor: 'pointer' }}
+              />
+            </Tooltip>
+            <BsPersonCircle className='icon' style={{ margin: '0 12px', cursor: 'pointer' }} />
+          </div>
+          <span style={spanStyle}>{user ? user.name : 'Guest'}</span>
+        </div>
+        <Popover
+          id={id}
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handlePopoverClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          PaperProps={{
+            elevation: 4,
+            style: {
+              width: '350px',
+              maxHeight: '450px',
+              overflowY: 'auto',
+              borderRadius: '12px',
+            },
+          }}
+        >
+          <Box
+            sx={{
+              p: 2,
+              backgroundColor: '#f8f9fa',
+              borderBottom: '1px solid #eaeaea',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Typography variant='h6' sx={{ fontWeight: 600, color: '#333' }}>Notifications</Typography>
+            {unreadCount > 0 && (
+              <Badge badgeContent={unreadCount} color='error'>
+                <Typography variant='body2' sx={{ color: '#666' }}>New</Typography>
+              </Badge>
+            )}
+          </Box>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ borderBottom: 1, borderColor: 'divider' }}
+          >
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="body2">Site Transfer</Typography>
+                  {siteTransferNotifications.filter(n => !n.isRead).length > 0 && (
+                    <Badge
+                      badgeContent={siteTransferNotifications.filter(n => !n.isRead).length}
+                      color="error"
+                      sx={{ ml: 1 }}
+                    />
+                  )}
+                </Box>
+              }
+            />
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="body2">Attendance</Typography>
+                  {attendanceNotifications.filter(n => !n.isRead).length > 0 && (
+                    <Badge
+                      badgeContent={attendanceNotifications.filter(n => !n.isRead).length}
+                      color="error"
+                      sx={{ ml: 1 }}
+                    />
+                  )}
+                </Box>
+              }
+            />
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="body2">Variable Pay</Typography>
+                  {alertNotifications.filter(n => !n.isRead).length > 0 && (
+                    <Badge
+                      badgeContent={alertNotifications.filter(n => !n.isRead).length}
+                      color="error"
+                      sx={{ ml: 1 }}
+                    />
+                  )}
+                </Box>
+              }
+            />
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="body2">Wages</Typography>
+                  {updateNotifications.filter(n => !n.isRead).length > 0 && (
+                    <Badge
+                      badgeContent={updateNotifications.filter(n => !n.isRead).length}
+                      color="error"
+                      sx={{ ml: 1 }}
+                    />
+                  )}
+                </Box>
+              }
+            />
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="body2">Other</Typography>
+                  {otherNotifications.filter(n => !n.isRead).length > 0 && (
+                    <Badge
+                      badgeContent={otherNotifications.filter(n => !n.isRead).length}
+                      color="error"
+                      sx={{ ml: 1 }}
+                    />
+                  )}
+                </Box>
+              }
+            />
+          </Tabs>
+          <Box sx={{ mt: 1 }}>
+            {tabValue === 0 && renderNotificationList(
+              siteTransferNotifications,
+              "No site transfer notifications"
+            )}
+            {tabValue === 1 && renderNotificationList(
+              attendanceNotifications,
+              "No attendance approval notifications"
+            )}
+            {tabValue === 2 && renderNotificationList(
+              alertNotifications,
+              "No variable pay notifications"
+            )}
+            {tabValue === 3 && renderNotificationList(
+              updateNotifications,
+              "No wages approval notifications"
+            )}
+            {tabValue === 4 && renderNotificationList(
+              otherNotifications,
+              "No other notifications"
+            )}
+          </Box>
+          <Box sx={{ p: 1.5, textAlign: 'center', borderTop: '1px solid #eaeaea' }}>
+            <Button
+              size='small'
+              sx={{
+                textTransform: 'none',
+                fontWeight: 500,
+                color: '#1976d2',
+              }}
+              onClick={() => navigate('/notifications')}
+            >
+              View All Notifications
+            </Button>
+          </Box>
+        </Popover>
+      </header>
+    );
+  }
+  
+  export default Header;
+  

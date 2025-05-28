@@ -13,7 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 
-const ExportSiteTransfer = ({departments, projectNames}) => {
+const ExportSiteTransfer = ({ departments, projectNames }) => {
     const theme = useTheme();
     const [open, setOpen] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
@@ -46,15 +46,15 @@ const ExportSiteTransfer = ({departments, projectNames}) => {
 
     useEffect(() => {
         if (projectNames && projectNames.length > 0) {
-          const units = projectNames.map((p) => ({
-            BusinessUnit: p.Business_Unit,
-            ProjectID: p.Id,
-          }));
-          setBusinessUnits(units);
+            const units = projectNames.map((p) => ({
+                BusinessUnit: p.Business_Unit,
+                ProjectID: p.Id,
+            }));
+            setBusinessUnits(units);
         }
-    //   console.log('Unit for bu',projectNames)
+        //   console.log('Unit for bu',projectNames)
 
-      }, [projectNames]);
+    }, [projectNames]);
 
 
     const handleBusinessUnitsChange = async (event) => {
@@ -73,7 +73,7 @@ const ExportSiteTransfer = ({departments, projectNames}) => {
             return;
         }
         setSelectedBusinessUnit(selectedValues);
-    
+
         // If only one business unit is selected, fetch its labours.
         if (selectedValues.length === 1) {
             const selectedProject = businessUnits.find(
@@ -119,65 +119,65 @@ const ExportSiteTransfer = ({departments, projectNames}) => {
     //     }
     // };
 
-    
-  const handleExport = async () => {
-    if (!month) {
-      toast.error('Please select a Month.');
-      return;
-    }
-    if (!payStructure) {
-      toast.error('Please select a Pay Structure.');
-      return;
-    }
-    if (selectedBusinessUnit.length === 0) {
-      toast.error('Please select at least one Business Unit.');
-      return;
-    }
 
-    // Map selected business unit names to their corresponding project IDs.
-    // (Assuming each business unit object has BusinessUnit and ProjectID fields.)
-    const selectedProjectIds = selectedBusinessUnit
-      .map((bu) => {
-        const project = businessUnits.find((unit) => unit.BusinessUnit === bu);
-        return project ? project.ProjectID : null;
-      })
-      .filter(Boolean); // Remove any null values
+    const handleExport = async () => {
+        if (!month) {
+            toast.error('Please select a Month.');
+            return;
+        }
+        if (!payStructure) {
+            toast.error('Please select a Pay Structure.');
+            return;
+        }
+        if (selectedBusinessUnit.length === 0) {
+            toast.error('Please select at least one Business Unit.');
+            return;
+        }
 
-    console.log("Exporting for project IDs:", selectedProjectIds);
+        // Map selected business unit names to their corresponding project IDs.
+        // (Assuming each business unit object has BusinessUnit and ProjectID fields.)
+        const selectedProjectIds = selectedBusinessUnit
+            .map((bu) => {
+                const project = businessUnits.find((unit) => unit.BusinessUnit === bu);
+                return project ? project.ProjectID : null;
+            })
+            .filter(Boolean); // Remove any null values
 
-    try {
-      const response = await axios.get(`${API_BASE_URL}/insentive/exportWagesExcel`, {
-        // Send projectName as a comma-separated list of project IDs.
-        params: { projectName: selectedProjectIds.join(','), month, payStructure },
-        responseType: 'blob',
-      });
-console.log('response for export',response.data)
-      const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
+        console.log("Exporting for project IDs:", selectedProjectIds);
 
-    //   const fileName = selectedProjectIds.length === 0 || selectedProjectIds.includes("all")
-    //     ? `Approved_Labours_${month}.xlsx`
-    //     : `Wages_${selectedProjectIds.join('_')}_${month}.xlsx`;
-    const fileName = `WagesReport_Export_${month}.xlsx`;
+        try {
+            const response = await axios.get(`${API_BASE_URL}/insentive/exportWagesExcel`, {
+                // Send projectName as a comma-separated list of project IDs.
+                params: { projectName: selectedProjectIds.join(','), month, payStructure },
+                responseType: 'blob',
+            });
+            console.log('response for export', response.data)
+            const blob = new Blob([response.data], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            });
 
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
+            //   const fileName = selectedProjectIds.length === 0 || selectedProjectIds.includes("all")
+            //     ? `Approved_Labours_${month}.xlsx`
+            //     : `Wages_${selectedProjectIds.join('_')}_${month}.xlsx`;
+            const fileName = `WagesReport_Export_${month}.xlsx`;
 
-      toast.success('Wages exported successfully!');
-    } catch (error) {
-      console.error('Error exporting data:', error);
-      if (error.response && error.response.data && error.response.data.message) {
-        toast.error(`Export Error: ${error.response.data.message}`);
-      } else {
-        toast.error('Error exporting data. Please try again later.');
-      }
-    }
-  };
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+
+            toast.success('Wages exported successfully!');
+        } catch (error) {
+            console.error('Error exporting data:', error);
+            if (error.response && error.response.data && error.response.data.message) {
+                toast.error(`Export Error: ${error.response.data.message}`);
+            } else {
+                toast.error('Error exporting data. Please try again later.');
+            }
+        }
+    };
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
@@ -269,33 +269,33 @@ console.log('response for export',response.data)
                                 ))}
                             </Select> */}
                             <Select
-  multiple
-  value={selectedBusinessUnit}
-  onChange={handleBusinessUnitsChange}
-  fullWidth
-  variant="outlined"
-  displayEmpty
-  renderValue={(selected) => {
-    if (selected.length === 0) {
-      return "Select Business Unit(s)";
-    }
-    return selected.join(', ');
-  }}
-  sx={{
-    borderRadius: '8px',
-    paddingTop: '4px',
-    paddingBottom: '2px',
-  }}
->
-  <MenuItem value="All">
-    <em>Select All</em>
-  </MenuItem>
-  {businessUnits.map((unit) => (
-    <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
-      {unit.BusinessUnit}
-    </MenuItem>
-  ))}
-</Select>
+                                multiple
+                                value={selectedBusinessUnit}
+                                onChange={handleBusinessUnitsChange}
+                                fullWidth
+                                variant="outlined"
+                                displayEmpty
+                                renderValue={(selected) => {
+                                    if (selected.length === 0) {
+                                        return "Select Business Unit(s)";
+                                    }
+                                    return selected.join(', ');
+                                }}
+                                sx={{
+                                    borderRadius: '8px',
+                                    paddingTop: '4px',
+                                    paddingBottom: '2px',
+                                }}
+                            >
+                                <MenuItem value="All">
+                                    <em>Select All</em>
+                                </MenuItem>
+                                {businessUnits.map((unit) => (
+                                    <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
+                                        {unit.BusinessUnit}
+                                    </MenuItem>
+                                ))}
+                            </Select>
 
                         </Box>
 
@@ -331,7 +331,7 @@ console.log('response for export',response.data)
                                 ))}
                             </Select>
                         </Box>
-                     
+
                         {/* Buttons */}
                         <Grid container spacing={2} justifyContent="flex-end">
                             <Grid item>

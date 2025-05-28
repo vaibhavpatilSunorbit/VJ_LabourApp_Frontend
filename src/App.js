@@ -32,6 +32,7 @@ import ViewMonthlyPayroll from './components/AdminSalary/ViewMonthlyPayroll/View
 import { useUser } from './UserContext/UserContext';
 import LabourIdCard from './PaySlip/LabourIdCard';
 import CompanyTransferApproval from './components/AdminApproval/CompanyTransferApproval/CompanyTransferApproval';
+import NotificationPage from './pages/ NotificationPage.jsx';
 import { initGA, logPageView } from './utils/analytics.js';
 
 const GAListener = () => {
@@ -170,6 +171,7 @@ function App() {
 
                     <Route path="/Payslip" element={<PaySlipPage onFormSubmit={handleFormSubmit} />} />
                     <Route path="/LabourIdCard" element={<LabourIdCard />} />
+                    <Route path='/notifications' element={<NotificationPage/>}/>
                   </Routes>
                 </>
               }
