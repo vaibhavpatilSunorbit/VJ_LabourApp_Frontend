@@ -26,6 +26,9 @@ import { IconButton } from '@mui/material';
 import { FaRegTimesCircle } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
 
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+
 
 const departmentWorkingHoursMapping = {
   'CIVIL': 'FLEXI SHIFT - 8 HRS',
@@ -133,6 +136,20 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     expiryDate: ''
   });
 
+  const [cropImage, setCropImage] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [currentField, setCurrentField] = useState('');
+
+
+    const [stream, setStream] = useState(null);
+  const [photoSrc, setPhotoSrc] = useState('');
+  const [facingMode, setFacingMode] = useState('user');
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+    const [multipleFiles, setMultipleFiles] = useState([]); // for induction docs multiple files queue
+  const [processingMultipleIndex, setProcessingMultipleIndex] = useState(0);
+
   const [formStatus, setFormStatus] = useState({
     kyc: false,
     personal: false,
@@ -186,44 +203,367 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     navigate(route);
   };
 
+ // In your component:
+  const [crop, setCrop] = useState({
+    unit: '%',
+    width: 50,
+    height: 50,
+    x: 25,
+    y: 25
+  });
+  const [tempFile, setTempFile] = useState(null)
+  const [rotation, setRotation] = useState(0);
+  const imgRef = useRef(null);
+
+  // const handleFileChange = async (event) => {
+  //   const { name, files } = event.target;
+  //   const file = files[0];
+  //   if (!file) return;
+
+  //   setCurrentField(name);
+  //   setTempFile(file);
+
+  //   const imageUrl = URL.createObjectURL(file);
+  //   setCropImage(imageUrl);
+  //   setShowCropper(true)
 
 
-  const handleFileChange = async (event) => {
+  //   const fileStateSetter = {
+  //     uploadAadhaarFront: setuploadAadhaarFront,
+  //     uploadAadhaarBack: setuploadAadhaarBack,
+  //     photoSrc: setPhotoSrc,
+  //     uploadIdProof: setuploadIdProof,
+  //     uploadInductionDoc: setuploadInductionDoc,
+  //   };
+
+  //   const setStateFunction = fileStateSetter[name];
+  //   if (setStateFunction) {
+  //     setStateFunction(file.name);
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       [name]: file,
+  //     }));
+  //   } else {
+  //     console.error(`Unknown file input name: ${name}`);
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   try {
+  //     const ocrData = await uploadAadhaarImageToSurepass(file);
+
+
+  //   } catch (error) {
+  //     console.error("Error uploading file:", error);
+  //   }
+  //   setLoading(false);
+  // };
+
+    const handleFileChange = (event) => {
     const { name, files } = event.target;
     const file = files[0];
-
     if (!file) return;
 
-    const fileStateSetter = {
-      uploadAadhaarFront: setuploadAadhaarFront,
-      uploadAadhaarBack: setuploadAadhaarBack,
-      photoSrc: setPhotoSrc,
-      uploadIdProof: setuploadIdProof,
-      uploadInductionDoc: setuploadInductionDoc,
+    setCurrentField(name);
+    setTempFile(file);
+
+    const imageUrl = URL.createObjectURL(file);
+    setCropImage(imageUrl);
+    setShowCropper(true);
+
+    // Reset crop and rotation
+    setCrop({
+      unit: '%',
+      width: 50,
+      height: 50,
+      x: 25,
+      y: 25,
+    });
+    setRotation(0);
+      openCropperWithFile(file, name);
+  };
+
+    // Handle multiple files for induction docs: queue and crop sequentially
+  // const handleMultipleFilesChange = (event) => {
+  //   const { name, files } = event.target;
+  //   if (!files || files.length === 0) return;
+  //   const filesArr = Array.from(files);
+  //   setMultipleFiles(filesArr);
+  //   setProcessingMultipleIndex(0);
+  //   openCropperWithFile(filesArr[0], name);
+  // };
+
+  const handleFileChangesInduction = (event) => {
+  const { name, files } = event.target;
+  const file = files[0];
+  if (!file) return;
+
+  setCurrentField(name);          // e.g., 'uploadInductionDoc'
+  setTempFile(file);
+  const imageUrl = URL.createObjectURL(file);
+  setCropImage(imageUrl);
+  setShowCropper(true);
+
+  // Reset crop and rotation
+  setCrop({
+    unit: '%',
+    width: 50,
+    height: 50,
+    x: 25,
+    y: 25,
+  });
+  setRotation(0);
+};
+
+
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    if (cropImage) URL.revokeObjectURL(cropImage);
+    setCropImage(null);
+    setTempFile(null);
+    //  setMultipleFiles([]);
+    // setProcessingMultipleIndex(0);
+  };
+
+  // This function creates a cropped and rotated image blob from the canvas and triggers upload
+  const handleCropApply = () => {
+    if (!crop || !imgRef.current || !tempFile) return;
+
+    const image = imgRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size based on rotation
+    const radians = (rotation * Math.PI) / 180;
+    let rotatedWidth, rotatedHeight;
+
+    // Calculate bounding box for rotated image
+    const sin = Math.abs(Math.sin(radians));
+    const cos = Math.abs(Math.cos(radians));
+    rotatedWidth = image.naturalWidth * cos + image.naturalHeight * sin;
+    rotatedHeight = image.naturalWidth * sin + image.naturalHeight * cos;
+
+    canvas.width = rotatedWidth;
+    canvas.height = rotatedHeight;
+
+    // Clear canvas and fill white background
+    ctx.clearRect(0, 0, rotatedWidth, rotatedHeight);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, rotatedWidth, rotatedHeight);
+
+    // Move to center to rotate
+    ctx.translate(rotatedWidth / 2, rotatedHeight / 2);
+    ctx.rotate(radians);
+    ctx.drawImage(
+      image,
+      -image.naturalWidth / 2,
+      -image.naturalHeight / 2,
+      image.naturalWidth,
+      image.naturalHeight
+    );
+
+    // Reset transform for cropping
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // Calculate crop coordinates in pixels relative to the rotated canvas
+    // Convert crop percentages to pixels relative to image displayed size
+    // To do this accurately, we need to scale crop coordinates from imgRef dimensions to natural dimensions, then adapt for rotation.
+    // Since canvas has rotated image, we can use this formula:
+
+    // First calculate scale between displayed image and natural size
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    // Crop coordinates on the rotated canvas:
+    // We need to transform crop.x/y/width/height (percent of displayed image) to pixels on rotated canvas.
+
+    // To do so, first get crop rectangle in natural image coordinates:
+    const cropXInImage = (crop.x * image.naturalWidth) / 100;
+    const cropYInImage = (crop.y * image.naturalHeight) / 100;
+    const cropWidthInImage = (crop.width * image.naturalWidth) / 100;
+    const cropHeightInImage = (crop.height * image.naturalHeight) / 100;
+
+    // Now, we calculate the position on the rotated canvas for the crop rectangle.
+    // Because the image is drawn rotated and centered on the canvas, we need to rotate these crop coordinates accordingly.
+
+    // Define helper function to rotate a point around center:
+    const rotatePoint = (x, y, angle, cx, cy) => {
+      const dx = x - cx;
+      const dy = y - cy;
+      const rcos = Math.cos(angle);
+      const rsin = Math.sin(angle);
+      const nx = cx + dx * rcos - dy * rsin;
+      const ny = cy + dx * rsin + dy * rcos;
+      return { x: nx, y: ny };
     };
 
-    const setStateFunction = fileStateSetter[name];
+    // The image is centered at (rotatedWidth/2, rotatedHeight/2)
+    // Crop rect corners:
+    const topLeft = rotatePoint(
+      cropXInImage,
+      cropYInImage,
+      radians,
+      image.naturalWidth / 2,
+      image.naturalHeight / 2
+    );
+    const bottomRight = rotatePoint(
+      cropXInImage + cropWidthInImage,
+      cropYInImage + cropHeightInImage,
+      radians,
+      image.naturalWidth / 2,
+      image.naturalHeight / 2
+    );
+
+    // Calculate crop rect in rotated canvas coordinates
+    const cropXOnCanvas = topLeft.x + rotatedWidth / 2 - image.naturalWidth / 2;
+    const cropYOnCanvas = topLeft.y + rotatedHeight / 2 - image.naturalHeight / 2;
+    const cropWidthOnCanvas = bottomRight.x - topLeft.x;
+    const cropHeightOnCanvas = bottomRight.y - topLeft.y;
+
+    // Because rotation can make cropWidth/Height negative, normalize:
+    const cropXFinal = Math.min(cropXOnCanvas, cropXOnCanvas + cropWidthOnCanvas);
+    const cropYFinal = Math.min(cropYOnCanvas, cropYOnCanvas + cropHeightOnCanvas);
+    const cropWidthFinal = Math.abs(cropWidthOnCanvas);
+    const cropHeightFinal = Math.abs(cropHeightOnCanvas);
+
+    // Create canvas for cropped image
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = cropWidthFinal;
+    croppedCanvas.height = cropHeightFinal;
+    const croppedCtx = croppedCanvas.getContext('2d');
+
+    // Draw cropped area from rotated canvas to cropped canvas
+    croppedCtx.drawImage(
+      canvas,
+      cropXFinal,
+      cropYFinal,
+      cropWidthFinal,
+      cropHeightFinal,
+      0,
+      0,
+      cropWidthFinal,
+      cropHeightFinal
+    );
+
+    croppedCanvas.toBlob(
+      async (blob) => {
+        if (!blob) {
+          console.error('Failed to create cropped image blob');
+          return;
+        }
+
+          const croppedFile = new File([blob], tempFile.name, { type: "image/jpeg" });
+
+        // Update UI and formData accordingly per field
+        if (currentField === "uploadAadhaarBack") {
+          setuploadAadhaarBack(croppedFile.name);
+          // Upload or store croppedFile in form data here as needed
+          await uploadAadhaarImageToSurepass(croppedFile);
+        } else if (currentField === "uploadIdProof") {
+          setuploadIdProof((prev) => [...prev, croppedFile.name]);
+          // await uploadAadhaarImageToSurepass(croppedFile);
+        } else if (currentField === "uploadInductionDoc") {
+          // For multiple files, accumulate names and files
+          setuploadInductionDoc((prev) => [...prev, croppedFile.name]);
+
+          // You may want to keep actual files separately for formData or upload
+          // Example: uploading one by one
+          // await uploadAadhaarImageToSurepass(croppedFile);
+
+          // Process next file in queue if any
+          // if (processingMultipleIndex + 1 < multipleFiles.length) {
+          //   const nextIndex = processingMultipleIndex + 1;
+          //   setProcessingMultipleIndex(nextIndex);
+          //   openCropperWithFile(multipleFiles[nextIndex], currentField);
+          //   return; // skip closing cropper to next file
+          // }
+        }
+
+        // Cleanup and close cropper modal
+        setShowCropper(false);
+        if (cropImage) URL.revokeObjectURL(cropImage);
+        setCropImage(null);
+        setTempFile(null);
+        // setMultipleFiles([]);
+        // setProcessingMultipleIndex(0);
+      },
+      //   const croppedFile = new File([blob], tempFile.name, { type: 'image/jpeg' });
+
+      //   // Update UI states & upload cropped file
+      //   const fileStateSetter = {
+      //     uploadAadhaarFront: setuploadAadhaarFront,
+      //     uploadAadhaarBack: setuploadAadhaarBack,
+      //     // Add other fields if needed
+      //   };
+      //   const setStateFunction = fileStateSetter[currentField];
+      //   if (setStateFunction) {
+      //     setStateFunction(croppedFile.name);
+      //     setFormData((prev) => ({ ...prev, [currentField]: croppedFile }));
+      //   }
+
+      //   setShowCropper(false);
+      //   if (cropImage) URL.revokeObjectURL(cropImage);
+      //   setCropImage(null);
+      //   setTempFile(null);
+
+      //   setLoading(true);
+      //   try {
+      //     await uploadAadhaarImageToSurepass(croppedFile);
+      //   } catch (error) {
+      //     console.error('Error uploading cropped file:', error);
+      //   }
+      //   setLoading(false);
+      // },
+      'image/jpeg',
+      0.95
+    );
+  };
+
+  const handleCropComplete = async (croppedFile) => {
+    // Get the appropriate state setter function
+    const fileStateSetter = {
+      uploadAadhaarFront: setuploadAadhaarFront,
+      // Add other fields as needed
+    };
+
+    const setStateFunction = fileStateSetter[currentField];
+
     if (setStateFunction) {
-      setStateFunction(file.name);
+      // Update the display name
+      setStateFunction(croppedFile.name);
+
+      // Update form data with the cropped file
       setFormData((prevFormData) => ({
         ...prevFormData,
-        [name]: file,
+        [currentField]: croppedFile,
       }));
+
+      // Process OCR if needed
+      setLoading(true);
+      try {
+        const ocrData = await uploadAadhaarImageToSurepass(croppedFile);
+        // Handle OCR data as needed
+      } catch (error) {
+        console.error("Error uploading file:", error);
+      }
+      setLoading(false);
     } else {
-      console.error(`Unknown file input name: ${name}`);
-      return;
+      console.error(`Unknown file input name: ${currentField}`);
     }
 
-    setLoading(true);
-    try {
-      const ocrData = await uploadAadhaarImageToSurepass(file);
-
-
-    } catch (error) {
-      console.error("Error uploading file:", error);
-    }
-    setLoading(false);
+    // Clean up
+    setShowCropper(false);
+    URL.revokeObjectURL(cropImage);
+    setCropImage(null);
+    setTempFile(null);
   };
+
+  // const handleCropCancel = () => {
+  //   setShowCropper(false);
+  //   URL.revokeObjectURL(cropImage);
+  //   setCropImage(null);
+  //   setTempFile(null);
+  // };
 
   const uploadAadhaarImageToSurepass = async (file, formStatus, isApproved) => {
     const formData = new FormData();
@@ -473,7 +813,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     }
   };
 
-
+ // Common function to open cropper modal with selected file
+  const openCropperWithFile = (file, field) => {
+    setCurrentField(field);
+    setTempFile(file);
+    setCropImage(URL.createObjectURL(file));
+    setCrop({ unit: "%", width: 50, height: 50, x: 25, y: 25 });
+    setRotation(0);
+    setShowCropper(true);
+  };
 
 
   const handleAadhaarNumberChange = async (e) => {
@@ -707,11 +1055,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   };
 
   // const CameraCapture = () => {
-  const [stream, setStream] = useState(null);
-  const [photoSrc, setPhotoSrc] = useState('');
-  const [facingMode, setFacingMode] = useState('user');
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+
 
 
   const startCamera = async () => {
@@ -1180,53 +1524,77 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
 
-  const handleFileChanges = async (event) => {
-    const { name, files } = event.target;
-    const file = files[0];
+  // const handleFileChanges = async (event) => {
+  //   const { name, files } = event.target;
+  //   const file = files[0];
 
-    if (!file) return;
+  //   if (!file) return;
 
 
-    const fileStateSetter = {
+  //   const fileStateSetter = {
 
-      uploadIdProof: setuploadIdProof,
-    };
-    const setStateFunction = fileStateSetter[name];
-    if (setStateFunction) {
-      // setStateFunction(file);
-      setStateFunction(file.name);
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [name]: file,
-      }));
-    } else {
-      console.error(`Unknown file input name: ${name}`);
-      return;
-    }
-  }
+  //     uploadIdProof: setuploadIdProof,
+  //   };
+  //   const setStateFunction = fileStateSetter[name];
+  //   if (setStateFunction) {
+  //     // setStateFunction(file);
+  //     setStateFunction(file.name);
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       [name]: file,
+  //     }));
+  //   } else {
+  //     console.error(`Unknown file input name: ${name}`);
+  //     return;
+  //   }
+  // }
 
-  const handleFileChangesInduction = async (event) => {
-    const { name, files } = event.target;
-    const file = files[0];
 
-    if (!file) return;
+  const handleFileChanges = (event) => {
+  const { name, files } = event.target;
+  const file = files[0];
+  if (!file) return;
 
-    const fileStateSetter = {
+  setCurrentField(name);          // Set to 'uploadIdProof'
+  setTempFile(file);              // Save the original file
+  const imageUrl = URL.createObjectURL(file);
+  setCropImage(imageUrl);         // Show in cropper
+  setShowCropper(true);           // Open crop modal
 
-      uploadInductionDoc: setuploadInductionDoc,
-    };
-    const setStateFunction = fileStateSetter[name];
-    if (setStateFunction) {
-      setStateFunction(file.name);
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [name]: file,
-      }));
-    } else {
-      console.error(`Unknown file input name: ${name}`);
-      return;
-    }
-  }
+  // Reset crop and rotation
+  setCrop({
+    unit: '%',
+    width: 50,
+    height: 50,
+    x: 25,
+    y: 25,
+  });
+  setRotation(0);
+};
+
+
+  // const handleFileChangesInduction = async (event) => {
+  //   const { name, files } = event.target;
+  //   const file = files[0];
+
+  //   if (!file) return;
+
+  //   const fileStateSetter = {
+
+  //     uploadInductionDoc: setuploadInductionDoc,
+  //   };
+  //   const setStateFunction = fileStateSetter[name];
+  //   if (setStateFunction) {
+  //     setStateFunction(file.name);
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       [name]: file,
+  //     }));
+  //   } else {
+  //     console.error(`Unknown file input name: ${name}`);
+  //     return;
+  //   }
+  // }
 
 
 
@@ -1536,31 +1904,437 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
                         {loading && <Loading />}
-                        <div className="project-field">
+                        {/* <div className="project-field">
                           <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
                             Upload Aadhaar Front {renderRequiredAsterisk(true)}
                           </InputLabel>
-                          <div className="input-with-icon">
+                        
+
+                           <div className="input-with-icon">
                             <input
-                              type="text"
-                              value={uploadAadhaarFront}
-                              placeholder="Choose file"
-                              readOnly
-                              style={{ cursor: 'pointer', backgroundColor: '#fff', ...getInputStyle('uploadAadhaarFront') }}
-                              onClick={() => document.getElementById('uploadAadhaarFront').click()}
-                            />
-                            <input
-                              type="file"
-                              id="uploadAadhaarFront"
-                              name="uploadAadhaarFront"
-                              onChange={handleFileChange}
-                              accept="image/*"
-                              style={{ display: 'none' }}
-                            />
+                              type="file"/>
                             <DocumentScannerIcon className="input-icon" />
                           </div>
+                          {showCropper && cropImage && (
+                            <div className="cropper-modal-overlay" style={{
+                              position: 'fixed',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              zIndex: 1000
+                            }}>
+                              <div className="cropper-modal" style={{
+                                backgroundColor: 'white',
+                                padding: '20px',
+                                borderRadius: '8px',
+                                maxWidth: '90%',
+                                maxHeight: '90%',
+                                overflow: 'auto'
+                              }}>
+                                <h3>Crop & Rotate Image</h3>
 
-                        </div>
+                                <div style={{
+                                  display: 'flex',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  gap: '15px',
+                                  margin: '10px 0 20px'
+                                }}>
+                                  <button
+                                    onClick={() => setRotation(prev => (prev - 90) % 360)}
+                                    style={{
+                                      padding: '8px 12px',
+                                      backgroundColor: '#f0f0f0',
+                                      border: '1px solid #ccc',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    ↺ Rotate Left
+                                  </button>
+
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <input
+                                      type="range"
+                                      min="-180"
+                                      max="180"
+                                      value={rotation}
+                                      onChange={(e) => setRotation(parseInt(e.target.value))}
+                                      style={{ width: '150px' }}
+                                    />
+                                    <span>{rotation}°</span>
+                                  </div>
+
+                                  <button
+                                    onClick={() => setRotation(prev => (prev + 90) % 360)}
+                                    style={{
+                                      padding: '8px 12px',
+                                      backgroundColor: '#f0f0f0',
+                                      border: '1px solid #ccc',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    ↻ Rotate Right
+                                  </button>
+                                </div>
+
+                                <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+                                  <button
+                                    onClick={() => {
+                                      setRotation(0);
+                                      setCrop({
+                                        unit: '%',
+                                        width: 50,
+                                        height: 50,
+                                        x: 25,
+                                        y: 25
+                                      });
+                                    }}
+                                    style={{
+                                      padding: '5px 10px',
+                                      backgroundColor: '#f0f0f0',
+                                      border: '1px solid #ccc',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    Reset All
+                                  </button>
+                                </div>
+
+                                <div style={{
+                                  maxWidth: '600px',
+                                  margin: '0 auto',
+                                  overflow: 'hidden'
+                                }}>
+                                  <div style={{
+                                    transform: `rotate(${rotation}deg)`,
+                                    transformOrigin: 'center center',
+                                    margin: Math.abs(rotation) > 45 ? '100px auto' : '0 auto',
+                                    maxWidth: '100%',
+                                    transition: 'transform 0.3s ease'
+                                  }}>
+                                    <ReactCrop
+                                      crop={crop}
+                                      onChange={(newCrop) => setCrop(newCrop)}
+                                    >
+                                      <img
+                                        ref={imgRef}
+                                        src={cropImage}
+                                        alt="Crop preview"
+                                        style={{ maxWidth: '100%' }}
+                                        crossOrigin="anonymous"
+                                      />
+                                    </ReactCrop>
+                                  </div>
+                                </div>
+
+                                <canvas
+                                  ref={canvasRef}
+                                  style={{ display: 'none' }}
+                                />
+
+                                <div style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  marginTop: '20px'
+                                }}>
+                                  <button
+                                    onClick={handleCropCancel}
+                                    style={{
+                                      padding: '8px 16px',
+                                      backgroundColor: '#f0f0f0',
+                                      border: '1px solid #ccc',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (!crop || !imgRef.current || !tempFile) return;
+
+                                      const canvas = canvasRef.current;
+                                      const ctx = canvas.getContext('2d');
+
+                                      // Create a temporary image to handle the rotation
+                                      const tempImage = new Image();
+                                      tempImage.src = cropImage;
+                                      tempImage.crossOrigin = "anonymous";
+
+                                      tempImage.onload = () => {
+                                        // Calculate dimensions based on rotation
+                                        const maxSize = Math.max(tempImage.width, tempImage.height);
+                                        canvas.width = maxSize * 2;
+                                        canvas.height = maxSize * 2;
+
+                                        // Clear canvas and set background
+                                        ctx.fillStyle = "white";
+                                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                                        // Move to center of canvas
+                                        ctx.translate(canvas.width / 2, canvas.height / 2);
+
+                                        // Rotate canvas
+                                        ctx.rotate(rotation * Math.PI / 180);
+
+                                        // Draw image centered
+                                        ctx.drawImage(
+                                          tempImage,
+                                          -tempImage.width / 2,
+                                          -tempImage.height / 2
+                                        );
+
+                                        // Reset transformation
+                                        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+                                        // Get the scale factors
+                                        const scaleX = tempImage.naturalWidth / imgRef.current.width;
+                                        const scaleY = tempImage.naturalHeight / imgRef.current.height;
+
+                                        // Calculate the crop coordinates
+                                        const cropX = (canvas.width / 2 - tempImage.width / 2) + (crop.x * imgRef.current.width / 100);
+                                        const cropY = (canvas.height / 2 - tempImage.height / 2) + (crop.y * imgRef.current.height / 100);
+                                        const cropWidth = crop.width * imgRef.current.width / 100;
+                                        const cropHeight = crop.height * imgRef.current.height / 100;
+
+                                        // Create a new canvas for the final cropped image
+                                        const croppedCanvas = document.createElement('canvas');
+                                        croppedCanvas.width = cropWidth;
+                                        croppedCanvas.height = cropHeight;
+                                        const croppedCtx = croppedCanvas.getContext('2d');
+
+                                        // Draw the cropped portion
+                                        croppedCtx.drawImage(
+                                          canvas,
+                                          cropX, cropY, cropWidth, cropHeight,
+                                          0, 0, cropWidth, cropHeight
+                                        );
+
+                                        // Convert to blob
+                                        croppedCanvas.toBlob((blob) => {
+                                          if (!blob) return;
+                                          const croppedFile = new File([blob], tempFile.name, { type: 'image/jpeg' });
+                                          handleCropComplete(croppedFile);
+                                        }, 'image/jpeg', 0.95);
+                                      };
+                                    }}
+                                    style={{
+                                      backgroundColor: '#4285f4',
+                                      color: 'white',
+                                      border: 'none',
+                                      padding: '8px 16px',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    Apply
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div> */}
+
+                         <div className="project-field">
+        <label htmlFor="uploadAadhaarFront" style={{ color: 'black' }}>
+          Upload Aadhaar Front <span style={{ color: 'red' }}>*</span>
+        </label>
+        <div className="input-with-icon">
+          <input
+            id="uploadAadhaarFront"
+            type="file"
+            name="uploadAadhaarFront"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+          {/* Your icon component here */}
+        </div>
+        {/* {uploadAadhaarFront && (
+          <p>
+            Selected File: <strong>{uploadAadhaarFront}</strong>
+          </p>
+        )} */}
+      </div>
+
+      {showCropper && cropImage && (
+        <div
+          className="cropper-modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            className="cropper-modal"
+            style={{
+              backgroundColor: 'white',
+              padding: 20,
+              borderRadius: 8,
+              maxWidth: '90%',
+              maxHeight: '90%',
+              overflow: 'auto',
+            }}
+          >
+            <h3>Crop & Rotate Image</h3>
+
+            {/* Rotation Controls */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 15,
+                margin: '10px 0 20px',
+              }}
+            >
+              <button
+                onClick={() => setRotation((prev) => (prev - 90) % 360)}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                ↺ Rotate Left
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input
+                  type="range"
+                  min={-180}
+                  max={180}
+                  value={rotation}
+                  onChange={(e) => setRotation(parseInt(e.target.value, 10))}
+                  style={{ width: 150 }}
+                />
+                <span>{rotation}°</span>
+              </div>
+              <button
+                onClick={() => setRotation((prev) => (prev + 90) % 360)}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                ↻ Rotate Right
+              </button>
+            </div>
+
+            {/* Reset Button */}
+            <div style={{ textAlign: 'center', marginBottom: 15 }}>
+              <button
+                onClick={() => {
+                  setRotation(0);
+                  setCrop({
+                    unit: '%',
+                    width: 50,
+                    height: 50,
+                    x: 25,
+                    y: 25,
+                  });
+                }}
+                style={{
+                  padding: '5px 10px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                Reset All
+              </button>
+            </div>
+
+            {/* Cropper */}
+            <div
+              style={{
+                maxWidth: 600,
+                margin: '0 auto',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  transform: `rotate(${rotation}deg)`,
+                  transformOrigin: 'center center',
+                  maxWidth: '100%',
+                  transition: 'transform 0.3s ease',
+                }}
+              >
+                <ReactCrop crop={crop} onChange={setCrop} keepSelection>
+                  <img
+                    ref={imgRef}
+                    src={cropImage}
+                    alt="To crop"
+                    style={{ maxWidth: '100%' }}
+                    crossOrigin="anonymous"
+                  />
+                </ReactCrop>
+              </div>
+            </div>
+
+            {/* Hidden canvas */}
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+            {/* Action Buttons */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: 20,
+              }}
+            >
+              <button
+                onClick={handleCropCancel}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCropApply}
+                style={{
+                  backgroundColor: '#4285f4',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
                         <div className="project-field">
                           <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
                             Upload Aadhaar Back
@@ -1753,6 +2527,176 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                             <DocumentScannerIcon className="input-icon" />
                           </div>
                         </div>
+                        
+      {showCropper && cropImage && (
+        <div
+          className="cropper-modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            className="cropper-modal"
+            style={{
+              backgroundColor: 'white',
+              padding: 20,
+              borderRadius: 8,
+              maxWidth: '90%',
+              maxHeight: '90%',
+              overflow: 'auto',
+            }}
+          >
+            <h3>Crop & Rotate Image</h3>
+
+            {/* Rotation Controls */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 15,
+                margin: '10px 0 20px',
+              }}
+            >
+              <button
+                onClick={() => setRotation((prev) => (prev - 90) % 360)}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                ↺ Rotate Left
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input
+                  type="range"
+                  min={-180}
+                  max={180}
+                  value={rotation}
+                  onChange={(e) => setRotation(parseInt(e.target.value, 10))}
+                  style={{ width: 150 }}
+                />
+                <span>{rotation}°</span>
+              </div>
+              <button
+                onClick={() => setRotation((prev) => (prev + 90) % 360)}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                ↻ Rotate Right
+              </button>
+            </div>
+
+            {/* Reset Button */}
+            <div style={{ textAlign: 'center', marginBottom: 15 }}>
+              <button
+                onClick={() => {
+                  setRotation(0);
+                  setCrop({
+                    unit: '%',
+                    width: 50,
+                    height: 50,
+                    x: 25,
+                    y: 25,
+                  });
+                }}
+                style={{
+                  padding: '5px 10px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                Reset All
+              </button>
+            </div>
+
+            {/* Cropper */}
+            <div
+              style={{
+                maxWidth: 600,
+                margin: '0 auto',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  transform: `rotate(${rotation}deg)`,
+                  transformOrigin: 'center center',
+                  maxWidth: '100%',
+                  transition: 'transform 0.3s ease',
+                }}
+              >
+                <ReactCrop crop={crop} onChange={setCrop} keepSelection>
+                  <img
+                    ref={imgRef}
+                    src={cropImage}
+                    alt="To crop"
+                    style={{ maxWidth: '100%' }}
+                    crossOrigin="anonymous"
+                  />
+                </ReactCrop>
+              </div>
+            </div>
+
+            {/* Hidden canvas */}
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+            {/* Action Buttons */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: 20,
+              }}
+            >
+              <button
+                onClick={handleCropCancel}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCropApply}
+                style={{
+                  backgroundColor: '#4285f4',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
                       </div>
                       <div className="navigationBut">
                         <button onClick={() => handleNext('/personal')}>Next</button>
@@ -2341,6 +3285,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                               </select>
                             </div>
                           </div>
+                          {/* </> */}
                         </div>
 
 
@@ -2387,7 +3332,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
                         <div className="locations">
-                          <div className="project-field">
+                          {/* <div className="project-field">
                             <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
                               Upload Induction Document {renderRequiredAsterisk(true)}
                             </InputLabel>
@@ -2411,7 +3356,200 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                               />
                               <DocumentScannerIcon className="input-icon" />
                             </div>
+                          </div> */}
+
+
+                          {/* Induction Documents - multiple files */}
+                          <div className="project-field">
+                            <InputLabel id="induction-label" sx={{ color: "black" }}>
+                              Upload Induction Document {renderRequiredAsterisk(true)}
+                            </InputLabel>
+                            <div className="input-with-icon">
+                              <input
+                                type="text"
+                                 value={uploadInductionDoc}
+                                placeholder="Choose files"
+                                readOnly
+                                style={{ cursor: "pointer", backgroundColor: "#fff", ...getInputStyle("uploadInductionDoc") }}
+                                onClick={() => document.getElementById("uploadInductionDoc").click()}
+                              />
+                              <input
+                                type="file"
+                                id="uploadInductionDoc"
+                                name="uploadInductionDoc"
+                                onChange={handleFileChangesInduction}
+                                accept="image/*"
+                                multiple
+                                style={{ display: "none" }}
+                              />
+                              <DocumentScannerIcon className="input-icon" />
+                            </div>
                           </div>
+
+                          {/* Cropper modal */}
+                          {showCropper && cropImage && (
+                            <div
+                              className="cropper-modal-overlay"
+                              style={{
+                                position: "fixed",
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: "rgba(0,0,0,0.7)",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                zIndex: 1000,
+                              }}
+                            >
+                              <div
+                                className="cropper-modal"
+                                style={{
+                                  backgroundColor: "white",
+                                  padding: 20,
+                                  borderRadius: 8,
+                                  maxWidth: "90%",
+                                  maxHeight: "90%",
+                                  overflow: "auto",
+                                }}
+                              >
+                                <h3>Crop & Rotate Image</h3>
+
+                                {/* Rotation controls */}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    gap: 15,
+                                    margin: "10px 0 20px",
+                                  }}
+                                >
+                                  <button
+                                    onClick={() => setRotation((prev) => (prev - 90) % 360)}
+                                    style={{
+                                      padding: "8px 12px",
+                                      backgroundColor: "#f0f0f0",
+                                      border: "1px solid #ccc",
+                                      borderRadius: 4,
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    ↺ Rotate Left
+                                  </button>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                    <input
+                                      type="range"
+                                      min={-180}
+                                      max={180}
+                                      value={rotation}
+                                      onChange={(e) => setRotation(parseInt(e.target.value, 10))}
+                                      style={{ width: 150 }}
+                                    />
+                                    <span>{rotation}°</span>
+                                  </div>
+                                  <button
+                                    onClick={() => setRotation((prev) => (prev + 90) % 360)}
+                                    style={{
+                                      padding: "8px 12px",
+                                      backgroundColor: "#f0f0f0",
+                                      border: "1px solid #ccc",
+                                      borderRadius: 4,
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    ↻ Rotate Right
+                                  </button>
+                                </div>
+
+                                {/* Reset Button */}
+                                <div style={{ textAlign: "center", marginBottom: 15 }}>
+                                  <button
+                                    onClick={() => {
+                                      setRotation(0);
+                                      setCrop({ unit: "%", width: 50, height: 50, x: 25, y: 25 });
+                                    }}
+                                    style={{
+                                      padding: "5px 10px",
+                                      backgroundColor: "#f0f0f0",
+                                      border: "1px solid #ccc",
+                                      borderRadius: 4,
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    Reset All
+                                  </button>
+                                </div>
+
+                                {/* Cropper */}
+                                <div
+                                  style={{
+                                    maxWidth: 600,
+                                    margin: "0 auto",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      transform: `rotate(${rotation}deg)`,
+                                      transformOrigin: "center center",
+                                      maxWidth: "100%",
+                                      transition: "transform 0.3s ease",
+                                    }}
+                                  >
+                                    <ReactCrop crop={crop} onChange={setCrop} keepSelection>
+                                      <img
+                                        ref={imgRef}
+                                        src={cropImage}
+                                        alt="To crop"
+                                        style={{ maxWidth: "100%" }}
+                                        crossOrigin="anonymous"
+                                      />
+                                    </ReactCrop>
+                                  </div>
+                                </div>
+
+                                {/* Hidden canvas */}
+                                <canvas ref={canvasRef} style={{ display: "none" }} />
+
+                                {/* Action Buttons */}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    marginTop: 20,
+                                  }}
+                                >
+                                  <button
+                                    onClick={handleCropCancel}
+                                    style={{
+                                      padding: "8px 16px",
+                                      backgroundColor: "#f0f0f0",
+                                      border: "1px solid #ccc",
+                                      borderRadius: 4,
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={handleCropApply}
+                                    style={{
+                                      backgroundColor: "#4285f4",
+                                      color: "white",
+                                      border: "none",
+                                      padding: "8px 16px",
+                                      borderRadius: 4,
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    Apply
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
 
