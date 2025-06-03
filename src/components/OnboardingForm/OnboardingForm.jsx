@@ -46,6 +46,7 @@ const departmentWorkingHoursMapping = {
   'DEEP CLEANING': 'FLEXI SHIFT - 8 HRS',
   'HOUSEKEEPING': 'FLEXI SHIFT - 8 HRS',
   'WATERPROOFING': 'FLEXI SHIFT - 8 HRS',
+  'GYPSUM': 'FLEXI SHIFT - 8 HRS',
 };
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = [], departmentList = [] }) => {
