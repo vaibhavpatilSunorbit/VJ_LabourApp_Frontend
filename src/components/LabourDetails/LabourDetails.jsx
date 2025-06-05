@@ -215,13 +215,23 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     const labour = labourResponse.data;
 
     let labourID;
+     const labourStatus = typeof labour.Reject_Reason === 'string' ? labour.Reject_Reason.trim() : '';
+    console.log("labourStatus:", labourStatus);
 
-    if (!labour.LabourID || labour.LabourID.trim() === '') {
+    const shouldGetNextId =
+      !labour.LabourID ||
+      labour.LabourID.trim() === '' ||
+      labourStatus === 'Manually Rejected from database for FEPR designation';
+
+    console.log("shouldGetNextId:", shouldGetNextId);
+
+    if (shouldGetNextId) {
       const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
         params: { departmentId }
       });
       labourID = nextID;
     } else {
+      // 2. Attendance Check
       const attendanceCheck = await axios.get(`${API_BASE_URL}/api/admin/attendance-check`, {
         params: { labourId: labour.LabourID }
       });
@@ -229,10 +239,10 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-      if (
-        attendanceCheck.data?.lastAttendanceDate &&
-        new Date(attendanceCheck.data.lastAttendanceDate) > threeMonthsAgo
-      ) {
+      const lastDate = attendanceCheck.data?.lastAttendanceDate;
+      const hasRecentAttendance = lastDate && new Date(lastDate) > threeMonthsAgo;
+
+      if (hasRecentAttendance) {
         labourID = labour.LabourID;
       } else {
         const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
@@ -241,6 +251,32 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
         labourID = nextID;
       }
     }
+
+    // if (!labour.LabourID || labour.LabourID.trim() === '') {
+    //   const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+    //     params: { departmentId }
+    //   });
+    //   labourID = nextID;
+    // } else {
+    //   const attendanceCheck = await axios.get(`${API_BASE_URL}/api/admin/attendance-check`, {
+    //     params: { labourId: labour.LabourID }
+    //   });
+
+    //   const threeMonthsAgo = new Date();
+    //   threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    //   if (
+    //     attendanceCheck.data?.lastAttendanceDate &&
+    //     new Date(attendanceCheck.data.lastAttendanceDate) > threeMonthsAgo
+    //   ) {
+    //     labourID = labour.LabourID;
+    //   } else {
+    //     const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+    //       params: { departmentId }
+    //     });
+    //     labourID = nextID;
+    //   }
+    // }
 
       const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus/${labour.projectName}`);
       const serialNumber = response.data.serialNumber;
