@@ -23,6 +23,7 @@ ChartJS.register(
   Legend
 );
 
+
 const AttendanceLineGraph = () => {
   const [timeRange, setTimeRange] = useState('lastWeek'); // Set default to lastWeek
   const [attendanceData, setAttendanceData] = useState([]);

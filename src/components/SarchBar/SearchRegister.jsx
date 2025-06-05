@@ -87,6 +87,7 @@ const SearchRegister = ({
         <label htmlFor="search" className="search-register__label">Search for stuff</label>
         <input
           id="search"
+          autoComplete='off'
           type="search"
           placeholder="Search By Name, Labour ID.."
           value={searchQuery}
