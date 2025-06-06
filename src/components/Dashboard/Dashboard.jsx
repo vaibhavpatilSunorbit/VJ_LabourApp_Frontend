@@ -262,7 +262,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchProjectCount = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/project-names');
+        const response = await axios.get(`${API_BASE_URL}/api/project-names`);
         if (response.data) {
 
           setProjectCount(Array.isArray(response.data) ? response.data.length : 0);
