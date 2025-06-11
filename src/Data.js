@@ -105,28 +105,15 @@ export const SidebarData = [
     roles: ["superadmin"],
   },
   {
-    icon: UilUniversity,
-    heading: "Help Desk",
-    roles: ["admin", "user"],
-    subLinks: [
-      {
-        heading: "Dashboard",
-        path: "helpDesk",
-        roles: ["admin", "user"],
-      },
-      {
-        heading: "Create Ticket",
-        path: "createTicket",
-        roles: ["admin", "user"],
-      },
-      {
-        heading: "All Tickets",
-        path: "getAllTickets",
-        roles: ["admin", "user"],
-      },
-     
-    ],
-  },
+  icon: UilUniversity,
+  heading: "Help Desk",
+  roles: ["admin", "user"],
+  subLinks: [
+    { heading: "Dashboard", path: "helpDesk", roles: ["admin", "user"] },
+    { heading: "Create Ticket", path: "createTicket", roles: ["admin", "user"] },
+    { heading: "All Tickets", path: "getAllTickets", roles: ["admin", "user"] },
+  ],
+},
   
   // {
   //   icon: UilFileAlt,
