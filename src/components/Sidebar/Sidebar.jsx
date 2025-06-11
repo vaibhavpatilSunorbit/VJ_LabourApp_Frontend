@@ -143,7 +143,7 @@ import profileIcon11 from '../../images/datatransfer.png';
 // import profileIcon12 from '../../images/salaryRegister.png';
 import profileIcon13 from '../../images/wages.png';
 import profileIcon14 from '../../images/payroll.png';
-import profileIcon15 from '../../images/report.png'; 
+
 
 import VJLogo from '../../images/VJlogo-1-removebg.png';
 import { SidebarData } from '../../Data';
@@ -157,14 +157,9 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
   const sidebarRef = useRef(null);
   const location = useLocation();
   const [activeSubSection, setActiveSubSection] = useState(null);
-  const [helpDeskCollapsed, setHelpDeskCollapsed] = useState(false); // Add state for Help Desk collapse
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
-  };
-
-  const toggleHelpDeskCollapse = () => {
-    setHelpDeskCollapsed(!helpDeskCollapsed);
   };
 
   const handleSubLinkClick = (subItem) => {
@@ -195,8 +190,9 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
   }, [openSidebarToggle]);
 
   const isSuperAdminOnly = (item) => {
+    // const superAdminPages = ["Attendance Report", "Wages Report",  "Admin Approval", "Site Transfer", "Variable Input", "Salary Register", "Run PayRoll", "View Payroll"];
     const superAdminPages = [];
-    return superAdminPages.includes(item.heading) && user?.userType !== 'superadmin';
+        return superAdminPages.includes(item.heading) && user?.userType !== 'superadmin';
   };
 
   return (
@@ -220,33 +216,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
           </div>
           {isCollapsed && (
             <ul className="application-list">
-              {SidebarData.find(item => item.heading === "Application")?.subLinks.map((subItem, index) => (
-                <Link
-                  key={index}
-                  to={`/${subItem.path}`}
-                  className={`sidebar-link ${location.pathname === `/${subItem.path}` ? 'active-subsection' : ''}`}
-                  onClick={() => handleSubLinkClick(subItem)}
-                >
-                  <li>
-                    <span className="bullet" style={{ color: getBulletColor(formStatus[subItem.path]) }}>&#8226;</span> {subItem.heading}
-                  </li>
-                </Link>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Help Desk Section */}
-        <div className="application-section">
-          <div className="application-header" onClick={toggleHelpDeskCollapse}>
-            <img src={profileIcon15} alt="Help Desk Icon" className="img-white-fill" style={{ height: "30px" }} />
-            <span className="bullet" style={{ color: '#FFBF00' }}>&#8226;</span>
-            <span className="mains">Help Desk</span>
-            {helpDeskCollapsed ? <ExpandMoreIcon sx={{ color: "white", paddingLeft: '20px' }} /> : <ExpandLessIcon sx={{ color: 'white', paddingLeft: '20px' }} />}
-          </div>
-          {helpDeskCollapsed && (
-            <ul className="application-list">
-              {SidebarData.find(item => item.heading === "Help Desk")?.subLinks.map((subItem, index) => (
+              {SidebarData.find(item => item.heading === "Application").subLinks.map((subItem, index) => (
                 <Link
                   key={index}
                   to={`/${subItem.path}`}
@@ -267,8 +237,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
           {SidebarData.filter(item => (
             (!user?.accessPages || user?.accessPages.includes(item.heading)) &&
             item.heading !== "Application" &&
-            item.heading !== "Help Desk" && // Exclude Help Desk from other sections
-            !isSuperAdminOnly(item)
+           !isSuperAdminOnly(item)
           )).map((item, index) => (
             <div
               key={index}
@@ -286,6 +255,13 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
                 item.heading === "Variable Input" ? profileIcon11 :
                 item.heading === "Run PayRoll" ? profileIcon13 :
                 item.heading === "View Payroll" ? profileIcon14 :
+                
+
+              
+
+                // item.heading === "People" ? profileIcon8 :
+                // item.heading === "Salary Register" ? profileIcon12 :
+
                 profileIcon6
               } alt="Profile Icon" className="img-white-fill" style={{ height: "30px" }} />
               <Link
@@ -304,7 +280,6 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
 }
 
 export default Sidebar;
-
 
 
 
