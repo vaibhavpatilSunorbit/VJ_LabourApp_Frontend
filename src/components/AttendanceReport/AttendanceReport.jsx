@@ -551,7 +551,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/api/labours/search?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/searchForAttendance?q=${searchQuery}`);
             setSearchResults(response.data);
             setPage(0);
         } catch (error) {
