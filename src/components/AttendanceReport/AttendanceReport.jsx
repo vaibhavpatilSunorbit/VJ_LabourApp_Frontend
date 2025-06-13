@@ -652,7 +652,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 };
             });
             setAttendanceData(fullMonthAttendance);
-
+            console.log("fullMonthAttendance", response);
+            
         } catch (error) {
             console.error('Error fetching attendance data:', error);
 
