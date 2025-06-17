@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     Table, IconButton, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Typography, TableFooter, Modal,
-    Grid, Checkbox, ListItemText,
+    Grid, Checkbox, ListItemText, CircularProgress
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -82,6 +82,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const [filters, setFilters] = useState({});
     const [laboursAttenadance, setLaboursAttenadance] = useState([]);
     const [changedFields, setChangedFields] = useState([]);
+    const [exporting, setExporting] = useState(false);
+    const [exportType, setExportType] = useState("");
     
     //  const [selectedBusinessUnits, setSelectedBusinessUnits] = useState([]);
 
@@ -985,7 +987,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 </Typography>
             </Box>
 
-            <Box display="flex" alignItems="center">
+            <Box display="flex" alignItems="center" mb={1} mr={2}>
                 <CircleIcon
                     sx={{
                         color: "#FF6F00",
@@ -1237,6 +1239,36 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         setFilters(newFilters);
     };
 
+    const handleExport = async (type) => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/labours/exportAttendance`, {
+                params: {
+                    month: selectedMonth,
+                    year: selectedYear,
+                    type: type,
+                },
+                responseType: 'blob', // Important
+            });
+
+            // Create a URL for the downloaded file
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `attendance_report_${selectedMonth}_${selectedYear}.${type}`); // Specify the file name
+
+            // Append to body, click and remove
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success('Report exported successfully!');
+        } catch (error) {
+            console.error('Error exporting report:', error);
+            toast.error('Failed to export report. Please try again later.');
+        }
+        setLoading(false);
+    };
+
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
             <ToastContainer />
@@ -1399,8 +1431,52 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                             )} */}
 
 
-                            <ExportAttendance />
-                            <ImportAttendance /></Box>
+                            <Button
+                                disabled={exporting}
+                                onClick={() => {
+                                    setExportType("excel");
+                                    setExporting(true);
+                                    handleExport("excel").finally(() => setExporting(false));
+                                }}
+                                variant="contained"
+                                sx={{
+                                    backgroundColor: '#1976d2',
+                                    color: '#fff',
+                                    '&:hover': {
+                                        backgroundColor: '#115293',
+                                    },
+                                    mr: 1
+                                }}
+                            >
+                                {exporting && exportType === "excel" ? (
+                                    <CircularProgress size={20} color="inherit" />
+                                ) : (
+                                    "Export Excel"
+                                )}
+                            </Button>
+                            <Button
+                                disabled={exporting}
+                                onClick={() => {
+                                    setExportType("pdf");
+                                    setExporting(true);
+                                    handleExport("pdf").finally(() => setExporting(false));
+                                }}
+                                variant="contained"
+                                sx={{
+                                    backgroundColor: '#4CAF50',
+                                    color: '#fff',
+                                    '&:hover': {
+                                        backgroundColor: '#388e3c',
+                                    },
+                                }}
+                            >
+                                {exporting && exportType === "pdf" ? (
+                                    <CircularProgress size={20} color="inherit" />
+                                ) : (
+                                    "Export PDF"
+                                )}
+                            </Button>
+                        </Box>
 
                         <TablePagination
                             className="custom-pagination"
