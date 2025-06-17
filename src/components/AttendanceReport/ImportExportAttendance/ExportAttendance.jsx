@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    Button, Box, TextField, Select, MenuItem, Typography, Modal, Grid
+    Button, Box, TextField, Select, MenuItem, Typography, Modal, Grid, Chip
 } from '@mui/material';
 import { API_BASE_URL } from "../../../Data";
 import { toast } from 'react-toastify';
@@ -9,7 +9,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import { Chip } from '@mui/material';
 
 const ExportAttendance = () => {
     const theme = useTheme();
@@ -23,36 +22,35 @@ const ExportAttendance = () => {
     const [departments, setDepartments] = useState([]);
     const [selectedDepartments, setSelectedDepartments] = useState([]);
 
-    const fetchDepartments = async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/departments`);
-            setDepartments(response.data);
-        } catch (error) {
-            console.error('Error fetching departments:', error);
-            toast.error('Error fetching departments.');
-        }
-    };
-
     useEffect(() => {
+        const fetchDepartments = async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/departments`);
+                setDepartments(response.data);
+            } catch (error) {
+                console.error('Error fetching departments:', error);
+                toast.error('Error fetching departments.');
+            }
+        };
         fetchDepartments();
     }, []);
 
-    const fetchBusinessUnits = async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
-            setBusinessUnits(response.data);
-        } catch (error) {
-            console.error('Error fetching business units:', error);
-            toast.error('Error fetching business units.');
-        }
-    };
     useEffect(() => {
+        const fetchBusinessUnits = async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
+                setBusinessUnits(response.data);
+            } catch (error) {
+                console.error('Error fetching business units:', error);
+                toast.error('Error fetching business units.');
+            }
+        };
         fetchBusinessUnits();
     }, []);
 
     // Unified export handler for both Excel and PDF
     const handleExport = async (type = "excel") => {
-        if (!selectedBusinessUnit || !startDate || !endDate) {
+        if (!selectedBusinessUnit.length || !startDate || !endDate) {
             toast.error('Please select a Business Unit, Start Date, and End Date.');
             return;
         }
@@ -78,15 +76,6 @@ const ExportAttendance = () => {
                 fileExt = 'pdf';
             }
 
-            // Log params for debugging
-            // console.log("Export params:", {
-            //     url,
-            //     projectName: selectedProjectIds.join(','),
-            //     department: selectedDepartments.join(','),
-            //     startDate,
-            //     endDate
-            // });
-
             const response = await axios.get(url, {
                 params: {
                     projectName: selectedProjectIds.join(','),
@@ -100,7 +89,6 @@ const ExportAttendance = () => {
             const blob = new Blob([response.data], { type: fileType });
             const fileName = `Attendance_${startDate}_${endDate}.${fileExt}`;
 
-            // Direct download for both Excel and PDF
             const downloadUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = downloadUrl;
@@ -248,10 +236,8 @@ const ExportAttendance = () => {
                                 sx={{
                                     paddingTop: '4px',
                                     paddingBottom: '2px',
-
                                 }}
                             >
-
                                 <MenuItem value="All">
                                     <em>Select All</em>
                                 </MenuItem>
