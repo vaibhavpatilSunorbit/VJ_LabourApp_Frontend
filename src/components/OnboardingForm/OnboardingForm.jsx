@@ -26,9 +26,6 @@ import { IconButton } from '@mui/material';
 import { FaRegTimesCircle } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
 
-import ReactCrop from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-
 
 const departmentWorkingHoursMapping = {
   'CIVIL': 'FLEXI SHIFT - 8 HRS',
@@ -40,16 +37,7 @@ const departmentWorkingHoursMapping = {
   'ELECTRICAL': 'FLEXI SHIFT - 9 HRS',
   'FEP-R': 'FLEXI SHIFT - 9 HRS',
   'MQC': 'FLEXI SHIFT - 8 HRS',
-  // 'IN-HOUSE': 'FLEXI SHIFT - 8 HRS',
-  'ICM (STORE)': 'FLEXI SHIFT - 8 HRS',
-  'QUALITY': 'FLEXI SHIFT - 8 HRS',
-  'RCC': 'FLEXI SHIFT - 8 HRS',
-  'BBM': 'FLEXI SHIFT - 8 HRS',
-  'PAINTING': 'FLEXI SHIFT - 8 HRS',
-  'DEEP CLEANING': 'FLEXI SHIFT - 8 HRS',
-  'HOUSEKEEPING': 'FLEXI SHIFT - 8 HRS',
-  'WATERPROOFING': 'FLEXI SHIFT - 8 HRS',
-  'GYPSUM': 'FLEXI SHIFT - 8 HRS',
+  'IN-HOUSE': 'FLEXI SHIFT - 8 HRS',
 };
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = [], departmentList = [] }) => {
@@ -70,6 +58,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const [searchResults, setSearchResults] = useState([]);
   const [error, setError] = useState('');
   const [newError, setNewError] = useState('');
+  const [hover, setHover] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadAadhaarFront, setuploadAadhaarFront] = useState('');
   const [uploadAadhaarBack, setuploadAadhaarBack] = useState('');
@@ -82,19 +71,25 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const [isAddUserCollapsed, setIsAddUserCollapsed] = useState(true);
   const [isLabourDetailsCollapsed, setIsLabourDetailsCollapsed] = useState(true);
   const location = useLocation();
+  // New Chages for dorpdown
   const [projectNames, setProjectNames] = useState([]);
   const [labourCategories, setLabourCategories] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [workingHours, setWorkingHours] = useState([]);
   const [designations, setDesignations] = useState([]);
   const [companyNames, setCompanyNames] = useState([]);
+  const [nextID, setNextID] = useState(null);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
   const navigate = useNavigate();
   const [selectedLabour, setSelectedLabour] = useState(null);
   const [contactError, setContactError] = useState('');
   const [emergencyError, setEmergencyError] = useState('');
+  const [aadhaarFront, setAadhaarFront] = useState(null);
+  const [isAadhaarValid, setIsAadhaarValid] = useState(false);
+  const [aadhaarBack, setAadhaarBack] = useState(null);
   const { labourId, onFormSubmitSuccess } = location.state || {};
+  const [aadhaarFrontData, setAadhaarFrontData] = useState({});
   const [formData, setFormData] = useState({
     uploadAadhaarFront: '',
     uploadAadhaarBack: '',
@@ -136,20 +131,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     uploadInductionDoc: '',
     expiryDate: ''
   });
-
-  const [cropImage, setCropImage] = useState(null);
-  const [showCropper, setShowCropper] = useState(false);
-  const [currentField, setCurrentField] = useState('');
-
-
-    const [stream, setStream] = useState(null);
-  const [photoSrc, setPhotoSrc] = useState('');
-  const [facingMode, setFacingMode] = useState('user');
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-
-    const [multipleFiles, setMultipleFiles] = useState([]); // for induction docs multiple files queue
-  const [processingMultipleIndex, setProcessingMultipleIndex] = useState(0);
 
   const [formStatus, setFormStatus] = useState({
     kyc: false,
@@ -204,373 +185,52 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     navigate(route);
   };
 
- // In your component:
-  const [crop, setCrop] = useState({
-    unit: '%',
-    width: 50,
-    height: 50,
-    x: 25,
-    y: 25
-  });
-  const [tempFile, setTempFile] = useState(null)
-  const [rotation, setRotation] = useState(0);
-  const imgRef = useRef(null);
-
-  // const handleFileChange = async (event) => {
-  //   const { name, files } = event.target;
-  //   const file = files[0];
-  //   if (!file) return;
-
-  //   setCurrentField(name);
-  //   setTempFile(file);
-
-  //   const imageUrl = URL.createObjectURL(file);
-  //   setCropImage(imageUrl);
-  //   setShowCropper(true)
 
 
-  //   const fileStateSetter = {
-  //     uploadAadhaarFront: setuploadAadhaarFront,
-  //     uploadAadhaarBack: setuploadAadhaarBack,
-  //     photoSrc: setPhotoSrc,
-  //     uploadIdProof: setuploadIdProof,
-  //     uploadInductionDoc: setuploadInductionDoc,
-  //   };
-
-  //   const setStateFunction = fileStateSetter[name];
-  //   if (setStateFunction) {
-  //     setStateFunction(file.name);
-  //     setFormData((prevFormData) => ({
-  //       ...prevFormData,
-  //       [name]: file,
-  //     }));
-  //   } else {
-  //     console.error(`Unknown file input name: ${name}`);
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   try {
-  //     const ocrData = await uploadAadhaarImageToSurepass(file);
-
-
-  //   } catch (error) {
-  //     console.error("Error uploading file:", error);
-  //   }
-  //   setLoading(false);
-  // };
-
-    const handleFileChange = (event) => {
+  const handleFileChange = async (event) => {
     const { name, files } = event.target;
     const file = files[0];
+
     if (!file) return;
 
-    setCurrentField(name);
-    setTempFile(file);
-
-    const imageUrl = URL.createObjectURL(file);
-    setCropImage(imageUrl);
-    setShowCropper(true);
-
-    // Reset crop and rotation
-    setCrop({
-      unit: '%',
-      width: 50,
-      height: 50,
-      x: 25,
-      y: 25,
-    });
-    setRotation(0);
-      openCropperWithFile(file, name);
-  };
-
-    // Handle multiple files for induction docs: queue and crop sequentially
-  // const handleMultipleFilesChange = (event) => {
-  //   const { name, files } = event.target;
-  //   if (!files || files.length === 0) return;
-  //   const filesArr = Array.from(files);
-  //   setMultipleFiles(filesArr);
-  //   setProcessingMultipleIndex(0);
-  //   openCropperWithFile(filesArr[0], name);
-  // };
-
-  const handleFileChangesInduction = (event) => {
-  const { name, files } = event.target;
-  const file = files[0];
-  if (!file) return;
-
-  setCurrentField(name);          // e.g., 'uploadInductionDoc'
-  setTempFile(file);
-  const imageUrl = URL.createObjectURL(file);
-  setCropImage(imageUrl);
-  setShowCropper(true);
-
-  // Reset crop and rotation
-  setCrop({
-    unit: '%',
-    width: 50,
-    height: 50,
-    x: 25,
-    y: 25,
-  });
-  setRotation(0);
-};
-
-
-  const handleCropCancel = () => {
-    setShowCropper(false);
-    if (cropImage) URL.revokeObjectURL(cropImage);
-    setCropImage(null);
-    setTempFile(null);
-    //  setMultipleFiles([]);
-    // setProcessingMultipleIndex(0);
-  };
-
-  // This function creates a cropped and rotated image blob from the canvas and triggers upload
-  const handleCropApply = () => {
-    if (!crop || !imgRef.current || !tempFile) return;
-
-    const image = imgRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    // Set canvas size based on rotation
-    const radians = (rotation * Math.PI) / 180;
-    let rotatedWidth, rotatedHeight;
-
-    // Calculate bounding box for rotated image
-    const sin = Math.abs(Math.sin(radians));
-    const cos = Math.abs(Math.cos(radians));
-    rotatedWidth = image.naturalWidth * cos + image.naturalHeight * sin;
-    rotatedHeight = image.naturalWidth * sin + image.naturalHeight * cos;
-
-    canvas.width = rotatedWidth;
-    canvas.height = rotatedHeight;
-
-    // Clear canvas and fill white background
-    ctx.clearRect(0, 0, rotatedWidth, rotatedHeight);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, rotatedWidth, rotatedHeight);
-
-    // Move to center to rotate
-    ctx.translate(rotatedWidth / 2, rotatedHeight / 2);
-    ctx.rotate(radians);
-    ctx.drawImage(
-      image,
-      -image.naturalWidth / 2,
-      -image.naturalHeight / 2,
-      image.naturalWidth,
-      image.naturalHeight
-    );
-
-    // Reset transform for cropping
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-    // Calculate crop coordinates in pixels relative to the rotated canvas
-    // Convert crop percentages to pixels relative to image displayed size
-    // To do this accurately, we need to scale crop coordinates from imgRef dimensions to natural dimensions, then adapt for rotation.
-    // Since canvas has rotated image, we can use this formula:
-
-    // First calculate scale between displayed image and natural size
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-
-    // Crop coordinates on the rotated canvas:
-    // We need to transform crop.x/y/width/height (percent of displayed image) to pixels on rotated canvas.
-
-    // To do so, first get crop rectangle in natural image coordinates:
-    const cropXInImage = (crop.x * image.naturalWidth) / 100;
-    const cropYInImage = (crop.y * image.naturalHeight) / 100;
-    const cropWidthInImage = (crop.width * image.naturalWidth) / 100;
-    const cropHeightInImage = (crop.height * image.naturalHeight) / 100;
-
-    // Now, we calculate the position on the rotated canvas for the crop rectangle.
-    // Because the image is drawn rotated and centered on the canvas, we need to rotate these crop coordinates accordingly.
-
-    // Define helper function to rotate a point around center:
-    const rotatePoint = (x, y, angle, cx, cy) => {
-      const dx = x - cx;
-      const dy = y - cy;
-      const rcos = Math.cos(angle);
-      const rsin = Math.sin(angle);
-      const nx = cx + dx * rcos - dy * rsin;
-      const ny = cy + dx * rsin + dy * rcos;
-      return { x: nx, y: ny };
-    };
-
-    // The image is centered at (rotatedWidth/2, rotatedHeight/2)
-    // Crop rect corners:
-    const topLeft = rotatePoint(
-      cropXInImage,
-      cropYInImage,
-      radians,
-      image.naturalWidth / 2,
-      image.naturalHeight / 2
-    );
-    const bottomRight = rotatePoint(
-      cropXInImage + cropWidthInImage,
-      cropYInImage + cropHeightInImage,
-      radians,
-      image.naturalWidth / 2,
-      image.naturalHeight / 2
-    );
-
-    // Calculate crop rect in rotated canvas coordinates
-    const cropXOnCanvas = topLeft.x + rotatedWidth / 2 - image.naturalWidth / 2;
-    const cropYOnCanvas = topLeft.y + rotatedHeight / 2 - image.naturalHeight / 2;
-    const cropWidthOnCanvas = bottomRight.x - topLeft.x;
-    const cropHeightOnCanvas = bottomRight.y - topLeft.y;
-
-    // Because rotation can make cropWidth/Height negative, normalize:
-    const cropXFinal = Math.min(cropXOnCanvas, cropXOnCanvas + cropWidthOnCanvas);
-    const cropYFinal = Math.min(cropYOnCanvas, cropYOnCanvas + cropHeightOnCanvas);
-    const cropWidthFinal = Math.abs(cropWidthOnCanvas);
-    const cropHeightFinal = Math.abs(cropHeightOnCanvas);
-
-    // Create canvas for cropped image
-    const croppedCanvas = document.createElement('canvas');
-    croppedCanvas.width = cropWidthFinal;
-    croppedCanvas.height = cropHeightFinal;
-    const croppedCtx = croppedCanvas.getContext('2d');
-
-    // Draw cropped area from rotated canvas to cropped canvas
-    croppedCtx.drawImage(
-      canvas,
-      cropXFinal,
-      cropYFinal,
-      cropWidthFinal,
-      cropHeightFinal,
-      0,
-      0,
-      cropWidthFinal,
-      cropHeightFinal
-    );
-
-    croppedCanvas.toBlob(
-      async (blob) => {
-        if (!blob) {
-          console.error('Failed to create cropped image blob');
-          return;
-        }
-
-          const croppedFile = new File([blob], tempFile.name, { type: "image/jpeg" });
-
-        // Update UI and formData accordingly per field
-        if (currentField === "uploadAadhaarBack") {
-          setuploadAadhaarBack(croppedFile.name);
-          // Upload or store croppedFile in form data here as needed
-          await uploadAadhaarImageToSurepass(croppedFile);
-        } else if (currentField === "uploadIdProof") {
-          setuploadIdProof((prev) => [...prev, croppedFile.name]);
-          // await uploadAadhaarImageToSurepass(croppedFile);
-        } else if (currentField === "uploadInductionDoc") {
-          // For multiple files, accumulate names and files
-          setuploadInductionDoc((prev) => [...prev, croppedFile.name]);
-
-          // You may want to keep actual files separately for formData or upload
-          // Example: uploading one by one
-          // await uploadAadhaarImageToSurepass(croppedFile);
-
-          // Process next file in queue if any
-          // if (processingMultipleIndex + 1 < multipleFiles.length) {
-          //   const nextIndex = processingMultipleIndex + 1;
-          //   setProcessingMultipleIndex(nextIndex);
-          //   openCropperWithFile(multipleFiles[nextIndex], currentField);
-          //   return; // skip closing cropper to next file
-          // }
-        }
-
-        // Cleanup and close cropper modal
-        setShowCropper(false);
-        if (cropImage) URL.revokeObjectURL(cropImage);
-        setCropImage(null);
-        setTempFile(null);
-        // setMultipleFiles([]);
-        // setProcessingMultipleIndex(0);
-      },
-      //   const croppedFile = new File([blob], tempFile.name, { type: 'image/jpeg' });
-
-      //   // Update UI states & upload cropped file
-      //   const fileStateSetter = {
-      //     uploadAadhaarFront: setuploadAadhaarFront,
-      //     uploadAadhaarBack: setuploadAadhaarBack,
-      //     // Add other fields if needed
-      //   };
-      //   const setStateFunction = fileStateSetter[currentField];
-      //   if (setStateFunction) {
-      //     setStateFunction(croppedFile.name);
-      //     setFormData((prev) => ({ ...prev, [currentField]: croppedFile }));
-      //   }
-
-      //   setShowCropper(false);
-      //   if (cropImage) URL.revokeObjectURL(cropImage);
-      //   setCropImage(null);
-      //   setTempFile(null);
-
-      //   setLoading(true);
-      //   try {
-      //     await uploadAadhaarImageToSurepass(croppedFile);
-      //   } catch (error) {
-      //     console.error('Error uploading cropped file:', error);
-      //   }
-      //   setLoading(false);
-      // },
-      'image/jpeg',
-      0.95
-    );
-  };
-
-  const handleCropComplete = async (croppedFile) => {
-    // Get the appropriate state setter function
     const fileStateSetter = {
       uploadAadhaarFront: setuploadAadhaarFront,
-      // Add other fields as needed
+      uploadAadhaarBack: setuploadAadhaarBack,
+      photoSrc: setPhotoSrc,
+      uploadIdProof: setuploadIdProof,
+      uploadInductionDoc: setuploadInductionDoc,
     };
 
-    const setStateFunction = fileStateSetter[currentField];
-
+    const setStateFunction = fileStateSetter[name];
     if (setStateFunction) {
-      // Update the display name
-      setStateFunction(croppedFile.name);
-
-      // Update form data with the cropped file
+      // setStateFunction(file);
+      setStateFunction(file.name);
       setFormData((prevFormData) => ({
         ...prevFormData,
-        [currentField]: croppedFile,
+        [name]: file,
       }));
-
-      // Process OCR if needed
-      setLoading(true);
-      try {
-        const ocrData = await uploadAadhaarImageToSurepass(croppedFile);
-        // Handle OCR data as needed
-      } catch (error) {
-        console.error("Error uploading file:", error);
-      }
-      setLoading(false);
     } else {
-      console.error(`Unknown file input name: ${currentField}`);
+      console.error(`Unknown file input name: ${name}`);
+      return;
     }
 
-    // Clean up
-    setShowCropper(false);
-    URL.revokeObjectURL(cropImage);
-    setCropImage(null);
-    setTempFile(null);
-  };
+    setLoading(true);
+    try {
+      const ocrData = await uploadAadhaarImageToSurepass(file);
 
-  // const handleCropCancel = () => {
-  //   setShowCropper(false);
-  //   URL.revokeObjectURL(cropImage);
-  //   setCropImage(null);
-  //   setTempFile(null);
-  // };
+
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+    setLoading(false);
+  };
 
   const uploadAadhaarImageToSurepass = async (file, formStatus, isApproved) => {
     const formData = new FormData();
     formData.append('file', file);
 
     try {
+      // Step 1: OCR API to extract Aadhaar number
       const ocrResponse = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -591,6 +251,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         toast.error('Aadhaar number not found in the uploaded image. Please upload a valid Aadhaar card image.');
         return;
       }
+      // toast.success('Aadhaar details extracted successfully. Validating Aadhaar number...');
+
+      // Step 2: Aadhaar Validation API
       const validationResponse = await axios.post(
         'https://kyc-api.aadhaarkyc.io/api/v1/aadhaar-validation/aadhaar-validation',
         { id_number: aadhaarNumber },
@@ -609,20 +272,24 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
       toast.success('Aadhaar number validated successfully. Proceeding to backend checks...');
 
+      // Step 3: Backend Aadhaar Check
       const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/api/labours/check-aadhaar`, { aadhaarNumber });
 
+      // Skip Aadhaar check if LabourID is present
       if (checkAadhaarResponse.data.LabourID) {
         toast.success('Labour ID found. Proceeding without duplicate checks.');
         processAadhaarData(ocrFields);
-        return;
+        return; // Exit the function to avoid further checks
       }
 
+      // Skip Aadhaar check if formStatus is 'Resubmitted' and isApproved === 3
       if (formStatus === 'Resubmitted' && isApproved === 3) {
         toast.success('Resubmitted form detected. Processing Aadhaar details...');
         processAadhaarData(ocrFields);
-        return;
+        return; // Exit the function to avoid further checks
       }
 
+      // Proceed with Aadhaar check if the above conditions are not met
       if (checkAadhaarResponse.data.exists) {
         toast.error('This Aadhaar number is already in use. User has already filled the form.');
       } else {
@@ -639,56 +306,95 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   };
 
 
-
   // const uploadAadhaarImageToSurepass = async (file, formStatus, isApproved) => {
   //   const formData = new FormData();
   //   formData.append('file', file);
-
+  
   //   try {
-  //     const response = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
+  //     // Step 1: OCR Aadhaar extraction
+  //     const ocrResponse = await axios.post('https://kyc-api.aadhaarkyc.io/api/v1/ocr/aadhaar', formData, {
   //       headers: {
-  //         'Content-Type': 'multipart/form-data',
-  //         'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A'
-  //       }
+  //                 'Content-Type': 'multipart/form-data',
+  //                 'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A',
+  //               },
   //     });
-
-  //     const { data } = response;
-  //     if (data && data.success && data.data && data.data.ocr_fields && data.data.ocr_fields.length > 0) {
-  //       const ocrFields = data.data.ocr_fields[0];
-
-  //       // Check Aadhaar details with backend
-  //       const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: ocrFields.aadhaar_number.value });
-
-  //       // Skip Aadhaar check if LabourID is present
-  //       if (checkAadhaarResponse.data.LabourID) {
-  //         processAadhaarData(ocrFields); // Process the Aadhaar data without checking for duplicates
-  //         return; // Exit the function to avoid further checks
-  //       }
-
-  //       // Skip Aadhaar check if formStatus is 'Resubmitted' and isApproved === 3
-  //       if (formStatus === 'Resubmitted' && isApproved === 3) {
-  //         processAadhaarData(ocrFields); // Process the Aadhaar data for Resubmitted case
-  //         return; // Exit the function to avoid further checks
-  //       }
-
-  //       // Proceed with Aadhaar check if the above conditions are not met
-  //       if (checkAadhaarResponse.data.exists) {
-  //         setMessageType('error');
-  //         toast.error('User has already filled the form with this Aadhaar Number.');
-  //       } else {
-  //         processAadhaarData(ocrFields);
-  //       }
-  //     } else {
-  //       setNewError('Error reading Aadhaar details from Image.');
+  
+  //     const { data: ocrData } = ocrResponse;
+  //     if (!ocrData.success || !ocrData.data.ocr_fields || ocrData.data.ocr_fields.length === 0) {
+  //       toast.error('Failed to extract Aadhaar details from the uploaded image. Please try again.');
+  //       return;
   //     }
+  
+  //     const ocrFields = ocrData.data.ocr_fields[0];
+  //     const aadhaarNumber = ocrFields.aadhaar_number.value;
+  
+  //     if (!aadhaarNumber) {
+  //       toast.error('Aadhaar number not found in the uploaded image.');
+  //       return;
+  //     }
+  
+  //     // Step 2: Aadhaar number validation
+  //     const validationResponse = await axios.post(
+  //       'https://kyc-api.aadhaarkyc.io/api/v1/aadhaar-validation/aadhaar-validation',
+  //       { id_number: aadhaarNumber },
+  //       {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY0NzEwNDcxNCwianRpIjoiOWNhMDViZTAtZTMwYS00NTc5LTk5MzEtYWY3MmVmYzg1ZGFhIiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmphdmRla2Fyc0BhYWRoYWFyYXBpLmlvIiwibmJmIjoxNjQ3MTA0NzE0LCJleHAiOjE5NjI0NjQ3MTQsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.cGYIaxfNm0BDCol5_7I1DaJFZE-jXSel2E63EHl2A4A',
+  //         },
+  //       }
+  //     );
+  
+  //     if (!validationResponse.data.success) {
+  //       toast.error('Aadhaar number is not valid. Please check and try again.');
+  //       return;
+  //     }
+  
+  //     toast.success('Aadhaar number validated successfully. Proceeding to backend checks...');
+  
+  //     // Step 3: Backend Aadhaar Check
+  //     const checkAadhaarResponse = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber });
+  //     const { exists, LabourIDs, skipCheck, LabourID } = checkAadhaarResponse.data;
+  
+  //     if (!exists) {
+  //       toast.success('Aadhaar number is unique. Processing details...');
+  //       processAadhaarData(ocrFields);
+  //       return;
+  //     }
+  
+  //     // Aadhaar exists → check if any record is Approved
+  //     if (LabourIDs && LabourIDs.length > 0) {
+  //       const statuses = await Promise.all(
+  //         LabourIDs.map(async (id) => {
+  //           const res = await axios.get(`${API_BASE_URL}/labours/${id}`);
+  //           return res.data.status;
+  //         })
+  //       );
+  
+  //       if (statuses.includes('Approved')) {
+  //         toast.error('This Aadhaar is already approved. Cannot proceed.');
+  //         return;
+  //       }
+  //     }
+  
+  //     // Proceed if record is resubmission or explicitly marked for skipCheck
+  //     if (skipCheck || (formStatus === 'Resubmitted' && isApproved === 3)) {
+  //       toast.success('Aadhaar resubmission detected. Proceeding...');
+  //       processAadhaarData(ocrFields);
+  //       return;
+  //     }
+  
+  //     // Default fallback if exists but not approved, and not resubmission
+  //     toast.error('This Aadhaar number already exists. Cannot reuse.');
   //   } catch (error) {
-  //     console.error('Error Uploading Aadhaar image to surepass:', error);
+  //     console.error('Error in Aadhaar upload process:', error);
   //     if (error.response) {
-  //       console.error('Error response data:', error.response.data);
+  //       console.error('Error response:', error.response.data);
   //     }
-  //     setNewError('Error uploading Aadhaar image. Please try again.');
+  //     toast.error('Aadhaar Number Verification Failed. Upload unsuccessful.');
   //   }
   // };
+  
 
   // const uploadAadhaarImageToSurepass = async (file) => {  
   //   const formData = new FormData();
@@ -748,6 +454,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
     const gender = genderMap[ocrFields.gender?.value] || ocrFields.gender?.value;
 
+    // Function to check if the age is under 18
     const checkAge = (dob) => {
       const birthDate = new Date(dob);
       const today = new Date();
@@ -770,19 +477,21 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       if (ageStatus === 'underage') {
         localError = 'Labour is underage. Age must be 18 or older.';
         toast.error(localError);
-        return;
+        return; // Exit the function, don't fill the form fields
       }
 
       if (ageStatus === 'overage') {
         localError = 'Labour exceeds the age limit. Age must be 60 or younger.';
         toast.error(localError);
-        return;
+        return; // Exit the function, don't fill the form fields
       }
 
       setFormData((prev) => ({
         ...prev,
         name: ocrFields.full_name?.value,
         dateOfBirth: dob,
+        // dateOfBirth: ocrFields.dob?.value,
+        // gender: ocrFields.gender?.value,
         gender: gender,
         aadhaarNumber: ocrFields.aadhaar_number.value,
       }));
@@ -814,25 +523,21 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     }
   };
 
- // Common function to open cropper modal with selected file
-  const openCropperWithFile = (file, field) => {
-    setCurrentField(field);
-    setTempFile(file);
-    setCropImage(URL.createObjectURL(file));
-    setCrop({ unit: "%", width: 50, height: 50, x: 25, y: 25 });
-    setRotation(0);
-    setShowCropper(true);
-  };
+
 
 
   const handleAadhaarNumberChange = async (e) => {
     const { value } = e.target;
 
+    // Update form data with the Aadhaar number
     setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value }));
     setNewError('');
+    // Validate Aadhaar number format
     if (value.length === 12) {
+      // Validate Aadhaar number format
       if (/^\d{12}$/.test(value)) {
         try {
+          // Step 1: Aadhaar Validation API
           const validationResponse = await axios.post(
             'https://kyc-api.aadhaarkyc.io/api/v1/aadhaar-validation/aadhaar-validation',
             { id_number: value },
@@ -844,25 +549,30 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
             }
           );
 
+          // If Aadhaar Validation API fails
           if (!validationResponse.data.success) {
             toast.error('Aadhaar validation failed. Please check the Aadhaar number and try again.');
-            setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));
+            setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));// Clear invalid Aadhaar number
             return;
           }
 
+          // Step 2: Backend Check API
           const response = await axios.post(`${API_BASE_URL}/api/labours/check-aadhaar`, { aadhaarNumber: value });
           const { exists, skipCheck } = response.data;
 
           if (skipCheck) {
+            // If Aadhaar resubmission is detected
             setMessageType('success');
             setMessage('Congratulations! Aadhaar resubmission detected, proceeding with the form.');
             toast.success('Aadhaar resubmission detected, proceeding with the form.');
           } else {
             if (exists) {
+              // If Aadhaar already exists in the backend
               setMessageType('error');
               toast.error('User has already filled the form with this Aadhaar number.');
-              setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));
+              setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear the field
             } else {
+              // If Aadhaar is unique
               setMessageType('success');
               setMessage('Congratulations! New Aadhaar number registered.');
               toast.success('New Aadhaar number registered successfully!');
@@ -874,10 +584,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
           toast.error('Error checking Aadhaar number. Please try again.');
         }
       } else {
+        // Invalid Aadhaar format
         toast.error('Invalid Aadhaar number. It must be a 12-digit numeric value.');
-        setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' }));
+        setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear invalid Aadhaar number
       }
     }
+    // Optionally, you can handle cases where the input exceeds 12 digits
     else if (value.length > 12) {
       toast.error('Aadhaar number cannot exceed 12 digits.');
       setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value.slice(0, 12) }));
@@ -885,14 +597,54 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   };
 
 
+  // const handleAadhaarNumberChange = async (e) => {
+  //   const { value } = e.target;
+  //   setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: value }));
+  //   validateAadhaarNumber(value);
+
+  //   if (value.length === 12 && /^\d{12}$/.test(value)) {
+  //     try {
+  //       const response = await axios.post(`${API_BASE_URL}/labours/check-aadhaar`, { aadhaarNumber: value });
+  //       const { exists, skipCheck } = response.data;
+
+  //       if (skipCheck) {
+  //         // Skip the check and proceed
+  //         setMessageType('success');
+  //         setMessage('Congratulations! Aadhaar resubmission detected, proceeding with the form.');
+  //         toast.success('Aadhaar resubmission detected, proceeding with the form.'); // Add a success toast
+  //       } else {
+  //         if (exists) {
+  //           setMessageType('error');
+  //           toast.error('User has already filled the form with this Aadhaar number.');
+  //           // setMessage('User has already filled the form with this Aadhaar number.');
+  //           setFormData((prevFormData) => ({ ...prevFormData, aadhaarNumber: '' })); // Clear the field
+  //         } else {
+  //           if (newError === '') {
+  //             setMessageType('success');
+  //             setMessage('Congratulations! New Aadhaar number registered.');
+  //           }
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('Error checking Aadhaar number:', error);
+  //       setMessageType('error');
+  //       setMessage('Error checking Aadhaar number. Please try again.');
+  //     }
+  //   }
+  // };
+
+
+
+
+
 
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
         setMessage('');
-      }, 5000);
+      }, 5000); // Clear message after 5 seconds
 
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timer); // Cleanup timer
     }
   }, [message]);
 
@@ -934,9 +686,19 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         setShowSuggestions(true);
       } else {
         setShowSuggestions(false);
+        // const nearbyPincode = pincode.substring(0, 4);
+        // const nearbyResponse = await fetchPincodeData(nearbyPincode);
 
+        // if (nearbyResponse && nearbyResponse[0] && nearbyResponse[0].Status === "Success") {
+        //   setSuggestions(nearbyResponse[0].PostOffice);
+        //   setShowSuggestions(true);
+        // } else {
+        //   console.error('Location data not found');
+        //   setShowSuggestions(false);
+        // }
       }
       setLoading(false);
+      // setShowSuggestions(false);
     } else {
       setShowSuggestions(false);
     }
@@ -966,6 +728,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     };
   }, []);
 
+  // New changes start here ---------------------------------------------
 
   useEffect(() => {
     const fetchData = async () => {
@@ -975,10 +738,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         const departmentsRes = await axios.get(API_BASE_URL + `/api/departments`);
         const workingHoursRes = await axios.get(API_BASE_URL + `/api/working-hours`);
         setProjectNames(projectNamesRes.data);
-        console.log('dprojectNamesRes.data', projectNamesRes.data)
         setLabourCategories(labourCategoriesRes.data);
         setDepartments(departmentsRes.data);
-        console.log('departmentsRes.data', departmentsRes.data)
         setWorkingHours(workingHoursRes.data);
 
       } catch (err) {
@@ -992,11 +753,16 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   useEffect(() => {
     const fetchDesignations = async () => {
       if (formData.department) {
-        console.log('formData.department', formData.department)
         try {
           const designationsRes = await axios.get(API_BASE_URL + `/api/designations/${formData.department}`);
           setDesignations(designationsRes.data);
 
+          // if (designationsRes.data.length > 0 && !formData.designation) {
+          //   setFormData(prevFormData => ({
+          //     ...prevFormData,
+          //     designation: designationsRes.data[0].Description
+          //   }));
+          // }
 
         } catch (err) {
           console.error(err);
@@ -1007,29 +773,22 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     fetchDesignations();
   }, [formData.department]);
 
-
   useEffect(() => {
     const fetchCompanyNames = async () => {
       if (formData.projectName) {
-        console.log("Fetching company names for:", formData.projectName);
-
         try {
           const companyNamesRes = await axios.get(API_BASE_URL + `/api/company-names/${formData.projectName}`);
+          setCompanyNames(companyNamesRes.data);
 
-          console.log("API Response:", companyNamesRes.data);
-
-          const companyData = Array.isArray(companyNamesRes.data) ? companyNamesRes.data : [companyNamesRes.data];
-
-          setCompanyNames(companyData);
-
-          if (companyData.length > 0 && !formData.companyName) {
+          if (companyNamesRes.data.length > 0 && !formData.companyName) {
             setFormData(prevFormData => ({
               ...prevFormData,
-              companyName: companyData[0].Description
+              companyName: companyNamesRes.data[0].Company_Name
             }));
           }
+
         } catch (err) {
-          console.error("Error fetching company names:", err);
+          console.error(err);
         }
       }
     };
@@ -1037,7 +796,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     fetchCompanyNames();
   }, [formData.projectName]);
 
-
+  // New changes end here ----------------------------------
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -1056,13 +815,27 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   };
 
   // const CameraCapture = () => {
+  const [stream, setStream] = useState(null);
+  const [photoSrc, setPhotoSrc] = useState('');
+  const [facingMode, setFacingMode] = useState('user');
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
-
-
+  // const startCamera = async () => {
+  //   try {
+  //     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  //     videoRef.current.srcObject = stream;
+  //     setStream(stream);
+  //   } catch (err) {
+  //     console.error("Error accessing camera: ", err);
+  //   }
+  // };
   const startCamera = async () => {
     try {
+      // Define video constraints for better compatibility
       const constraints = {
         video: {
+          // facingMode: 'user' 
           facingMode: facingMode
         }
       };
@@ -1253,6 +1026,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const bankDetailsRequiredFields = ['bankName', 'branch', 'accountNumber', 'ifscCode'];
   const projectRequiredFields = ['projectName', 'companyName', 'department', 'designation', 'labourCategory', 'workingHours', 'Induction_Date', 'Inducted_By', 'uploadInductionDoc'];
 
+  // Check if all required fields are filled
   const isFormComplete = (form, requiredFields) => {
     return requiredFields.every(field => form[field] !== '');
   };
@@ -1272,7 +1046,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const getBulletColor = (isCompleted) => {
     return isCompleted ? '#20C305' : '#FFBF00';
   };
-
+  // const getBulletColor = () => {
+  //   if (formType === "kyc") {
+  //     return kycCompleted ? '#20C305' : '#FFBF00';
+  //   } else if (formType === "project") {
+  //     return projectCompleted ? '#20C305' : '#FFBF00';
+  //   } else {
+  //     return '#FFBF00';
+  //   }
+  // };
 
   const handleDateChange = (e) => {
     const selectedDate = new Date(e.target.value);
@@ -1298,6 +1080,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       'projectName', 'department', 'designation', 'labourCategory', 'workingHours', 'Induction_Date', 'Inducted_By', 'uploadInductionDoc',
     ];
 
+    // for (const field of requiredFields) {
+    //   if (!formData[field]) {
+    //     toast.error(`Please fill in the ${field} field.`);
+    //     return false;
+    //   }
+    // }
     const missingFields = [];
 
     for (const field of requiredFields) {
@@ -1310,6 +1098,8 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       toast.error(`Please fill in the following fields: ${missingFields.join(', ')}`);
       return false;
     }
+
+
     return true;
   };
 
@@ -1335,8 +1125,22 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   };
 
 
+  // const base64ToBlob = (base64, mimeType) => {
+  //   const byteString = atob(base64.split(',')[1]);
+  //   const arrayBuffer = new ArrayBuffer(byteString.length);
+  //   const intArray = new Uint8Array(arrayBuffer);
+
+  //   for (let i = 0; i < byteString.length; i++) {
+  //     intArray[i] = byteString.charCodeAt(i);
+  //   }
+
+  //   return new Blob([intArray], { type: mimeType });
+  // };
+
+
   useEffect(() => {
     if (labourId) {
+      // Fetch the existing labour data
       fetchLabourData(labourId);
     }
   }, [labourId]);
@@ -1344,7 +1148,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   const fetchLabourData = async (id) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
-      setFormData(response.data);
+      setFormData(response.data); // Populate the form with the fetched data
     } catch (error) {
       console.error('Error fetching labour data:', error);
     }
@@ -1374,6 +1178,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     setLoading(true);
     setSaved(false);
 
+    // const { user } = useUser();
 
     try {
       const formDataToSend = new FormData();
@@ -1388,6 +1193,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
       } else {
         console.error('uploadAadhaarFront is not a file object');
       }
+
+      // if (uploadAadhaarBack && uploadAadhaarBack instanceof File) {
+      //   formDataToSend.append('uploadAadhaarBack', uploadAadhaarBack, uploadAadhaarBack.name);
+      // } else {
+      //   console.error('uploadAadhaarBack is not a file object');
+      // }
       if (uploadAadhaarBack && uploadAadhaarBack instanceof File) {
         formDataToSend.append('uploadAadhaarBack', uploadAadhaarBack, uploadAadhaarBack.name);
       }
@@ -1408,7 +1219,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         const photoBlob = base64ToBlob(photoSrc, 'image/jpeg');
         formDataToSend.append('photoSrc', photoBlob, 'captured_photo.jpg');
       } else if (photoSrc && typeof photoSrc === 'string') {
-        formDataToSend.append('photoSrc', photoSrc);
+        formDataToSend.append('photoSrc', photoSrc); // Use existing URL
       }
 
       if (user.name) {
@@ -1445,7 +1256,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
             },
           });
         } else {
-          response = await axios.post(`${API_BASE_URL}/api/labours/laboursCreateRecord`, formDataToSend, {
+          response = await axios.post(`${API_BASE_URL}/api/labours`, formDataToSend, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
@@ -1461,8 +1272,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
         }
 
         if (['Rejected', 'Resubmitted', 'Disable'].includes(labourStatus) && (response.status === 200 || response.status === 201)) {
+          // Call API to update hideResubmit field
           await axios.put(`${API_BASE_URL}/api/labours/updateHideResubmit/${labourId}`, { hideResubmit: true });
 
+          // Notify LabourDetails that the resubmit was successful for the selected statuses
           if (onFormSubmitSuccess) {
             onFormSubmitSuccess({ labourId, hideResubmit: true });
           }
@@ -1525,77 +1338,54 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
 
-  // const handleFileChanges = async (event) => {
-  //   const { name, files } = event.target;
-  //   const file = files[0];
+  const handleFileChanges = async (event) => {
+    const { name, files } = event.target;
+    const file = files[0];
 
-  //   if (!file) return;
-
-
-  //   const fileStateSetter = {
-
-  //     uploadIdProof: setuploadIdProof,
-  //   };
-  //   const setStateFunction = fileStateSetter[name];
-  //   if (setStateFunction) {
-  //     // setStateFunction(file);
-  //     setStateFunction(file.name);
-  //     setFormData((prevFormData) => ({
-  //       ...prevFormData,
-  //       [name]: file,
-  //     }));
-  //   } else {
-  //     console.error(`Unknown file input name: ${name}`);
-  //     return;
-  //   }
-  // }
+    if (!file) return;
 
 
-  const handleFileChanges = (event) => {
-  const { name, files } = event.target;
-  const file = files[0];
-  if (!file) return;
+    const fileStateSetter = {
 
-  setCurrentField(name);          // Set to 'uploadIdProof'
-  setTempFile(file);              // Save the original file
-  const imageUrl = URL.createObjectURL(file);
-  setCropImage(imageUrl);         // Show in cropper
-  setShowCropper(true);           // Open crop modal
+      uploadIdProof: setuploadIdProof,
+    };
+    const setStateFunction = fileStateSetter[name];
+    if (setStateFunction) {
+      // setStateFunction(file);
+      setStateFunction(file.name);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        [name]: file,
+      }));
+    } else {
+      console.error(`Unknown file input name: ${name}`);
+      return;
+    }
+  }
 
-  // Reset crop and rotation
-  setCrop({
-    unit: '%',
-    width: 50,
-    height: 50,
-    x: 25,
-    y: 25,
-  });
-  setRotation(0);
-};
+  const handleFileChangesInduction = async (event) => {
+    const { name, files } = event.target;
+    const file = files[0];
 
+    if (!file) return;
 
-  // const handleFileChangesInduction = async (event) => {
-  //   const { name, files } = event.target;
-  //   const file = files[0];
+    const fileStateSetter = {
 
-  //   if (!file) return;
-
-  //   const fileStateSetter = {
-
-  //     uploadInductionDoc: setuploadInductionDoc,
-  //   };
-  //   const setStateFunction = fileStateSetter[name];
-  //   if (setStateFunction) {
-  //     setStateFunction(file.name);
-  //     setFormData((prevFormData) => ({
-  //       ...prevFormData,
-  //       [name]: file,
-  //     }));
-  //   } else {
-  //     console.error(`Unknown file input name: ${name}`);
-  //     return;
-  //   }
-  // }
+      uploadInductionDoc: setuploadInductionDoc,
+    };
+    const setStateFunction = fileStateSetter[name];
+    if (setStateFunction) {
+      // setStateFunction(file);
+      setStateFunction(file.name); // Set the file name for display
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        [name]: file,
+      }));
+    } else {
+      console.error(`Unknown file input name: ${name}`);
+      return;
+    }
+  }
 
 
 
@@ -1645,7 +1435,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
   const handleContactNumberChange = (e) => {
     const { value } = e.target;
-    if (/^\d*$/.test(value)) {
+    if (/^\d*$/.test(value)) {  // Only allow digits
       setFormData({ ...formData, contactNumber: value });
       validateContactNumber(value);
     }
@@ -1659,7 +1449,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
   const handleEmergencyContactChange = (e) => {
     const { value } = e.target;
-    if (/^\d*$/.test(value)) {
+    if (/^\d*$/.test(value)) {  // Only allow digits
       setFormData({ ...formData, emergencyContact: value });
       validateEmergencyNumber(value);
     }
@@ -1680,17 +1470,17 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     const { name, value } = e.target;
 
     if (name === "projectName") {
-      const projectId = parseInt(value, 10);
-      const selectedProject = projectNames.find(project => project.Id === projectId);
+      const projectId = parseInt(value, 10); // Get the selected project's ID
+      const selectedProject = projectNames.find(project => project.id === projectId);
 
       if (selectedProject) {
-        const companyName = selectedProject.Business_Unit;
+        const companyName = selectedProject.Company_Name; // Get the corresponding company name
 
         setFormData((prevFormData) => ({
           ...prevFormData,
-          projectName: value,
-          projectId,
-          companyName,
+          projectName: value, // Update projectName
+          projectId,          // Store the project ID
+          companyName,        // Automatically update companyName
         }));
       } else {
         console.error(`Project with ID ${projectId} not found.`);
@@ -1750,7 +1540,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
   const openPreviewModal = () => {
-    const project = projectNames.find(project => project.Id === parseInt(formData.projectName));
+    const project = projectNames.find(project => project.id === parseInt(formData.projectName));
     const department = departments.find(dept => dept.Id === parseInt(formData.department));
 
     const processedData = {
@@ -1819,6 +1609,32 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     }
   };
 
+
+
+  const handleAddressSelect = (selectedAddress) => {
+    const addressComponents = selectedAddress.display_name.split(', ');
+    const city = addressComponents[1];
+    const taluka = addressComponents[1];
+    const district = addressComponents[2];
+    const state = addressComponents[3];
+    const pincode = addressComponents[7];
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      address: selectedAddress.display_name,
+      village: city,
+      taluka: taluka || '',
+      district: district || '',
+      state: state || '',
+      pincode: pincode || '',
+    }));
+
+    setSuggestions([]);
+  };
+
+
+
+
   const clearFile = (name) => {
     const fileStateSetter = {
       uploadAadhaarFront: setuploadAadhaarFront,
@@ -1842,6 +1658,17 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
   };
 
 
+  function handlePhotoChange(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const imageData = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   const getFormattedDate = (offsetDays = 0) => {
     const date = new Date();
     date.setDate(date.getDate() + offsetDays);
@@ -1857,6 +1684,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
     setSearchQuery(value);
   };
 
+  // const handleTitleChange = (e) => {
+  //   setFormData({ ...formData, [e.target.name]: e.target.value });
+  // };
   const styles = {
     list: {
       marginLeft: '-22px',
@@ -1905,437 +1735,31 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
                         {loading && <Loading />}
-                        {/* <div className="project-field">
+                        <div className="project-field">
                           <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
                             Upload Aadhaar Front {renderRequiredAsterisk(true)}
                           </InputLabel>
-                        
-
-                           <div className="input-with-icon">
+                          <div className="input-with-icon">
                             <input
-                              type="file"/>
+                              type="text"
+                              value={uploadAadhaarFront}
+                              placeholder="Choose file"
+                              readOnly
+                              style={{ cursor: 'pointer', backgroundColor: '#fff', ...getInputStyle('uploadAadhaarFront') }}
+                              onClick={() => document.getElementById('uploadAadhaarFront').click()}
+                            />
+                            <input
+                              type="file"
+                              id="uploadAadhaarFront"
+                              name="uploadAadhaarFront"
+                              onChange={handleFileChange}
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                            />
                             <DocumentScannerIcon className="input-icon" />
                           </div>
-                          {showCropper && cropImage && (
-                            <div className="cropper-modal-overlay" style={{
-                              position: 'fixed',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              zIndex: 1000
-                            }}>
-                              <div className="cropper-modal" style={{
-                                backgroundColor: 'white',
-                                padding: '20px',
-                                borderRadius: '8px',
-                                maxWidth: '90%',
-                                maxHeight: '90%',
-                                overflow: 'auto'
-                              }}>
-                                <h3>Crop & Rotate Image</h3>
 
-                                <div style={{
-                                  display: 'flex',
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                  gap: '15px',
-                                  margin: '10px 0 20px'
-                                }}>
-                                  <button
-                                    onClick={() => setRotation(prev => (prev - 90) % 360)}
-                                    style={{
-                                      padding: '8px 12px',
-                                      backgroundColor: '#f0f0f0',
-                                      border: '1px solid #ccc',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    ↺ Rotate Left
-                                  </button>
-
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <input
-                                      type="range"
-                                      min="-180"
-                                      max="180"
-                                      value={rotation}
-                                      onChange={(e) => setRotation(parseInt(e.target.value))}
-                                      style={{ width: '150px' }}
-                                    />
-                                    <span>{rotation}°</span>
-                                  </div>
-
-                                  <button
-                                    onClick={() => setRotation(prev => (prev + 90) % 360)}
-                                    style={{
-                                      padding: '8px 12px',
-                                      backgroundColor: '#f0f0f0',
-                                      border: '1px solid #ccc',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    ↻ Rotate Right
-                                  </button>
-                                </div>
-
-                                <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-                                  <button
-                                    onClick={() => {
-                                      setRotation(0);
-                                      setCrop({
-                                        unit: '%',
-                                        width: 50,
-                                        height: 50,
-                                        x: 25,
-                                        y: 25
-                                      });
-                                    }}
-                                    style={{
-                                      padding: '5px 10px',
-                                      backgroundColor: '#f0f0f0',
-                                      border: '1px solid #ccc',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    Reset All
-                                  </button>
-                                </div>
-
-                                <div style={{
-                                  maxWidth: '600px',
-                                  margin: '0 auto',
-                                  overflow: 'hidden'
-                                }}>
-                                  <div style={{
-                                    transform: `rotate(${rotation}deg)`,
-                                    transformOrigin: 'center center',
-                                    margin: Math.abs(rotation) > 45 ? '100px auto' : '0 auto',
-                                    maxWidth: '100%',
-                                    transition: 'transform 0.3s ease'
-                                  }}>
-                                    <ReactCrop
-                                      crop={crop}
-                                      onChange={(newCrop) => setCrop(newCrop)}
-                                    >
-                                      <img
-                                        ref={imgRef}
-                                        src={cropImage}
-                                        alt="Crop preview"
-                                        style={{ maxWidth: '100%' }}
-                                        crossOrigin="anonymous"
-                                      />
-                                    </ReactCrop>
-                                  </div>
-                                </div>
-
-                                <canvas
-                                  ref={canvasRef}
-                                  style={{ display: 'none' }}
-                                />
-
-                                <div style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  marginTop: '20px'
-                                }}>
-                                  <button
-                                    onClick={handleCropCancel}
-                                    style={{
-                                      padding: '8px 16px',
-                                      backgroundColor: '#f0f0f0',
-                                      border: '1px solid #ccc',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (!crop || !imgRef.current || !tempFile) return;
-
-                                      const canvas = canvasRef.current;
-                                      const ctx = canvas.getContext('2d');
-
-                                      // Create a temporary image to handle the rotation
-                                      const tempImage = new Image();
-                                      tempImage.src = cropImage;
-                                      tempImage.crossOrigin = "anonymous";
-
-                                      tempImage.onload = () => {
-                                        // Calculate dimensions based on rotation
-                                        const maxSize = Math.max(tempImage.width, tempImage.height);
-                                        canvas.width = maxSize * 2;
-                                        canvas.height = maxSize * 2;
-
-                                        // Clear canvas and set background
-                                        ctx.fillStyle = "white";
-                                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                                        // Move to center of canvas
-                                        ctx.translate(canvas.width / 2, canvas.height / 2);
-
-                                        // Rotate canvas
-                                        ctx.rotate(rotation * Math.PI / 180);
-
-                                        // Draw image centered
-                                        ctx.drawImage(
-                                          tempImage,
-                                          -tempImage.width / 2,
-                                          -tempImage.height / 2
-                                        );
-
-                                        // Reset transformation
-                                        ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-                                        // Get the scale factors
-                                        const scaleX = tempImage.naturalWidth / imgRef.current.width;
-                                        const scaleY = tempImage.naturalHeight / imgRef.current.height;
-
-                                        // Calculate the crop coordinates
-                                        const cropX = (canvas.width / 2 - tempImage.width / 2) + (crop.x * imgRef.current.width / 100);
-                                        const cropY = (canvas.height / 2 - tempImage.height / 2) + (crop.y * imgRef.current.height / 100);
-                                        const cropWidth = crop.width * imgRef.current.width / 100;
-                                        const cropHeight = crop.height * imgRef.current.height / 100;
-
-                                        // Create a new canvas for the final cropped image
-                                        const croppedCanvas = document.createElement('canvas');
-                                        croppedCanvas.width = cropWidth;
-                                        croppedCanvas.height = cropHeight;
-                                        const croppedCtx = croppedCanvas.getContext('2d');
-
-                                        // Draw the cropped portion
-                                        croppedCtx.drawImage(
-                                          canvas,
-                                          cropX, cropY, cropWidth, cropHeight,
-                                          0, 0, cropWidth, cropHeight
-                                        );
-
-                                        // Convert to blob
-                                        croppedCanvas.toBlob((blob) => {
-                                          if (!blob) return;
-                                          const croppedFile = new File([blob], tempFile.name, { type: 'image/jpeg' });
-                                          handleCropComplete(croppedFile);
-                                        }, 'image/jpeg', 0.95);
-                                      };
-                                    }}
-                                    style={{
-                                      backgroundColor: '#4285f4',
-                                      color: 'white',
-                                      border: 'none',
-                                      padding: '8px 16px',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    Apply
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div> */}
-
-                         <div className="project-field">
-        <label htmlFor="uploadAadhaarFront" style={{ color: 'black' }}>
-          Upload Aadhaar Front <span style={{ color: 'red' }}>*</span>
-        </label>
-        <div className="input-with-icon">
-          <input
-            id="uploadAadhaarFront"
-            type="file"
-            name="uploadAadhaarFront"
-            accept="image/*"
-            onChange={handleFileChange}
-          />
-          {/* Your icon component here */}
-        </div>
-        {/* {uploadAadhaarFront && (
-          <p>
-            Selected File: <strong>{uploadAadhaarFront}</strong>
-          </p>
-        )} */}
-      </div>
-
-      {showCropper && cropImage && (
-        <div
-          className="cropper-modal-overlay"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            className="cropper-modal"
-            style={{
-              backgroundColor: 'white',
-              padding: 20,
-              borderRadius: 8,
-              maxWidth: '90%',
-              maxHeight: '90%',
-              overflow: 'auto',
-            }}
-          >
-            <h3>Crop & Rotate Image</h3>
-
-            {/* Rotation Controls */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 15,
-                margin: '10px 0 20px',
-              }}
-            >
-              <button
-                onClick={() => setRotation((prev) => (prev - 90) % 360)}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                ↺ Rotate Left
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input
-                  type="range"
-                  min={-180}
-                  max={180}
-                  value={rotation}
-                  onChange={(e) => setRotation(parseInt(e.target.value, 10))}
-                  style={{ width: 150 }}
-                />
-                <span>{rotation}°</span>
-              </div>
-              <button
-                onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                ↻ Rotate Right
-              </button>
-            </div>
-
-            {/* Reset Button */}
-            <div style={{ textAlign: 'center', marginBottom: 15 }}>
-              <button
-                onClick={() => {
-                  setRotation(0);
-                  setCrop({
-                    unit: '%',
-                    width: 50,
-                    height: 50,
-                    x: 25,
-                    y: 25,
-                  });
-                }}
-                style={{
-                  padding: '5px 10px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset All
-              </button>
-            </div>
-
-            {/* Cropper */}
-            <div
-              style={{
-                maxWidth: 600,
-                margin: '0 auto',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  transform: `rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
-                  maxWidth: '100%',
-                  transition: 'transform 0.3s ease',
-                }}
-              >
-                <ReactCrop crop={crop} onChange={setCrop} keepSelection>
-                  <img
-                    ref={imgRef}
-                    src={cropImage}
-                    alt="To crop"
-                    style={{ maxWidth: '100%' }}
-                    crossOrigin="anonymous"
-                  />
-                </ReactCrop>
-              </div>
-            </div>
-
-            {/* Hidden canvas */}
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: 20,
-              }}
-            >
-              <button
-                onClick={handleCropCancel}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCropApply}
-                style={{
-                  backgroundColor: '#4285f4',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-
+                        </div>
                         <div className="project-field">
                           <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
                             Upload Aadhaar Back
@@ -2382,7 +1806,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                               <option value="">Select Labour Ownership</option>
                               <option value="VJ" style={{ width: 'calc(100% - 20px)' }}>VJ</option>
                               <option value="CONTRACTOR" style={{ width: 'calc(100% - 20px)' }}>CONTRACTOR</option>
-                              <option value="CONTRACTOR" style={{ width: 'calc(100% - 20px)' }}>SCPL</option>
                             </select>
                           </div>
                         </div>
@@ -2528,176 +1951,6 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                             <DocumentScannerIcon className="input-icon" />
                           </div>
                         </div>
-                        
-      {showCropper && cropImage && (
-        <div
-          className="cropper-modal-overlay"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            className="cropper-modal"
-            style={{
-              backgroundColor: 'white',
-              padding: 20,
-              borderRadius: 8,
-              maxWidth: '90%',
-              maxHeight: '90%',
-              overflow: 'auto',
-            }}
-          >
-            <h3>Crop & Rotate Image</h3>
-
-            {/* Rotation Controls */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 15,
-                margin: '10px 0 20px',
-              }}
-            >
-              <button
-                onClick={() => setRotation((prev) => (prev - 90) % 360)}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                ↺ Rotate Left
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input
-                  type="range"
-                  min={-180}
-                  max={180}
-                  value={rotation}
-                  onChange={(e) => setRotation(parseInt(e.target.value, 10))}
-                  style={{ width: 150 }}
-                />
-                <span>{rotation}°</span>
-              </div>
-              <button
-                onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                ↻ Rotate Right
-              </button>
-            </div>
-
-            {/* Reset Button */}
-            <div style={{ textAlign: 'center', marginBottom: 15 }}>
-              <button
-                onClick={() => {
-                  setRotation(0);
-                  setCrop({
-                    unit: '%',
-                    width: 50,
-                    height: 50,
-                    x: 25,
-                    y: 25,
-                  });
-                }}
-                style={{
-                  padding: '5px 10px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset All
-              </button>
-            </div>
-
-            {/* Cropper */}
-            <div
-              style={{
-                maxWidth: 600,
-                margin: '0 auto',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  transform: `rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
-                  maxWidth: '100%',
-                  transition: 'transform 0.3s ease',
-                }}
-              >
-                <ReactCrop crop={crop} onChange={setCrop} keepSelection>
-                  <img
-                    ref={imgRef}
-                    src={cropImage}
-                    alt="To crop"
-                    style={{ maxWidth: '100%' }}
-                    crossOrigin="anonymous"
-                  />
-                </ReactCrop>
-              </div>
-            </div>
-
-            {/* Hidden canvas */}
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: 20,
-              }}
-            >
-              <button
-                onClick={handleCropCancel}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCropApply}
-                style={{
-                  backgroundColor: '#4285f4',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
                       </div>
                       <div className="navigationBut">
                         <button onClick={() => handleNext('/personal')}>Next</button>
@@ -2931,6 +2184,54 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                         </div>
                       </div>
 
+
+
+                      {/* <div className="location-photo-label">
+                        <InputLabel
+                          id="personal-emcontact-label"
+                          sx={{ color: "black" }}
+                        >
+                          Capture Photo{renderRequiredAsterisk(true)}
+                        </InputLabel>
+                        <div className="camera-container">
+                          <div className="video-container" style={{ position: 'relative' }}>
+                            <video ref={videoRef} className="video" autoPlay style={{ display: stream ? 'block' : 'none', width: '100%' }}></video>
+                            <canvas ref={canvasRef} className="canvas" style={{ display: 'none' }}></canvas>
+                            {photoSrc && <img src={photoSrc} alt="Captured" className="photo" style={{ width: '96%', position: 'absolute', top: 0, left: 0 }} />}
+                          </div>
+                          <div className="button-container" style={{ marginTop: '10px' }}>
+                            {!stream && !photoSrc && (
+                              <button type="button" onClick={startCamera} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px' }}>
+                                Start Camera<CameraAltIcon />
+                              </button>
+                            )}
+                            {stream && !photoSrc && (
+                              <button type="button" onClick={capturePhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px', backgroundColor: 'rgb(93 210 120 / 89%)', color: 'white', }}>
+                                Capture Photo<CameraAltIcon />
+                              </button>
+                            )}
+                            {!stream && photoSrc && (
+                              <button type="button" onClick={repeatPhoto} className="camerabutton" style={{ width: "278px", border: '2px solid #dfdfdf', borderRadius: '5px', height: '45px', backgroundColor: 'rgb(214 94 105 / 78%)', color: 'white', }}>
+                                Repeat Photo<CameraAltIcon />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <input
+                          type="hidden"
+                          id="photoInput"
+                          name="photoInput"
+                          value={photoSrc || ''}
+                          required
+                          onChange={(e) => setFormData((prevFormData) => {
+                            return { ...prevFormData, photoInput: e.target.value }
+                          })}
+                        />
+
+                      </div> */}
+
+
+
                       <div className="location-photo-label">
                         <InputLabel
                           id="personal-emcontact-label"
@@ -3087,6 +2388,29 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                         </div>
                       </div>
 
+                      {/* <div className="locations">
+                        <div className="bankDetails-field">
+                          <InputLabel id="branch-label" sx={{ color: "black" }}>
+                            Payment Mode
+                          </InputLabel>
+                          <input
+                            type="text"
+                            id="Payment_Mode"
+                            name="Payment_Mode"
+                            required
+                            value={formData.Payment_Mode || 'NEFT'}
+                            onChange={handleChanges}
+                            style={getInputStyle('Payment_Mode')}
+                          />
+                        </div>
+                      </div> */}
+
+                      {/* <div className="bankDetails-field">
+                        <InputLabel id="id-card-label" sx={{ color: "black" }}>
+                          Id Proof{renderRequiredAsterisk(true)}
+                        </InputLabel>
+                        <input type="file" onChange={() => { }} required />
+                      </div> */}
                       <div className="navigationBut">
                         <button onClick={() => handlePrevious('/personal')}>Previous</button>
                         <button onClick={() => handleNext('/project')} style={{ marginLeft: "10px" }}>Next</button>
@@ -3154,13 +2478,15 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 id="projectName"
                                 name="projectName"
                                 value={formData.projectName}
+                                // onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                                 onChange={handleInputChange}
                                 style={getInputStyle('projectName')}
                               // required
                               >
                                 <option value="" >Select a project</option>
                                 {projectNames.map(project => (
-                                  <option key={project.Id} value={project.Id}>{project.Business_Unit}</option>
+                                  // <option key={project.id} value={project.Business_Unit}>{project.Business_Unit}</option>
+                                  <option key={project.id} value={project.id}>{project.Business_Unit}</option>
                                 ))}
                               </select>
                             </div>
@@ -3179,12 +2505,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                                 style={getInputStyle('companyName')}
                               >
-
-                                {Array.isArray(companyNames) ? companyNames.map((company) => (
-                                  <option key={company.Company_Name} value={company.Company_Name}>
-                                    {company.Company_Name}
-                                  </option>
-                                )) : null}
+                                {/* <option value="" >Select Company Name</option> */}
+                                {companyNames.map(company => (
+                                  <option key={company.id} value={company.Company_Name}>{company.Company_Name}</option>
+                                ))}
                               </select>
                             </div>
                           </div>
@@ -3200,9 +2524,10 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                             </InputLabel>
                             <div className="gender-input">
                               <select
-                                Id="department"
+                                id="department"
                                 name="department"
                                 value={formData.department}
+                                // onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                                 onChange={handleInputChange}
                                 style={getInputStyle('department')}
                               // required
@@ -3230,11 +2555,13 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                               >
                                 <option value="" >Select a Trade</option>
                                 {designations.map(designation => (
-                                  <option key={designation.id} value={designation.farvision_description} data-id={designation.id}>
-                                    {designation.farvision_description}
+                                  <option key={designation.id} value={designation.Description} data-id={designation.id}>
+                                    {designation.Description}
                                   </option>
                                 ))}
-
+                                {/* {designations.map(designation => (
+                                  <option key={designation.id} value={designation.Description}>{designation.Description}</option>
+                                ))} */}
                               </select>
                             </div>
                           </div>
@@ -3250,6 +2577,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 id="labourCategory"
                                 name="labourCategory"
                                 value={formData.labourCategory}
+                                // onChange={(e) => setFormData({ ...formData, labourCategory: e.target.value })}
                                 onChange={handleSelectChange}
                                 style={getInputStyle('labourCategory')}
                               // required
@@ -3260,7 +2588,9 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                     {category.Description}
                                   </option>
                                 ))}
-
+                                {/* {labourCategories.map(category => (
+                                  <option key={category.Id} value={category.Description}>{category.Description}</option>
+                                ))} */}
                               </select>
                             </div>
                           </div>
@@ -3273,6 +2603,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 id="workingHours"
                                 name="workingHours"
                                 value={formData.workingHours}
+                                // onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
                                 onChange={handleInputChange}
                                 style={getInputStyle('workingHours')}
                                 // required
@@ -3282,11 +2613,12 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                                 {Object.values(departmentWorkingHoursMapping).map((hours, index) => (
                                   <option key={index} value={hours}>{hours}</option>
                                 ))}
-
+                                {/* {workingHours.map(hours => (
+                                  <option key={hours.Id} value={hours.Shift_Name}>{hours.Shift_Name}</option>
+                                ))} */}
                               </select>
                             </div>
                           </div>
-                          {/* </> */}
                         </div>
 
 
@@ -3333,7 +2665,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
                         <div className="locations">
-                          {/* <div className="project-field">
+                          <div className="project-field">
                             <InputLabel id="aadhaar-label" sx={{ color: "black" }}>
                               Upload Induction Document {renderRequiredAsterisk(true)}
                             </InputLabel>
@@ -3357,205 +2689,13 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                               />
                               <DocumentScannerIcon className="input-icon" />
                             </div>
-                          </div> */}
-
-
-                          {/* Induction Documents - multiple files */}
-                          <div className="project-field">
-                            <InputLabel id="induction-label" sx={{ color: "black" }}>
-                              Upload Induction Document {renderRequiredAsterisk(true)}
-                            </InputLabel>
-                            <div className="input-with-icon">
-                              <input
-                                type="text"
-                                 value={uploadInductionDoc}
-                                placeholder="Choose files"
-                                readOnly
-                                style={{ cursor: "pointer", backgroundColor: "#fff", ...getInputStyle("uploadInductionDoc") }}
-                                onClick={() => document.getElementById("uploadInductionDoc").click()}
-                              />
-                              <input
-                                type="file"
-                                id="uploadInductionDoc"
-                                name="uploadInductionDoc"
-                                onChange={handleFileChangesInduction}
-                                accept="image/*"
-                                multiple
-                                style={{ display: "none" }}
-                              />
-                              <DocumentScannerIcon className="input-icon" />
-                            </div>
                           </div>
-
-                          {/* Cropper modal */}
-                          {showCropper && cropImage && (
-                            <div
-                              className="cropper-modal-overlay"
-                              style={{
-                                position: "fixed",
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                backgroundColor: "rgba(0,0,0,0.7)",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                zIndex: 1000,
-                              }}
-                            >
-                              <div
-                                className="cropper-modal"
-                                style={{
-                                  backgroundColor: "white",
-                                  padding: 20,
-                                  borderRadius: 8,
-                                  maxWidth: "90%",
-                                  maxHeight: "90%",
-                                  overflow: "auto",
-                                }}
-                              >
-                                <h3>Crop & Rotate Image</h3>
-
-                                {/* Rotation controls */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    gap: 15,
-                                    margin: "10px 0 20px",
-                                  }}
-                                >
-                                  <button
-                                    onClick={() => setRotation((prev) => (prev - 90) % 360)}
-                                    style={{
-                                      padding: "8px 12px",
-                                      backgroundColor: "#f0f0f0",
-                                      border: "1px solid #ccc",
-                                      borderRadius: 4,
-                                      cursor: "pointer",
-                                    }}
-                                  >
-                                    ↺ Rotate Left
-                                  </button>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                    <input
-                                      type="range"
-                                      min={-180}
-                                      max={180}
-                                      value={rotation}
-                                      onChange={(e) => setRotation(parseInt(e.target.value, 10))}
-                                      style={{ width: 150 }}
-                                    />
-                                    <span>{rotation}°</span>
-                                  </div>
-                                  <button
-                                    onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                                    style={{
-                                      padding: "8px 12px",
-                                      backgroundColor: "#f0f0f0",
-                                      border: "1px solid #ccc",
-                                      borderRadius: 4,
-                                      cursor: "pointer",
-                                    }}
-                                  >
-                                    ↻ Rotate Right
-                                  </button>
-                                </div>
-
-                                {/* Reset Button */}
-                                <div style={{ textAlign: "center", marginBottom: 15 }}>
-                                  <button
-                                    onClick={() => {
-                                      setRotation(0);
-                                      setCrop({ unit: "%", width: 50, height: 50, x: 25, y: 25 });
-                                    }}
-                                    style={{
-                                      padding: "5px 10px",
-                                      backgroundColor: "#f0f0f0",
-                                      border: "1px solid #ccc",
-                                      borderRadius: 4,
-                                      cursor: "pointer",
-                                    }}
-                                  >
-                                    Reset All
-                                  </button>
-                                </div>
-
-                                {/* Cropper */}
-                                <div
-                                  style={{
-                                    maxWidth: 600,
-                                    margin: "0 auto",
-                                    overflow: "hidden",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      transform: `rotate(${rotation}deg)`,
-                                      transformOrigin: "center center",
-                                      maxWidth: "100%",
-                                      transition: "transform 0.3s ease",
-                                    }}
-                                  >
-                                    <ReactCrop crop={crop} onChange={setCrop} keepSelection>
-                                      <img
-                                        ref={imgRef}
-                                        src={cropImage}
-                                        alt="To crop"
-                                        style={{ maxWidth: "100%" }}
-                                        crossOrigin="anonymous"
-                                      />
-                                    </ReactCrop>
-                                  </div>
-                                </div>
-
-                                {/* Hidden canvas */}
-                                <canvas ref={canvasRef} style={{ display: "none" }} />
-
-                                {/* Action Buttons */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    marginTop: 20,
-                                  }}
-                                >
-                                  <button
-                                    onClick={handleCropCancel}
-                                    style={{
-                                      padding: "8px 16px",
-                                      backgroundColor: "#f0f0f0",
-                                      border: "1px solid #ccc",
-                                      borderRadius: 4,
-                                      cursor: "pointer",
-                                    }}
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    onClick={handleCropApply}
-                                    style={{
-                                      backgroundColor: "#4285f4",
-                                      color: "white",
-                                      border: "none",
-                                      padding: "8px 16px",
-                                      borderRadius: 4,
-                                      cursor: "pointer",
-                                    }}
-                                  >
-                                    Apply
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
                         </div>
 
 
                         <div className="buttons-container">
                           <div className="navigation-buttons">
+                            {/* <button onClick={() => handleNext('/project')} style={{marginLeft: '10px'}}>Next</button> */}
                           </div>
                           <div className="save-btn">
                             <button
@@ -3567,6 +2707,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                             <button
                               variant="contained"
                               type="button"
+                              // onClick={openModal}
                               onClick={openPreviewModal}
                               className="btn btn-preview"
                             > Preview
@@ -3751,5 +2892,3 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
 export default OnboardingForm;
-
-
