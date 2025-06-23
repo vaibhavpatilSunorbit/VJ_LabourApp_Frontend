@@ -97,49 +97,49 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const laboursSource =
         labourlist && labourlist.length > 0 ? labourlist : labours;
 
-    const fetchLaboursAttenadance = async (filters = {}) => {
-        setLoading(true);
-        try {
-            const response = await axios.get(
-                `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
-                { params: filters }
-            );
+    // const fetchLaboursAttenadance = async (filters = {}) => {
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.get(
+    //             `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
+    //             { params: filters }
+    //         );
 
-            console.log("Filtered Attendance Response", response.data);
+    //         console.log("Filtered Attendance Response", response.data);
 
-            const uniqueLaboursMap = new Map();
-            console.log("uniqueLaboursMap", uniqueLaboursMap);
-            response.data.forEach(item => {
-                if (!uniqueLaboursMap.has(item.LabourID)) {
-                    uniqueLaboursMap.set(item.LabourID, {
-                        LabourID: item.LabourID,
-                        name: item.name,
-                        projectName: item.projectName,
-                        department: item.department,
-                        workingHours: item.workingHours || item.Shift,
-                        businessUnit: item.businessUnit,
-                        departmentName: item.departmentName,
-                        status: item.status || 'Approved',
-                        PresentDays: item.PresentDays,
-                        AbsentDays: item.AbsentDays,
-                        HalfDays: item.HalfDays,
-                        Overtime: item.RoundOffTotalOvertime
-                    });
-                }
-            });
+    //         const uniqueLaboursMap = new Map();
+    //         console.log("uniqueLaboursMap", uniqueLaboursMap);
+    //         response.data.forEach(item => {
+    //             if (!uniqueLaboursMap.has(item.LabourID)) {
+    //                 uniqueLaboursMap.set(item.LabourID, {
+    //                     LabourID: item.LabourID,
+    //                     name: item.name,
+    //                     projectName: item.projectName,
+    //                     department: item.department,
+    //                     workingHours: item.workingHours || item.Shift,
+    //                     businessUnit: item.businessUnit,
+    //                     departmentName: item.departmentName,
+    //                     status: item.status || 'Approved',
+    //                     PresentDays: item.PresentDays,
+    //                     AbsentDays: item.AbsentDays,
+    //                     HalfDays: item.HalfDays,
+    //                     Overtime: item.RoundOffTotalOvertime
+    //                 });
+    //             }
+    //         });
 
-            const uniqueLabours = Array.from(uniqueLaboursMap.values());
-            console.log("uniqueLabours", uniqueLabours);
-            setLaboursAttenadance(response.data);
-            setLabours(uniqueLabours);
+    //         const uniqueLabours = Array.from(uniqueLaboursMap.values());
+    //         console.log("uniqueLabours", uniqueLabours);
+    //         setLaboursAttenadance(response.data);
+    //         setLabours(uniqueLabours);
 
-        } catch (error) {
-            console.error('Error fetching labours:', error);
-            toast.error('Failed to fetch data');
-        } finally {
-            setLoading(false);
-        }
-    };
+    //     } catch (error) {
+    //         console.error('Error fetching labours:', error);
+    //         toast.error('Failed to fetch data');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
 
 
@@ -153,9 +153,49 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     //     }
     // };
 
+    const fetchLaboursAttenadance = async (filters = {}) => {
+    setLoading(true);
+    try {
+        const response = await axios.get(
+            `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
+            { params: filters }
+        );
+
+        const uniqueLaboursMap = new Map();
+        response.data.forEach(item => {
+            if (!uniqueLaboursMap.has(item.LabourID)) {
+                uniqueLaboursMap.set(item.LabourID, {
+                    LabourID: item.LabourID,
+                    name: item.name,
+                    projectName: item.projectName,
+                    department: item.department,
+                    workingHours: item.workingHours || item.Shift,
+                    businessUnit: item.businessUnit,
+                    departmentName: item.departmentName,
+                    status: item.status || 'Approved',
+                    PresentDays: item.PresentDays,
+                    AbsentDays: item.AbsentDays,
+                    HalfDays: item.HalfDays,
+                    Overtime: item.RoundOffTotalOvertime
+                });
+            }
+        });
+
+        const uniqueLabours = Array.from(uniqueLaboursMap.values());
+        setLaboursAttenadance(response.data);
+        setLabours(uniqueLabours);
+        setAttendanceData(response.data); // <-- ADD THIS LINE
+
+    } catch (error) {
+        console.error('Error fetching labours:', error);
+        toast.error('Failed to fetch data');
+    } finally {
+        setLoading(false);
+    }
+};
 
     useEffect(() => {
-        // fetchLaboursAttenadance();
+        fetchLaboursAttenadance();
         fetchProjectNames();
     }, []);
 
@@ -821,27 +861,34 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     // };
 
 
-    const getFilteredLaboursForTable = () => {
-        let baseLabours = rowsPerPage > 0
-            ? (searchResults.length > 0
-                ? searchResults
-                : (filteredIconLabours.length > 0
-                    ? filteredIconLabours
-                    : [...labours]))
-            : [];
+   const getFilteredLaboursForTable = () => {
+    let baseLabours = rowsPerPage > 0
+        ? (searchResults.length > 0
+            ? searchResults
+            : (filteredIconLabours.length > 0
+                ? filteredIconLabours
+                : [...labours]))
+        : [];
 
-        baseLabours = baseLabours.filter((labour) => {
-            const labourProjectId = Number(labour.projectName);
-            const labourDepartmentId = Number(labour.department);
-            return (
-                allowedProjectIds.includes(labourProjectId) &&
-                allowedDepartmentIds.includes(labourDepartmentId)
-            );
-        });
+    baseLabours = baseLabours.filter((labour) => {
+        const labourProjectId = Number(labour.projectName);
+        const labourDepartmentId = Number(labour.department);
+        return (
+            allowedProjectIds.includes(labourProjectId) &&
+            allowedDepartmentIds.includes(labourDepartmentId)
+        );
+    });
 
-        baseLabours = baseLabours.filter((labour) => labour.status === 'Approved' || labour.status === 'Disable');
-        return baseLabours;
-    };
+    // Only show users with presentDays > 0
+    baseLabours = baseLabours.filter((labour) => {
+        const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
+        return (labour.status === 'Approved' || labour.status === 'Disable') &&
+            labourAttendance &&
+            Number(labourAttendance.presentDays) > 0;
+    });
+
+    return baseLabours;
+};
 
     const handleModalClose = () => {
         setModalOpen(false);
