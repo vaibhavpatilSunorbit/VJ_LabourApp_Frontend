@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    Button, Box, TextField, Select, MenuItem, Typography, Modal, Grid, Chip
+    Button, Box, TextField, Select, MenuItem, Typography, Modal, Grid
 } from '@mui/material';
 import { API_BASE_URL } from "../../../Data";
 import { toast } from 'react-toastify';
@@ -9,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import { Chip } from '@mui/material';
 
 const ExportAttendance = () => {
     const theme = useTheme();
@@ -22,35 +24,36 @@ const ExportAttendance = () => {
     const [departments, setDepartments] = useState([]);
     const [selectedDepartments, setSelectedDepartments] = useState([]);
 
+    const fetchDepartments = async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/departments`);
+            setDepartments(response.data);
+        } catch (error) {
+            console.error('Error fetching departments:', error);
+            toast.error('Error fetching departments.');
+        }
+    };
+
     useEffect(() => {
-        const fetchDepartments = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/api/departments`);
-                setDepartments(response.data);
-            } catch (error) {
-                console.error('Error fetching departments:', error);
-                toast.error('Error fetching departments.');
-            }
-        };
         fetchDepartments();
     }, []);
 
+    const fetchBusinessUnits = async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
+            setBusinessUnits(response.data);
+        } catch (error) {
+            console.error('Error fetching business units:', error);
+            toast.error('Error fetching business units.');
+        }
+    };
     useEffect(() => {
-        const fetchBusinessUnits = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
-                setBusinessUnits(response.data);
-            } catch (error) {
-                console.error('Error fetching business units:', error);
-                toast.error('Error fetching business units.');
-            }
-        };
         fetchBusinessUnits();
     }, []);
 
     // Unified export handler for both Excel and PDF
     const handleExport = async (type = "excel") => {
-        if (!selectedBusinessUnit.length || !startDate || !endDate) {
+        if (!selectedBusinessUnit || !startDate || !endDate) {
             toast.error('Please select a Business Unit, Start Date, and End Date.');
             return;
         }
@@ -76,6 +79,15 @@ const ExportAttendance = () => {
                 fileExt = 'pdf';
             }
 
+            // Log params for debugging
+            // console.log("Export params:", {
+            //     url,
+            //     projectName: selectedProjectIds.join(','),
+            //     department: selectedDepartments.join(','),
+            //     startDate,
+            //     endDate
+            // });
+
             const response = await axios.get(url, {
                 params: {
                     projectName: selectedProjectIds.join(','),
@@ -89,6 +101,7 @@ const ExportAttendance = () => {
             const blob = new Blob([response.data], { type: fileType });
             const fileName = `Attendance_${startDate}_${endDate}.${fileExt}`;
 
+            // Direct download for both Excel and PDF
             const downloadUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = downloadUrl;
@@ -236,8 +249,10 @@ const ExportAttendance = () => {
                                 sx={{
                                     paddingTop: '4px',
                                     paddingBottom: '2px',
+
                                 }}
                             >
+
                                 <MenuItem value="All">
                                     <em>Select All</em>
                                 </MenuItem>
@@ -411,19 +426,30 @@ export default ExportAttendance;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import React, { useState, useEffect } from 'react';
 // import axios from 'axios';
 // import {
-//     Button, Box, TextField, Select, MenuItem, Typography, Modal, Grid
+//     Button, Box, TextField, Select, MenuItem, Typography, Modal, Grid, Chip
 // } from '@mui/material';
 // import { API_BASE_URL } from "../../../Data";
-// import { ToastContainer, toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
 // import 'react-toastify/dist/ReactToastify.css';
 // import { useTheme } from '@mui/material/styles';
 // import useMediaQuery from '@mui/material/useMediaQuery';
 // import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-// import { Chip } from '@mui/material';
-
 
 // const ExportAttendance = () => {
 //     const theme = useTheme();
@@ -434,40 +460,38 @@ export default ExportAttendance;
 //     const [startDate, setStartDate] = useState('');
 //     const [endDate, setEndDate] = useState('');
 //     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-//     const [labours, setLabours] = useState([]);
 //     const [departments, setDepartments] = useState([]);
-// const [selectedDepartments, setSelectedDepartments] = useState([]);
+//     const [selectedDepartments, setSelectedDepartments] = useState([]);
 
-// const fetchDepartments = async () => {
-//     try {
-//         const response = await axios.get(`${API_BASE_URL}/api/departments`);
-//         setDepartments(response.data); // expected: array of strings or objects with .name
-//     } catch (error) {
-//         console.error('Error fetching departments:', error);
-//         toast.error('Error fetching departments.');
-//     }
-// };
-
-// useEffect(() => {
-//     fetchDepartments();
-// }, []);
-
-
-//     const fetchBusinessUnits = async () => {
-//         try {
-//             const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
-//             setBusinessUnits(response.data);
-//         } catch (error) {
-//             console.error('Error fetching business units:', error);
-//             toast.error('Error fetching business units.');
-//         }
-//     };
 //     useEffect(() => {
+//         const fetchDepartments = async () => {
+//             try {
+//                 const response = await axios.get(`${API_BASE_URL}/api/departments`);
+//                 setDepartments(response.data);
+//             } catch (error) {
+//                 console.error('Error fetching departments:', error);
+//                 toast.error('Error fetching departments.');
+//             }
+//         };
+//         fetchDepartments();
+//     }, []);
+
+//     useEffect(() => {
+//         const fetchBusinessUnits = async () => {
+//             try {
+//                 const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
+//                 setBusinessUnits(response.data);
+//             } catch (error) {
+//                 console.error('Error fetching business units:', error);
+//                 toast.error('Error fetching business units.');
+//             }
+//         };
 //         fetchBusinessUnits();
 //     }, []);
 
+//     // Unified export handler for both Excel and PDF
 //     const handleExport = async (type = "excel") => {
-//         if (!selectedBusinessUnit || !startDate || !endDate) {
+//         if (!selectedBusinessUnit.length || !startDate || !endDate) {
 //             toast.error('Please select a Business Unit, Start Date, and End Date.');
 //             return;
 //         }
@@ -478,13 +502,7 @@ export default ExportAttendance;
 //             })
 //             .filter(Boolean);
 
-//         // try {
-//         //     const response = await axios.get(`${API_BASE_URL}/api/labours/export`, {
-//         //         params: { projectName: selectedProjectIds.join(','), department: selectedDepartments.join(','), startDate, endDate },
-//         //         responseType: 'blob',
-//         //     });
-
-//          try {
+//         try {
 //             let url = "";
 //             let fileType = "";
 //             let fileExt = "";
@@ -509,22 +527,19 @@ export default ExportAttendance;
 //                 responseType: 'blob',
 //             });
 
-//             const blob = new Blob([response.data], {
-//                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-//             });
+//             const blob = new Blob([response.data], { type: fileType });
+//             const fileName = `Attendance_${startDate}_${endDate}.${fileExt}`;
 
-//             // const fileName = `Attendance_${selectedBusinessUnit.join('_')}_${startDate}_${endDate}.xlsx`;
-//             const fileName = `Attendance_${startDate}_${endDate}.xlsx`;
-
+//             const downloadUrl = window.URL.createObjectURL(blob);
 //             const link = document.createElement('a');
-//             link.href = window.URL.createObjectURL(blob);
+//             link.href = downloadUrl;
 //             link.setAttribute('download', fileName);
 //             document.body.appendChild(link);
 //             link.click();
+//             document.body.removeChild(link);
+//             window.URL.revokeObjectURL(downloadUrl);
 
-//             link.parentNode.removeChild(link);
-
-//             toast.success('Attendance exported successfully!');
+//             toast.success(`Attendance ${type === "excel" ? "Excel" : "PDF"} exported successfully!`);
 //         } catch (error) {
 //             console.error('Error exporting data:', error);
 
@@ -597,42 +612,12 @@ export default ExportAttendance;
 //                                 component="label"
 //                                 variant="body2"
 //                                 color="textSecondary"
-//                                 sx={{ marginBottom: 0.5}}
+//                                 sx={{ marginBottom: 0.5 }}
 //                             >
 //                                 Select Business Unit
 //                             </Typography>
-//                             {/* <Select
-//                                 value={selectedBusinessUnit}
-//                                 onChange={(e) => {
-//                                     setSelectedBusinessUnit(e.target.value);
-//                                     const selectedProject = businessUnits.find(
-//                                         (unit) => unit.BusinessUnit === e.target.value
-//                                     );
-//                                     setProjectName(selectedProject?.ProjectID || '');
-//                                 }}
-//                                 displayEmpty
-//                                 fullWidth
-//                                 variant="outlined"
-//                                 sx={{
-//                                     borderRadius: '8px',
-//                                     paddingTop: '4px',
-//                                     paddingBottom: '2px'
-//                                 }}
-//                             >
-//                                 <MenuItem value="" disabled>
-//                                     Select Business Unit
-//                                 </MenuItem>
-//                                 {businessUnits.map((unit) => (
-//                                     <MenuItem
-//                                         key={unit.BusinessUnit}
-//                                         value={unit.BusinessUnit}
-//                                     >
-//                                         {unit.BusinessUnit}
-//                                     </MenuItem>
-//                                 ))}
-//                             </Select> */}
 //                             <Select
-//                              multiple
+//                                 multiple
 //                                 value={selectedBusinessUnit}
 //                                 onChange={(e) => {
 //                                     const { value } = e.target;
@@ -665,7 +650,7 @@ export default ExportAttendance;
 //                                 renderValue={(selected) => {
 //                                     if (selected.length === 0) return "Select Business Unit(s)";
 //                                     return (
-//                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 , height: '100px', overflowY: 'auto' }}>
+//                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, height: '100px', overflowY: 'auto' }}>
 //                                             {selected.map((value) => (
 //                                                 <Chip
 //                                                     key={value}
@@ -692,7 +677,6 @@ export default ExportAttendance;
 //                                 sx={{
 //                                     paddingTop: '4px',
 //                                     paddingBottom: '2px',
-                                
 //                                 }}
 //                             >
 //                                 <MenuItem value="All">
@@ -707,70 +691,66 @@ export default ExportAttendance;
 //                         </Box>
 
 //                         <Box>
-//     <Typography component="label" variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
-//         Select Department(s)
-//     </Typography>
-//     <Select
-//         multiple
-//         fullWidth
-//         variant="outlined"
-//         value={selectedDepartments}
-//         onChange={(e) => {
-//             const { value } = e.target;
-//             const selected = typeof value === 'string' ? value.split(',') : value;
+//                             <Typography component="label" variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
+//                                 Select Department(s)
+//                             </Typography>
+//                             <Select
+//                                 multiple
+//                                 fullWidth
+//                                 variant="outlined"
+//                                 value={selectedDepartments}
+//                                 onChange={(e) => {
+//                                     const { value } = e.target;
+//                                     const selected = typeof value === 'string' ? value.split(',') : value;
 
-//             if (selected.includes('All')) {
-//                 if (selectedDepartments.length === departments.length) {
-//                     // Deselect all
-//                     setSelectedDepartments([]);
-//                 } else {
-//                     // Select all department IDs
-//                     const allDeptIds = departments.map((dept) => dept.Id);
-//                     setSelectedDepartments(allDeptIds);
-//                 }
-//                 return;
-//             }
+//                                     if (selected.includes('All')) {
+//                                         if (selectedDepartments.length === departments.length) {
+//                                             setSelectedDepartments([]);
+//                                         } else {
+//                                             const allDeptIds = departments.map((dept) => dept.Id);
+//                                             setSelectedDepartments(allDeptIds);
+//                                         }
+//                                         return;
+//                                     }
 
-//             setSelectedDepartments(selected);
-//         }}
-//         renderValue={(selected) => {
-//             if (selected.length === 0) return "Select Department(s)";
-//             return (
-//                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, height: '90px', overflowY: 'auto' }}>
-//                     {selected.map((id) => {
-//                         const dept = departments.find((d) => d.Id === id);
-//                         return (
-//                             <Chip
-//                                 key={id}
-//                                 label={dept?.Description || id}
-//                                 onMouseDown={(e) => e.stopPropagation()}
-//                                 onDelete={() => {
-//                                     const updated = selectedDepartments.filter(item => item !== id);
-//                                     setSelectedDepartments(updated);
+//                                     setSelectedDepartments(selected);
 //                                 }}
-//                             />
-//                         );
-//                     })}
-//                 </Box>
-//             );
-//         }}
-//         sx={{
-//             paddingTop: '4px',
-//             paddingBottom: '2px',
-//         }}
-//     >
-//         <MenuItem value="All">
-//             <em>Select All</em>
-//         </MenuItem>
-//         {departments.map((dept) => (
-//             <MenuItem key={dept.Id} value={dept.Id}>
-//                 {dept.Description}
-//             </MenuItem>
-//         ))}
-//     </Select>
-// </Box>
-
-
+//                                 renderValue={(selected) => {
+//                                     if (selected.length === 0) return "Select Department(s)";
+//                                     return (
+//                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, height: '90px', overflowY: 'auto' }}>
+//                                             {selected.map((id) => {
+//                                                 const dept = departments.find((d) => d.Id === id);
+//                                                 return (
+//                                                     <Chip
+//                                                         key={id}
+//                                                         label={dept?.Description || id}
+//                                                         onMouseDown={(e) => e.stopPropagation()}
+//                                                         onDelete={() => {
+//                                                             const updated = selectedDepartments.filter(item => item !== id);
+//                                                             setSelectedDepartments(updated);
+//                                                         }}
+//                                                     />
+//                                                 );
+//                                             })}
+//                                         </Box>
+//                                     );
+//                                 }}
+//                                 sx={{
+//                                     paddingTop: '4px',
+//                                     paddingBottom: '2px',
+//                                 }}
+//                             >
+//                                 <MenuItem value="All">
+//                                     <em>Select All</em>
+//                                 </MenuItem>
+//                                 {departments.map((dept) => (
+//                                     <MenuItem key={dept.Id} value={dept.Id}>
+//                                         {dept.Description}
+//                                     </MenuItem>
+//                                 ))}
+//                             </Select>
+//                         </Box>
 
 //                         <Box>
 //                             <Typography component="label" variant="body2" color="textSecondary">
@@ -800,7 +780,7 @@ export default ExportAttendance;
 //                             />
 //                         </Box>
 
-//                       <Grid container spacing={2} justifyContent="flex-end">
+//                         <Grid container spacing={2} justifyContent="flex-end">
 //                             <Grid item>
 //                                 <Button
 //                                     onClick={handleClose}
@@ -852,9 +832,18 @@ export default ExportAttendance;
 //             </Modal>
 //         </>
 //     )
-
 // };
+
 // export default ExportAttendance;
+
+
+
+
+
+
+
+
+
 
 
 
