@@ -215,29 +215,6 @@ const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341];
     );
     console.log("Full labour response:", labour);
 
-<<<<<<< HEAD
-    let labourID;
-     const labourStatus = typeof labour.Reject_Reason === 'string' ? labour.Reject_Reason.trim() : '';
-    console.log("labourStatus:", labourStatus);
-
-    const shouldGetNextId =
-      !labour.LabourID ||
-      labour.LabourID.trim() === '' ||
-      labourStatus === 'Manually Rejected from database for FEPR designation';
-
-    console.log("shouldGetNextId:", shouldGetNextId);
-
-    if (shouldGetNextId) {
-      const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
-        params: { departmentId }
-      });
-      labourID = nextID;
-    } else {
-      // 2. Attendance Check
-      const attendanceCheck = await axios.get(`${API_BASE_URL}/api/admin/attendance-check`, {
-        params: { labourId: labour.LabourID }
-      });
-=======
     /* 2️⃣  Normalise some values we’ll reuse */
     const labourStatus =
       typeof labour.Reject_Reason === "string"
@@ -265,26 +242,10 @@ const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341];
         `${API_BASE_URL}/api/admin/attendance-check`,
         { params: { labourId: currentLabourId } }
       );
->>>>>>> 9d95c647f4f48210ffa3a211d3b5c7cc9f6a28c0
 
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-<<<<<<< HEAD
-      const lastDate = attendanceCheck.data?.lastAttendanceDate;
-      const hasRecentAttendance = lastDate && new Date(lastDate) > threeMonthsAgo;
-
-      if (hasRecentAttendance) {
-        labourID = labour.LabourID;
-      } else {
-        const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
-          params: { departmentId }
-        });
-        labourID = nextID;
-      }
-    }
-
-=======
       const lastDate = attendance?.lastAttendanceDate
         ? new Date(attendance.lastAttendanceDate)
         : null;
@@ -351,7 +312,6 @@ const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341];
 //     }
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
->>>>>>> 9d95c647f4f48210ffa3a211d3b5c7cc9f6a28c0
     // if (!labour.LabourID || labour.LabourID.trim() === '') {
     //   const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
     //     params: { departmentId }

@@ -3,15 +3,9 @@ import { UilUniversity, UilUserPlus, UilFileAlt } from '@iconscout/react-unicons
 
 
 
-<<<<<<< HEAD
 export const API_BASE_URL = "https://laboursandbox.vjerp.com";
 // export const API_BASE_URL = "http://localhost:4000";
 // export const API_BASE_URL = "https://vjlabour.vjerp.com";
-=======
-// export const API_BASE_URL = "https://laboursandbox.vjerp.com";
-// export const API_BASE_URL = "http://localhost:4000";
-export const API_BASE_URL = "https://vjlabour.vjerp.com";
->>>>>>> 9d95c647f4f48210ffa3a211d3b5c7cc9f6a28c0
 
 
 
@@ -163,10 +157,6 @@ export const INDUCTED_BY_OPTIONS = [
   "Sanket Ravindra Hule",
   "Tushar Rajesh Kamble",
   "Vrushabh Sanjay Kagnole",
-<<<<<<< HEAD
-=======
-  "Sachin Mahadu Papal",
->>>>>>> 9d95c647f4f48210ffa3a211d3b5c7cc9f6a28c0
   "Aditya Pravin Kumbhar",
   "Akash Satish Mohite",
   "Vitthal Chagan Katkar",

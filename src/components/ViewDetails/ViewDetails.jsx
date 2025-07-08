@@ -732,13 +732,8 @@ import { API_BASE_URL } from '../../Data';
 
 const trimUrl = (url) => {
   // const baseUrl = "http://localhost:4000/uploads/";
-<<<<<<< HEAD
   const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
   // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
-=======
-  // const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
-  const baseUrl = "https://vjlabour.vjerp.com/uploads/";
->>>>>>> 9d95c647f4f48210ffa3a211d3b5c7cc9f6a28c0
   return typeof url === 'string' ? url.replace(baseUrl, '') : '';
 };
 
