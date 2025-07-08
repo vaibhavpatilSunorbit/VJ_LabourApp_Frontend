@@ -241,53 +241,104 @@ const CalenderAttendance = () => {
         }
     };
 
+const fetchAttendanceForMonth = async () => {
+    if (!selectedLabourId || !selectedMonth) return;
+    setLoading(true);
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
+            params: { month: selectedMonth, year: selectedYear }
+        });
 
+        const attendanceList = response.data;
+        console.log('response.data for the labour 16-12-24', response.data);
 
-    const fetchAttendanceForMonth = async () => {
-        if (!selectedLabourId || !selectedMonth) return;
-        setLoading(true);
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
-                params: { month: selectedMonth, year: selectedYear }
-            });
+        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
 
-            const attendanceList = response.data;
-            console.log('response.data for the labour 16-12-24', response.data)
+        // Initialize an array to hold attendance data for each day of the month
+        const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
+            const date = new Date(selectedYear, selectedMonth - 1, i + 1);
 
-            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-            const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
-                const date = new Date(selectedYear, selectedMonth - 1, i + 1);
-                const attendanceRecord = attendanceList.find(
-                    (record) => new Date(record.Date).toDateString() === date.toDateString()
-                );
+            // Check if attendance record exists for the current date
+            const attendanceRecord = attendanceList.find(
+                (record) => new Date(record.Date).toDateString() === date.toDateString()
+            );
 
-                return {
-                    date: attendanceRecord?.Date.split('T')[0] || date.toISOString().split('T')[0],
-                    status: attendanceRecord ? attendanceRecord.Status : 'NA',
-                    firstPunch: attendanceRecord?.FirstPunch || '-',
-                    lastPunch: attendanceRecord?.LastPunch || '-',
-                    totalHours: attendanceRecord?.TotalHours || '0.00',
-                    overtime: attendanceRecord?.Overtime || '0.0',
-                    isHoliday: attendanceRecord?.Status === 'H',
-                    labourId: attendanceRecord?.LabourId || 'NA',
-                    overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
-                    remark: attendanceRecord?.RemarkManually || '-',
-                    attendanceId: attendanceRecord?.AttendanceId || '-',
-                };
-            });
-            console.log('attendanceRecord+++', fullMonthAttendance)
-            setAttendanceData(fullMonthAttendance);
-        } catch (error) {
-            console.error('Error fetching attendance data:', error);
+            return {
+                serial: i + 1,  // Serial number aligns with the date (1 to 30)
+                date: date.toISOString().split('T')[0],  // Correct date format (YYYY-MM-DD)
+                status: attendanceRecord ? attendanceRecord.Status : 'NA',  // Default to "NA" if no record found
+                firstPunch: attendanceRecord?.FirstPunch || '-',
+                lastPunch: attendanceRecord?.LastPunch || '-',
+                totalHours: attendanceRecord?.TotalHours || '0.00',
+                overtime: attendanceRecord?.Overtime || '0.0',
+                isHoliday: attendanceRecord?.Status === 'H',
+                labourId: attendanceRecord?.LabourId || 'NA',
+                overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
+                remark: attendanceRecord?.RemarkManually || '-',
+                attendanceId: attendanceRecord?.AttendanceId || '-',
+            };
+        });
 
-            if (error.response?.data?.message) {
-                toast.error(error.response.data.message);
-            } else {
-                toast.error('Error fetching attendance data. Please try again later.');
-            }
+        console.log('attendanceRecord+++', fullMonthAttendance);
+        setAttendanceData(fullMonthAttendance);
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+
+        if (error.response?.data?.message) {
+            toast.error(error.response.data.message);
+        } else {
+            toast.error('Error fetching attendance data. Please try again later.');
         }
-        setLoading(false);
-    };
+    }
+    setLoading(false);
+};
+
+
+    // const fetchAttendanceForMonth = async () => {
+    //     if (!selectedLabourId || !selectedMonth) return;
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelaboursforsinglelabour/${selectedLabourId}`, {
+    //             params: { month: selectedMonth, year: selectedYear }
+    //         });
+
+    //         const attendanceList = response.data;
+    //         console.log('response.data for the labour 16-12-24', response.data)
+
+    //         const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+    //         const fullMonthAttendance = Array.from({ length: daysInMonth }, (_, i) => {
+    //             const date = new Date(selectedYear, selectedMonth - 1, i + 1);
+    //             const attendanceRecord = attendanceList.find(
+    //                 (record) => new Date(record.Date).toDateString() === date.toDateString()
+    //             );
+
+    //             return {
+    //                 date: attendanceRecord?.Date.split('T')[0] || date.toISOString().split('T')[0],
+    //                 status: attendanceRecord ? attendanceRecord.Status : 'NA',
+    //                 firstPunch: attendanceRecord?.FirstPunch || '-',
+    //                 lastPunch: attendanceRecord?.LastPunch || '-',
+    //                 totalHours: attendanceRecord?.TotalHours || '0.00',
+    //                 overtime: attendanceRecord?.Overtime || '0.0',
+    //                 isHoliday: attendanceRecord?.Status === 'H',
+    //                 labourId: attendanceRecord?.LabourId || 'NA',
+    //                 overtimemanually: attendanceRecord?.OvertimeManually || '0.0',
+    //                 remark: attendanceRecord?.RemarkManually || '-',
+    //                 attendanceId: attendanceRecord?.AttendanceId || '-',
+    //             };
+    //         });
+    //         console.log('attendanceRecord+++', fullMonthAttendance)
+    //         setAttendanceData(fullMonthAttendance);
+    //     } catch (error) {
+    //         console.error('Error fetching attendance data:', error);
+
+    //         if (error.response?.data?.message) {
+    //             toast.error(error.response.data.message);
+    //         } else {
+    //             toast.error('Error fetching attendance data. Please try again later.');
+    //         }
+    //     }
+    //     setLoading(false);
+    // };
 
 
     useEffect(() => {
