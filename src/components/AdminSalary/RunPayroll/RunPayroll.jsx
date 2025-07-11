@@ -401,9 +401,11 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 TotalOvertimeHours: item.totalOvertimeHours,
                 Overtime_Pay: item.overtimePay,
                 WeeklyOff_Pay: item.weeklyOffPay,
-                Gross_Pay: item.grossPay,
-                Bonuses: item.bonuses,
-                Total_Deductions: item.totalDeductions,
+                Gross_Pay: item.baseWage,
+                Insentive: item.bonuses,
+                Advance: item.advancePay,
+                Debit: item.debit,
+                Total_Deduction: item.totalDeductions,
                 Net_Pay: item.netPay,
             }));
 
@@ -1048,9 +1050,10 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                     <TableCell>Total OT Hours</TableCell>
                                     <TableCell>Overtime Pay</TableCell>
                                     <TableCell>Weekly Off Pay</TableCell>
-                                    <TableCell>Bonus</TableCell>
-                                    <TableCell>Total Deductions</TableCell>
-                                    {/* <TableCell>Basic Salary</TableCell> */}
+                                    <TableCell>Insentive</TableCell>
+                                    <TableCell>Advance</TableCell>
+                                    <TableCell>Debit</TableCell>
+                                    <TableCell>Basic Salary</TableCell>
                                     <TableCell>Net Pay</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -1124,9 +1127,15 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                             onClick={() => handleOpenModalDeduction(labour)}
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
-                                            {labour.totalDeductions}
+                                            {labour.advancePay}
                                         </TableCell>
-                                        {/* <TableCell>{labour.baseWage}</TableCell> */}
+                                         <TableCell
+                                            onClick={() => handleOpenModalDeduction(labour)}
+                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
+                                        >
+                                            {labour.debit}
+                                        </TableCell>
+                                        <TableCell>{labour.baseWage}</TableCell>
                                         {/* <TableCell>{labour.netPay}</TableCell> */}
                                         <TableCell
                                             onClick={() => handleOpenModalNetpay(labour)}

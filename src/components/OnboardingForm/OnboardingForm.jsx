@@ -37,7 +37,16 @@ const departmentWorkingHoursMapping = {
   'ELECTRICAL': 'FLEXI SHIFT - 9 HRS',
   'FEP-R': 'FLEXI SHIFT - 9 HRS',
   'MQC': 'FLEXI SHIFT - 8 HRS',
-  'IN-HOUSE': 'FLEXI SHIFT - 8 HRS',
+  // 'IN-HOUSE': 'FLEXI SHIFT - 8 HRS',
+  'ICM (STORE)': 'FLEXI SHIFT - 8 HRS',
+  'QUALITY': 'FLEXI SHIFT - 8 HRS',
+  'RCC': 'FLEXI SHIFT - 8 HRS',
+  'BBM': 'FLEXI SHIFT - 8 HRS',
+  'PAINTING': 'FLEXI SHIFT - 8 HRS',
+  'DEEP CLEANING': 'FLEXI SHIFT - 8 HRS',
+  'HOUSEKEEPING': 'FLEXI SHIFT - 8 HRS',
+  'WATERPROOFING': 'FLEXI SHIFT - 8 HRS',
+  'GYPSUM': 'FLEXI SHIFT - 8 HRS',
 };
 
 const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = [], departmentList = [] }) => {
@@ -1599,6 +1608,7 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
                               <option value="">Select Labour Ownership</option>
                               <option value="VJ" style={{ width: 'calc(100% - 20px)' }}>VJ</option>
                               <option value="CONTRACTOR" style={{ width: 'calc(100% - 20px)' }}>CONTRACTOR</option>
+                              <option value="CONTRACTOR" style={{ width: 'calc(100% - 20px)' }}>SCPL</option>
                             </select>
                           </div>
                         </div>
