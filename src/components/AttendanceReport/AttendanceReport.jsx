@@ -486,6 +486,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 ...(onboardName && { onboardName }), AttendanceStatus,
                 markWeeklyOff: manualEditData.status === 'weeklyOff',
                 updatedFields: changedFields,
+                userType: user.userType || null,
             };
 
             console.log("payload for attendance only", payload)

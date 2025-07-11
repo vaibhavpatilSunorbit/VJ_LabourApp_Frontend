@@ -39,6 +39,7 @@ const accessPages = [
   "Run PayRoll",
   "View Payroll",
   "Dashboard",
+  "User Approval",
   // "Salary Generation",
   // "People",
 ];
@@ -525,6 +526,7 @@ const AddUser = () => {
                 <MenuItem value="superadmin">Super Admin</MenuItem>
                 <MenuItem value="admin">Admin</MenuItem>
                 <MenuItem value="user">User</MenuItem>
+                <MenuItem value="ENC">E&C</MenuItem>
               </TextField>
 
               <Autocomplete
