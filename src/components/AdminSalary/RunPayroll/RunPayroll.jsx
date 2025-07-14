@@ -382,7 +382,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
 
     const exportPayrollData = async (data) => {
         setLoading(true);
-        console.log("data ", JSON.stringify(data));
+        console.log("data export Payroll Data", JSON.stringify(data));
         try {
 
             const selectiveData = data.map(item => ({
@@ -394,7 +394,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 Department: item.department,
                 AadhaarNumber: item.aadhaarNumber,
                 AccountNumber: item.accountNumber,
-                Attendance_Count: item.attendanceCount,
+                presentDays: item.presentDays,
                 Wage_Type: item.wageType,
                 DailyWage_Rate: item.dailyWageRate,
                 FixedMonthly_Rate: item.fixedMonthlyWage,
