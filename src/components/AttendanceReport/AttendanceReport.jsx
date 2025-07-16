@@ -496,10 +496,10 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         let response;
 
         if (isOnlyOvertime) {
-            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload);
+            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload); 
         } else {
             response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
-        }
+            }
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
