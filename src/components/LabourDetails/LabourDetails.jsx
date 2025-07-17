@@ -201,7 +201,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     setIsApproveConfirmOpen(false);
   };
 
-const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341];
+const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
   const approveLabour = async (id, departmentId) => {
     try {
       // const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});

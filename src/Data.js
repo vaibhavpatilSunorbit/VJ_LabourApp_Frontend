@@ -160,6 +160,12 @@ export const INDUCTED_BY_OPTIONS = [
   "Aditya Pravin Kumbhar",
   "Akash Satish Mohite",
   "Vitthal Chagan Katkar",
+  // "Omkar Mahadev Kadam",
+  // "Mahesh Madhukar Kate",
+  // "Akshay Jaysing Shedge",
+  // "Aishwarya Tatyaso Shinde",
+  // "Santosh Sadashiv Patil",
+  // "Sachin Mahadu Papal",
 ];
 
 

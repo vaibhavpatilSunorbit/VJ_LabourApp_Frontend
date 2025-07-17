@@ -486,6 +486,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 ...(onboardName && { onboardName }), AttendanceStatus,
                 markWeeklyOff: manualEditData.status === 'weeklyOff',
                 updatedFields: changedFields,
+                userType: user.userType || null,
             };
 
             console.log("payload for attendance only", payload)
@@ -495,10 +496,10 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         let response;
 
         if (isOnlyOvertime) {
-            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload);
+            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload); 
         } else {
             response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
-        }
+            }
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date
@@ -552,7 +553,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             return;
         }
         try {
-            const response = await axios.get(`${API_BASE_URL}/api/labours/search?q=${searchQuery}`);
+            const response = await axios.get(`${API_BASE_URL}/api/labours/searchAttendance?q=${searchQuery}`);
             setSearchResults(response.data);
             setPage(0);
         } catch (error) {
