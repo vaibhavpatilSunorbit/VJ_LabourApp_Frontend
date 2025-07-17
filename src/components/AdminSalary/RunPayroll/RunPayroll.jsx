@@ -327,6 +327,9 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     totalHolidaysInMonth: labour.attendance?.totalHolidaysInMonth || 0,
                     holidayOvertimeHours: labour.attendance?.holidayOvertimeHours || 0,
                     holidayOvertimeWages: labour.attendance?.holidayOvertimeWages || 0,
+                    sundayPayment: labour.attendance?.sundayPayment || 0,
+                    additionalPresent: labour.attendance?.additionalPresent || 0,
+                    additionalHalf: labour.attendance?.additionalHalf || 0,
                     totalOvertimeHours: labour.cappedOvertime || 0,
                     derivedPerHour: labour.derivedPerHour || 0,
                     basicSalary: labour.baseWage || 0,
@@ -358,7 +361,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     fullResponse: labour
                 };
             });
-            // console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
+            console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
@@ -382,7 +385,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
 
     const exportPayrollData = async (data) => {
         setLoading(true);
-        console.log("data ", JSON.stringify(data));
+        console.log("data export Payroll Data", JSON.stringify(data));
         try {
 
             const selectiveData = data.map(item => ({
@@ -394,7 +397,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 Department: item.department,
                 AadhaarNumber: item.aadhaarNumber,
                 AccountNumber: item.accountNumber,
-                Attendance_Count: item.attendanceCount,
+                presentDays: item.presentDays,
                 Wage_Type: item.wageType,
                 DailyWage_Rate: item.dailyWageRate,
                 FixedMonthly_Rate: item.fixedMonthlyWage,
@@ -1112,7 +1115,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
                                             {/* {labour.attendanceCount} */}
-                                            {(labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0)}
+                                            {(labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0)}
                                         </TableCell>
                                         <TableCell>{labour.totalOvertimeHours}</TableCell>
                                         <TableCell>{labour.overtimePay}</TableCell>

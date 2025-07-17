@@ -201,7 +201,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     setIsApproveConfirmOpen(false);
   };
 
-
+const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
   const approveLabour = async (id, departmentId) => {
     try {
       // const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});
@@ -210,47 +210,107 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
       // const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
       // const labour = labourResponse.data;
 
-      // 1. Get labour details
-      const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
-      const labour = labourResponse.data;
+   const { data: labour } = await axios.get(
+      `${API_BASE_URL}/api/labours/${id}`
+    );
+    console.log("Full labour response:", labour);
 
-      let labourID;
-      const labourStatus = typeof labour.Reject_Reason === 'string' ? labour.Reject_Reason.trim() : '';
-      console.log("labourStatus:", labourStatus);
+    /* 2️⃣  Normalise some values we’ll reuse */
+    const labourStatus =
+      typeof labour.Reject_Reason === "string"
+        ? labour.Reject_Reason.trim()
+        : "";
+    const currentLabourId = labour.LabourID?.trim() ?? "";
 
-      const shouldGetNextId =
-        !labour.LabourID ||
-        labour.LabourID.trim() === '' ||
-        labourStatus === 'Manually Rejected from database for FEPR designation';
+    /* 3️⃣  Work out whether the existing ID matches the *desired* prefix   */
+    const isJihDept = JIH_DEPARTMENTS.includes(Number(departmentId));
+    const desiredPrefix = isJihDept ? "JIH" : "JC";
+    const prefixMismatch =
+      currentLabourId !== "" &&
+      !currentLabourId.toUpperCase().startsWith(desiredPrefix);
 
-      console.log("shouldGetNextId:", shouldGetNextId);
+    /* 4️⃣  First-pass check: obvious cases that *always* need a fresh ID   */
+    let needNewId =
+      !currentLabourId ||
+      labourStatus ===
+        "Manually Rejected from database for FEPR designation" ||
+      prefixMismatch;
 
-      if (shouldGetNextId) {
-        const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
-          params: { departmentId }
-        });
-        labourID = nextID;
-      } else {
-        // 2. Attendance Check
-        const attendanceCheck = await axios.get(`${API_BASE_URL}/api/admin/attendance-check`, {
-          params: { labourId: labour.LabourID }
-        });
+    /* 5️⃣  If we’re still undecided, fall back to the attendance rule      */
+    if (!needNewId) {
+      const { data: attendance } = await axios.get(
+        `${API_BASE_URL}/api/admin/attendance-check`,
+        { params: { labourId: currentLabourId } }
+      );
 
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-        const lastDate = attendanceCheck.data?.lastAttendanceDate;
-        const hasRecentAttendance = lastDate && new Date(lastDate) > threeMonthsAgo;
+      const lastDate = attendance?.lastAttendanceDate
+        ? new Date(attendance.lastAttendanceDate)
+        : null;
 
-        if (hasRecentAttendance) {
-          labourID = labour.LabourID;
-        } else {
-          const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
-            params: { departmentId }
-          });
-          labourID = nextID;
-        }
-      }
+      const recentAttendance = lastDate && lastDate > threeMonthsAgo;
+      needNewId = !recentAttendance;
+    }
+
+    /* 6️⃣  Either keep the old ID or fetch a brand-new one                  */
+    let labourID;
+    if (needNewId) {
+      const {
+        data: { nextID },
+      } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+        params: { departmentId },
+      });
+      labourID = nextID;
+    } else {
+      labourID = currentLabourId;
+    }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//  // 1. Get labour details
+//     const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
+//     const labour = labourResponse.data;
+// console.log("Full labour response:", labour);
+//     let labourID;
+
+//     const labourStatus = typeof labour.Reject_Reason === 'string' ? labour.Reject_Reason.trim() : '';
+//     console.log("labourStatus", labourStatus);
+
+//     const shouldGetNextId =
+//       !labour.LabourID ||
+//       labour.LabourID.trim() === '' ||
+//       labourStatus === 'Manually Rejected from database for FEPR designation';
+
+//     console.log("shouldGetNextId", shouldGetNextId);
+
+//     if (shouldGetNextId) {
+//       const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+//         params: { departmentId }
+//       });
+//       labourID = nextID;
+//     } else {
+//       // 2. Attendance Check
+//       const attendanceCheck = await axios.get(`${API_BASE_URL}/api/admin/attendance-check`, {
+//         params: { labourId: labour.LabourID }
+//       });
+
+//       const threeMonthsAgo = new Date();
+//       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+//       const lastDate = attendanceCheck.data?.lastAttendanceDate;
+//       const hasRecentAttendance = lastDate && new Date(lastDate) > threeMonthsAgo;
+
+//       if (hasRecentAttendance) {
+//         labourID = labour.LabourID;
+//       } else {
+//         const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+//           params: { departmentId }
+//         });
+//         labourID = nextID;
+//       }
+//     }
+///////////////////////////////////////////////////////////////////////////////////////////////
 
       // if (!labour.LabourID || labour.LabourID.trim() === '') {
       //   const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {

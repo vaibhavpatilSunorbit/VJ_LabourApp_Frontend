@@ -3,8 +3,8 @@ import { UilUniversity, UilUserPlus, UilFileAlt } from '@iconscout/react-unicons
 
 
 
-// export const API_BASE_URL = "https://laboursandbox.vjerp.com";
-export const API_BASE_URL = "http://localhost:4000";
+export const API_BASE_URL = "https://laboursandbox.vjerp.com";
+// export const API_BASE_URL = "http://localhost:4000";
 // export const API_BASE_URL = "https://vjlabour.vjerp.com";
 
 
@@ -146,24 +146,26 @@ export const accessPages = [
 export const INDUCTED_BY_OPTIONS = [
   "Dhiraj Dindikar Meshram",
   "Sandip Adhikrav Chavan",
-  "Omkar Mahadev Kadam",
-  "Mahesh Madhukar Kate",
-  "Akshay Jaysing Shedge",
   "Mangesh Ashok Pardhi",
   "Gouspak Salim Patel",
-  "Aishwarya Tatyaso Shinde",
   "Rahul Krushnarao Deshmukh",
   "Chirantan Deoram Somwanshi",
   "Harshal Vijay Ahire",
-  "Santosh Sadashiv Patil",
   "Aniket Shivaji Pardhi",
   "Athar S Shaikh",
   "Satish Shivaji Lande",
   "Sanket Ravindra Hule",
   "Tushar Rajesh Kamble",
   "Vrushabh Sanjay Kagnole",
-  "Sachin Mahadu Papal",
-  "Aditya Pravin Kumbhar"
+  "Aditya Pravin Kumbhar",
+  "Akash Satish Mohite",
+  "Vitthal Chagan Katkar",
+  // "Omkar Mahadev Kadam",
+  // "Mahesh Madhukar Kate",
+  // "Akshay Jaysing Shedge",
+  // "Aishwarya Tatyaso Shinde",
+  // "Santosh Sadashiv Patil",
+  // "Sachin Mahadu Papal",
 ];
 
 

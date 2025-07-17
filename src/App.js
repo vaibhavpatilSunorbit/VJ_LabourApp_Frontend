@@ -36,7 +36,8 @@ import NotificationPage from './pages/ NotificationPage.jsx';
 import SupportTicketForm from './pages/CreateTicket/SupportTicketForm.jsx';
 import AllTicketsPage from './pages/AllTicketsPage/AllTicketsPage.jsx';
 import { initGA, logPageView } from './utils/analytics.js';
-
+import UserAttedanceApproval from './components/UserApproval/UserAttendanceApproval/UserAttendanceApproval.jsx';
+import UserApproval from './components/UserApproval/UserApproval.jsx';
 const GAListener = () => {
   const location = useLocation();
 
@@ -169,6 +170,8 @@ function App() {
                     <Route path="/RunPayroll" element={<RunPayroll onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
                     <Route path="/ViewMonthlyPayroll" element={<ViewMonthlyPayroll onFormSubmit={handleFormSubmit} departments={departments} projectNames={projectNames}/>} />
                     <Route path="/adminApproval/CompanyTransferApproval" element={<CompanyTransferApproval departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/userApproval" element={<UserApproval onFormSubmit={handleFormSubmit} />} />
+                    <Route path="/userApproval/UserAttedanceApproval" element={<UserAttedanceApproval departments={departments} projectNames={projectNames} onFormSubmit={handleFormSubmit} />} />
 
 
                     <Route path="/Payslip" element={<PaySlipPage onFormSubmit={handleFormSubmit} />} />

@@ -1240,9 +1240,9 @@ Edit ({selectedLabourIds.length})
                   <Typography variant="body2">
                     {new Date(record.CreatedAt).toLocaleDateString()}
                   </Typography>
-                  <Typography variant="body2">
+                  {/* <Typography variant="body2">
                     {new Date(record.CreatedAt).toLocaleTimeString()}
-                  </Typography>
+                  </Typography> */}
                 </Box>
                 {/* Right Side - Details */}
                 <Box
