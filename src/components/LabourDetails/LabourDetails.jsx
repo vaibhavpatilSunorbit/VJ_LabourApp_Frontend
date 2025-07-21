@@ -624,11 +624,11 @@ const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
 
   const handleReject = async (id) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/api/labours/reject/${id}`, { Reject_Reason: rejectReason });
+      const response = await axios.put(`${API_BASE_URL}/api/labours/reject/${id}`, { Reject_Reason: rejectReason  , RejectedBy : user.name });
       if (response.data.success) {
         setLabours(prevLabours =>
           prevLabours.map(labour =>
-            labour.id === id ? { ...labour, status: 'Rejected', isApproved: 2, Reject_Reason: rejectReason } : labour
+            labour.id === id ? { ...labour, status: 'Rejected', isApproved: 2, Reject_Reason: rejectReason , RejectedBy :user.name } : labour
           )
         );
         toast.success('Labour rejected successfully.');
