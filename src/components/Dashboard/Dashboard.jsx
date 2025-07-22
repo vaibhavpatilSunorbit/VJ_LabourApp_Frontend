@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import AttendanceLineGraph from '../../pages/LaborAttendancePage';
 import TodayAttendanceBarChart from '../../pages/TodayAttendanceBarChart';
+import DepartmentPercentageTable from '../../pages/DepartmentPercentageTable';
 import axios from 'axios';
 import { API_BASE_URL } from '../../Data';
 
@@ -114,13 +115,70 @@ const Dashboard = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
+  const staticMachineData = [
+    {
+      machineName: "ESSL-001",
+      location: "Main Entrance",
+      status: "Online",
+      lastPingTime: "2023-06-15T08:30:00Z",
+      ipAddress: "192.168.1.100"
+    },
+    {
+      machineName: "ESSL-002",
+      location: "Back Entrance",
+      status: "Offline",
+      lastPingTime: "2023-06-14T18:45:00Z",
+      ipAddress: "192.168.1.101"
+    },
+    {
+      machineName: "ESSL-003",
+      location: "HR Department",
+      status: "Online",
+      lastPingTime: "2023-06-15T09:15:00Z",
+      ipAddress: "192.168.1.102"
+    },
+    {
+      machineName: "ESSL-004",
+      location: "IT Department",
+      status: "Online",
+      lastPingTime: "2023-06-15T08:45:00Z",
+      ipAddress: "192.168.1.103"
+    },
+    {
+      machineName: "ESSL-005",
+      location: "Finance Department",
+      status: "Offline",
+      lastPingTime: "2023-06-14T16:30:00Z",
+      ipAddress: "192.168.1.104"
+    },
+    {
+      machineName: "ESSL-006",
+      location: "Cafeteria",
+      status: "Online",
+      lastPingTime: "2023-06-15T07:50:00Z",
+      ipAddress: "192.168.1.105"
+    },
+    {
+      machineName: "ESSL-007",
+      location: "Production Floor",
+      status: "Online",
+      lastPingTime: "2023-06-15T08:00:00Z",
+      ipAddress: "192.168.1.106"
+    },
+    {
+      machineName: "ESSL-008",
+      location: "Warehouse",
+      status: "Offline",
+      lastPingTime: "2023-06-13T19:20:00Z",
+      ipAddress: "192.168.1.107"
+    }
+  ];
   // Fetch the Labour Count
   useEffect(() => {
     const fetchLabourCounts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/dashboard/getAllLaboursCount`);
+        const response = await axios.get(`${API_BASE_URL}/api/getAllLaboursCount`);
         if (response.data.success) {
           setLabourCount({
             Approved: response.data.data.Approved || 0,
@@ -143,9 +201,9 @@ const Dashboard = () => {
       try {
         setLoading(true);
         const [wagesRes, siteTransferRes, variablePayRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/dashboard/getWagesCount`),
-          axios.get(`${API_BASE_URL}/dashboard/getAllSiteTransferCount`),
-          axios.get(`${API_BASE_URL}/dashboard/getAllVariableCount`)
+          axios.get(`${API_BASE_URL}/api/getWagesCount`),
+          axios.get(`${API_BASE_URL}/api/getAllSiteTransferCount`),
+          axios.get(`${API_BASE_URL}/api/getAllVariableCount`)
         ]);
         if (wagesRes.data.success) {
           setWagesData(wagesRes.data.data);
@@ -171,7 +229,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchActiveWorkers = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/dashboard/getAllActive')
+        const response = await axios.get(`${API_BASE_URL}/api/getAllActive`)
         if (response.data.success) {
           setActiveWorker(response.data.data.ActiveWorkersAllTime);
         }
@@ -187,7 +245,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchAttendanceRates = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/dashboard/getAllActivep`);
+        const response = await axios.get(`${API_BASE_URL}/api/getAllActivep`);
         if (response.data.success) {
           setAttendanceRates(response.data.data.PresentPercentageOfAllActiveWorkers);
         }
@@ -204,7 +262,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchProjectCount = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/project-names');
+        const response = await axios.get(`${API_BASE_URL}/api/project-names`);
         if (response.data) {
 
           setProjectCount(Array.isArray(response.data) ? response.data.length : 0);
@@ -343,7 +401,7 @@ const Dashboard = () => {
     const fetchAttendance = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/dashboard/getAPM`);
+        const response = await axios.get(`${API_BASE_URL}/api/getAPM`);
         if (response.data.success) {
           const data = response.data.data;
           setAttendanceData({
@@ -505,6 +563,8 @@ const Dashboard = () => {
             </Grid>
           </Grid>
 
+        
+
 
           <Grid container spacing={3} sx={{ mt: 3, mb: 4 }}>
             <Grid item xs={12} md={8}>
@@ -571,6 +631,55 @@ const Dashboard = () => {
                       </Box>
                     </Grid>
                   </Grid>
+                </Box>
+              </Paper>
+            </Grid>
+          </Grid>
+          <Grid container spacing={3} sx={{ mt: 2, mb: 4 }}>
+            <Grid item xs={12}>
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 2, // Reduced padding from 3 to 2
+                  borderRadius: 3,
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  maxHeight: '600px', // Added maximum height
+                  overflowY: 'auto', // Added vertical scrolling when content exceeds height
+                }}
+              >
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -30, // Reduced from -50 to -30
+                    right: -30, // Reduced from -50 to -30
+                    width: 120, // Reduced from 200 to 120
+                    height: 120, // Reduced from 200 to 120
+                    borderRadius: '50%',
+                    bgcolor: alpha(theme.palette.primary.main, 0.03),
+                    zIndex: 0
+                  }}
+                />
+                <Typography variant="h6" fontWeight={700} mb={1} color="text.primary" sx={{ position: 'relative' }}>
+                 Wage Distribution & ESSL Machine Status
+                </Typography>
+                <Divider sx={{ mb: 2 }} /> {/* Reduced margin bottom from 3 to 2 */}
+
+                {/* Department Percentage Table Component with custom styling */}
+                <Box sx={{
+                  '& .MuiTableContainer-root': {
+                    maxHeight: '450px' // Limit the table height
+                  },
+                  '& .MuiTableCell-root': {
+                    py: 1, // Reduce cell padding
+                    px: 1.5
+                  },
+                  '& .MuiTypography-h5': {
+                    fontSize: '1.1rem' // Reduce heading size
+                  }
+                }}>
+                  <DepartmentPercentageTable staticMachineData={staticMachineData}/>
                 </Box>
               </Paper>
             </Grid>

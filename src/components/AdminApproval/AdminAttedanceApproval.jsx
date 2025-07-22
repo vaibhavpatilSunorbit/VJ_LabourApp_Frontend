@@ -169,6 +169,8 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
       } else {
         toast.error('Failed to approve attendance. Please try again.');
       }
+      console.log( AttendanceId , "Attendance id ");
+      
     } catch (error) {
       console.error('Error approving attendance:', error);
       toast.error('Error approving attendance. Please try again.');
