@@ -15,7 +15,13 @@ import {
   Box,
   Select,
   MenuItem,
-  TablePagination, DialogTitle,
+  TablePagination,
+  DialogTitle,
+  Checkbox,
+  ListItemText,
+  FormControl,
+  OutlinedInput,
+  Chip,
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { ToastContainer, toast } from 'react-toastify';
@@ -37,12 +43,23 @@ const modalStyle = {
   p: 4,
 };
 
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
 const ApproveLabours = () => {
   const [projectNames, setProjectNames] = useState([]);
   const [devices, setDevices] = useState([]);
   const [formData, setFormData] = useState({
     projectId: '',
-    deviceId: '',
+    deviceIds: [], // Changed to array for multiple selection
   });
   const [projectDeviceStatus, setProjectDeviceStatus] = useState([]);
   const [selectedProjects, setSelectedProjects] = useState([]);
@@ -98,18 +115,49 @@ const ApproveLabours = () => {
     }));
   };
 
+  const handleDeviceChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      deviceIds: typeof value === 'string' ? value.split(',') : value,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (formData.deviceIds.length === 0) {
+      toast.error('Please select at least one device');
+      return;
+    }
+
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/approveLabour`, formData);
-      if (response.status === 200) {
-        toast.success('Data submitted successfully');
+      // Submit each device separately
+      const promises = formData.deviceIds.map(deviceId => 
+        axios.post(`${API_BASE_URL}/api/approveLabour`, {
+          projectId: formData.projectId,
+          deviceId: deviceId
+        })
+      );
+
+      const responses = await Promise.all(promises);
+      
+      if (responses.every(response => response.status === 200)) {
+        toast.success('Data submitted successfully for all selected devices');
         const updatedStatus = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
         setProjectDeviceStatus(updatedStatus.data);
         setSelectedProjects(updatedStatus.data.map(item => item.ProjectID));
+        
+        // Reset form
+        setFormData({
+          projectId: '',
+          deviceIds: [],
+        });
       } else {
-        console.error('Failed to submit data:', response.status);
-        toast.error('Failed to submit data');
+        console.error('Failed to submit data for some devices');
+        toast.error('Failed to submit data for some devices');
       }
     } catch (err) {
       console.error('Error submitting data:', err);
@@ -251,26 +299,48 @@ const ApproveLabours = () => {
             </select>
           </div>
         </div>
+        
         <div className="form-column">
           <div className="form-field">
             <InputLabel id="device-name-label" style={inputLabelStyle}>
               Device Name{renderRequiredAsterisk(true)}
             </InputLabel>
-            <select
-              id="deviceId"
-              name="deviceId"
-              value={formData.deviceId}
-              onChange={handleInputChange}
-              style={getInputStyle()}
-              required
-            >
-              <option value="">Select a device</option>
-              {devices.map((device) => (
-                <option key={device.DeviceId} value={device.DeviceId}>{device.DeviceSName}</option>
-              ))}
-            </select>
+            <FormControl sx={{ width: window.innerWidth < 768 ? '37vw' : '17vw' }}>
+              <Select
+                labelId="device-name-label"
+                id="deviceIds"
+                multiple
+                value={formData.deviceIds}
+                onChange={handleDeviceChange}
+                input={<OutlinedInput />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => {
+                      const device = devices.find(d => d.DeviceId === value);
+                      return (
+                        <Chip 
+                          key={value} 
+                          label={device ? device.DeviceSName : value}
+                          size="small"
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+                MenuProps={MenuProps}
+                required
+              >
+                {devices.map((device) => (
+                  <MenuItem key={device.DeviceId} value={device.DeviceId}>
+                    <Checkbox checked={formData.deviceIds.indexOf(device.DeviceId) > -1} />
+                    <ListItemText primary={device.DeviceSName} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </div>
         </div>
+        
         <Button type="submit" variant="contained" sx={{
           backgroundColor: 'rgb(229, 255, 225)',
           color: 'rgb(43, 217, 144)',
@@ -282,6 +352,7 @@ const ApproveLabours = () => {
           Submit
         </Button>
       </form>
+
       <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
         <TableContainer component={Paper} sx={{ height: '72vh', overflow: 'auto' }}>
           <TablePagination
@@ -335,6 +406,7 @@ const ApproveLabours = () => {
           </Table>
         </TableContainer>
       </Box>
+
       <Modal
         open={isModalOpen}
         onClose={handleCloseModal}
@@ -342,14 +414,14 @@ const ApproveLabours = () => {
         aria-describedby="modal-modal-description"
       >
         <Box sx={{ ...modalStyle, position: 'relative' }}>
-           <DialogTitle
-                              sx={{
-                                  fontSize: { xs: "14px", sm: "16px", md: "18px" },
-                                  paddingBottom: { xs: "0px", sm: "0px", md: "18px"},
-                                  paddingLeft: { xs: "0px", sm: "0px", md: "0px"},
-                              }}
-                          >Update Device
-                          </DialogTitle>
+          <DialogTitle
+            sx={{
+              fontSize: { xs: "14px", sm: "16px", md: "18px" },
+              paddingBottom: { xs: "0px", sm: "0px", md: "18px"},
+              paddingLeft: { xs: "0px", sm: "0px", md: "0px"},
+            }}
+          >Update Device
+          </DialogTitle>
           <IconButton
             aria-label="close"
             onClick={handleCloseModal}
@@ -383,6 +455,7 @@ const ApproveLabours = () => {
             <Select
               id="newDeviceId"
               name="newDeviceId"
+              placeholder='Device Name'
               value={modalData.newDeviceId}
               onChange={handleModalInputChange}
               fullWidth
@@ -392,16 +465,16 @@ const ApproveLabours = () => {
                 <MenuItem key={device.DeviceId} value={device.DeviceId}>{device.DeviceSName}</MenuItem>
               ))}
             </Select>
-            <Button type="submit" variant="contained" color="primary" className="submit-button"  sx={{
-                                backgroundColor: 'rgb(229, 255, 225)',
-                                color: 'rgb(43, 217, 144)',
-                                width: '100px',
-                                marginRight: '10px',
-                                marginBottom: '3px',
-                                '&:hover': {
-                                    backgroundColor: 'rgb(229, 255, 225)',
-                                },
-                            }}>
+            <Button type="submit" variant="contained" color="primary" className="submit-button" sx={{
+              backgroundColor: 'rgb(229, 255, 225)',
+              color: 'rgb(43, 217, 144)',
+              width: '100px',
+              marginRight: '10px',
+              marginBottom: '3px',
+              '&:hover': {
+                backgroundColor: 'rgb(229, 255, 225)',
+              },
+            }}>
               Update
             </Button>
           </form>
@@ -412,4 +485,3 @@ const ApproveLabours = () => {
 };
 
 export default ApproveLabours;
-
