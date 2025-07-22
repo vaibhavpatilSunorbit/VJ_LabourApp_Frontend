@@ -18,8 +18,8 @@ import {
   TablePagination,
   DialogTitle,
   Checkbox,
-  FormControl,
   ListItemText,
+  FormControl,
   OutlinedInput,
   Chip,
 } from '@mui/material';
@@ -59,7 +59,7 @@ const ApproveLabours = () => {
   const [devices, setDevices] = useState([]);
   const [formData, setFormData] = useState({
     projectId: '',
-    deviceIds: [], // Changed from deviceId to deviceIds array
+    deviceIds: [], // Changed to array for multiple selection
   });
   const [projectDeviceStatus, setProjectDeviceStatus] = useState([]);
   const [selectedProjects, setSelectedProjects] = useState([]);
@@ -109,26 +109,24 @@ const ApproveLabours = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'deviceIds') {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [name]: typeof value === 'string' ? value.split(',') : value,
-      }));
-    } else {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [name]: value,
-      }));
-    }
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+
+  const handleDeviceChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      deviceIds: typeof value === 'string' ? value.split(',') : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.projectId) {
-      toast.error('Please select a project');
-      return;
-    }
     
     if (formData.deviceIds.length === 0) {
       toast.error('Please select at least one device');
@@ -136,40 +134,30 @@ const ApproveLabours = () => {
     }
 
     try {
-      // Use the multiple devices API if more than one device is selected
-      if (formData.deviceIds.length > 1) {
-        const response = await axios.post(`${API_BASE_URL}/api/addMultipleDevices`, {
+      // Submit each device separately
+      const promises = formData.deviceIds.map(deviceId => 
+        axios.post(`${API_BASE_URL}/api/approveLabour`, {
           projectId: formData.projectId,
-          deviceIds: formData.deviceIds
-        });
+          deviceId: deviceId
+        })
+      );
+
+      const responses = await Promise.all(promises);
+      
+      if (responses.every(response => response.status === 200)) {
+        toast.success('Data submitted successfully for all selected devices');
+        const updatedStatus = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
+        setProjectDeviceStatus(updatedStatus.data);
+        setSelectedProjects(updatedStatus.data.map(item => item.ProjectID));
         
-        if (response.status === 200) {
-          toast.success('Multiple devices added successfully');
-          const updatedStatus = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
-          setProjectDeviceStatus(updatedStatus.data);
-          setSelectedProjects(updatedStatus.data.map(item => item.ProjectID));
-          setFormData({ projectId: '', deviceIds: [] });
-        } else {
-          console.error('Failed to submit data:', response.status);
-          toast.error('Failed to submit data');
-        }
+        // Reset form
+        setFormData({
+          projectId: '',
+          deviceIds: [],
+        });
       } else {
-        // Use the single device API for single device
-        const response = await axios.post(`${API_BASE_URL}/api/approveLabour`, {
-          projectId: formData.projectId,
-          deviceId: formData.deviceIds[0]
-        });
-        
-        if (response.status === 200) {
-          toast.success('Device added successfully');
-          const updatedStatus = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
-          setProjectDeviceStatus(updatedStatus.data);
-          setSelectedProjects(updatedStatus.data.map(item => item.ProjectID));
-          setFormData({ projectId: '', deviceIds: [] });
-        } else {
-          console.error('Failed to submit data:', response.status);
-          toast.error('Failed to submit data');
-        }
+        console.error('Failed to submit data for some devices');
+        toast.error('Failed to submit data for some devices');
       }
     } catch (err) {
       console.error('Error submitting data:', err);
@@ -287,10 +275,6 @@ const ApproveLabours = () => {
     project => !selectedProjects.includes(project.Id)
   );
 
-  // Get assigned device IDs to filter them out from available devices
-  const assignedDeviceIds = projectDeviceStatus.map(item => item.DeviceID);
-  const availableDevices = devices.filter(device => !assignedDeviceIds.includes(device.DeviceId));
-
   return (
     <div>
       <ToastContainer />
@@ -315,10 +299,11 @@ const ApproveLabours = () => {
             </select>
           </div>
         </div>
+        
         <div className="form-column">
           <div className="form-field">
             <InputLabel id="device-name-label" style={inputLabelStyle}>
-              Device Names{renderRequiredAsterisk(true)}
+              Device Name{renderRequiredAsterisk(true)}
             </InputLabel>
             <FormControl sx={{ width: window.innerWidth < 768 ? '37vw' : '17vw' }}>
               <Select
@@ -326,12 +311,12 @@ const ApproveLabours = () => {
                 id="deviceIds"
                 multiple
                 value={formData.deviceIds}
-                onChange={handleInputChange}
+                onChange={handleDeviceChange}
                 input={<OutlinedInput />}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {selected.map((value) => {
-                      const device = availableDevices.find(d => d.DeviceId === value);
+                      const device = devices.find(d => d.DeviceId === value);
                       return (
                         <Chip 
                           key={value} 
@@ -343,10 +328,9 @@ const ApproveLabours = () => {
                   </Box>
                 )}
                 MenuProps={MenuProps}
-                name="deviceIds"
                 required
               >
-                {availableDevices.map((device) => (
+                {devices.map((device) => (
                   <MenuItem key={device.DeviceId} value={device.DeviceId}>
                     <Checkbox checked={formData.deviceIds.indexOf(device.DeviceId) > -1} />
                     <ListItemText primary={device.DeviceSName} />
@@ -356,20 +340,16 @@ const ApproveLabours = () => {
             </FormControl>
           </div>
         </div>
-        <Button 
-          type="submit" 
-          variant="contained" 
-          sx={{
+        
+        <Button type="submit" variant="contained" sx={{
+          backgroundColor: 'rgb(229, 255, 225)',
+          color: 'rgb(43, 217, 144)',
+          '&:hover': {
             backgroundColor: 'rgb(229, 255, 225)',
-            color: 'rgb(43, 217, 144)',
-            '&:hover': {
-              backgroundColor: 'rgb(229, 255, 225)',
-            },
-            mt: isMobile ? 0 : 3
-          }} 
-          className="submit-button"
-        >
-          Submit ({formData.deviceIds.length} device{formData.deviceIds.length !== 1 ? 's' : ''})
+          },
+          mt: isMobile ? 0 : 3
+        }} className="submit-button" >
+          Submit
         </Button>
       </form>
 
@@ -400,7 +380,7 @@ const ApproveLabours = () => {
               {projectDeviceStatus.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
                 <TableRow
                   key={row.DeviceID}
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
                   <TableCell component="th" scope="row">
                     {(page * rowsPerPage) + index + 1}
@@ -427,7 +407,6 @@ const ApproveLabours = () => {
         </TableContainer>
       </Box>
 
-      {/* Update Modal */}
       <Modal
         open={isModalOpen}
         onClose={handleCloseModal}
@@ -476,6 +455,7 @@ const ApproveLabours = () => {
             <Select
               id="newDeviceId"
               name="newDeviceId"
+              placeholder='Device Name'
               value={modalData.newDeviceId}
               onChange={handleModalInputChange}
               fullWidth
@@ -505,4 +485,3 @@ const ApproveLabours = () => {
 };
 
 export default ApproveLabours;
-
