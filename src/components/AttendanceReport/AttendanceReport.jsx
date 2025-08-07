@@ -445,7 +445,11 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             }
 
 
-            if (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4) {
+            if (
+                manualEditData.status !== 'absent' &&
+                manualEditData.status !== 'weeklyOff' &&
+                (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4)
+            ) {
                 toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
                 return;
             }
