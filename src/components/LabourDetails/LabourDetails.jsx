@@ -155,23 +155,23 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     })
     .sort((a, b) => b.labourID - a.labourID);
 
-    useEffect(() => {
-      const fetchMetadata = async () => {
-        try {
-          const [deptRes, projRes] = await Promise.all([
-            axios.get(`${API_BASE_URL}/api/departments`),
-            axios.get(`${API_BASE_URL}/api/project-names`)
-          ]);
-  
-          setDepartments(deptRes.data);
-          setProjectNames(projRes.data);
-        } catch (err) {
-          console.error('Metadata load failed:', err);
-        }
-      };
-  
-      fetchMetadata();
-    }, []);
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const [deptRes, projRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/departments`),
+          axios.get(`${API_BASE_URL}/api/project-names`)
+        ]);
+
+        setDepartments(deptRes.data);
+        setProjectNames(projRes.data);
+      } catch (err) {
+        console.error('Metadata load failed:', err);
+      }
+    };
+
+    fetchMetadata();
+  }, []);
 
 
   const handleSearch = async (e) => {
@@ -201,7 +201,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     setIsApproveConfirmOpen(false);
   };
 
-const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
+  const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
   const approveLabour = async (id, departmentId) => {
     try {
       // const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});
@@ -210,72 +210,72 @@ const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
       // const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
       // const labour = labourResponse.data;
 
-   const { data: labour } = await axios.get(
-      `${API_BASE_URL}/api/labours/${id}`
-    );
-    console.log("Full labour response:", labour);
-
-    /* 2️⃣  Normalise some values we’ll reuse */
-    const labourStatus =
-      typeof labour.Reject_Reason === "string"
-        ? labour.Reject_Reason.trim()
-        : "";
-    const currentLabourId = labour.LabourID?.trim() ?? "";
-
-    /* 3️⃣  Work out whether the existing ID matches the *desired* prefix   */
-    const isJihDept = JIH_DEPARTMENTS.includes(Number(departmentId));
-    const desiredPrefix = isJihDept ? "JIH" : "JC";
-    const prefixMismatch =
-      currentLabourId !== "" &&
-      !currentLabourId.toUpperCase().startsWith(desiredPrefix);
-
-    /* 4️⃣  First-pass check: obvious cases that *always* need a fresh ID   */
-    let needNewId =
-      !currentLabourId ||
-      labourStatus ===
-        "Manually Rejected from database for FEPR designation" ||
-      prefixMismatch;
-
-    /* 5️⃣  If we’re still undecided, fall back to the attendance rule      */
-    if (!needNewId) {
-      const { data: attendance } = await axios.get(
-        `${API_BASE_URL}/api/admin/attendance-check`,
-        { params: { labourId: currentLabourId } }
+      const { data: labour } = await axios.get(
+        `${API_BASE_URL}/api/labours/${id}`
       );
+      console.log("Full labour response:", labour);
 
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      /* 2️⃣  Normalise some values we’ll reuse */
+      const labourStatus =
+        typeof labour.Reject_Reason === "string"
+          ? labour.Reject_Reason.trim()
+          : "";
+      const currentLabourId = labour.LabourID?.trim() ?? "";
 
-      const lastDate = attendance?.lastAttendanceDate
-        ? new Date(attendance.lastAttendanceDate)
-        : null;
+      /* 3️⃣  Work out whether the existing ID matches the *desired* prefix   */
+      const isJihDept = JIH_DEPARTMENTS.includes(Number(departmentId));
+      const desiredPrefix = isJihDept ? "JIH" : "JC";
+      const prefixMismatch =
+        currentLabourId !== "" &&
+        !currentLabourId.toUpperCase().startsWith(desiredPrefix);
 
-      const recentAttendance = lastDate && lastDate > threeMonthsAgo;
-      needNewId = !recentAttendance;
-    }
+      /* 4️⃣  First-pass check: obvious cases that *always* need a fresh ID   */
+      let needNewId =
+        !currentLabourId ||
+        labourStatus ===
+        "Manually Rejected from database for FEPR designation" ||
+        prefixMismatch;
 
-    /* 6️⃣  Either keep the old ID or fetch a brand-new one                  */
-    let labourID;
-    if (needNewId) {
-      const {
-        data: { nextID },
-      } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
-        params: { departmentId },
-      });
-      labourID = nextID;
-    } else {
-      labourID = currentLabourId;
-    }
+      /* 5️⃣  If we’re still undecided, fall back to the attendance rule      */
+      if (!needNewId) {
+        const { data: attendance } = await axios.get(
+          `${API_BASE_URL}/api/admin/attendance-check`,
+          { params: { labourId: currentLabourId } }
+        );
+
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+        const lastDate = attendance?.lastAttendanceDate
+          ? new Date(attendance.lastAttendanceDate)
+          : null;
+
+        const recentAttendance = lastDate && lastDate > threeMonthsAgo;
+        needNewId = !recentAttendance;
+      }
+
+      /* 6️⃣  Either keep the old ID or fetch a brand-new one                  */
+      let labourID;
+      if (needNewId) {
+        const {
+          data: { nextID },
+        } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
+          params: { departmentId },
+        });
+        labourID = nextID;
+      } else {
+        labourID = currentLabourId;
+      }
 
 
 
-     const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus/${labour.projectName}`);
-const serials = response.data.serialNumber || [];
+      const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus/${labour.projectName}`);
+      const serials = response.data.serialNumber || [];
 
-for (const device of serials) {
-  const serialNumber = device.SerialNumber;
+      for (const device of serials) {
+        const serialNumber = device.SerialNumber;
 
-  const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
+        const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
       <AddEmployee xmlns="http://tempuri.org/">
@@ -291,51 +291,51 @@ for (const device of serials) {
     </soap:Body>
   </soap:Envelope>`;
 
-  try {
-    const soapResponse = await axios.post(
-      `${API_BASE_URL}/api/labours/essl/addEmployee`,
-      soapEnvelope,
-      {
-        headers: {
-          'Content-Type': 'text/xml'
+        try {
+          const soapResponse = await axios.post(
+            `${API_BASE_URL}/api/labours/essl/addEmployee`,
+            soapEnvelope,
+            {
+              headers: {
+                'Content-Type': 'text/xml'
+              }
+            }
+          );
+
+          if (soapResponse.status === 200) {
+            const commandId = soapResponse.data.CommandId;
+
+            const pollStatus = async () => {
+              const { data: commandStatus } = await axios.get(`${API_BASE_URL}/api/labours/commandstatus/${commandId}`);
+              return commandStatus.status;
+            };
+
+            let status = await pollStatus();
+            let retries = 0;
+            const maxRetries = 30;
+
+            while (status === 'Pending' && retries < maxRetries) {
+              await new Promise((resolve) => setTimeout(resolve, 8000));
+              status = await pollStatus();
+              retries++;
+            }
+
+            if ((status === 'Pending' || status === 'Failure') && retries >= maxRetries) {
+              toast.error(`Device ${serialNumber} failed or timed out.`);
+              continue; // go to next serial
+            }
+
+            if (status === 'Success') {
+              await axios.put(`${API_BASE_URL}/api/labours/approve/${id}`, { labourID });
+              setApprovedLabours((prev) => [...new Set([...prev, id])]);
+              toast.success(`✅ Labour ${labour.name} approved on device ${serialNumber}`);
+            }
+          }
+        } catch (error) {
+          console.error(`Error for device ${serialNumber}:`, error.message);
+          toast.error(`Failed to sync with device ${serialNumber}`);
         }
       }
-    );
-
-    if (soapResponse.status === 200) {
-      const commandId = soapResponse.data.CommandId;
-
-      const pollStatus = async () => {
-        const { data: commandStatus } = await axios.get(`${API_BASE_URL}/api/labours/commandstatus/${commandId}`);
-        return commandStatus.status;
-      };
-
-      let status = await pollStatus();
-      let retries = 0;
-      const maxRetries = 30;
-
-      while (status === 'Pending' && retries < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 8000));
-        status = await pollStatus();
-        retries++;
-      }
-
-      if ((status === 'Pending' || status === 'Failure') && retries >= maxRetries) {
-        toast.error(`Device ${serialNumber} failed or timed out.`);
-        continue; // go to next serial
-      }
-
-      if (status === 'Success') {
-        await axios.put(`${API_BASE_URL}/api/labours/approve/${id}`, { labourID });
-        setApprovedLabours((prev) => [...new Set([...prev, id])]);
-        toast.success(`✅ Labour ${labour.name} approved on device ${serialNumber}`);
-      }
-    }
-  } catch (error) {
-    console.error(`Error for device ${serialNumber}:`, error.message);
-    toast.error(`Failed to sync with device ${serialNumber}`);
-  }
-}
 
 
     } catch (error) {
@@ -448,21 +448,21 @@ for (const device of serials) {
   //     processLabourApprovals();
   //   }
   // }, [labourQueue, isApproving]);
-  
+
 
 
   const handleApprove = async (labour) => {
 
     handleApproveConfirmClose();
     const labourObj = Array.isArray(labour)
-    ? labour.map(l => ({ id: l.id, departmentId: l.departmentId }))
-    : [{ id: labour.id, departmentId: labour.departmentId }];
+      ? labour.map(l => ({ id: l.id, departmentId: l.departmentId }))
+      : [{ id: labour.id, departmentId: labour.departmentId }];
 
-  setApprovingLabours(prev => [...prev, ...labourObj.map(l => l.id)]);
-  // setLabourQueue(prev => [...prev, ...labourObj]);
-  
+    setApprovingLabours(prev => [...prev, ...labourObj.map(l => l.id)]);
+    // setLabourQueue(prev => [...prev, ...labourObj]);
+
     processLabourApprovals([...labourObj]);
-  
+
     // if (!Array.isArray(id)) {
     //   id = [id];
     // }
@@ -501,12 +501,12 @@ for (const device of serials) {
   useEffect(() => {
     fetchAttendanceLabours();
   }, []);
-  
+
   const fetchAttendanceLabours = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/api/laboursoldattendance`);
-  
+
       if (response.data.labours.length > 0) {
         setLabours(response.data.labours);
       } else {
@@ -698,7 +698,7 @@ for (const device of serials) {
       const response = await axios.get(`${API_BASE_URL}/api/labours`);
       setLabours(response.data);
       setLoading(false);
-    } catch (error) { 
+    } catch (error) {
       setError('Error fetching labours. Please try again.');
       setLoading(false);
     }
@@ -904,70 +904,70 @@ for (const device of serials) {
     }
   }, [searchResults, filteredIconLabours, labours]);
 
-// useEffect(() => {
-//   const fetchStatuses = async (labourIds) => {
-//     try {
-//       const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
-//       return response.data;
-//     } catch (error) {
-//       console.error('Error fetching statuses:', error);
-//       return [];
-//     }
-//   };
+  // useEffect(() => {
+  //   const fetchStatuses = async (labourIds) => {
+  //     try {
+  //       const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
+  //       return response.data;
+  //     } catch (error) {
+  //       console.error('Error fetching statuses:', error);
+  //       return [];
+  //     }
+  //   };
 
-//   const fetchDisableAttendance = async (labourIds) => {
-//     try {
-//       const response = await axios.post(`${API_BASE_URL}/api/labours/getDisableLaborsAttendance`, { labourIds });
-//       return response.data;
-//     } catch (error) {
-//       console.error('Error fetching disable attendance:', error);
-//       return [];
-//     }
-//   };
+  //   const fetchDisableAttendance = async (labourIds) => {
+  //     try {
+  //       const response = await axios.post(`${API_BASE_URL}/api/labours/getDisableLaborsAttendance`, { labourIds });
+  //       return response.data;
+  //     } catch (error) {
+  //       console.error('Error fetching disable attendance:', error);
+  //       return [];
+  //     }
+  //   };
 
-//   const updateStatuses = async () => {
-//     const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
-//     const labourIds = labourList.map(labour => labour.LabourID || labour.id);
+  //   const updateStatuses = async () => {
+  //     const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
+  //     const labourIds = labourList.map(labour => labour.LabourID || labour.id);
 
-//     if (labourIds.length === 0) return;
+  //     if (labourIds.length === 0) return;
 
-//     const [statuses, disabledStatuses] = await Promise.all([
-//       fetchStatuses(labourIds),
-//       fetchDisableAttendance(labourIds),
-//     ]);
+  //     const [statuses, disabledStatuses] = await Promise.all([
+  //       fetchStatuses(labourIds),
+  //       fetchDisableAttendance(labourIds),
+  //     ]);
 
-//     const updatedStatuses = {};
+  //     const updatedStatuses = {};
 
-//     // Process statuses from `getCombinedStatuses`
-//     statuses.forEach(status => {
-//       updatedStatuses[status.LabourID] = {
-//         esslStatus: status.esslStatus === 'success',
-//         employeeMasterStatus: status.employeeMasterStatus === 'true',
-//         // disabledAttendanceCreatedAt to be updated from second API
-//         disabledAttendanceCreatedAt: null,
-//       };
-//     });
+  //     // Process statuses from `getCombinedStatuses`
+  //     statuses.forEach(status => {
+  //       updatedStatuses[status.LabourID] = {
+  //         esslStatus: status.esslStatus === 'success',
+  //         employeeMasterStatus: status.employeeMasterStatus === 'true',
+  //         // disabledAttendanceCreatedAt to be updated from second API
+  //         disabledAttendanceCreatedAt: null,
+  //       };
+  //     });
 
-//     // Merge with disabled attendance data
-//     disabledStatuses.forEach(disabled => {
-//       const id = disabled.LabourID;
-//       if (!updatedStatuses[id]) {
-//         updatedStatuses[id] = {};
-//       }
-//       updatedStatuses[id].disabledAttendanceCreatedAt = disabled.CreatedAt ? new Date(disabled.CreatedAt) : null;
-//     });
+  //     // Merge with disabled attendance data
+  //     disabledStatuses.forEach(disabled => {
+  //       const id = disabled.LabourID;
+  //       if (!updatedStatuses[id]) {
+  //         updatedStatuses[id] = {};
+  //       }
+  //       updatedStatuses[id].disabledAttendanceCreatedAt = disabled.CreatedAt ? new Date(disabled.CreatedAt) : null;
+  //     });
 
-//     setStatuses(updatedStatuses);
-//   };
+  //     setStatuses(updatedStatuses);
+  //   };
 
-//   updateStatuses();
-// }, []);
+  //   updateStatuses();
+  // }, []);
 
 
 
   // Filter icon with filter the labours for tha icon.....................
- 
- 
+
+
   const handleFilterClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
