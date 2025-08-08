@@ -17,7 +17,7 @@ import {
     MenuItem, Modal, Typography, IconButton, Dialog,
     DialogTitle,
     DialogContent,
-    DialogContentText, Checkbox, ListItemText,
+    DialogContentText, Checkbox, ListItemText, Chip,
     DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, Fade, FormControlLabel, Switch
 } from '@mui/material';
 import { modalStyle } from '../modalStyles.js';
@@ -43,7 +43,7 @@ import logo from "../../../images/VJlogo-1-removebg.png";
 import NoData from "../../../images/NoData.jpg";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
-
+import Tooltip from '@mui/material/Tooltip';
 
 const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     const theme = useTheme();
@@ -291,6 +291,10 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
             params.labourIds = labourId;
         }
 
+        const allSelected = selectedBusinessUnit.length === businessUnits.length;
+        if (!allSelected && selectedBusinessUnit.length > 0) {
+            params.projectId = selectedBusinessUnit.join(',');
+        }
         try {
             const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationDataAllLabours`, { params });
             const fetchedData = response.data;
@@ -310,9 +314,9 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     srNo: index + 1,
                     id: labour.id || 0,
                     LabourID: labour.labourId,
-                    name: labour.name || "-",      
+                    name: labour.name || "-",
                     projectId: labour.projectName || "-",
-                    departmentId: labour.department || "-",         
+                    departmentId: labour.department || "-",
                     projectName: labour.businessUnit || "-",
                     department: labour.departmentName || "-",
                     aadhaarNumber: labour.aadhaarNumber || "-",
@@ -361,7 +365,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     fullResponse: labour
                 };
             });
-            console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
+            console.log('ShowSalaryGeneration for month', JSON.stringify(ShowSalaryGeneration))
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
@@ -377,7 +381,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
         if (!selectedMonth && !selectedYear) {
             fetchSalaryGenerationForDateMonthAll();
         }
-    }, [selectedMonth, selectedYear]);
+    }, [selectedMonth, selectedYear, selectedBusinessUnit]);
     // useEffect(() => {
     //         fetchSalaryGenerationForDateMonthAll();
     // },[]);
@@ -916,6 +920,77 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 ))}
                             </Select>
 
+                            <FormControl
+                                sx={{
+                                    width: { xs: '100%', sm: '25%' },
+                                    marginBottom: { xs: '20px', sm: '0' },
+                                }}
+                            >
+                                <InputLabel id="business-unit-label">Business Unit</InputLabel>
+                                <Select
+                                    labelId="business-unit-label"
+                                    multiple
+                                    value={selectedBusinessUnit}
+                                    onChange={handleBusinessUnitChange}
+                                    displayEmpty
+                                    renderValue={(selected) => {
+                                        if (selected.length === 0) return <em>All</em>;
+                                        const selectedLabels = projectNames
+                                            .filter(project => selected.includes(project.Id))
+                                            .map(project => project.Business_Unit);
+
+                                        return (
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexWrap: 'wrap',
+                                                    gap: 0.5,
+                                                    maxHeight: 30, // limit height
+                                                    overflowY: 'auto',
+                                                }}
+                                            >
+                                                {selectedLabels.map((label) => (
+                                                    <Chip key={label} label={label} />
+                                                ))}
+                                            </Box>
+                                        );
+                                    }}
+                                    MenuProps={{
+                                        PaperProps: {
+                                            style: {
+                                                maxHeight: 300, // dropdown height
+                                            },
+                                        },
+                                    }}
+                                    sx={{
+                                        mt: 1,
+                                        '& .MuiSelect-multiple': {
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            alignItems: 'flex-start',
+                                        },
+                                    }}
+                                >
+                                    <MenuItem value="ALL">
+                                        <Checkbox
+                                            checked={isAllSelected}
+                                            indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected}
+                                        />
+                                        <ListItemText primary="Select All" />
+                                    </MenuItem>
+                                    {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                        projectNames.map((project) => (
+                                            <MenuItem key={project.Id} value={project.Id}>
+                                                <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                                <ListItemText primary={project.Business_Unit} />
+                                            </MenuItem>
+                                        ))
+                                    ) : (
+                                        <MenuItem disabled>No Projects Available</MenuItem>
+                                    )}
+                                </Select>
+                            </FormControl>
+
                             <FormControlLabel
                                 control={
                                     <Switch
@@ -943,23 +1018,34 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 />
                             )}
 
-                            <Button
-                                variant="contained"
-                                onClick={fetchSalaryGenerationForDateMonthAll}
-                                sx={{
-                                    fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
-                                    height: "40px",
-                                    width: "20%", // Button width to match other inputs
-                                    backgroundColor: "rgb(229, 255, 225)",
-                                    color: "rgb(43, 217, 144)",
-                                    '&:hover': {
-                                        backgroundColor: "rgb(229, 255, 225)",
-                                    },
-                                    marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
-                                }}
+                            <Tooltip
+                                title={selectedBusinessUnit.length === 0 ? "Select at least one Business Unit" : ""}
+                                arrow
                             >
-                                PayRoll
-                            </Button>
+                                <span>
+                                    <Button
+                                        variant="contained"
+                                        onClick={fetchSalaryGenerationForDateMonthAll}
+                                        disabled={selectedBusinessUnit.length === 0}
+                                        sx={{
+                                            fontSize: { xs: "0.8rem", sm: "1rem" },
+                                            height: "40px",
+                                            backgroundColor: selectedBusinessUnit.length === 0 ? "#ccc" : "rgb(229, 255, 225)",
+                                            color: selectedBusinessUnit.length === 0 ? "#666" : "rgb(43, 217, 144)",
+                                            '&:hover': {
+                                                backgroundColor: selectedBusinessUnit.length === 0
+                                                    ? "#ccc"
+                                                    : "rgb(229, 255, 225)",
+                                            },
+                                            marginBottom: { xs: "20px", sm: "0" },
+                                            cursor: selectedBusinessUnit.length === 0 ? "not-allowed" : "pointer",
+                                        }}
+                                    >
+                                        PayRoll
+                                    </Button>
+                                </span>
+                            </Tooltip>
+
 
 
                         </Box>
@@ -1132,7 +1218,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                         >
                                             {labour.advancePay}
                                         </TableCell>
-                                         <TableCell
+                                        <TableCell
                                             onClick={() => handleOpenModalDeduction(labour)}
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
@@ -1621,30 +1707,30 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             Export PayRoll
                         </Button>
                         {(user.userType === 'admin' || user.userType === 'superadmin') && (
-                        <Button
-                            variant="contained"
-                            onClick={() => {
-                                handleApproveConfirmOpen();
-                                setIsFinalizeClicked(true); // permanently disable after 1st click
-                            }}
-                            disabled={!isFinalizeEnabled || isFinalizeClicked}
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                height: "40px",
-                                width: "100%",
-                                backgroundColor: "rgb(229, 255, 225)",
-                                color: "rgb(43, 217, 144)",
-                                '&:hover': {
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    handleApproveConfirmOpen();
+                                    setIsFinalizeClicked(true); // permanently disable after 1st click
+                                }}
+                                disabled={!isFinalizeEnabled || isFinalizeClicked}
+                                sx={{
+                                    fontSize: { xs: "0.8rem", sm: "1rem" },
+                                    height: "40px",
+                                    width: "100%",
                                     backgroundColor: "rgb(229, 255, 225)",
-                                },
-                                marginBottom: { xs: "20px", sm: "0" },
-                                opacity: (!isFinalizeEnabled || isFinalizeClicked) ? 0.5 : 1,
-                                cursor: (!isFinalizeEnabled || isFinalizeClicked) ? 'not-allowed' : 'pointer'
-                            }}
-                        >
-                            Finalize PayRoll
-                        </Button>
-)}
+                                    color: "rgb(43, 217, 144)",
+                                    '&:hover': {
+                                        backgroundColor: "rgb(229, 255, 225)",
+                                    },
+                                    marginBottom: { xs: "20px", sm: "0" },
+                                    opacity: (!isFinalizeEnabled || isFinalizeClicked) ? 0.5 : 1,
+                                    cursor: (!isFinalizeEnabled || isFinalizeClicked) ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                Finalize PayRoll
+                            </Button>
+                        )}
 
                     </Box>
 
