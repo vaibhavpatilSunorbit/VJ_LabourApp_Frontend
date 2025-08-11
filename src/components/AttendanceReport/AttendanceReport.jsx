@@ -445,7 +445,11 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             }
 
 
-            if (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4) {
+            if (
+                manualEditData.status !== 'absent' &&
+                manualEditData.status !== 'weeklyOff' &&
+                (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4)
+            ) {
                 toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
                 return;
             }
@@ -486,6 +490,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 ...(onboardName && { onboardName }), AttendanceStatus,
                 markWeeklyOff: manualEditData.status === 'weeklyOff',
                 updatedFields: changedFields,
+                userType: user.userType || null,
             };
 
             console.log("payload for attendance only", payload)
@@ -495,10 +500,10 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         let response;
 
         if (isOnlyOvertime) {
-            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload);
+            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload); 
         } else {
             response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
-        }
+            }
 
             const updatedAttendanceData = attendanceData.map((day) =>
                 day.date === selectedDay.date

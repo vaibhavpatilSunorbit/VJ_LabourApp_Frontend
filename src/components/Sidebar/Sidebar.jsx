@@ -256,6 +256,7 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
                 item.heading === "Run PayRoll" ? profileIcon13 :
                 item.heading === "View Payroll" ? profileIcon14 :
                 item.heading === "Dashboard" ? profileIcon15 :
+                item.heading === "User " ? profileIcon15 :
 
                 // item.heading === "People" ? profileIcon8 :
                 // item.heading === "Salary Register" ? profileIcon12 :
