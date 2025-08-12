@@ -105,6 +105,30 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
         setIsApproveConfirmOpen(false);
     };
 
+    // computed flags (put inside your component)
+    const hasMonthYear = Boolean(selectedMonth) && Boolean(selectedYear);
+    const hasBU = Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0;
+    const hasLabourId = !fetchForAll && String(labourId ?? "").trim().length > 0;
+
+    // final enable/disable rule:
+    // - if NOT fetchForAll: require Labour ID
+    // - if fetchForAll: require Month+Year+BU
+    const canClickPayroll = hasLabourId || (fetchForAll && hasMonthYear && hasBU);
+    const isDisabled = !canClickPayroll;
+
+    // helpful tooltip
+    let tooltipTitle = "";
+    if (isDisabled) {
+        if (!fetchForAll) {
+            tooltipTitle = "Enter a Labour ID or switch to All to use Month/Year/BU.";
+        } else {
+            const missing = [];
+            if (!hasMonthYear) missing.push("month & year");
+            if (!hasBU) missing.push("business unit");
+            tooltipTitle = `Select ${missing.join(" and ")}.`;
+        }
+    }
+
 
     const allowedProjectIds =
         user && user.projectNames ? JSON.parse(user.projectNames) : [];
@@ -830,265 +854,151 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
 
                 <Box
                     sx={{
-                        width: "auto",
-                        height: "auto",
-                        bgcolor: "white",
-                        marginBottom: "15px",
-                        p: 1,
-                        borderRadius: 2,
-                        boxShadow: 3,
-                        alignSelf: "flex-start",
+                        width: "96%",
+                        gap: 2.5,
                         display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexWrap: { xs: "wrap", sm: "nowrap" },
+                        flexDirection: { xs: "column", sm: "row" },
+                        alignItems: { xs: "stretch", sm: "flex-end" },
+                        justifyContent: "flex-start",
+                        p: { xs: 2, sm: 2.5 },
+                        borderRadius: 2,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        bgcolor: "background.paper",
+                        boxShadow: { xs: "none", sm: "0 2px 10px rgba(0,0,0,0.06)" },
                     }}
                 >
-                    <Tabs
-                        value={tabValue}
-                        onChange={handleTabChange}
-                        aria-label="tabs example"
-                        sx={{
-                            ".MuiTabs-indicator": {
-                                display: "none",
-                            },
-                            minHeight: "auto",
-                        }}
+                    <Select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        displayEmpty
+                        sx={{ width: { xs: "100%", sm: "25%" } }}
                     >
-                    </Tabs>
+                        <MenuItem value="" disabled>Select Month</MenuItem>
+                        {months.map((month) => (
+                            <MenuItem key={month.value} value={month.value}>{month.label}</MenuItem>
+                        ))}
+                    </Select>
 
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexDirection: { xs: "column", sm: "column" },
-                            alignItems: { xs: "stretch", sm: "flex-end" },
-                            gap: 2,
-                            height: "auto",
-                            width: "100%",
-                            justifyContent: { xs: "flex-start", sm: "space-between" },
-                        }}
+                    <Select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        displayEmpty
+                        sx={{ width: { xs: "100%", sm: "25%" } }}
                     >
-                        <Box
-                            sx={{
-                                width: "100%",
-                                gap: "20px",
-                                display: "flex",
-                                flexDirection: { xs: "column", sm: "row" },
-                                alignItems: "flex-end",
-                                justifyContent: "flex-start",
-                                // padding: "20px",
+                        <MenuItem value="" disabled>Select Year</MenuItem>
+                        {[2024, 2025].map((year) => (
+                            <MenuItem key={year} value={year}>{year}</MenuItem>
+                        ))}
+                    </Select>
+
+                    <FormControl
+                        sx={{ width: { xs: "90%", sm: "25%" } }}
+                    >
+                        <InputLabel id="business-unit-label">Business Unit</InputLabel>
+                        <Select
+                            labelId="business-unit-label"
+                            multiple
+                            value={selectedBusinessUnit}
+                            onChange={handleBusinessUnitChange}
+                            displayEmpty
+                            renderValue={(selected) => {
+                                if (selected.length === 0) return <em>All</em>;
+                                const selectedLabels = projectNames
+                                    .filter(p => selected.includes(p.Id))
+                                    .map(p => p.Business_Unit);
+                                return (
+                                    <Box sx={{
+                                        display: 'flex', flexWrap: 'wrap', gap: 0.5,
+                                        maxHeight: 32, overflowY: 'auto'
+                                    }}>
+                                        {selectedLabels.map((label) => <Chip key={label} label={label} size="small" />)}
+                                    </Box>
+                                );
                             }}
+                            MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                            sx={{ mt: 1 }}
                         >
-                            <Select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                                // size="small"
-                                displayEmpty
-                                sx={{
-                                    width: "25%",
-                                    marginBottom: { xs: "20px", sm: "0" }
-                                }}
-                            >
-                                <MenuItem value="" disabled>
-                                    Select Month
-                                </MenuItem>
-                                {months.map((month) => (
-                                    <MenuItem key={month.value} value={month.value}>
-                                        {month.label}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-
-                            <Select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(e.target.value)}
-                                // size="small"
-                                displayEmpty
-                                sx={{
-                                    // marginTop: '-5px',
-                                    width: "25%", // Ensure this also takes full width
-                                    marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
-                                }}
-                            >
-                                <MenuItem value="" disabled>
-                                    Select Year
-                                </MenuItem>
-                                {[2024, 2025].map((year) => (
-                                    <MenuItem key={year} value={year}>
-                                        {year}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-
-                            <FormControl
-                                sx={{
-                                    width: { xs: '100%', sm: '25%' },
-                                    marginBottom: { xs: '20px', sm: '0' },
-                                }}
-                            >
-                                <InputLabel id="business-unit-label">Business Unit</InputLabel>
-                                <Select
-                                    labelId="business-unit-label"
-                                    multiple
-                                    value={selectedBusinessUnit}
-                                    onChange={handleBusinessUnitChange}
-                                    displayEmpty
-                                    renderValue={(selected) => {
-                                        if (selected.length === 0) return <em>All</em>;
-                                        const selectedLabels = projectNames
-                                            .filter(project => selected.includes(project.Id))
-                                            .map(project => project.Business_Unit);
-
-                                        return (
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    flexWrap: 'wrap',
-                                                    gap: 0.5,
-                                                    maxHeight: 30, // limit height
-                                                    overflowY: 'auto',
-                                                }}
-                                            >
-                                                {selectedLabels.map((label) => (
-                                                    <Chip key={label} label={label} />
-                                                ))}
-                                            </Box>
-                                        );
-                                    }}
-                                    MenuProps={{
-                                        PaperProps: {
-                                            style: {
-                                                maxHeight: 300, // dropdown height
-                                            },
-                                        },
-                                    }}
-                                    sx={{
-                                        mt: 1,
-                                        '& .MuiSelect-multiple': {
-                                            display: 'flex',
-                                            flexWrap: 'wrap',
-                                            alignItems: 'flex-start',
-                                        },
-                                    }}
-                                >
-                                    <MenuItem value="ALL">
-                                        <Checkbox
-                                            checked={isAllSelected}
-                                            indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected}
-                                        />
-                                        <ListItemText primary="Select All" />
-                                    </MenuItem>
-                                    {Array.isArray(projectNames) && projectNames.length > 0 ? (
-                                        projectNames.map((project) => (
-                                            <MenuItem key={project.Id} value={project.Id}>
-                                                <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
-                                                <ListItemText primary={project.Business_Unit} />
-                                            </MenuItem>
-                                        ))
-                                    ) : (
-                                        <MenuItem disabled>No Projects Available</MenuItem>
-                                    )}
-                                </Select>
-                            </FormControl>
-
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={fetchForAll}
-                                        onChange={(e) => setFetchForAll(e.target.checked)}
-                                        color="primary"
-                                    />
-                                }
-                                sx={{
-                                    marginBottom: { xs: "20px", sm: "0" },
-                                }}
-                            />
-                            {!fetchForAll && (
-                                <TextField
-                                    label="Labour ID"
-                                    variant="outlined"
-                                    size="small"
-                                    value={labourId}
-                                    onChange={(e) => setLabourId(e.target.value)}
-                                    sx={{
-                                        width: "25%", // Full width
-                                        marginBottom: { xs: "20px", sm: "0" },
-                                        marginTop: { xs: "0", sm: "5px" }
-                                    }}
+                            <MenuItem value="ALL">
+                                <Checkbox
+                                    checked={isAllSelected}
+                                    indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected}
                                 />
+                                <ListItemText primary="Select All" />
+                            </MenuItem>
+                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
+                                projectNames.map((project) => (
+                                    <MenuItem key={project.Id} value={project.Id}>
+                                        <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                        <ListItemText primary={project.Business_Unit} />
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem disabled>No Projects Available</MenuItem>
                             )}
+                        </Select>
+                    </FormControl>
 
-                            <Tooltip
-                                title={selectedBusinessUnit.length === 0 ? "Select at least one Business Unit" : ""}
-                                arrow
-                            >
-                                <span>
-                                    <Button
-                                        variant="contained"
-                                        onClick={fetchSalaryGenerationForDateMonthAll}
-                                        disabled={selectedBusinessUnit.length === 0}
-                                        sx={{
-                                            fontSize: { xs: "0.8rem", sm: "1rem" },
-                                            height: "40px",
-                                            backgroundColor: selectedBusinessUnit.length === 0 ? "#ccc" : "rgb(229, 255, 225)",
-                                            color: selectedBusinessUnit.length === 0 ? "#666" : "rgb(43, 217, 144)",
-                                            '&:hover': {
-                                                backgroundColor: selectedBusinessUnit.length === 0
-                                                    ? "#ccc"
-                                                    : "rgb(229, 255, 225)",
-                                            },
-                                            marginBottom: { xs: "20px", sm: "0" },
-                                            cursor: selectedBusinessUnit.length === 0 ? "not-allowed" : "pointer",
-                                        }}
-                                    >
-                                        PayRoll
-                                    </Button>
-                                </span>
-                            </Tooltip>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={fetchForAll}
+                                onChange={(e) => setFetchForAll(e.target.checked)}
+                                color="primary"
+                            />
+                        }
+                    />
 
+                    {!fetchForAll && (
+                        <TextField
+                            label="Labour ID"
+                            variant="outlined"
+                            size="small"
+                            value={labourId}
+                            onChange={(e) => setLabourId(e.target.value)}
+                            sx={{ width: { xs: "100%", sm: "25%" } }}
+                            InputProps={{ sx: { fontWeight: 500 } }}
+                        />
+                    )}
 
-
-                        </Box>
-
-                        <Box
-                            sx={{
-                                display: "flex",
-                                marginRight: "20px",
-                                flexDirection: { xs: "row", sm: "row" },
-                            }}
-                        >
-                            <Box
+                    <Tooltip title={tooltipTitle} arrow disableHoverListener={canClickPayroll}>
+                        <span>
+                            <Button
+                                variant="contained"
+                                onClick={fetchSalaryGenerationForDateMonthAll}
+                                disabled={isDisabled}
+                                disableElevation
                                 sx={{
-                                    width: { xs: "100%", sm: "auto" },
-                                    display: "flex",
-                                    flexDirection: { xs: "row", sm: "row" },
-                                    gap: "20px",
-                                    alignItems: "center",
-                                    justifyContent: "space-evenly",
+                                    height: 44,
+                                    px: 3,
+                                    textTransform: "none",
+                                    fontWeight: 700,
+                                    borderRadius: 2,
+                                    letterSpacing: 0.2,
+                                    transition: "transform 120ms ease",
+                                    background:
+                                        isDisabled
+                                            ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
+                                            : "linear-gradient(90deg, #1db954, #00c896)",
+                                    color: isDisabled ? "#9e9e9e" : "#ffffff",
+                                    boxShadow: isDisabled ? "none" : "0 6px 16px rgba(0,0,0,0.15)",
+                                    "&:hover": {
+                                        transform: isDisabled ? "none" : "translateY(-1px)",
+                                        background:
+                                            isDisabled
+                                                ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
+                                                : "linear-gradient(90deg, #19a64c, #00b785)",
+                                    },
+                                    cursor: isDisabled ? "not-allowed" : "pointer",
                                 }}
+                                aria-disabled={isDisabled}
                             >
-                                <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
-                                    Filter
-                                </Button>
-                                {selectedLabourIds.length > 0 && (
-                                    <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
-                                        Edit ({selectedLabourIds.length})
-                                    </Button>
-                                )}
-
-                                <TablePagination
-                                    className="custom-pagination"
-                                    rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
-                                    count={filteredData.length > 0 ? filteredData.length : labours.length}
-                                    rowsPerPage={rowsPerPage}
-                                    page={page}
-                                    onPageChange={handlePageChange}
-                                    onRowsPerPageChange={handleRowsPerPageChange}
-                                />
-                            </Box>
-                        </Box>
-                    </Box>
+                                PayRoll
+                            </Button>
+                        </span>
+                    </Tooltip>
                 </Box>
+
 
 
                 <TableContainer
