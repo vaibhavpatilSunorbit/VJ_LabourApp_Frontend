@@ -18,13 +18,13 @@ import {
     CircularProgress,
     InputAdornment,
     Tooltip,
-    Divider,
 } from "@mui/material";
-import { Search, CalendarToday, Refresh, Visibility, VisibilityOff, Download, Upload } from "@mui/icons-material";
+import { Search, CalendarToday, Refresh, Visibility, VisibilityOff } from "@mui/icons-material";
 import DailyAttendance from "./Dailyattandace";
 import CalendarModal from "./CalendarModal";
-import ExportAttendance from './ImportExportAttendance/ExportAttendance'
-import ImportAttendance from './ImportExportAttendance/ImportAttendance'
+import ExportAttendance from './ImportExportAttendance/ExportAttendance';
+import ImportAttendance from './ImportExportAttendance/ImportAttendance';
+
 const AttendanceReport = () => {
     const [month, setMonth] = useState("7");
     const [year, setYear] = useState("2025");
@@ -46,7 +46,14 @@ const AttendanceReport = () => {
             if (!res.ok) throw new Error("Failed to fetch attendance data");
             const result = await res.json();
             const dataArray = Array.isArray(result) ? result : result.data || [];
-            setAttendanceData(dataArray);
+
+            // 🔹 Normalize LabourName -> name
+            const normalizedData = dataArray.map((item) => ({
+                ...item,
+                name: item.LabourName || item.name || "-",
+            }));
+
+            setAttendanceData(normalizedData);
         } catch (error) {
             console.error("Error fetching attendance:", error);
             setAttendanceData([]);
@@ -140,14 +147,12 @@ const AttendanceReport = () => {
 
                 {/* Action Buttons */}
                 <Box sx={{ display: "flex", gap: 1, ml: "auto" }}>
-                    {/* Instead of Button, use your ExportAttendance Component */}
                     <ExportAttendance />
                     <Button variant="outlined" color="secondary">
-                        <ImportAttendance/>
+                        <ImportAttendance />
                     </Button>
                 </Box>
             </Paper>
-
 
             {/* Attendance Table */}
             <TableContainer
@@ -228,8 +233,14 @@ const AttendanceReport = () => {
                                         <TableCell align="center">{row.HalfDays ?? "-"}</TableCell>
                                         <TableCell align="center">{row.AbsentDays ?? "-"}</TableCell>
                                         <TableCell align="center">{row.MissPunchDays ?? "-"}</TableCell>
-                                        <TableCell align="center">{row.OT ?? "-"}</TableCell>
-                                        <TableCell align="center">{row.RoundOffTotalOvertime ?? "-"}</TableCell>
+                                        {/* ✅ Show TotalOvertimeHours */}
+                                        <TableCell align="center">
+                                            {row.TotalOvertimeHours != null ? Math.floor(row.TotalOvertimeHours) : "-"}
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            {row.RoundOffTotalOvertime != null ? Math.floor(row.RoundOffTotalOvertime) : "-"}
+                                        </TableCell>
+
                                         <TableCell align="center">
                                             <Tooltip title={expandedLabourId === row.LabourId ? "Hide Details" : "View Details"}>
                                                 <IconButton
