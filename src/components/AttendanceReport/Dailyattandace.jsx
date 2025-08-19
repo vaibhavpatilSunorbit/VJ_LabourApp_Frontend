@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -20,10 +22,13 @@ import {
   Alert,
 } from "@mui/material";
 import { API_BASE_URL } from "../../Data";
+import { useUser } from "../../UserContext/UserContext";
 
 const DailyAttendance = ({ labourId, month, year }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const { user } = useUser();
 
   const [dailyAttendance, setDailyAttendance] = useState([]);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
@@ -45,26 +50,42 @@ const DailyAttendance = ({ labourId, month, year }) => {
     "Leave",
   ];
 
-  // Fetch subprojects
-  useEffect(() => {
-    const fetchSubProjects = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/api/subprojects`);
-        const arr = Array.isArray(res.data)
-          ? res.data
-          : Array.isArray(res.data?.data)
-          ? res.data.data
-          : [];
-        setSubProjects(arr);
-      } catch (err) {
-        console.error("Error fetching subprojects:", err);
-        setSubProjects([]);
-      }
-    };
-    fetchSubProjects();
-  }, []);
+useEffect(() => {
+  const fetchSubProjects = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/subprojects`);
+      console.log("🔹 Full API Response:", res.data);
 
-  // Fetch attendance + projects
+      let arr = [];
+
+      // adjust extraction after seeing structure
+      if (Array.isArray(res.data)) {
+        arr = res.data;
+      } else if (res.data?.subProjects) {
+        arr = res.data.subProjects;
+      } else if (res.data?.items) {
+        arr = res.data.items;
+      } else {
+        // fallback: wrap single object
+        arr = [res.data];
+      }
+
+      console.log("✅ Extracted SubProjects:", arr);
+      setSubProjects(arr);
+    } catch (err) {
+      console.error("❌ Error fetching subprojects:", err);
+      setSubProjects([]);
+    }
+  };
+  fetchSubProjects();
+}, []);
+
+
+
+
+
+
+  // 🔹 Fetch attendance + project names
   useEffect(() => {
     if (!labourId) return;
 
@@ -78,44 +99,39 @@ const DailyAttendance = ({ labourId, month, year }) => {
           : [];
 
         attendanceData.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-        setDailyAttendance(attendanceData);
 
-        const projectsRes = await axios.get(
-          `${API_BASE_URL}/api/project-names`
-        );
+        const projectsRes = await axios.get(`${API_BASE_URL}/api/project-names`);
         const allProjects = Array.isArray(projectsRes.data)
           ? projectsRes.data
           : Array.isArray(projectsRes.data?.data)
-          ? projectsRes.data.data
-          : [];
+            ? projectsRes.data.data
+            : [];
 
-        const matchedProjects = attendanceData.map((att) => {
-          let projectIdOrName =
-            att.Project?._id || att.projectName || att.Project?.name;
-
+        // 🔹 Match projects with attendance
+        const matchedAttendance = attendanceData.map((att) => {
           const matchedProject = allProjects.find(
             (proj) =>
-              proj._id === projectIdOrName ||
-              proj.name?.trim().toLowerCase() ===
-                (projectIdOrName || "").toString().trim().toLowerCase()
+              String(proj.Id) === String(att.projectName) ||
+              String(proj.Id) === String(att.Id)
           );
 
           return {
             ...att,
-            businessUnit: matchedProject?.Business_Unit || null,
             projectFullInfo: matchedProject || null,
           };
         });
 
+        // 🔹 Save unique projects for lookup
         const uniqueMatchedProjects = Array.from(
           new Map(
-            matchedProjects
+            matchedAttendance
               .filter((p) => p.projectFullInfo)
-              .map((p) => [p.projectFullInfo._id, p.projectFullInfo])
+              .map((p) => [p.projectFullInfo.Id, p.projectFullInfo])
           ).values()
         );
 
         setProjects(uniqueMatchedProjects);
+        setDailyAttendance(matchedAttendance);
       } catch (err) {
         console.error("Error fetching attendance or projects:", err);
         setDailyAttendance([]);
@@ -125,92 +141,109 @@ const DailyAttendance = ({ labourId, month, year }) => {
     fetchAttendanceAndProjects();
   }, [labourId, month, year]);
 
-  // const handleFieldChange = (index, field, value) => {
-  //   const updated = [...dailyAttendance];
-  //   updated[index][field] = value;
-  //   setDailyAttendance(updated);
-  // };
-
   const handleFieldChange = (index, field, value) => {
-  const updated = [...dailyAttendance];
+    const updated = [...dailyAttendance];
 
-  if (field === "Status" && value === "A") {
-    // Reset fields when status is Absent
-    updated[index] = {
-      ...updated[index],
-      Status: "A",
-      FirstPunch: null,
-      LastPunch: null,
-      TotalHours: 0,
-      Overtime: 0,
-      OvertimeManually: 0,
-      RemarkManually: "Leave", // optional default remark
-    };
-  } else {
-    updated[index][field] = value;
-  }
+    if (field === "Status" && value === "A") {
+      updated[index] = {
+        ...updated[index],
+        Status: "A",
+        FirstPunch: null,
+        LastPunch: null,
+        TotalHours: 0,
+        Overtime: 0,
+        OvertimeManually: 0,
+        RemarkManually: "Leave",
+      };
+    } else {
+      updated[index][field] = value;
+    }
 
-  setDailyAttendance(updated);
-};
+    setDailyAttendance(updated);
+  };
 
+  // 🔹 Save row
+  const handleSaveRow = async (index) => {
+    const rowData = dailyAttendance[index];
 
-  // ✅ Save row and send to backend
- const handleSaveRow = async (index) => {
-  const rowData = dailyAttendance[index];
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/api/labours/upsertAttendance`,
+        {
+          labourId: labourId,
+          date: rowData.Date,
+          AttendanceId: rowData.AttendanceId || null,
+          firstPunchManually: rowData.FirstPunch || null,
+          lastPunchManually: rowData.LastPunch || null,
+          overtimeManually: rowData.OvertimeManually || 0,
+          remarkManually: rowData.RemarkManually || "",
+          workingHours: rowData.TotalHours || 0,
+          onboardName: rowData.onboardName || "",
+          AttendanceStatus: rowData.Status || "P",
+          markWeeklyOff: rowData.markWeeklyOff || false,
+          updatedFields: {
+            projectId: rowData.projectName,
+            subprojectId: rowData.subprojectId,
+            workType: rowData.workType,
+          },
+          userType: user?.userType || "user",
+          updatedBy: user?.name || "Unknown",
+        }
+      );
 
-  try {
-    const res = await axios.post(
-      `${API_BASE_URL}/api/labours/upsertAttendance`,
-      {
-        labourId: labourId,
-        date: rowData.Date,
-        AttendanceId: rowData.AttendanceId || null,
-        firstPunchManually: rowData.FirstPunch || null,
-        lastPunchManually: rowData.LastPunch || null,
-        overtimeManually: rowData.OvertimeManually || 0,
-        remarkManually: rowData.RemarkManually || "",
-        workingHours: rowData.TotalHours || 0,
-        onboardName: rowData.onboardName || "",   // if available
-        AttendanceStatus: rowData.Status || "P", // Present/Absent etc.
-        markWeeklyOff: rowData.markWeeklyOff || false,
-        updatedFields: {
-          projectId: rowData.projectName,
-          subprojectId: rowData.subprojectId,
-          workType: rowData.workType,
-        },
-        userType: "system", // or whoever is saving
-      }
-    );
+      console.log("Row saved response:", res.data);
 
-    console.log("Row saved response:", res.data);
-
-    setEditingRowIndex(null);
-    setToast({
-      open: true,
-      message: "Row saved successfully!",
-      severity: "success",
-    });
-  } catch (err) {
-    console.error("Error saving row:", err);
-    setToast({
-      open: true,
-      message: "Error saving row",
-      severity: "error",
-    });
-  }
-};
-
+      setEditingRowIndex(null);
+      setToast({
+        open: true,
+        message: "Row saved successfully!",
+        severity: "success",
+      });
+    } catch (err) {
+      console.error("Error saving row:", err);
+      setToast({
+        open: true,
+        message: "Error saving row",
+        severity: "error",
+      });
+    }
+  };
 
   const getSubProjectName = (id) => {
     const sp = subProjects.find((s) => String(s.id) === String(id));
     return sp ? sp.name : "-";
   };
 
-  const getProjectName = (id) => {
-    const proj = projects.find((p) => String(p.Id) === String(id));
+  // 🔹 Return Business_Unit instead of raw ID
+  const getProjectName = (idOrNumber) => {
+    if (!idOrNumber) return "-";
+
+    const proj = projects.find(
+      (p) =>
+        String(p.Id) === String(idOrNumber) ||
+        String(p.projectName) === String(idOrNumber)
+    );
+
     return proj ? proj.Business_Unit : "-";
   };
 
+  const getSubProjectsByProject = (idOrNumber) => {
+  if (!idOrNumber) return [];
+
+  // First get the Business Unit for that project
+  const businessUnit = getProjectName(idOrNumber);
+
+  if (!businessUnit || businessUnit === "-") return [];
+
+  // Now filter subprojects that belong to this Business Unit
+  const matchedSubs = subProjects.filter(
+    (sub) =>
+      String(sub.Business_Unit) === String(businessUnit) ||
+      String(sub.SubDescription) === String(businessUnit)
+  );
+  
+  return matchedSubs;
+};
   const getRowColor = (status) => {
     switch (status) {
       case "P":
@@ -234,7 +267,7 @@ const DailyAttendance = ({ labourId, month, year }) => {
         Attendance for {labourId}
       </Typography>
 
-      {/* ✅ Legend Section */}
+      {/* 🔹 Legend */}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
         {[
           { color: "#4caf50", label: "Present (P)" },
@@ -257,7 +290,7 @@ const DailyAttendance = ({ labourId, month, year }) => {
         ))}
       </Box>
 
-      {/* ✅ Attendance Table */}
+      {/* 🔹 Attendance Table */}
       <TableContainer component={Paper} sx={{ width: "100%", maxHeight: 500 }}>
         <Table
           size={isMobile ? "small" : "medium"}
@@ -338,18 +371,15 @@ const DailyAttendance = ({ labourId, month, year }) => {
                           type="time"
                           step="1"
                           onChange={(e) =>
-                            handleFieldChange(
-                              index,
-                              "FirstPunch",
-                              e.target.value
-                            )
+                            handleFieldChange(index, "FirstPunch", e.target.value)
                           }
                         />
-                      ) : day.FirstPunch ? (
-                        new Date(`1970-01-01T${day.FirstPunch}`).toLocaleTimeString(
-                          "en-GB",
-                          { hour: "2-digit", minute: "2-digit", second: "2-digit" }
-                        )
+                      ) : day.FirstPunch && !isNaN(new Date(`1970-01-01T${day.FirstPunch}`).getTime()) ? (
+                        new Date(`1970-01-01T${day.FirstPunch}`).toLocaleTimeString("en-GB", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })
                       ) : (
                         "-"
                       )}
@@ -367,16 +397,16 @@ const DailyAttendance = ({ labourId, month, year }) => {
                             handleFieldChange(index, "LastPunch", e.target.value)
                           }
                         />
-                      ) : day.LastPunch ? (
-                        new Date(`1970-01-01T${day.LastPunch}`).toLocaleTimeString(
-                          "en-GB",
-                          { hour: "2-digit", minute: "2-digit", second: "2-digit" }
-                        )
+                      ) : day.LastPunch && !isNaN(new Date(`1970-01-01T${day.LastPunch}`).getTime()) ? (
+                        new Date(`1970-01-01T${day.LastPunch}`).toLocaleTimeString("en-GB", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })
                       ) : (
                         "-"
                       )}
                     </TableCell>
-
                     <TableCell>{day.TotalHours || "-"}</TableCell>
                     <TableCell>{day.Overtime || "-"}</TableCell>
 
@@ -426,8 +456,8 @@ const DailyAttendance = ({ labourId, month, year }) => {
                       )}
                     </TableCell>
 
-                    {/* Project */}
-                    <TableCell>{getProjectName(day.projectName)}</TableCell>
+                    {/* Project → Business_Unit */}
+                    <TableCell>{getProjectName(day.projectName || day.Id)}</TableCell>
 
                     {/* Subproject */}
                     <TableCell>
@@ -436,11 +466,7 @@ const DailyAttendance = ({ labourId, month, year }) => {
                           size="small"
                           value={day.subprojectId || ""}
                           onChange={(e) =>
-                            handleFieldChange(
-                              index,
-                              "subprojectId",
-                              e.target.value
-                            )
+                            handleFieldChange(index, "subprojectId", e.target.value)
                           }
                           sx={{ minWidth: 150 }}
                         >

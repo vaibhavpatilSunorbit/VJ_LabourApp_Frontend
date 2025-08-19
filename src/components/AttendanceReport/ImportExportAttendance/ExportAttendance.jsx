@@ -79,14 +79,7 @@ const ExportAttendance = () => {
                 fileExt = 'pdf';
             }
 
-            // Log params for debugging
-            // console.log("Export params:", {
-            //     url,
-            //     projectName: selectedProjectIds.join(','),
-            //     department: selectedDepartments.join(','),
-            //     startDate,
-            //     endDate
-            // });
+        
 
             const response = await axios.get(url, {
                 params: {
