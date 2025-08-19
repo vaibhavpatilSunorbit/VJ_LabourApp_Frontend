@@ -80,11 +80,6 @@ useEffect(() => {
   fetchSubProjects();
 }, []);
 
-
-
-
-
-
   // 🔹 Fetch attendance + project names
   useEffect(() => {
     if (!labourId) return;
