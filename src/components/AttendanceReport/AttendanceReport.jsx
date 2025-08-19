@@ -254,7 +254,7 @@ const AttendanceReport = () => {
             </Paper>
 
             {/* Attendance Table */}
-            <TableContainer component={Paper} sx={{ maxHeight: "65vh", borderRadius: 2 }}>
+            <TableContainer component={Paper} sx={{ maxHeight: "60vh", borderRadius: 2 }}>
                 {loading ? (
                     <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
                         <CircularProgress />
@@ -322,10 +322,21 @@ const AttendanceReport = () => {
                 )}
             </TableContainer>
 
-            {/* ✅ Pagination outside the scrollable container */}
-            <Box
+            {/* Sticky Pagination Bar */}
+            <Paper
+                elevation={2}
                 sx={{
-                    mt: 2,
+                    position: "sticky",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 10,
+                    background: "#fff",
+                    mt: 0,
+                    borderRadius: 0,
+                    borderTop: "1px solid #eee",
+                    px: 2,
+                    py: 1,
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
@@ -343,7 +354,7 @@ const AttendanceReport = () => {
                     color="primary"
                     size="small"
                 />
-            </Box>
+            </Paper>
 
             {/* Calendar Modal */}
             {openCalendar && (

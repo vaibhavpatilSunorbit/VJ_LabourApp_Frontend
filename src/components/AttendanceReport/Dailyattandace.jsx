@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -50,35 +48,31 @@ const DailyAttendance = ({ labourId, month, year }) => {
     "Leave",
   ];
 
-useEffect(() => {
-  const fetchSubProjects = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/subprojects`);
-      console.log("🔹 Full API Response:", res.data);
+  // 🔹 Fetch subprojects
+  useEffect(() => {
+    const fetchSubProjects = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/subprojects`);
+        let arr = [];
 
-      let arr = [];
+        if (Array.isArray(res.data)) {
+          arr = res.data;
+        } else if (res.data?.subProjects) {
+          arr = res.data.subProjects;
+        } else if (res.data?.items) {
+          arr = res.data.items;
+        } else {
+          arr = [res.data];
+        }
 
-      // adjust extraction after seeing structure
-      if (Array.isArray(res.data)) {
-        arr = res.data;
-      } else if (res.data?.subProjects) {
-        arr = res.data.subProjects;
-      } else if (res.data?.items) {
-        arr = res.data.items;
-      } else {
-        // fallback: wrap single object
-        arr = [res.data];
+        setSubProjects(arr);
+      } catch (err) {
+        console.error("❌ Error fetching subprojects:", err);
+        setSubProjects([]);
       }
-
-      console.log("✅ Extracted SubProjects:", arr);
-      setSubProjects(arr);
-    } catch (err) {
-      console.error("❌ Error fetching subprojects:", err);
-      setSubProjects([]);
-    }
-  };
-  fetchSubProjects();
-}, []);
+    };
+    fetchSubProjects();
+  }, []);
 
   // 🔹 Fetch attendance + project names
   useEffect(() => {
@@ -99,8 +93,8 @@ useEffect(() => {
         const allProjects = Array.isArray(projectsRes.data)
           ? projectsRes.data
           : Array.isArray(projectsRes.data?.data)
-            ? projectsRes.data.data
-            : [];
+          ? projectsRes.data.data
+          : [];
 
         // 🔹 Match projects with attendance
         const matchedAttendance = attendanceData.map((att) => {
@@ -116,7 +110,7 @@ useEffect(() => {
           };
         });
 
-        // 🔹 Save unique projects for lookup
+        // 🔹 Unique projects for lookup
         const uniqueMatchedProjects = Array.from(
           new Map(
             matchedAttendance
@@ -143,8 +137,8 @@ useEffect(() => {
       updated[index] = {
         ...updated[index],
         Status: "A",
-        FirstPunch: null,
-        LastPunch: null,
+        FirstPunch: '000',
+        LastPunch: '0000',
         TotalHours: 0,
         Overtime: 0,
         OvertimeManually: 0,
@@ -204,9 +198,10 @@ useEffect(() => {
     }
   };
 
+  // 🔹 Get SubProject Name from SubDescription
   const getSubProjectName = (id) => {
     const sp = subProjects.find((s) => String(s.id) === String(id));
-    return sp ? sp.name : "-";
+    return sp ? sp.SubDescription : "-";
   };
 
   // 🔹 Return Business_Unit instead of raw ID
@@ -222,23 +217,6 @@ useEffect(() => {
     return proj ? proj.Business_Unit : "-";
   };
 
-  const getSubProjectsByProject = (idOrNumber) => {
-  if (!idOrNumber) return [];
-
-  // First get the Business Unit for that project
-  const businessUnit = getProjectName(idOrNumber);
-
-  if (!businessUnit || businessUnit === "-") return [];
-
-  // Now filter subprojects that belong to this Business Unit
-  const matchedSubs = subProjects.filter(
-    (sub) =>
-      String(sub.Business_Unit) === String(businessUnit) ||
-      String(sub.SubDescription) === String(businessUnit)
-  );
-  
-  return matchedSubs;
-};
   const getRowColor = (status) => {
     switch (status) {
       case "P":
@@ -369,12 +347,16 @@ useEffect(() => {
                             handleFieldChange(index, "FirstPunch", e.target.value)
                           }
                         />
-                      ) : day.FirstPunch && !isNaN(new Date(`1970-01-01T${day.FirstPunch}`).getTime()) ? (
-                        new Date(`1970-01-01T${day.FirstPunch}`).toLocaleTimeString("en-GB", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })
+                      ) : day.FirstPunch &&
+                        !isNaN(new Date(`1970-01-01T${day.FirstPunch}`).getTime()) ? (
+                        new Date(`1970-01-01T${day.FirstPunch}`).toLocaleTimeString(
+                          "en-GB",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          }
+                        )
                       ) : (
                         "-"
                       )}
@@ -392,16 +374,21 @@ useEffect(() => {
                             handleFieldChange(index, "LastPunch", e.target.value)
                           }
                         />
-                      ) : day.LastPunch && !isNaN(new Date(`1970-01-01T${day.LastPunch}`).getTime()) ? (
-                        new Date(`1970-01-01T${day.LastPunch}`).toLocaleTimeString("en-GB", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })
+                      ) : day.LastPunch &&
+                        !isNaN(new Date(`1970-01-01T${day.LastPunch}`).getTime()) ? (
+                        new Date(`1970-01-01T${day.LastPunch}`).toLocaleTimeString(
+                          "en-GB",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          }
+                        )
                       ) : (
                         "-"
                       )}
                     </TableCell>
+
                     <TableCell>{day.TotalHours || "-"}</TableCell>
                     <TableCell>{day.Overtime || "-"}</TableCell>
 
@@ -452,7 +439,9 @@ useEffect(() => {
                     </TableCell>
 
                     {/* Project → Business_Unit */}
-                    <TableCell>{getProjectName(day.projectName || day.Id)}</TableCell>
+                    <TableCell>
+                      {getProjectName(day.projectName || day.Id)}
+                    </TableCell>
 
                     {/* Subproject */}
                     <TableCell>
@@ -467,7 +456,7 @@ useEffect(() => {
                         >
                           {subProjects.map((sp) => (
                             <MenuItem key={sp.id} value={sp.id}>
-                              {sp.name}
+                              {sp.SubDescription}
                             </MenuItem>
                           ))}
                         </Select>
