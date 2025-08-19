@@ -17,7 +17,7 @@ import {
   Paper,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
-
+import { API_BASE_URL } from "../../Data";
 const statusColors = {
   P: "#4caf50", // Present
   A: "#f57c00", // Absent
@@ -60,7 +60,7 @@ const CalendarModal = ({ open, onClose, labourId, month, year }) => {
   useEffect(() => {
     if (open && labourId && month && year) {
       fetch(
-        `http://localhost:4000/api/labours/attendancelaboursforsinglelabour/${labourId}?month=${month}&year=${year}`
+        `${API_BASE_URL}/api/labours/attendancelaboursforsinglelabour/${labourId}?month=${month}&year=${year}`
       )
         .then((res) => res.json())
         .then((data) => {

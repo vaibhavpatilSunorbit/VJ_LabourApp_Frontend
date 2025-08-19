@@ -19,6 +19,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import { API_BASE_URL } from "../../Data";
 
 const DailyAttendance = ({ labourId, month, year }) => {
   const theme = useTheme();
@@ -35,18 +36,25 @@ const DailyAttendance = ({ labourId, month, year }) => {
     severity: "success",
   });
 
-  const statusOptions = ["P", "A", "WO", "MP"];
+  const statusOptions = ["P", "HD", "H", "A", "MP"];
+  const remarkOptions = [
+    "Valid Punch",
+    "Missed Punch",
+    "System Error",
+    "Manual Entry",
+    "Leave",
+  ];
 
   // Fetch subprojects
   useEffect(() => {
     const fetchSubProjects = async () => {
       try {
-        const res = await axios.get("http://localhost:4000/api/subprojects");
+        const res = await axios.get(`${API_BASE_URL}/api/subprojects`);
         const arr = Array.isArray(res.data)
           ? res.data
           : Array.isArray(res.data?.data)
-            ? res.data.data
-            : [];
+          ? res.data.data
+          : [];
         setSubProjects(arr);
       } catch (err) {
         console.error("Error fetching subprojects:", err);
@@ -56,107 +64,142 @@ const DailyAttendance = ({ labourId, month, year }) => {
     fetchSubProjects();
   }, []);
 
-  // Fetch attendance data
-useEffect(() => {
-  if (!labourId) return;
+  // Fetch attendance + projects
+  useEffect(() => {
+    if (!labourId) return;
 
-  const fetchAttendanceAndProjects = async () => {
-    try {
-      // 1️⃣ Fetch attendance for single labour
-      const attendanceRes = await axios.get(
-        `http://localhost:4000/api/labours/attendancelaboursforsinglelabour/${labourId}?month=${month}&year=${year}`
-      );
-      const attendanceData = Array.isArray(attendanceRes.data) ? attendanceRes.data : [];
+    const fetchAttendanceAndProjects = async () => {
+      try {
+        const attendanceRes = await axios.get(
+          `${API_BASE_URL}/api/labours/attendancelaboursforsinglelabour/${labourId}?month=${month}&year=${year}`
+        );
+        const attendanceData = Array.isArray(attendanceRes.data)
+          ? attendanceRes.data
+          : [];
 
-      // Sort by Date
-      attendanceData.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        attendanceData.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        setDailyAttendance(attendanceData);
 
-      setDailyAttendance(attendanceData);
+        const projectsRes = await axios.get(
+          `${API_BASE_URL}/api/project-names`
+        );
+        const allProjects = Array.isArray(projectsRes.data)
+          ? projectsRes.data
+          : Array.isArray(projectsRes.data?.data)
+          ? projectsRes.data.data
+          : [];
 
-      // 2️⃣ Fetch all project names (with business unit info)
-      const projectsRes = await axios.get("http://localhost:4000/api/project-names");
-      const allProjects = Array.isArray(projectsRes.data)
-        ? projectsRes.data
-        : Array.isArray(projectsRes.data?.data)
-        ? projectsRes.data.data
-        : [];
+        const matchedProjects = attendanceData.map((att) => {
+          let projectIdOrName =
+            att.Project?._id || att.projectName || att.Project?.name;
 
-      // 3️⃣ Map attendance project names/IDs to actual project objects
-      const matchedProjects = attendanceData.map(att => {
-        // Check if attendance row has Project object
-        let projectIdOrName = att.Project?._id || att.projectName || att.Project?.name;
+          const matchedProject = allProjects.find(
+            (proj) =>
+              proj._id === projectIdOrName ||
+              proj.name?.trim().toLowerCase() ===
+                (projectIdOrName || "").toString().trim().toLowerCase()
+          );
 
-        const matchedProject = allProjects.find(
-          proj =>
-            proj._id === projectIdOrName ||
-            proj.name?.trim().toLowerCase() === (projectIdOrName || "").toString().trim().toLowerCase()
+          return {
+            ...att,
+            businessUnit: matchedProject?.Business_Unit || null,
+            projectFullInfo: matchedProject || null,
+          };
+        });
+
+        const uniqueMatchedProjects = Array.from(
+          new Map(
+            matchedProjects
+              .filter((p) => p.projectFullInfo)
+              .map((p) => [p.projectFullInfo._id, p.projectFullInfo])
+          ).values()
         );
 
-        return {
-          ...att,
-          businessUnit: matchedProject?.Business_Unit || null, // attach Business Unit if matched
-          projectFullInfo: matchedProject || null, // optional: full project info
-        };
-      });
+        setProjects(uniqueMatchedProjects);
+      } catch (err) {
+        console.error("Error fetching attendance or projects:", err);
+        setDailyAttendance([]);
+      }
+    };
 
-      console.log("Attendance with matched Business Unit:", matchedProjects);
+    fetchAttendanceAndProjects();
+  }, [labourId, month, year]);
 
-      // Optional: if you want unique projects for dropdown
-      const uniqueMatchedProjects = Array.from(
-        new Map(
-          matchedProjects
-            .filter(p => p.projectFullInfo)
-            .map(p => [p.projectFullInfo._id, p.projectFullInfo])
-        ).values()
-      );
-      console.log("Unique Matched Projects for dropdown:", uniqueMatchedProjects);
-
-    } catch (err) {
-      console.error("Error fetching attendance or projects:", err);
-      setDailyAttendance([]);
-    }
-  };
-
-  fetchAttendanceAndProjects();
-}, [labourId, month, year]);
-
-
-
-
-
-  // Fetch only relevant projects
-  // const fetchFilteredProjects = async (ids) => {
-  //   try {
-  //     const res = await axios.get("http://localhost:4000/api/project-names");
-  //     let arr = Array.isArray(res.data)
-  //       ? res.data
-  //       : Array.isArray(res.data?.data)
-  //         ? res.data.data
-  //         : [];
-
-  //     arr = arr.filter((proj) => ids.includes(proj.Id));
-  //     setProjects(arr);
-  //   } catch (err) {
-  //     console.error("Error fetching filtered projects:", err);
-  //     setProjects([]);
-  //   }
+  // const handleFieldChange = (index, field, value) => {
+  //   const updated = [...dailyAttendance];
+  //   updated[index][field] = value;
+  //   setDailyAttendance(updated);
   // };
 
   const handleFieldChange = (index, field, value) => {
-    const updated = [...dailyAttendance];
-    updated[index][field] = value;
-    setDailyAttendance(updated);
-  };
+  const updated = [...dailyAttendance];
 
-  const handleSaveRow = (index) => {
-    // Here you could also call an API to save the updated row
+  if (field === "Status" && value === "A") {
+    // Reset fields when status is Absent
+    updated[index] = {
+      ...updated[index],
+      Status: "A",
+      FirstPunch: null,
+      LastPunch: null,
+      TotalHours: 0,
+      Overtime: 0,
+      OvertimeManually: 0,
+      RemarkManually: "Leave", // optional default remark
+    };
+  } else {
+    updated[index][field] = value;
+  }
+
+  setDailyAttendance(updated);
+};
+
+
+  // ✅ Save row and send to backend
+ const handleSaveRow = async (index) => {
+  const rowData = dailyAttendance[index];
+
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/api/labours/upsertAttendance`,
+      {
+        labourId: labourId,
+        date: rowData.Date,
+        AttendanceId: rowData.AttendanceId || null,
+        firstPunchManually: rowData.FirstPunch || null,
+        lastPunchManually: rowData.LastPunch || null,
+        overtimeManually: rowData.OvertimeManually || 0,
+        remarkManually: rowData.RemarkManually || "",
+        workingHours: rowData.TotalHours || 0,
+        onboardName: rowData.onboardName || "",   // if available
+        AttendanceStatus: rowData.Status || "P", // Present/Absent etc.
+        markWeeklyOff: rowData.markWeeklyOff || false,
+        updatedFields: {
+          projectId: rowData.projectName,
+          subprojectId: rowData.subprojectId,
+          workType: rowData.workType,
+        },
+        userType: "system", // or whoever is saving
+      }
+    );
+
+    console.log("Row saved response:", res.data);
+
     setEditingRowIndex(null);
     setToast({
       open: true,
-      message: "Row updated successfully!",
+      message: "Row saved successfully!",
       severity: "success",
     });
-  };
+  } catch (err) {
+    console.error("Error saving row:", err);
+    setToast({
+      open: true,
+      message: "Error saving row",
+      severity: "error",
+    });
+  }
+};
+
 
   const getSubProjectName = (id) => {
     const sp = subProjects.find((s) => String(s.id) === String(id));
@@ -165,22 +208,21 @@ useEffect(() => {
 
   const getProjectName = (id) => {
     const proj = projects.find((p) => String(p.Id) === String(id));
-    console.log(proj,'ProjectNamr');
-    
     return proj ? proj.Business_Unit : "-";
   };
-
 
   const getRowColor = (status) => {
     switch (status) {
       case "P":
         return "#e0f7e9";
+      case "HD":
+        return "#ffebee";
+      case "H":
+        return "#f3e5f5";
       case "A":
-        return "#fdecea";
-      case "WO":
-        return "#e8f4fd";
+        return "#fff3e0";
       case "MP":
-        return "#fff7e6";
+        return "#e3f2fd";
       default:
         return "transparent";
     }
@@ -188,18 +230,35 @@ useEffect(() => {
 
   return (
     <Box sx={{ p: 2, backgroundColor: "#f9fbfd" }}>
-      <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: "bold" }}>
+      <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: "bold" }}>
         Attendance for {labourId}
       </Typography>
 
-      <TableContainer
-        component={Paper}
-        sx={{
-          width: "100%",
-          maxHeight: 500,
-          overflowX: "auto",
-        }}
-      >
+      {/* ✅ Legend Section */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
+        {[
+          { color: "#4caf50", label: "Present (P)" },
+          { color: "#f44336", label: "Half Day (HD)" },
+          { color: "#9c27b0", label: "Holiday (H)" },
+          { color: "#ff9800", label: "Absent (A)" },
+          { color: "#2196f3", label: "MissPunch (MP)" },
+        ].map((item, i) => (
+          <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              sx={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                backgroundColor: item.color,
+              }}
+            />
+            <Typography variant="body2">{item.label}</Typography>
+          </Box>
+        ))}
+      </Box>
+
+      {/* ✅ Attendance Table */}
+      <TableContainer component={Paper} sx={{ width: "100%", maxHeight: 500 }}>
         <Table
           size={isMobile ? "small" : "medium"}
           stickyHeader
@@ -248,7 +307,7 @@ useEffect(() => {
                       {new Date(day.Date).toLocaleDateString()}
                     </TableCell>
 
-                    {/* Editable Status */}
+                    {/* Status */}
                     <TableCell>
                       {isEditing ? (
                         <Select
@@ -270,6 +329,7 @@ useEffect(() => {
                       )}
                     </TableCell>
 
+                    {/* Punch In */}
                     <TableCell>
                       {isEditing ? (
                         <TextField
@@ -288,17 +348,14 @@ useEffect(() => {
                       ) : day.FirstPunch ? (
                         new Date(`1970-01-01T${day.FirstPunch}`).toLocaleTimeString(
                           "en-GB",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          }
+                          { hour: "2-digit", minute: "2-digit", second: "2-digit" }
                         )
                       ) : (
                         "-"
                       )}
                     </TableCell>
 
+                    {/* Punch Out */}
                     <TableCell>
                       {isEditing ? (
                         <TextField
@@ -313,11 +370,7 @@ useEffect(() => {
                       ) : day.LastPunch ? (
                         new Date(`1970-01-01T${day.LastPunch}`).toLocaleTimeString(
                           "en-GB",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          }
+                          { hour: "2-digit", minute: "2-digit", second: "2-digit" }
                         )
                       ) : (
                         "-"
@@ -327,6 +380,7 @@ useEffect(() => {
                     <TableCell>{day.TotalHours || "-"}</TableCell>
                     <TableCell>{day.Overtime || "-"}</TableCell>
 
+                    {/* Manual OT */}
                     <TableCell>
                       {isEditing ? (
                         <TextField
@@ -346,11 +400,12 @@ useEffect(() => {
                       )}
                     </TableCell>
 
+                    {/* Remark */}
                     <TableCell>
                       {isEditing ? (
-                        <TextField
-                          value={day.RemarkManually || ""}
+                        <Select
                           size="small"
+                          value={day.RemarkManually || ""}
                           onChange={(e) =>
                             handleFieldChange(
                               index,
@@ -358,16 +413,21 @@ useEffect(() => {
                               e.target.value
                             )
                           }
-                        />
+                          sx={{ minWidth: 150 }}
+                        >
+                          {remarkOptions.map((remark) => (
+                            <MenuItem key={remark} value={remark}>
+                              {remark}
+                            </MenuItem>
+                          ))}
+                        </Select>
                       ) : (
                         day.RemarkManually || "-"
                       )}
                     </TableCell>
 
-                    <TableCell>
-                      {getProjectName(day.projectName)}
-                    </TableCell>
-
+                    {/* Project */}
+                    <TableCell>{getProjectName(day.projectName)}</TableCell>
 
                     {/* Subproject */}
                     <TableCell>
@@ -397,6 +457,7 @@ useEffect(() => {
 
                     <TableCell>{day.workType || "-"}</TableCell>
 
+                    {/* Actions */}
                     <TableCell>
                       <Button
                         variant={isEditing ? "contained" : "outlined"}
