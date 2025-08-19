@@ -417,6 +417,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
 
     const handleSaveManualEdit = async () => {
+        handleManualEditDialogClose();
+        setIsLoading(true);
         try {
             if (manualEditData.status === 'weeklyOff') {
                 const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
@@ -520,9 +522,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             );
 
             setAttendanceData(updatedAttendanceData);
-
+            setIsLoading(false);
             toast.success(response.data.message || 'Attendance updated successfully!');
-            handleManualEditDialogClose();
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
             console.error('Error saving attendance:', errorMessage);

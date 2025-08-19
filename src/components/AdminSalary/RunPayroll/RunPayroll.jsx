@@ -355,6 +355,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     totalHolidaysInMonth: labour.attendance?.totalHolidaysInMonth || 0,
                     holidayOvertimeHours: labour.attendance?.holidayOvertimeHours || 0,
                     holidayOvertimeWages: labour.attendance?.holidayOvertimeWages || 0,
+                    totalHolidaysConsider: labour.attendance?.totalHolidaysConsider || 0,
                     sundayPayment: labour.attendance?.sundayPayment || 0,
                     additionalPresent: labour.attendance?.additionalPresent || 0,
                     additionalHalf: labour.attendance?.additionalHalf || 0,
@@ -413,7 +414,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
 
     const exportPayrollData = async (data) => {
         setLoading(true);
-        console.log("data export Payroll Data", JSON.stringify(data));
+        // console.log("data export Payroll Data", JSON.stringify(data));
         try {
 
             const selectiveData = data.map(item => ({
@@ -425,14 +426,14 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 Department: item.department,
                 AadhaarNumber: item.aadhaarNumber,
                 AccountNumber: item.accountNumber,
-                presentDays: item.presentDays,
+                presentDays: item.wageType === 'FIXED MONTHLY WAGES' ? (item.presentDays + item.additionalPresent + item.additionalHalf) : (item.presentDays + item.totalHolidaysInMonth + item.additionalPresent + item.additionalHalf),
                 Wage_Type: item.wageType,
                 DailyWage_Rate: item.dailyWageRate,
                 FixedMonthly_Rate: item.fixedMonthlyWage,
                 TotalOvertimeHours: item.totalOvertimeHours,
                 Overtime_Pay: item.overtimePay,
                 WeeklyOff_Pay: item.weeklyOffPay,
-                Gross_Pay: item.baseWage,
+                Gross_Pay: item.fullResponse.grossPay,
                 Insentive: item.bonuses,
                 Advance: item.advancePay,
                 Debit: item.debit,
@@ -1162,8 +1163,8 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                             onClick={() => handleOpenModal(labour)}
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
-                                            {/* {labour.attendanceCount} */}
-                                            {(labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0)}
+                                            {/* {labour.totalHolidaysConsider} */}
+                                            {((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0) - (labour.totalHolidaysConsider || 0))}
                                         </TableCell>
                                         <TableCell>{labour.totalOvertimeHours}</TableCell>
                                         <TableCell>{labour.overtimePay}</TableCell>
