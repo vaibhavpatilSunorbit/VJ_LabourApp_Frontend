@@ -28,6 +28,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Badge from '@mui/material/Badge';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AttendanceReport = ({ departments, labour, labourlist }) => {
     const theme = useTheme();
@@ -927,7 +928,9 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             </Box>
         );
     };
-
+const handleImportSuccess = (msg) => {
+    toast.success(msg || "Attendance imported successfully!");
+  };
     const StatusLegend = () => (
         <Box
             display="flex"
@@ -1247,7 +1250,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
-            <ToastContainer />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
                 <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
                     User | Attendance Report
@@ -1263,6 +1265,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 />
             </Box>
             {loading && <Loading />}
+                                           
 
             <Box
                 sx={{
@@ -1408,7 +1411,9 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
 
                             <ExportAttendance />
-                            <ImportAttendance /></Box>
+                            <ImportAttendance onSuccess={handleImportSuccess}/>
+<ToastContainer position="top-right" autoClose={3000} />
+                            </Box>
 
                         <TablePagination
                             className="custom-pagination"

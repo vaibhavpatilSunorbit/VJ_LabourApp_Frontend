@@ -38,90 +38,90 @@ const ExportAttendance = () => {
         fetchDepartments();
     }, []);
 
-    const fetchBusinessUnits = async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
-            setBusinessUnits(response.data);
-        } catch (error) {
-            console.error('Error fetching business units:', error);
-            toast.error('Error fetching business units.');
-        }
-    };
+const fetchBusinessUnits = async () => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/project-names`);
+        // Normalize field names for frontend
+        const normalized = response.data.map(unit => ({
+            id: unit.Id,
+            businessUnit: unit.Business_Unit, 
+            companyDescription: unit.ComapanyDescription,
+            companyId: unit.ComapanyID,
+            ProjectID: unit.ProjectID   // ✅ make sure ProjectID is included
+        }));
+        setBusinessUnits(normalized);
+    } catch (error) {
+        console.error('Error fetching business units:', error);
+        toast.error('Error fetching business units.');
+    }
+};
     useEffect(() => {
         fetchBusinessUnits();
     }, []);
 
     // Unified export handler for both Excel and PDF
-    const handleExport = async (type = "excel") => {
-        if (!selectedBusinessUnit || !startDate || !endDate) {
-            toast.error('Please select a Business Unit, Start Date, and End Date.');
-            return;
+const handleExport = async (type = "excel") => {
+    if (!selectedBusinessUnit.length || !startDate || !endDate) {
+        toast.error('Please select a Business Unit, Start Date, and End Date.');
+        return;
+    }
+
+    try {
+        let url = "";
+        let fileType = "";
+        let fileExt = "";
+
+        if (type === "excel") {
+            url = `${API_BASE_URL}/api/labours/export`;
+            fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            fileExt = 'xlsx';
+        } else if (type === "pdf") {
+            url = `${API_BASE_URL}/api/labours/exportAttendanceExcel`;
+            fileType = 'application/pdf';
+            fileExt = 'pdf';
         }
-        const selectedProjectIds = selectedBusinessUnit
-            .map((bu) => {
-                const project = businessUnits.find((unit) => unit.BusinessUnit === bu);
-                return project ? project.ProjectID : null;
-            })
-            .filter(Boolean);
 
-        try {
-            let url = "";
-            let fileType = "";
-            let fileExt = "";
+        // ✅ Use ProjectID from selected business units
+        const selectedProjectIds = selectedBusinessUnit.map((bu) => {
+            const project = businessUnits.find((unit) => unit.businessUnit === bu);
+            console.log("project===>", project);
+            return project ? project.id : null;
+        }).filter(Boolean);
 
-            if (type === "excel") {
-                url = `${API_BASE_URL}/api/labours/export`;
-                fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-                fileExt = 'xlsx';
-            } else if (type === "pdf") {
-                url = `${API_BASE_URL}/api/labours/exportAttendanceExcel`;
-                fileType = 'application/pdf';
-                fileExt = 'pdf';
-            }
+        const response = await axios.get(url, {
+            params: {
+                projectName: selectedProjectIds.join(','), // ✅ now always correct
+                department: selectedDepartments.join(','),
+                startDate,
+                endDate
+            },
+            responseType: 'blob',
+        });
 
-            // Log params for debugging
-            // console.log("Export params:", {
-            //     url,
-            //     projectName: selectedProjectIds.join(','),
-            //     department: selectedDepartments.join(','),
-            //     startDate,
-            //     endDate
-            // });
+        const blob = new Blob([response.data], { type: fileType });
+        const fileName = `Attendance_${startDate}_${endDate}.${fileExt}`;
 
-            const response = await axios.get(url, {
-                params: {
-                    projectName: selectedProjectIds.join(','),
-                    department: selectedDepartments.join(','),
-                    startDate,
-                    endDate
-                },
-                responseType: 'blob',
-            });
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
 
-            const blob = new Blob([response.data], { type: fileType });
-            const fileName = `Attendance_${startDate}_${endDate}.${fileExt}`;
-
-            // Direct download for both Excel and PDF
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(downloadUrl);
-
-            toast.success(`Attendance ${type === "excel" ? "Excel" : "PDF"} exported successfully!`);
-        } catch (error) {
-            console.error('Error exporting data:', error);
-
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(`Export Error: ${error.response.data.message}`);
-            } else {
-                toast.error('Error exporting data. Please try again later.');
-            }
+        toast.success(`Attendance ${type === "excel" ? "Excel" : "PDF"} exported successfully!`);
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        if (error.response?.data?.message) {
+            toast.error(`Export Error: ${error.response.data.message}`);
+        } else {
+            toast.error('Error exporting data. Please try again later.');
         }
-    };
+    }
+    handleClose();
+};
+
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -257,8 +257,8 @@ const ExportAttendance = () => {
                                     <em>Select All</em>
                                 </MenuItem>
                                 {businessUnits.map((unit) => (
-                                    <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
-                                        {unit.BusinessUnit}
+                                    <MenuItem key={unit.id} value={unit.businessUnit}>
+                                        {unit.businessUnit}
                                     </MenuItem>
                                 ))}
                             </Select>

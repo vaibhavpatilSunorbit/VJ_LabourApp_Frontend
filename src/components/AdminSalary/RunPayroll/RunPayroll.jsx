@@ -359,6 +359,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     sundayPayment: labour.attendance?.sundayPayment || 0,
                     additionalPresent: labour.attendance?.additionalPresent || 0,
                     additionalHalf: labour.attendance?.additionalHalf || 0,
+                    // additionalAbsent: labour.attendance?.additionalAbsent || 0,
                     totalOvertimeHours: labour.cappedOvertime || 0,
                     derivedPerHour: labour.derivedPerHour || 0,
                     basicSalary: labour.baseWage || 0,
@@ -1105,8 +1106,8 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                     <TableCell>Insentive</TableCell>
                                     <TableCell>Advance</TableCell>
                                     <TableCell>Debit</TableCell>
-                                    <TableCell>Basic Salary</TableCell>
-                                    <TableCell>Net Pay</TableCell>
+                                    <TableCell>Gross Salary</TableCell>
+                                    <TableCell>Net Salary</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody
@@ -1163,8 +1164,8 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                             onClick={() => handleOpenModal(labour)}
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
-                                            {/* {labour.totalHolidaysConsider} */}
-                                            {((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0) - (labour.totalHolidaysConsider || 0))}
+                                            {/* {labour.totalHolidaysConsider}, {labour.totalHolidaysInMonth}, {labour.additionalPresent}, {labour.additionalHalf}, {labour.presentDays} */}
+                                            {labour.totalHolidaysConsider > 0 ? ((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0)) : ((labour.presentDays || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0))}
                                         </TableCell>
                                         <TableCell>{labour.totalOvertimeHours}</TableCell>
                                         <TableCell>{labour.overtimePay}</TableCell>
@@ -1187,7 +1188,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                         >
                                             {labour.debit}
                                         </TableCell>
-                                        <TableCell>{labour.baseWage}</TableCell>
+                                        <TableCell>{labour.fullResponse.grossPay}</TableCell>
                                         {/* <TableCell>{labour.netPay}</TableCell> */}
                                         <TableCell
                                             onClick={() => handleOpenModalNetpay(labour)}
@@ -1221,18 +1222,72 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             Labour ID: {selectedLabour?.LabourID || "N/A"}
                         </Typography>
 
-                        <Box sx={{
+<Box
+  sx={{
+    display: "flex",
+    flexDirection: "column",
+    gap: 1,
+  }}
+>
+  <Typography>
+    <strong style={{ marginRight: "25%" }}>Name:</strong>{" "}
+    {selectedLabour?.name || "N/A"}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "12%" }}>Present Days:</strong>{" "}
+    {(selectedLabour?.presentDays || 0) +
+      (selectedLabour?.additionalPresent || 0)}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "13%" }}>Absent Days:</strong>{" "}
+    {selectedLabour?.absentDays || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "18.5%" }}>Half Days:</strong>{" "}
+    {(selectedLabour?.halfDays || 0) +
+      (selectedLabour?.additionalHalf || 0)}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "5%" }}>Miss Punch Days:</strong>{" "}
+    {selectedLabour?.missPunchDays || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "12.5%" }}>Holiday Days:</strong>{" "}
+    {selectedLabour?.totalHolidaysInMonth || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "13.5%" }}>Total Days:</strong>{" "}
+    {(selectedLabour?.presentDays || 0) +
+      (selectedLabour?.additionalPresent || 0) +
+      (selectedLabour?.absentDays || 0) +
+      (selectedLabour?.halfDays || 0) +
+      (selectedLabour?.additionalHalf || 0) +
+      (selectedLabour?.missPunchDays || 0) + (selectedLabour?.totalHolidaysInMonth || 0)}
+  </Typography>
+</Box>
+
+
+
+
+                        {/* <Box sx={{
                             display: "flex",
                             flexDirection: "column",
                             gap: 1,
                         }}>
                             <Typography><strong style={{ marginRight: '25%' }}>Name:</strong> {selectedLabour?.name || "N/A"}</Typography>
-                            <Typography><strong style={{ marginRight: '12%' }}>Present Days:</strong> {selectedLabour?.presentDays || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '12%' }}>Present Days:</strong> {(selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0) - (selectedLabour?.totalHolidaysConsider || 0)}</Typography>
                             <Typography><strong style={{ marginRight: '13%' }}>Absent Days:</strong> {selectedLabour?.absentDays || 0}</Typography>
-                            <Typography><strong style={{ marginRight: '18.5%' }}>Half Days:</strong> {selectedLabour?.halfDays || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '18.5%' }}>Half Days:</strong> {(selectedLabour?.halfDays || 0) - (selectedLabour?.additionalHalf || 0)}</Typography>
                             <Typography><strong style={{ marginRight: '5%' }}>Miss Punch Days:</strong> {selectedLabour?.missPunchDays || 0}</Typography>
                             <Typography><strong style={{ marginRight: '12.5%' }}>Holiday Days:</strong> {selectedLabour?.totalHolidaysInMonth || 0}</Typography>
-                        </Box>
+                            <Typography><strong style={{ marginRight: '13.5%' }}>Total Days:</strong> {(selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0) - (selectedLabour?.totalHolidaysConsider || 0) + (selectedLabour?.absentDays || 0) + (selectedLabour?.halfDays || 0) + (selectedLabour?.missPunchDays || 0) + (selectedLabour?.totalHolidaysInMonth || 0)}</Typography>
+                        </Box> */}
 
                         <Button variant="contained" sx={{
                             mt: 3, float: 'right',
@@ -1377,7 +1432,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         {/* Net Pay Summary */}
                         <Box textAlign="left" sx={{ display: 'flex', justifyContent: 'flex-end', mr: 3 }}>
                             <Box textAlign="left" sx={{ backgroundColor: "#FFECB3", padding: 2, borderRadius: 2, width: "30%" }}>
-                                <Typography variant="h6" fontWeight="bold">Net Pay: ₹{selectedLabour?.netPay || "-"}</Typography>
+                                <Typography variant="h6" fontWeight="bold">Net Salary: ₹{selectedLabour?.netPay || "-"}</Typography>
                                 <Typography variant="body2">
                                     Gross Pay (A): <b>₹{selectedLabour?.baseWage || "-"}</b>
                                 </Typography>
