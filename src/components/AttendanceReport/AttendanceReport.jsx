@@ -420,6 +420,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const handleSaveManualEdit = async () => {
         handleManualEditDialogClose();
         setIsLoading(true);
+         let latestLabourWageRecord = null;
         try {
             if (manualEditData.status === 'weeklyOff') {
                 const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
@@ -439,6 +440,10 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 if (!latestLabourWageRecord) {
                     toast.error("Add the wages for that labour then add mark as weeklyOff");
                     return;
+                }
+                 if (latestLabourWageRecord.WeeklyOff === 0) {
+                  toast.error("You are not eligible for Weekly Off. It will not be marked Weekly Off In Wages.");
+                   return; // 🚫 stop further execution
                 }
 
                 if (latestLabourWageRecord.PayStructure === "DAILY WAGES") {
@@ -491,7 +496,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
                 workingHours,
                 ...(onboardName && { onboardName }), AttendanceStatus,
-                markWeeklyOff: manualEditData.status === 'weeklyOff',
+                markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
                 updatedFields: changedFields,
                 userType: user.userType || null,
             };

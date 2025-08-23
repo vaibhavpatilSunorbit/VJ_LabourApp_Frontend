@@ -690,7 +690,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
                 <TableCell>Attendance Edit By</TableCell>
                 {/* <TableCell>Status</TableCell> */}
                 {tabValue === 0 && <TableCell>Send Approval Date</TableCell>}
-                {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>}
+                {/* {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>} */}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
                 {tabValue === 1 && <TableCell>Approve Date</TableCell>}
                 {tabValue !== 0 && tabValue !== 1 && <TableCell>Rejected Date</TableCell>}
@@ -778,7 +778,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
                     </TableCell>
                   )}
 
-                  {tabValue === 0 && (
+                  {/* {tabValue === 0 && (
                     <TableCell>
                       {(user.userType === 'user' && labour.ApprovalStatus === 'Pending') && (
                         <IconButton
@@ -795,7 +795,7 @@ const WagesApproval = ({ departments, projectNames, labour, labourlist }) => {
                         </IconButton>
                       )}
                     </TableCell>
-                  )}
+                  )} */}
 
                   {user.userType === 'admin' || user.userType === 'superadmin' && (
                     <TableCell>
