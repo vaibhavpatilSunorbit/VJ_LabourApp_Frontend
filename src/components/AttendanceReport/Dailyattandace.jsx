@@ -137,8 +137,8 @@ const DailyAttendance = ({ labourId, month, year }) => {
       updated[index] = {
         ...updated[index],
         Status: "A",
-        FirstPunch: '000',
-        LastPunch: '0000',
+        FirstPunch: '00:00:00',
+        LastPunch: '00:00:00',
         TotalHours: 0,
         Overtime: 0,
         OvertimeManually: 0,
@@ -154,6 +154,22 @@ const DailyAttendance = ({ labourId, month, year }) => {
   // 🔹 Save row
   const handleSaveRow = async (index) => {
     const rowData = dailyAttendance[index];
+
+    // Count total Missed Punches (MP) for this labour in current month/year
+    const missPunchCount = dailyAttendance.filter(
+      (att) => att.Status === "MP"
+    ).length;
+
+    // If less than or equal to 3 Miss Punches, do not send to admin approval
+    if (rowData.Status === "MP" && missPunchCount <= 3) {
+      setToast({
+        open: true,
+        message: `First three Miss Punches do not go to Admin Approval. (${missPunchCount}/3)`,
+        severity: "info",
+      });
+      setEditingRowIndex(null);
+      return;
+    }
 
     try {
       const res = await axios.post(
@@ -180,19 +196,30 @@ const DailyAttendance = ({ labourId, month, year }) => {
         }
       );
 
-      console.log("Row saved response:", res.data);
+      // Check for already in approval status from backend
+      if (
+        res.data?.alreadyInApproval ||
+        res.data?.message?.toLowerCase().includes("already in admin approval")
+      ) {
+        setToast({
+          open: true,
+          message: `LabourId ${labourId} is already in admin approval.`,
+          severity: "info",
+        });
+      } else {
+        setToast({
+          open: true,
+          message: `LabourId ${labourId} goes to the Admin for approval.`,
+          severity: "success",
+        });
+      }
 
       setEditingRowIndex(null);
-      setToast({
-        open: true,
-        message: "Row saved successfully!",
-        severity: "success",
-      });
     } catch (err) {
       console.error("Error saving row:", err);
       setToast({
         open: true,
-        message: "Error saving row",
+        message: `LabourId ${labourId} is Already Pending with Admin Approval`,
         severity: "error",
       });
     }
@@ -220,7 +247,7 @@ const DailyAttendance = ({ labourId, month, year }) => {
   const getRowColor = (status) => {
     switch (status) {
       case "P":
-        return "#e0f7e9";
+        return "#a6ebc1ff";
       case "HD":
         return "#ffebee";
       case "H":
@@ -500,16 +527,28 @@ const DailyAttendance = ({ labourId, month, year }) => {
         open={toast.open}
         autoHideDuration={3000}
         onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setToast({ ...toast, open: false })}
-          severity={toast.severity}
-          sx={{ width: "100%" }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        ContentProps={{
+          sx: {
+            background:
+              toast.severity === "success"
+                ? "#43a047"
+                : toast.severity === "error"
+                ? "#d32f2f"
+                : toast.severity === "info"
+                ? "#1976d2"
+                : "#333",
+            color: "#fff",
+            fontWeight: 600,
+            fontSize: "1rem",
+            boxShadow: 3,
+            borderRadius: 2,
+            minWidth: 320,
+            justifyContent: "center",
+          },
+        }}
+        message={toast.message}
+      />
     </Box>
   );
 };

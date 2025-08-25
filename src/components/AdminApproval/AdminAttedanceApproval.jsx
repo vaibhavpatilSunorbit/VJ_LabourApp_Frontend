@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
@@ -170,8 +168,6 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
       } else {
         toast.error('Failed to approve attendance. Please try again.');
       }
-      console.log( AttendanceId , "Attendance id ");
-      
     } catch (error) {
       console.error('Error approving attendance:', error);
       toast.error('Error approving attendance. Please try again.');
@@ -775,7 +771,7 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
                       component="span"
                       sx={{
                         backgroundColor:
-                          labour.UpdatedFields?.includes('punchIn') && labour.FirstPunchManually
+                          (Array.isArray(labour.UpdatedFields) ? labour.UpdatedFields : []).includes('punchIn') && labour.FirstPunchManually
                             ? 'rgb(229, 255, 225)'
                             : 'transparent',
                         px: 1, py: 1,
@@ -792,13 +788,13 @@ const AdminAttedanceApproval = ({ departments, projectNames, labour, labourlist 
                       component="span"
                       sx={{
                         backgroundColor:
-                          labour.UpdatedFields?.includes('punchOut') && labour.LastPunchManually
+                          (Array.isArray(labour.UpdatedFields) ? labour.UpdatedFields : []).includes('punchOut') && labour.LastPunchManually
                             ? 'rgb(229, 255, 225)'
                             : 'transparent',
-                        px: 1, // horizontal padding inside the highlight
-                        py: 1, // vertical padding inside the highlight
-                        borderRadius: 1, // optional: rounded corners
-                        display: 'inline-block', // so background hugs the content
+                        px: 1,
+                        py: 1,
+                        borderRadius: 1,
+                        display: 'inline-block',
                       }}
                     >
                       {labour.LastPunchManually}

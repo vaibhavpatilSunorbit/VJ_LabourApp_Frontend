@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
@@ -310,9 +309,9 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     srNo: index + 1,
                     id: labour.id || 0,
                     LabourID: labour.labourId,
-                    name: labour.name || "-",      
+                    name: labour.name || "-",
                     projectId: labour.projectName || "-",
-                    departmentId: labour.department || "-",         
+                    departmentId: labour.department || "-",
                     projectName: labour.businessUnit || "-",
                     department: labour.departmentName || "-",
                     aadhaarNumber: labour.aadhaarNumber || "-",
@@ -361,7 +360,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     fullResponse: labour
                 };
             });
-            console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
+            console.log('ShowSalaryGeneration for month', JSON.stringify(ShowSalaryGeneration))
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
@@ -1132,7 +1131,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                         >
                                             {labour.advancePay}
                                         </TableCell>
-                                         <TableCell
+                                        <TableCell
                                             onClick={() => handleOpenModalDeduction(labour)}
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
@@ -1153,51 +1152,108 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         </Table>
                     </Box>
                 </TableContainer>
-                <Modal open={modalOpen} onClose={() => setModalOpen(false)} aria-labelledby="attendance-details-modal">
-                    <Box sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        width: 400,
-                        bgcolor: "background.paper",
-                        boxShadow: 24,
-                        p: 4,
-                        borderRadius: 2
-                    }}>
-                        <Typography
-                            variant="h6"
-                            sx={{ mb: 4, fontSize: { xs: "1rem", sm: "1.25rem" } }}
-                        >
-                            Labour ID: {selectedLabour?.LabourID || "N/A"}
-                        </Typography>
+                 <Modal open={modalOpen} onClose={handleCloseModal} aria-labelledby="attendance-details-modal">
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 360,
+          bgcolor: "background.paper",
+          boxShadow: 24,
+          borderRadius: 2,
+          overflow: "hidden",
+          textAlign: "center",
+        }}
+      >
+        {/* Header */}
+        <Box sx={{ p: 2, position: "relative" }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            {selectedLabour?.LabourID || "N/A"}
+          </Typography>
+          <Typography variant="h6" sx={{ fontWeight: 500 }}>
+            {selectedLabour?.name || "N/A"}
+          </Typography>
 
-                        <Box sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 1,
-                        }}>
-                            <Typography><strong style={{ marginRight: '25%' }}>Name:</strong> {selectedLabour?.name || "N/A"}</Typography>
-                            <Typography><strong style={{ marginRight: '12%' }}>Present Days:</strong> {selectedLabour?.presentDays || 0}</Typography>
-                            <Typography><strong style={{ marginRight: '13%' }}>Absent Days:</strong> {selectedLabour?.absentDays || 0}</Typography>
-                            <Typography><strong style={{ marginRight: '18.5%' }}>Half Days:</strong> {selectedLabour?.halfDays || 0}</Typography>
-                            <Typography><strong style={{ marginRight: '5%' }}>Miss Punch Days:</strong> {selectedLabour?.missPunchDays || 0}</Typography>
-                            <Typography><strong style={{ marginRight: '12.5%' }}>Holiday Days:</strong> {selectedLabour?.totalHolidaysInMonth || 0}</Typography>
-                        </Box>
+          <IconButton
+            onClick={handleCloseModal}
+            size="small"
+            sx={{ position: "absolute", top: 8, right: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
 
-                        <Button variant="contained" sx={{
-                            mt: 3, float: 'right',
-                            backgroundColor: '#fce4ec',
-                            color: 'rgb(255, 100, 100)',
-                            width: '100px',
-                            '&:hover': {
-                                backgroundColor: '#f8bbd0',
-                            },
-                        }} onClick={handleCloseModal}>
-                            Close
-                        </Button>
-                    </Box>
-                </Modal>
+        <Divider />
+
+        {/* Content */}
+        <Box sx={{ p: 3, textAlign: "left" }}>
+          <Typography sx={{ color: "green", mb: 0.5 }}>
+            Present Days
+            <span style={{ float: "right" }}>
+              {selectedLabour?.presentDays || "00"}
+            </span>
+          </Typography>
+          <Typography sx={{ color: "green", mb: 0.5 }}>
+            Holidays
+            <span style={{ float: "right" }}>
+              {selectedLabour?.totalHolidaysInMonth || "00"}
+            </span>
+          </Typography>
+          <Typography sx={{ color: "green", mb: 0.5 }}>
+            Half Day
+            <span style={{ float: "right" }}>
+              {selectedLabour?.halfDays || "00"}
+            </span>
+          </Typography>
+          <Typography sx={{ color: "red", mb: 0.5 }}>
+            Miss Punch
+            <span style={{ float: "right" }}>
+              {selectedLabour?.missPunchDays || "00"}
+            </span>
+          </Typography>
+          <Typography sx={{ color: "red", mb: 0.5 }}>
+            Absent Days
+            <span style={{ float: "right" }}>
+              {selectedLabour?.absentDays || "00"}
+            </span>
+          </Typography>
+
+          {/* Total Salary Days */}
+          <Box
+            sx={{
+              bgcolor: "#e8f5e9",
+              mt: 2,
+              p: 1.5,
+              borderRadius: 1,
+              textAlign: "center",
+              fontWeight: 600,
+              color: "green",
+            }}
+          >
+            Total Salary Days: {selectedLabour?.totalSalaryDays || "00"}
+          </Box>
+        </Box>
+
+        {/* Footer */}
+        <Box sx={{ px: 3, py: 2 }}>
+          <Button
+            variant="contained"
+            onClick={handleCloseModal}
+            fullWidth
+            sx={{
+              bgcolor: "#f5f5f5",
+              color: "#000",
+              textTransform: "none",
+              "&:hover": { bgcolor: "#e0e0e0" },
+            }}
+          >
+            Close
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
 
                 {/* --------------------------------------------------------------------------- */}
                 <Modal open={modalOpenBonus} onClose={() => setModalOpenBonus(false)} aria-labelledby="attendance-details-modal">
@@ -1243,48 +1299,140 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     </Box>
                 </Modal>
                 {/* --------------------------------------------------------------------------- */}
-                <Modal open={modalOpenDeduction} onClose={() => setModalOpenDeduction(false)} aria-labelledby="attendance-details-modal">
+                <Modal open={modalOpenDeduction} onClose={() => setModalOpenDeduction(false)} aria-labelledby="deduction-details-modal">
                     <Box sx={{
                         position: "absolute",
                         top: "50%",
                         left: "50%",
                         transform: "translate(-50%, -50%)",
-                        width: 400,
+                        width: 420,
                         bgcolor: "background.paper",
                         boxShadow: 24,
-                        p: 4,
-                        borderRadius: 2
+                        p: 0,
+                        borderRadius: 3,
+                        overflow: "hidden",
                     }}>
-                        <Typography
-                            variant="h6"
-                            sx={{ mb: 4, fontSize: { xs: "1rem", sm: "1.25rem" } }}
-                        >
-                            Labour ID: {selectedLabour?.LabourID || "N/A"}
-                        </Typography>
-
+                        {/* Header */}
                         <Box sx={{
+                            bgcolor: "#f44336",
+                            color: "#fff",
+                            px: 3,
+                            py: 2,
                             display: "flex",
-                            flexDirection: "column",
-                            gap: 1,
+                            alignItems: "center",
+                            justifyContent: "space-between"
                         }}>
-                            <Typography><strong style={{ marginRight: '25%' }}>Name:</strong> {selectedLabour?.name || "N/A"}</Typography>
-                            <Typography><strong style={{ marginRight: '19%' }}>Advance:</strong> {selectedLabour?.advancePay || 0}</Typography>
-                            <Typography><strong style={{ marginRight: '2%' }}>Advance Remarks:</strong> {selectedLabour?.advanceRemarks || '-'}</Typography>
-                            <Typography><strong style={{ marginRight: '25.5%' }}>Debit:</strong> {selectedLabour?.debit || 0}</Typography>
-                            <Typography><strong style={{ marginRight: '5%' }}>Debit Remarks:</strong> {selectedLabour?.debitRemarks || '-'}</Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                Deduction Details
+                            </Typography>
+                            <Button
+                                onClick={handleCloseModalDeduction}
+                                sx={{ color: "#fff", minWidth: 0, p: 0 }}
+                            >
+                                <CloseIcon />
+                            </Button>
                         </Box>
 
-                        <Button variant="contained" sx={{
-                            mt: 3, float: 'right',
-                            backgroundColor: '#fce4ec',
-                            color: 'rgb(255, 100, 100)',
-                            width: '100px',
-                            '&:hover': {
-                                backgroundColor: '#f8bbd0',
-                            },
-                        }} onClick={handleCloseModalDeduction}>
-                            Close
-                        </Button>
+                        {/* Content */}
+                        <Box sx={{
+                            p: 3,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                            bgcolor: "#fafafa"
+                        }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 500, color: "#333" }}>
+                                Labour ID: <span style={{ color: "#f44336" }}>{selectedLabour?.LabourID || "N/A"}</span>
+                            </Typography>
+                            <Typography>
+                                <strong>Name:</strong> {selectedLabour?.name || "N/A"}
+                            </Typography>
+                            <Box sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                                bgcolor: "#fff3e0",
+                                borderRadius: 2,
+                                p: 2,
+                                mb: 1,
+                                border: "1px solid #ffe0b2"
+                            }}>
+                                <Box sx={{
+                                    bgcolor: "#ff9800",
+                                    color: "#fff",
+                                    borderRadius: "50%",
+                                    width: 36,
+                                    height: 36,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontWeight: 700,
+                                    fontSize: 20
+                                }}>
+                                    ₹
+                                </Box>
+                                <Box>
+                                    <Typography variant="body1"><strong>Advance:</strong> {selectedLabour?.advancePay || 0}</Typography>
+                                    <Typography variant="body2" sx={{ color: "#888" }}>
+                                        <strong>Remarks:</strong> {selectedLabour?.advanceRemarks || '-'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <Box sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                                bgcolor: "#e3f2fd",
+                                borderRadius: 2,
+                                p: 2,
+                                border: "1px solid #90caf9"
+                            }}>
+                                <Box sx={{
+                                    bgcolor: "#1976d2",
+                                    color: "#fff",
+                                    borderRadius: "50%",
+                                    width: 36,
+                                    height: 36,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontWeight: 700,
+                                    fontSize: 20
+                                }}>
+                                    <span>D</span>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body1"><strong>Debit:</strong> {selectedLabour?.debit || 0}</Typography>
+                                    <Typography variant="body2" sx={{ color: "#888" }}>
+                                        <strong>Remarks:</strong> {selectedLabour?.debitRemarks || '-'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Box>
+
+                        {/* Footer */}
+                        <Box sx={{
+                            px: 3,
+                            py: 2,
+                            bgcolor: "#f5f5f5",
+                            display: "flex",
+                            justifyContent: "flex-end"
+                        }}>
+                            <Button
+                                variant="contained"
+                                sx={{
+                                    backgroundColor: "#f44336",
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                    borderRadius: 2,
+                                    px: 4,
+                                    '&:hover': { backgroundColor: "#d32f2f" }
+                                }}
+                                onClick={handleCloseModalDeduction}
+                            >
+                                Close
+                            </Button>
+                        </Box>
                     </Box>
                 </Modal>
                 {/* --------------------------------------------------------------------------- */}
@@ -1621,30 +1769,30 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             Export PayRoll
                         </Button>
                         {(user.userType === 'admin' || user.userType === 'superadmin') && (
-                        <Button
-                            variant="contained"
-                            onClick={() => {
-                                handleApproveConfirmOpen();
-                                setIsFinalizeClicked(true); // permanently disable after 1st click
-                            }}
-                            disabled={!isFinalizeEnabled || isFinalizeClicked}
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                height: "40px",
-                                width: "100%",
-                                backgroundColor: "rgb(229, 255, 225)",
-                                color: "rgb(43, 217, 144)",
-                                '&:hover': {
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    handleApproveConfirmOpen();
+                                    setIsFinalizeClicked(true); // permanently disable after 1st click
+                                }}
+                                disabled={!isFinalizeEnabled || isFinalizeClicked}
+                                sx={{
+                                    fontSize: { xs: "0.8rem", sm: "1rem" },
+                                    height: "40px",
+                                    width: "100%",
                                     backgroundColor: "rgb(229, 255, 225)",
-                                },
-                                marginBottom: { xs: "20px", sm: "0" },
-                                opacity: (!isFinalizeEnabled || isFinalizeClicked) ? 0.5 : 1,
-                                cursor: (!isFinalizeEnabled || isFinalizeClicked) ? 'not-allowed' : 'pointer'
-                            }}
-                        >
-                            Finalize PayRoll
-                        </Button>
-)}
+                                    color: "rgb(43, 217, 144)",
+                                    '&:hover': {
+                                        backgroundColor: "rgb(229, 255, 225)",
+                                    },
+                                    marginBottom: { xs: "20px", sm: "0" },
+                                    opacity: (!isFinalizeEnabled || isFinalizeClicked) ? 0.5 : 1,
+                                    cursor: (!isFinalizeEnabled || isFinalizeClicked) ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                Finalize PayRoll
+                            </Button>
+                        )}
 
                     </Box>
 
@@ -1824,7 +1972,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                         <strong>Edited By:</strong> {record.payAddedBy || "N/A"}
                                     </Typography>
                                     <Typography variant="body2">
-                                        <strong>Effective Date:</strong>{" "}
+                                        <strong>Effective Date:</strong> {" "}
                                         {record.EffectiveDate
                                             ? new Date(record.EffectiveDate).toLocaleDateString()
                                             : "N/A"}
