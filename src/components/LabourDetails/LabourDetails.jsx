@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
@@ -266,80 +265,15 @@ const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
     } else {
       labourID = currentLabourId;
     }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//  // 1. Get labour details
-//     const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
-//     const labour = labourResponse.data;
-// console.log("Full labour response:", labour);
-//     let labourID;
-
-//     const labourStatus = typeof labour.Reject_Reason === 'string' ? labour.Reject_Reason.trim() : '';
-//     console.log("labourStatus", labourStatus);
-
-//     const shouldGetNextId =
-//       !labour.LabourID ||
-//       labour.LabourID.trim() === '' ||
-//       labourStatus === 'Manually Rejected from database for FEPR designation';
-
-//     console.log("shouldGetNextId", shouldGetNextId);
-
-//     if (shouldGetNextId) {
-//       const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
-//         params: { departmentId }
-//       });
-//       labourID = nextID;
-//     } else {
-//       // 2. Attendance Check
-//       const attendanceCheck = await axios.get(`${API_BASE_URL}/api/admin/attendance-check`, {
-//         params: { labourId: labour.LabourID }
-//       });
-
-//       const threeMonthsAgo = new Date();
-//       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
-//       const lastDate = attendanceCheck.data?.lastAttendanceDate;
-//       const hasRecentAttendance = lastDate && new Date(lastDate) > threeMonthsAgo;
-
-//       if (hasRecentAttendance) {
-//         labourID = labour.LabourID;
-//       } else {
-//         const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
-//           params: { departmentId }
-//         });
-//         labourID = nextID;
-//       }
-//     }
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-      // if (!labour.LabourID || labour.LabourID.trim() === '') {
-      //   const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
-      //     params: { departmentId }
-      //   });
-      //   labourID = nextID;
-      // } else {
-      //   const attendanceCheck = await axios.get(`${API_BASE_URL}/api/admin/attendance-check`, {
-      //     params: { labourId: labour.LabourID }
-      //   });
-
-      //   const threeMonthsAgo = new Date();
-      //   threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
-      //   if (
-      //     attendanceCheck.data?.lastAttendanceDate &&
-      //     new Date(attendanceCheck.data.lastAttendanceDate) > threeMonthsAgo
-      //   ) {
-      //     labourID = labour.LabourID;
-      //   } else {
-      //     const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`, {
-      //       params: { departmentId }
-      //     });
-      //     labourID = nextID;
-      //   }
-      // }
-
       const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus/${labour.projectName}`);
+      console.log('projectDeviceStatus response:', response.data); // Add this line
       const serialNumber = response.data.serialNumber;
+      if (!serialNumber) {
+        toast.error('Serial number not found for the selected project. Cannot approve labour.');
+        setApprovedLabours([]);
+        return;
+      }
+      
 
       const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
@@ -417,7 +351,8 @@ const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
 
         const { data: projectResponse } = await axios.get(`${API_BASE_URL}/projectDeviceStatus/${labour.projectName}`);
         const serialNumber = projectResponse.serialNumber;
-
+        console.log(serialNumber , 'Serial Numbers of project name ');
+        
         const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
           <soap:Body>
@@ -2070,7 +2005,7 @@ const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
           }} autoFocus>
             Edit
           </Button>
-        </DialogActions>
+               </DialogActions>
       </Dialog>
 
 
