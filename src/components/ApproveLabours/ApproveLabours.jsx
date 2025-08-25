@@ -110,17 +110,10 @@ const ApproveLabours = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'deviceIds') {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [name]: typeof value === 'string' ? value.split(',') : value,
-      }));
-    } else {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [name]: value,
-      }));
-    }
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
   };
 
   const handleDeviceChange = (event) => {
@@ -135,6 +128,7 @@ const ApproveLabours = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (formData.deviceIds.length === 0) {
       toast.error('Please select at least one device');
       return;
@@ -282,10 +276,6 @@ const ApproveLabours = () => {
     project => !selectedProjects.includes(project.Id)
   );
 
-  // Get assigned device IDs to filter them out from available devices
-  const assignedDeviceIds = projectDeviceStatus.map(item => item.DeviceID);
-  const availableDevices = devices.filter(device => !assignedDeviceIds.includes(device.DeviceId));
-
   return (
     <div>
       <ToastContainer />
@@ -314,7 +304,7 @@ const ApproveLabours = () => {
         <div className="form-column">
           <div className="form-field">
             <InputLabel id="device-name-label" style={inputLabelStyle}>
-              Device Names{renderRequiredAsterisk(true)}
+              Device Name{renderRequiredAsterisk(true)}
             </InputLabel>
             <FormControl sx={{ width: window.innerWidth < 768 ? '37vw' : '17vw' }}>
               <Select
@@ -362,15 +352,10 @@ const ApproveLabours = () => {
           color: 'rgb(43, 217, 144)',
           '&:hover': {
             backgroundColor: 'rgb(229, 255, 225)',
-            color: 'rgb(43, 217, 144)',
-            '&:hover': {
-              backgroundColor: 'rgb(229, 255, 225)',
-            },
-            mt: isMobile ? 0 : 3
-          }} 
-          className="submit-button"
-        >
-          Submit ({formData.deviceIds.length} device{formData.deviceIds.length !== 1 ? 's' : ''})
+          },
+          mt: isMobile ? 0 : 3
+        }} className="submit-button" >
+          Submit
         </Button>
       </form>
 
@@ -401,7 +386,7 @@ const ApproveLabours = () => {
               {projectDeviceStatus.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
                 <TableRow
                   key={row.DeviceID}
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
                   <TableCell component="th" scope="row">
                     {(page * rowsPerPage) + index + 1}
