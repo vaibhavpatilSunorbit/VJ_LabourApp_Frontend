@@ -17,7 +17,7 @@ import {
     MenuItem, Modal, Typography, IconButton, Dialog,
     DialogTitle,
     DialogContent,
-    DialogContentText, Checkbox, ListItemText,
+    DialogContentText, Checkbox, ListItemText, Chip,
     DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, Fade, FormControlLabel, Switch
 } from '@mui/material';
 import { modalStyle } from '../modalStyles.js';
@@ -43,7 +43,7 @@ import logo from "../../../images/VJlogo-1-removebg.png";
 import NoData from "../../../images/NoData.jpg";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
-
+import Tooltip from '@mui/material/Tooltip';
 
 const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     const theme = useTheme();
@@ -104,6 +104,30 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     const handleApproveConfirmClose = () => {
         setIsApproveConfirmOpen(false);
     };
+
+    // computed flags (put inside your component)
+    const hasMonthYear = Boolean(selectedMonth) && Boolean(selectedYear);
+    const hasBU = Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0;
+    const hasLabourId = !fetchForAll && String(labourId ?? "").trim().length > 0;
+
+    // final enable/disable rule:
+    // - if NOT fetchForAll: require Labour ID
+    // - if fetchForAll: require Month+Year+BU
+    const canClickPayroll = hasLabourId || (fetchForAll && hasMonthYear && hasBU);
+    const isDisabled = !canClickPayroll;
+
+    // helpful tooltip
+    let tooltipTitle = "";
+    if (isDisabled) {
+        if (!fetchForAll) {
+            tooltipTitle = "Enter a Labour ID or switch to All to use Month/Year/BU.";
+        } else {
+            const missing = [];
+            if (!hasMonthYear) missing.push("month & year");
+            if (!hasBU) missing.push("business unit");
+            tooltipTitle = `Select ${missing.join(" and ")}.`;
+        }
+    }
 
 
     const allowedProjectIds =
@@ -291,6 +315,10 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
             params.labourIds = labourId;
         }
 
+        const allSelected = selectedBusinessUnit.length === businessUnits.length;
+        if (!allSelected && selectedBusinessUnit.length > 0) {
+            params.projectId = selectedBusinessUnit.join(',');
+        }
         try {
             const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationDataAllLabours`, { params });
             const fetchedData = response.data;
@@ -310,9 +338,9 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     srNo: index + 1,
                     id: labour.id || 0,
                     LabourID: labour.labourId,
-                    name: labour.name || "-",      
+                    name: labour.name || "-",
                     projectId: labour.projectName || "-",
-                    departmentId: labour.department || "-",         
+                    departmentId: labour.department || "-",
                     projectName: labour.businessUnit || "-",
                     department: labour.departmentName || "-",
                     aadhaarNumber: labour.aadhaarNumber || "-",
@@ -327,9 +355,11 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     totalHolidaysInMonth: labour.attendance?.totalHolidaysInMonth || 0,
                     holidayOvertimeHours: labour.attendance?.holidayOvertimeHours || 0,
                     holidayOvertimeWages: labour.attendance?.holidayOvertimeWages || 0,
+                    totalHolidaysConsider: labour.attendance?.totalHolidaysConsider || 0,
                     sundayPayment: labour.attendance?.sundayPayment || 0,
                     additionalPresent: labour.attendance?.additionalPresent || 0,
                     additionalHalf: labour.attendance?.additionalHalf || 0,
+                    // additionalAbsent: labour.attendance?.additionalAbsent || 0,
                     totalOvertimeHours: labour.cappedOvertime || 0,
                     derivedPerHour: labour.derivedPerHour || 0,
                     basicSalary: labour.baseWage || 0,
@@ -361,7 +391,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     fullResponse: labour
                 };
             });
-            console.log('ShowSalaryGeneration for month',JSON.stringify(ShowSalaryGeneration))
+            console.log('ShowSalaryGeneration for month', JSON.stringify(ShowSalaryGeneration))
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
@@ -377,7 +407,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
         if (!selectedMonth && !selectedYear) {
             fetchSalaryGenerationForDateMonthAll();
         }
-    }, [selectedMonth, selectedYear]);
+    }, [selectedMonth, selectedYear, selectedBusinessUnit]);
     // useEffect(() => {
     //         fetchSalaryGenerationForDateMonthAll();
     // },[]);
@@ -385,7 +415,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
 
     const exportPayrollData = async (data) => {
         setLoading(true);
-        console.log("data export Payroll Data", JSON.stringify(data));
+        // console.log("data export Payroll Data", JSON.stringify(data));
         try {
 
             const selectiveData = data.map(item => ({
@@ -397,14 +427,14 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 Department: item.department,
                 AadhaarNumber: item.aadhaarNumber,
                 AccountNumber: item.accountNumber,
-                presentDays: item.presentDays,
+                presentDays: item.wageType === 'FIXED MONTHLY WAGES' ? (item.presentDays + item.additionalPresent + item.additionalHalf) : (item.presentDays + item.totalHolidaysInMonth + item.additionalPresent + item.additionalHalf),
                 Wage_Type: item.wageType,
                 DailyWage_Rate: item.dailyWageRate,
                 FixedMonthly_Rate: item.fixedMonthlyWage,
                 TotalOvertimeHours: item.totalOvertimeHours,
                 Overtime_Pay: item.overtimePay,
                 WeeklyOff_Pay: item.weeklyOffPay,
-                Gross_Pay: item.baseWage,
+                Gross_Pay: item.fullResponse.grossPay,
                 Insentive: item.bonuses,
                 Advance: item.advancePay,
                 Debit: item.debit,
@@ -824,185 +854,205 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 </Box>
 
 
-                <Box
-                    sx={{
-                        width: "auto",
-                        height: "auto",
-                        bgcolor: "white",
-                        marginBottom: "15px",
-                        p: 1,
-                        borderRadius: 2,
-                        boxShadow: 3,
-                        alignSelf: "flex-start",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexWrap: { xs: "wrap", sm: "nowrap" },
-                    }}
-                >
-                    <Tabs
-                        value={tabValue}
-                        onChange={handleTabChange}
-                        aria-label="tabs example"
-                        sx={{
-                            ".MuiTabs-indicator": {
-                                display: "none",
-                            },
-                            minHeight: "auto",
-                        }}
-                    >
-                    </Tabs>
+             {/* === Top: Filters / Selects === */}
+<Box
+  sx={{
+    display: "flex",
+    alignItems: "flex-end",
+    gap: 2,
+    // force ONE row on sm+ (no wrapping); allow wrap only on xs
+    flexWrap: { xs: "wrap", sm: "nowrap" },
+    overflowX: { xs: "visible", sm: "auto" }, // scroll horizontally instead of creating a 3rd line
+    pb: 1,
+  }}
+>
+  <Select
+    value={selectedMonth}
+    onChange={(e) => setSelectedMonth(e.target.value)}
+    displayEmpty
+    sx={{ minWidth: 140, "& .MuiSelect-select": { py: 1.25 } }}
+  >
+    <MenuItem value="" disabled>Select Month</MenuItem>
+    {months.map(m => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
+  </Select>
 
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexDirection: { xs: "column", sm: "column" },
-                            alignItems: { xs: "stretch", sm: "flex-end" },
-                            gap: 2,
-                            height: "auto",
-                            width: "100%",
-                            justifyContent: { xs: "flex-start", sm: "space-between" },
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                width: "100%",
-                                gap: "20px",
-                                display: "flex",
-                                flexDirection: { xs: "column", sm: "row" },
-                                alignItems: "flex-end",
-                                justifyContent: "flex-start",
-                                // padding: "20px",
-                            }}
-                        >
-                            <Select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                                // size="small"
-                                displayEmpty
-                                sx={{
-                                    width: "25%",
-                                    marginBottom: { xs: "20px", sm: "0" }
-                                }}
-                            >
-                                <MenuItem value="" disabled>
-                                    Select Month
-                                </MenuItem>
-                                {months.map((month) => (
-                                    <MenuItem key={month.value} value={month.value}>
-                                        {month.label}
-                                    </MenuItem>
-                                ))}
-                            </Select>
+  <Select
+    value={selectedYear}
+    onChange={(e) => setSelectedYear(e.target.value)}
+    displayEmpty
+    sx={{ minWidth: 140, "& .MuiSelect-select": { py: 1.25 } }}
+  >
+    <MenuItem value="" disabled>Select Year</MenuItem>
+    {[2024, 2025].map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+  </Select>
 
-                            <Select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(e.target.value)}
-                                // size="small"
-                                displayEmpty
-                                sx={{
-                                    // marginTop: '-5px',
-                                    width: "25%", // Ensure this also takes full width
-                                    marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
-                                }}
-                            >
-                                <MenuItem value="" disabled>
-                                    Select Year
-                                </MenuItem>
-                                {[2024, 2025].map((year) => (
-                                    <MenuItem key={year} value={year}>
-                                        {year}
-                                    </MenuItem>
-                                ))}
-                            </Select>
+  <FormControl sx={{ minWidth: 200 }}>
+    <InputLabel id="business-unit-label">Business Unit</InputLabel>
+    <Select
+      labelId="business-unit-label"
+      label="Business Unit"
+      multiple
+      value={selectedBusinessUnit}
+      onChange={handleBusinessUnitChange}
+      displayEmpty
+      renderValue={(selected) => {
+        if (!selected || selected.length === 0) return <em>All</em>;
+        const selectedLabels = projectNames
+          .filter(p => selected.includes(p.Id))
+          .map(p => p.Business_Unit);
+        return (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxHeight: 32, overflowY: "auto" }}>
+            {selectedLabels.map((label) => <Chip key={label} label={label} size="small" />)}
+          </Box>
+        );
+      }}
+      MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+      sx={{ "& .MuiSelect-select": { py: 1.25 } }}
+    >
+      <MenuItem value="ALL">
+        <Checkbox
+          checked={isAllSelected}
+          indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected}
+        />
+        <ListItemText primary="Select All" />
+      </MenuItem>
+      {Array.isArray(projectNames) && projectNames.length > 0 ? (
+        projectNames.map((project) => (
+          <MenuItem key={project.Id} value={project.Id}>
+            <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+            <ListItemText primary={project.Business_Unit} />
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem disabled>No Projects Available</MenuItem>
+      )}
+    </Select>
+  </FormControl>
 
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={fetchForAll}
-                                        onChange={(e) => setFetchForAll(e.target.checked)}
-                                        color="primary"
-                                    />
-                                }
-                                sx={{
-                                    marginBottom: { xs: "20px", sm: "0" },
-                                }}
-                            />
-                            {!fetchForAll && (
-                                <TextField
-                                    label="Labour ID"
-                                    variant="outlined"
-                                    size="small"
-                                    value={labourId}
-                                    onChange={(e) => setLabourId(e.target.value)}
-                                    sx={{
-                                        width: "25%", // Full width
-                                        marginBottom: { xs: "20px", sm: "0" },
-                                        marginTop: { xs: "0", sm: "5px" }
-                                    }}
-                                />
-                            )}
+  <FormControlLabel
+    sx={{ ml: 1 }}
+    control={
+      <Switch
+        checked={fetchForAll}
+        onChange={(e) => setFetchForAll(e.target.checked)}
+        color="primary"
+      />
+    }
+  />
 
-                            <Button
-                                variant="contained"
-                                onClick={fetchSalaryGenerationForDateMonthAll}
-                                sx={{
-                                    fontSize: { xs: "0.8rem", sm: "1rem" }, // Responsive font size
-                                    height: "40px",
-                                    width: "20%", // Button width to match other inputs
-                                    backgroundColor: "rgb(229, 255, 225)",
-                                    color: "rgb(43, 217, 144)",
-                                    '&:hover': {
-                                        backgroundColor: "rgb(229, 255, 225)",
-                                    },
-                                    marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
-                                }}
-                            >
-                                PayRoll
-                            </Button>
+  {!fetchForAll && (
+    <TextField
+      label="Labour ID"
+      variant="outlined"
+      size="small"
+      value={labourId}
+      onChange={(e) => setLabourId(e.target.value)}
+      sx={{ minWidth: 150, "& .MuiInputBase-input": { py: 1.25, fontWeight: 500 } }}
+    />
+  )}
 
+  <Tooltip title={tooltipTitle} arrow disableHoverListener={canClickPayroll} sx={{ ml: "auto" }}>
+    <span>
+      <Button
+        variant="contained"
+        onClick={fetchSalaryGenerationForDateMonthAll}
+        disabled={isDisabled}
+        disableElevation
+        sx={{
+          height: 44,
+          px: 3,
+          textTransform: "none",
+          fontWeight: 700,
+          borderRadius: 2,
+          letterSpacing: 0.2,
+          transition: "transform 120ms ease",
+          background: isDisabled
+            ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
+            : "linear-gradient(90deg, #1db954, #00c896)",
+          color: isDisabled ? "#9e9e9e" : "#ffffff",
+          boxShadow: isDisabled ? "none" : "0 6px 16px rgba(0,0,0,0.15)",
+          "&:hover": {
+            transform: isDisabled ? "none" : "translateY(-1px)",
+            background: isDisabled
+              ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
+              : "linear-gradient(90deg, #19a64c, #00b785)",
+          },
+          cursor: isDisabled ? "not-allowed" : "pointer",
+        }}
+        aria-disabled={isDisabled}
+      >
+        PayRoll
+      </Button>
+    </span>
+  </Tooltip>
+</Box>
 
-                        </Box>
+{/* === Bottom: Filter / Edit / Pagination row === */}
+<Box
+  sx={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: { xs: "space-between", sm: "flex-end" },
+    gap: 1.5,
+    // force ONE row here too
+    flexWrap: { xs: "wrap", sm: "nowrap" },
+    pt: 0.5,
+  }}
+>
+  <Button
+    variant="outlined"
+    color="secondary"
+    startIcon={<FilterListIcon />}
+    onClick={() => setFilterModalOpen(true)}
+    sx={{ height: 40, px: 2 }}
+  >
+    Filter
+  </Button>
 
-                        <Box
-                            sx={{
-                                display: "flex",
-                                marginRight: "20px",
-                                flexDirection: { xs: "row", sm: "row" },
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    width: { xs: "100%", sm: "auto" },
-                                    display: "flex",
-                                    flexDirection: { xs: "row", sm: "row" },
-                                    gap: "20px",
-                                    alignItems: "center",
-                                    justifyContent: "space-evenly",
-                                }}
-                            >
-                                <Button variant="outlined" color="secondary" startIcon={<FilterListIcon />} onClick={() => setFilterModalOpen(true)}>
-                                    Filter
-                                </Button>
-                                {selectedLabourIds.length > 0 && (
-                                    <Button variant="outlined" color="secondary" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
-                                        Edit ({selectedLabourIds.length})
-                                    </Button>
-                                )}
+  {selectedLabourIds.length > 0 && (
+    <Button
+      variant="outlined"
+      color="secondary"
+      startIcon={<EditIcon />}
+      onClick={() => setModalOpen(true)}
+      sx={{ height: 40, px: 2 }}
+    >
+      Edit ({selectedLabourIds.length})
+    </Button>
+  )}
 
-                                <TablePagination
-                                    className="custom-pagination"
-                                    rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
-                                    count={filteredData.length > 0 ? filteredData.length : labours.length}
-                                    rowsPerPage={rowsPerPage}
-                                    page={page}
-                                    onPageChange={handlePageChange}
-                                    onRowsPerPageChange={handleRowsPerPageChange}
-                                />
-                            </Box>
-                        </Box>
-                    </Box>
-                </Box>
+  <TablePagination
+    component="div"
+    rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
+    count={filteredData.length > 0 ? filteredData.length : labours.length}
+    rowsPerPage={rowsPerPage}
+    page={page}
+    onPageChange={handlePageChange}
+    onRowsPerPageChange={handleRowsPerPageChange}
+    sx={{
+      ml: "auto",
+      height: 40,
+      "& .MuiTablePagination-toolbar": {
+        minHeight: 40,
+        px: 0,
+        gap: 1,
+        flexWrap: "nowrap",
+      },
+      "& .MuiTablePagination-selectLabel": {
+        mr: 1,
+        display: { xs: "none", sm: "inline-flex" },
+      },
+      "& .MuiTablePagination-displayedRows": {
+        ml: 1,
+        minWidth: 120,
+      },
+      "& .MuiTablePagination-select": { py: 0.5 },
+      "& .MuiInputBase-root": { height: 34, mt: "-2px" },
+      "& .MuiTablePagination-actions": { ml: 0.5 },
+    }}
+  />
+</Box>
+
 
 
                 <TableContainer
@@ -1056,8 +1106,8 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                     <TableCell>Insentive</TableCell>
                                     <TableCell>Advance</TableCell>
                                     <TableCell>Debit</TableCell>
-                                    <TableCell>Basic Salary</TableCell>
-                                    <TableCell>Net Pay</TableCell>
+                                    <TableCell>Gross Salary</TableCell>
+                                    <TableCell>Net Salary</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody
@@ -1114,8 +1164,8 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                             onClick={() => handleOpenModal(labour)}
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
-                                            {/* {labour.attendanceCount} */}
-                                            {(labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0)}
+                                            {/* {labour.totalHolidaysConsider}, {labour.totalHolidaysInMonth}, {labour.additionalPresent}, {labour.additionalHalf}, {labour.presentDays} */}
+                                            {labour.totalHolidaysConsider > 0 ? ((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0)) : ((labour.presentDays || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0))}
                                         </TableCell>
                                         <TableCell>{labour.totalOvertimeHours}</TableCell>
                                         <TableCell>{labour.overtimePay}</TableCell>
@@ -1132,13 +1182,13 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                         >
                                             {labour.advancePay}
                                         </TableCell>
-                                         <TableCell
+                                        <TableCell
                                             onClick={() => handleOpenModalDeduction(labour)}
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
                                             {labour.debit}
                                         </TableCell>
-                                        <TableCell>{labour.baseWage}</TableCell>
+                                        <TableCell>{labour.fullResponse.grossPay}</TableCell>
                                         {/* <TableCell>{labour.netPay}</TableCell> */}
                                         <TableCell
                                             onClick={() => handleOpenModalNetpay(labour)}
@@ -1172,18 +1222,72 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             Labour ID: {selectedLabour?.LabourID || "N/A"}
                         </Typography>
 
-                        <Box sx={{
+<Box
+  sx={{
+    display: "flex",
+    flexDirection: "column",
+    gap: 1,
+  }}
+>
+  <Typography>
+    <strong style={{ marginRight: "25%" }}>Name:</strong>{" "}
+    {selectedLabour?.name || "N/A"}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "12%" }}>Present Days:</strong>{" "}
+    {(selectedLabour?.presentDays || 0) +
+      (selectedLabour?.additionalPresent || 0)}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "13%" }}>Absent Days:</strong>{" "}
+    {selectedLabour?.absentDays || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "18.5%" }}>Half Days:</strong>{" "}
+    {(selectedLabour?.halfDays || 0) +
+      (selectedLabour?.additionalHalf || 0)}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "5%" }}>Miss Punch Days:</strong>{" "}
+    {selectedLabour?.missPunchDays || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "12.5%" }}>Holiday Days:</strong>{" "}
+    {selectedLabour?.totalHolidaysInMonth || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "13.5%" }}>Total Days:</strong>{" "}
+    {(selectedLabour?.presentDays || 0) +
+      (selectedLabour?.additionalPresent || 0) +
+      (selectedLabour?.absentDays || 0) +
+      (selectedLabour?.halfDays || 0) +
+      (selectedLabour?.additionalHalf || 0) +
+      (selectedLabour?.missPunchDays || 0) + (selectedLabour?.totalHolidaysInMonth || 0)}
+  </Typography>
+</Box>
+
+
+
+
+                        {/* <Box sx={{
                             display: "flex",
                             flexDirection: "column",
                             gap: 1,
                         }}>
                             <Typography><strong style={{ marginRight: '25%' }}>Name:</strong> {selectedLabour?.name || "N/A"}</Typography>
-                            <Typography><strong style={{ marginRight: '12%' }}>Present Days:</strong> {selectedLabour?.presentDays || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '12%' }}>Present Days:</strong> {(selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0) - (selectedLabour?.totalHolidaysConsider || 0)}</Typography>
                             <Typography><strong style={{ marginRight: '13%' }}>Absent Days:</strong> {selectedLabour?.absentDays || 0}</Typography>
-                            <Typography><strong style={{ marginRight: '18.5%' }}>Half Days:</strong> {selectedLabour?.halfDays || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '18.5%' }}>Half Days:</strong> {(selectedLabour?.halfDays || 0) - (selectedLabour?.additionalHalf || 0)}</Typography>
                             <Typography><strong style={{ marginRight: '5%' }}>Miss Punch Days:</strong> {selectedLabour?.missPunchDays || 0}</Typography>
                             <Typography><strong style={{ marginRight: '12.5%' }}>Holiday Days:</strong> {selectedLabour?.totalHolidaysInMonth || 0}</Typography>
-                        </Box>
+                            <Typography><strong style={{ marginRight: '13.5%' }}>Total Days:</strong> {(selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0) - (selectedLabour?.totalHolidaysConsider || 0) + (selectedLabour?.absentDays || 0) + (selectedLabour?.halfDays || 0) + (selectedLabour?.missPunchDays || 0) + (selectedLabour?.totalHolidaysInMonth || 0)}</Typography>
+                        </Box> */}
 
                         <Button variant="contained" sx={{
                             mt: 3, float: 'right',
@@ -1328,7 +1432,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         {/* Net Pay Summary */}
                         <Box textAlign="left" sx={{ display: 'flex', justifyContent: 'flex-end', mr: 3 }}>
                             <Box textAlign="left" sx={{ backgroundColor: "#FFECB3", padding: 2, borderRadius: 2, width: "30%" }}>
-                                <Typography variant="h6" fontWeight="bold">Net Pay: ₹{selectedLabour?.netPay || "-"}</Typography>
+                                <Typography variant="h6" fontWeight="bold">Net Salary: ₹{selectedLabour?.netPay || "-"}</Typography>
                                 <Typography variant="body2">
                                     Gross Pay (A): <b>₹{selectedLabour?.baseWage || "-"}</b>
                                 </Typography>
@@ -1621,30 +1725,30 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             Export PayRoll
                         </Button>
                         {(user.userType === 'admin' || user.userType === 'superadmin') && (
-                        <Button
-                            variant="contained"
-                            onClick={() => {
-                                handleApproveConfirmOpen();
-                                setIsFinalizeClicked(true); // permanently disable after 1st click
-                            }}
-                            disabled={!isFinalizeEnabled || isFinalizeClicked}
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                height: "40px",
-                                width: "100%",
-                                backgroundColor: "rgb(229, 255, 225)",
-                                color: "rgb(43, 217, 144)",
-                                '&:hover': {
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    handleApproveConfirmOpen();
+                                    setIsFinalizeClicked(true); // permanently disable after 1st click
+                                }}
+                                disabled={!isFinalizeEnabled || isFinalizeClicked}
+                                sx={{
+                                    fontSize: { xs: "0.8rem", sm: "1rem" },
+                                    height: "40px",
+                                    width: "100%",
                                     backgroundColor: "rgb(229, 255, 225)",
-                                },
-                                marginBottom: { xs: "20px", sm: "0" },
-                                opacity: (!isFinalizeEnabled || isFinalizeClicked) ? 0.5 : 1,
-                                cursor: (!isFinalizeEnabled || isFinalizeClicked) ? 'not-allowed' : 'pointer'
-                            }}
-                        >
-                            Finalize PayRoll
-                        </Button>
-)}
+                                    color: "rgb(43, 217, 144)",
+                                    '&:hover': {
+                                        backgroundColor: "rgb(229, 255, 225)",
+                                    },
+                                    marginBottom: { xs: "20px", sm: "0" },
+                                    opacity: (!isFinalizeEnabled || isFinalizeClicked) ? 0.5 : 1,
+                                    cursor: (!isFinalizeEnabled || isFinalizeClicked) ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                Finalize PayRoll
+                            </Button>
+                        )}
 
                     </Box>
 

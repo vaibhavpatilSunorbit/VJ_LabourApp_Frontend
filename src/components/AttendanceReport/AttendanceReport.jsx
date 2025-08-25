@@ -28,6 +28,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Badge from '@mui/material/Badge';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AttendanceReport = ({ departments, labour, labourlist }) => {
     const theme = useTheme();
@@ -457,6 +458,9 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
 
     const handleSaveManualEdit = async () => {
+        handleManualEditDialogClose();
+        setIsLoading(true);
+         let latestLabourWageRecord = null;
         try {
             if (manualEditData.status === 'weeklyOff') {
                 const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
@@ -477,6 +481,10 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                     toast.error("Add the wages for that labour then add mark as weeklyOff");
                     return;
                 }
+                 if (latestLabourWageRecord.WeeklyOff === 0) {
+                  toast.error("You are not eligible for Weekly Off. It will not be marked Weekly Off In Wages.");
+                   return; // 🚫 stop further execution
+                }
 
                 if (latestLabourWageRecord.PayStructure === "DAILY WAGES") {
                     toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
@@ -485,7 +493,11 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             }
 
 
-            if (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4) {
+            if (
+                manualEditData.status !== 'absent' &&
+                manualEditData.status !== 'weeklyOff' &&
+                (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4)
+            ) {
                 toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
                 return;
             }
@@ -524,7 +536,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
                 workingHours,
                 ...(onboardName && { onboardName }), AttendanceStatus,
-                markWeeklyOff: manualEditData.status === 'weeklyOff',
+                markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
                 updatedFields: changedFields,
                 userType: user.userType || null,
             };
@@ -556,9 +568,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             );
 
             setAttendanceData(updatedAttendanceData);
-
+            setIsLoading(false);
             toast.success(response.data.message || 'Attendance updated successfully!');
-            handleManualEditDialogClose();
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
             console.error('Error saving attendance:', errorMessage);
@@ -969,7 +980,9 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             </Box>
         );
     };
-
+const handleImportSuccess = (msg) => {
+    toast.success(msg || "Attendance imported successfully!");
+  };
     const StatusLegend = () => (
         <Box
             display="flex"
@@ -1289,7 +1302,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
-            <ToastContainer />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
                 <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
                     User | Attendance Report
@@ -1305,6 +1317,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 />
             </Box>
             {loading && <Loading />}
+                                           
 
             <Box
                 sx={{
@@ -1450,7 +1463,9 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
 
                             <ExportAttendance />
-                            <ImportAttendance /></Box>
+                            <ImportAttendance onSuccess={handleImportSuccess}/>
+<ToastContainer position="top-right" autoClose={3000} />
+                            </Box>
 
                         <TablePagination
                             className="custom-pagination"

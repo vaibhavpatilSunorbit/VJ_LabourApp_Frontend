@@ -15,7 +15,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Loading from '../../Loading/Loading';
 
-const ImportAttendance = () => {
+const ImportAttendance = ({ onSuccess }) => {
     const [open, setOpen] = useState(false);
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -42,7 +42,9 @@ const ImportAttendance = () => {
             const response = await axios.post(`${API_BASE_URL}/api/labours/import`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            toast.message(response.data.message);
+            // toast.success(response.data.message || 'Attendance imported successfully!');
+            // toast.message(response.data.message);
+            if (onSuccess) onSuccess(response.data.message);
         } catch (error) {
             if (error.response && error.response.data) {
                 const { message, invalidRows } = error.response.data;
@@ -59,7 +61,7 @@ const ImportAttendance = () => {
                     toast.message(`Error: ${message}`);
                 }
             } else {
-                console.error('Unexpected error:', error);
+                toast.error('Unexpected error:', error);
             }
         } finally {
             setLoading(false);
@@ -68,6 +70,7 @@ const ImportAttendance = () => {
 
     return (
         <>
+<ToastContainer /> 
             {loading && (
                 <Box
                     sx={{
@@ -137,7 +140,6 @@ const ImportAttendance = () => {
                     </Typography>
 
                     <Box display="flex" flexDirection="column" gap={3}>
-                        <ToastContainer />
 
                         <Box>
                             <Typography
