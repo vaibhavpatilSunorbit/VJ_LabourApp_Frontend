@@ -101,7 +101,7 @@ const Dashboard = () => {
   const theme = useTheme();
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [loading, setLoading] = useState(true);
-  const [labourCount, setLabourCount] = useState({ Approved: 0, Pending: 0, Rejected: 0 });
+  const [labourCount, setLabourCount] = useState({ Approved: 0, Pending: 0, Rejected: 0, Disable: 0 });
   const [wagesData, setWagesData] = useState({ Approved: 0, Pending: 0, Rejected: 0 });
   const [siteTransferData, setSiteTransferData] = useState({ Approved: 0, Pending: 0, Rejected: 0 });
   const [variablePayData, setVariablePayData] = useState({ Approved: 0, AdminPending: 0, Pending: 0, Rejected: 0 });
@@ -125,7 +125,8 @@ const Dashboard = () => {
           setLabourCount({
             Approved: response.data.data.Approved || 0,
             Pending: response.data.data.Pending || 0,
-            Rejected: response.data.data.Rejected || 0
+            Rejected: response.data.data.Rejected || 0,
+            Disable: response.data.data.Disable || 0
           });
         }
       } catch (error) {
@@ -171,7 +172,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchActiveWorkers = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/dashboard/getAllActive')
+        const response = await axios.get(`${API_BASE_URL}/dashboard/getAllActive`)
         if (response.data.success) {
           setActiveWorker(response.data.data.ActiveWorkersAllTime);
         }
@@ -204,7 +205,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchProjectCount = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/project-names');
+        const response = await axios.get(`${API_BASE_URL}/api/project-names`);
         if (response.data) {
 
           setProjectCount(Array.isArray(response.data) ? response.data.length : 0);
@@ -275,7 +276,7 @@ const Dashboard = () => {
     },
     {
       title: 'Rejected',
-      count: labourCount.Rejected,
+      count: labourCount.Rejected + labourCount.Disable,
       icon: Cancel,
       color: theme.palette.error.main,
       bgColor: alpha(theme.palette.error.main, 0.04),
