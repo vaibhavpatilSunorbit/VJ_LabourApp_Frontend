@@ -37,7 +37,7 @@ const AttendanceLineGraph = () => {
       setError(null);
       try {
         // Change this URL to your actual backend API URL
-        const response = await axios.get(`${API_BASE_URL}/dashboard/getAllAPM`, {
+        const response = await axios.get(`${API_BASE_URL}/api/getAllAPM`, {
           params: { period: timeRange } // lastWeek, lastMonth, allTime as per your backend
         });
 
