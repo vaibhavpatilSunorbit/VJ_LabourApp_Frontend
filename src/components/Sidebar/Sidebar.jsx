@@ -143,7 +143,7 @@ import profileIcon11 from '../../images/datatransfer.png';
 // import profileIcon12 from '../../images/salaryRegister.png';
 import profileIcon13 from '../../images/wages.png';
 import profileIcon14 from '../../images/payroll.png';
-import profileIcon15 from '../../images/payroll.png';
+// import profileIcon15 from '../../images/attendance.png';
 
 import VJLogo from '../../images/VJlogo-1-removebg.png';
 import { SidebarData } from '../../Data';
@@ -255,8 +255,8 @@ function Sidebar({ formStatus = {}, openSidebarToggle, OpenSidebar }) {
                 item.heading === "Variable Input" ? profileIcon11 :
                 item.heading === "Run PayRoll" ? profileIcon13 :
                 item.heading === "View Payroll" ? profileIcon14 :
-                item.heading === "Dashboard" ? profileIcon15 :
-                item.heading === "User " ? profileIcon15 :
+                // item.heading === "Dashboard" ? profileIcon15 :
+                // item.heading === "User " ? profileIcon15 :
 
                 // item.heading === "People" ? profileIcon8 :
                 // item.heading === "Salary Register" ? profileIcon12 :

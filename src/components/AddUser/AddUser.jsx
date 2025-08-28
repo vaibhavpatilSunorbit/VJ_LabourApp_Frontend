@@ -26,6 +26,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const accessPages = [
+  "Dashboard",
   "Application",
   "Labour Details",
   "Add User",
@@ -594,9 +595,5 @@ const AddUser = () => {
 };
 
 export default AddUser;
-
-
-
-
 
 

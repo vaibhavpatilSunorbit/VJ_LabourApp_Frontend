@@ -2613,5 +2613,3 @@ const OnboardingForm = ({ formType, onFormSubmit, onPhotoCapture, projectList = 
 
 
 export default OnboardingForm;
-
-

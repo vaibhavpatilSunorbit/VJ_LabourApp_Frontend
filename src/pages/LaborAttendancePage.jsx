@@ -13,7 +13,6 @@ import {
   Legend,
 } from 'chart.js';
 import { API_BASE_URL } from '../Data';
-
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -23,6 +22,7 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+
 
 const AttendanceLineGraph = () => {
   const [timeRange, setTimeRange] = useState('lastWeek'); // Set default to lastWeek

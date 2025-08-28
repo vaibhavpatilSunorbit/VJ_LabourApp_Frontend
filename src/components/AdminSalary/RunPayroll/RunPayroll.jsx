@@ -1,60 +1,59 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    Button,
-    Box,
-    TextField,
-    TablePagination,
-    Select,
-    MenuItem, Modal, Typography, IconButton, Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogContentText, Checkbox, ListItemText, Chip,
-    DialogActions, FormControl, InputLabel, Tabs, Grid, Divider, Fade, FormControlLabel, Switch
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField,
+    TablePagination, Select, MenuItem, Modal, Typography, IconButton, Dialog, DialogTitle, DialogContent,
+    DialogContentText, Checkbox, ListItemText, DialogActions, FormControlLabel, Switch, Tooltip, Grid, Divider, Fade
 } from '@mui/material';
-import { modalStyle } from '../modalStyles.js';
-import { StyleForPayslip } from '../modalStyles.js';
-import { StyleEmpInfo } from '../modalStyles.js';
+import { modalStyle, StyleForPayslip, StyleEmpInfo } from '../modalStyles.js';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import SearchBar from '../../SarchBar/SearchRegister.jsx';
 import * as XLSX from 'xlsx';
-// import Loading from "../../Loading/Loading.jsx";
 import TableSkeletonLoading from "../../Loading/TableSkeletonLoading.jsx";
 import { API_BASE_URL } from "../../../Data.js";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../../UserContext/UserContext.js';
-import ExportVariablePay from '../../VariableInputs/ImportExportVariablePay/ExportVariablePay.jsx'
 import ViewDetails from '../../ViewDetails/ViewDetails.jsx';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from "@mui/icons-material/Close";
 import { ArrowBack } from '@mui/icons-material';
 import logo from "../../../images/VJlogo-1-removebg.png";
 import NoData from "../../../images/NoData.jpg";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
-import Tooltip from '@mui/material/Tooltip';
 
-const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
+const months = [
+    { value: 1, label: 'January' }, { value: 2, label: 'February' }, { value: 3, label: 'March' },
+    { value: 4, label: 'April' }, { value: 5, label: 'May' }, { value: 6, label: 'June' },
+    { value: 7, label: 'July' }, { value: 8, label: 'August' }, { value: 9, label: 'September' },
+    { value: 10, label: 'October' }, { value: 11, label: 'November' }, { value: 12, label: 'December' }
+];
+
+function searchLabourData(data, searchQuery) {
+    if (!searchQuery) return data;
+    searchQuery = searchQuery.toLowerCase();
+    return data.filter(item =>
+        item.name?.toLowerCase().includes(searchQuery) ||
+        item.LabourID?.toLowerCase().includes(searchQuery) ||
+        item.projectName?.toLowerCase().includes(searchQuery) ||
+        item.department?.toLowerCase().includes(searchQuery)
+    );
+}
+
+const RunPayroll = ({ departments, projectNames, labourlist }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const { user } = useUser();
+    const navigate = useNavigate();
+
+    // State
     const [labours, setLabours] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [variablePay, setvariablePay] = useState({});
-    const [payStructure, setPayStructure] = useState({});
     const [tabValue, setTabValue] = useState(0);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -65,19 +64,10 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     const [selectedLabour, setSelectedLabour] = useState(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
-    const [attendanceData, setAttendanceData] = useState([]);
-    const { user } = useUser();
-    const [openModal, setOpenModal] = useState(false);
-    const [selectedHistory, setSelectedHistory] = useState([]);
-    const currentDate = new Date();
-    // const currentMonth = (currentDate.getMonth() + 1).toString();
     const [selectedMonth, setSelectedMonth] = useState('');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [openDialogSite, setOpenDialogSite] = useState(false);
-    const [statusesSite, setStatusesSite] = useState({});
     const [navigating, setNavigating] = useState(false);
-    const location = useLocation();
-    const navigate = useNavigate();
     const [fetchForAll, setFetchForAll] = useState(true);
     const [labourId, setLabourId] = useState('');
     const [salaryData, setSalaryData] = useState([]);
@@ -86,250 +76,51 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
     const [isFinalizeClicked, setIsFinalizeClicked] = useState(false);
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
     const [selectedDepartment, setSelectedDepartment] = useState([]);
-    const [selectedPayStructure, setSelectedPayStructure] = useState('');
-    const [employeeToggle, setEmployeeToggle] = useState('all');
-    const [selectedEmployee, setSelectedEmployee] = useState('');
     const [filterModalOpen, setFilterModalOpen] = useState(false);
-    const [labourData, setLabourData] = useState([]);
-    const [isTransferConfirmOpen, setIsTransferConfirmOpen] = useState(false);
-    const [isTransferSuccess, setIsTransferSuccess] = useState(false);
-    const [selectedLabourIds, setSelectedLabourIds] = useState([]);
-
-
     const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false);
-    const handleApproveConfirmOpen = () => {
-        setIsApproveConfirmOpen(true);
-    };
+    const [selectedLabourIds] = useState([]);
+    const [openModal, setOpenModal] = useState(false);
+    const [selectedHistory, setSelectedHistory] = useState([]);
 
-    const handleApproveConfirmClose = () => {
-        setIsApproveConfirmOpen(false);
-    };
-
-    // computed flags (put inside your component)
-    const hasMonthYear = Boolean(selectedMonth) && Boolean(selectedYear);
-    const hasBU = Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0;
-    const hasLabourId = !fetchForAll && String(labourId ?? "").trim().length > 0;
-
-    // final enable/disable rule:
-    // - if NOT fetchForAll: require Labour ID
-    // - if fetchForAll: require Month+Year+BU
-    const canClickPayroll = hasLabourId || (fetchForAll && hasMonthYear && hasBU);
+    // Memoized computed flags
+    const hasMonthYear = useMemo(() => Boolean(selectedMonth) && Boolean(selectedYear), [selectedMonth, selectedYear]);
+    const hasBU = useMemo(() => Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0, [selectedBusinessUnit]);
+    const hasLabourId = useMemo(() => !fetchForAll && String(labourId ?? "").trim().length > 0, [fetchForAll, labourId]);
+    const canClickPayroll = useMemo(() => hasLabourId || (fetchForAll && hasMonthYear && hasBU), [hasLabourId, fetchForAll, hasMonthYear, hasBU]);
     const isDisabled = !canClickPayroll;
 
-    // helpful tooltip
-    let tooltipTitle = "";
-    if (isDisabled) {
-        if (!fetchForAll) {
-            tooltipTitle = "Enter a Labour ID or switch to All to use Month/Year/BU.";
-        } else {
-            const missing = [];
-            if (!hasMonthYear) missing.push("month & year");
-            if (!hasBU) missing.push("business unit");
-            tooltipTitle = `Select ${missing.join(" and ")}.`;
-        }
-    }
+    // Tooltip for Payroll button
+    const tooltipTitle = useMemo(() => {
+        if (!isDisabled) return "";
+        if (!fetchForAll) return "Enter a Labour ID or switch to All to use Month/Year/BU.";
+        const missing = [];
+        if (!hasMonthYear) missing.push("month & year");
+        if (!hasBU) missing.push("business unit");
+        return `Select ${missing.join(" and ")}.`;
+    }, [isDisabled, fetchForAll, hasMonthYear, hasBU]);
 
+    // Fetch business units on mount
+    useEffect(() => {
+        axios.get(`${API_BASE_URL}/api/projectDeviceStatus`)
+            .then(res => setBusinessUnits(res.data))
+            .catch(() => toast.error('Error fetching business units.'));
+    }, []);
 
-    const allowedProjectIds =
-        user && user.projectNames ? JSON.parse(user.projectNames) : [];
-    const allowedDepartmentIds =
-        user && user.departments ? JSON.parse(user.departments) : [];
-    const laboursSource =
-        labourlist && labourlist.length > 0 ? labourlist : labours;
-
-    const fetchLabours = async (filters = {}) => {
-        setLoading(true);
-        try {
-            const response = await axios.get(
-                `${API_BASE_URL}/api/labours/getWagesAndLabourOnboardingJoin`,
-                {
-                    params: filters,
-                }
-            );
-            setLabours(response.data);
-
-        } catch (error) {
-            console.error('Error fetching labours:', error);
-            toast.error('Failed to fetch data');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    // useEffect(() => {
-    //     fetchLabours();
-    // }, []);
-
-    const handleApplyFilter = async () => {
-        const params = {};
-        if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
-        if (selectedDepartment) params.department = selectedDepartment;
-        if (selectedPayStructure) params.payStructure = selectedPayStructure;
-        if (employeeToggle === 'single' && selectedEmployee) {
-            params.employee = selectedEmployee;
-        }
-    }
-    const handleResetFilter = () => {
-        setSelectedBusinessUnit('');
-        setSelectedDepartment('');
-        setLabours(salaryData)
-        setSelectedPayStructure('');
-        setEmployeeToggle('all');
-        setSelectedEmployee('');
-        setFilterModalOpen(false);
-        setFilteredData([]);
-    };
-
-    const handleApplyFilters = () => {
-        const filters = {};
-
-        if (Array.isArray(selectedBusinessUnit) && selectedBusinessUnit.length > 0) {
-            filters.ProjectID = selectedBusinessUnit.join(','); // Pass as comma-separated string
-        }
-
-        if (Array.isArray(selectedDepartment) && selectedDepartment.length > 0) {
-            filters.DepartmentID = selectedDepartment.join(',');
-        }
-        // fetchLabours(filters);
-        const projectFilter = filters.ProjectID.split(',').map(Number);
-        const departmentFilter = filters.DepartmentID.split(',').map(Number);
-
-        // Filter data array based on projectName and department
-        const filteredData = labours.filter(item =>
-            projectFilter.includes(item.projectId) && departmentFilter.includes(item.departmentId)
-        );
-        setFilteredData(filteredData);
-        setFilterModalOpen(false);
-    };
-
-    const isAllSelected = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
-    const isAllSelectedDep = departments.length > 0 && selectedDepartment.length === departments.length;
-
-    const handleBusinessUnitChange = (event) => {
-        const value = event.target.value;
-
-        if (value.includes('ALL')) {
-            if (isAllSelected) {
-                setSelectedBusinessUnit([]); // Deselect all
-            } else {
-                const allIds = projectNames.map(p => p.Id);
-                setSelectedBusinessUnit(allIds); // Select all
-            }
-        } else {
-            setSelectedBusinessUnit(value);
-        }
-    };
-
-    const handleDepartmentChange = (event) => {
-        const value = event.target.value;
-        if (value.includes('ALL')) {
-            if (isAllSelectedDep) {
-                setSelectedDepartment([]);
-            } else {
-                const allDeptIds = departments.map(d => d.Id);
-                setSelectedDepartment(allDeptIds);
-            }
-        } else {
-            // setSelectedDepartment(typeof value === 'string' ? value.split(',') : value);
-            setSelectedDepartment(value);
-        }
-    };
-
-
-    //   const fetchProjectNames = async () => {
-    //         try {
-    //           const response = await axios.get(API_BASE_URL + "/api/project-names");
-    //           // Expecting response.data to be an array of projects with properties "Id" and "Business_Unit"
-    //           setProjectNames(response.data);
-    //         } catch (error) {
-    //           console.error('Error fetching project names:', error);
-    //           toast.error('Error fetching project names.');
-    //         }
-    //       };
-
-    // Lookup function to get Business_Unit name based on project id
-    const getProjectDescription = (projectNames) => {
-        if (!Array.isArray(projectNames) || projectNames.length === 0) {
-            return 'Unknown';
-        }
-        if (projectNames === undefined || projectNames === null || projectNames === '') {
-            return 'Unknown';
-        }
-        // Convert projectId to a number if necessary and find the matching project
-        const project = projectNames.find(proj => proj.Id === Number(projectNames));
-        return project ? project.Business_Unit : 'Unknown';
-    };
-
-    // Extract selectedMonth and selectedYear from navigation state
-    // const { selectedMonth, selectedYear } = location.state || {};
-
-    // const fetchLabours = async () => {
-    //     setLoading(true);
-    //     try {
-    //         const response = await axios.get(`${API_BASE_URL}/insentive/payroll/eligibleLaboursForSalaryGeneration`, {
-    //             params: { month: selectedMonth, year: selectedYear },
-    //         });
-    //         setLabours(response.data);
-    //         console.log("response.data .", response.data)
-    //     } catch (error) {
-    //         console.error('Error fetching labours:', error);
-    //         toast.error('Failed to fetch data');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     if (selectedMonth && selectedYear) {
-    //         fetchLabours();
-    //     }
-    // }, [selectedMonth, selectedYear]);
-
-    const months = [
-        { value: 1, label: 'January' },
-        { value: 2, label: 'February' },
-        { value: 3, label: 'March' },
-        { value: 4, label: 'April' },
-        { value: 5, label: 'May' },
-        { value: 6, label: 'June' },
-        { value: 7, label: 'July' },
-        { value: 8, label: 'August' },
-        { value: 9, label: 'September' },
-        { value: 10, label: 'October' },
-        { value: 11, label: 'November' },
-        { value: 12, label: 'December' }
-    ];
-
-
-
-    const fetchSalaryGenerationForDateMonthAll = async () => {
+    // Fetch salary data
+    const fetchSalaryGenerationForDateMonthAll = useCallback(async () => {
         if (!selectedMonth || !selectedYear) {
             toast.warning('Please select a valid month and year.');
             return;
         }
         setLoading(true);
-
         const params = { month: selectedMonth, year: selectedYear };
-        if (!fetchForAll) {
-            params.labourIds = labourId;
-        }
-
-        const allSelected = selectedBusinessUnit.length === businessUnits.length;
-        if (!allSelected && selectedBusinessUnit.length > 0) {
-            params.projectId = selectedBusinessUnit.join(',');
-        }
+        if (!fetchForAll) params.labourIds = labourId;
+        if (selectedBusinessUnit.length > 0) params.projectId = selectedBusinessUnit.join(',');
         try {
             const response = await axios.get(`${API_BASE_URL}/insentive/payroll/salaryGenerationDataAllLabours`, { params });
             const fetchedData = response.data;
-            if (!Array.isArray(fetchedData)) {
-                throw new Error('Unexpected data format received from the API.');
-            }
-            if (fetchedData.length === 0) {
-                setLabours([]);
-                setSalaryData([]);
-                setNoDataAvailable(true);
-                return;
+            if (!Array.isArray(fetchedData) || fetchedData.length === 0) {
+                setLabours([]); setSalaryData([]); setNoDataAvailable(true); return;
             }
             setNoDataAvailable(false);
 
@@ -350,7 +141,6 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     absentDays: labour.attendance?.absentDays || 0,
                     halfDays: labour.attendance?.halfDays || 0,
                     missPunchDays: labour.attendance?.missPunchDays || 0,
-                    WeeklyOffDays: labour.attendance?.WeeklyOffDays || 0,
                     normalOvertimeCount: labour.attendance?.normalOvertimeCount || 0,
                     holidayOvertimeCount: labour.attendance?.holidayOvertimeCount || 0,
                     totalHolidaysInMonth: labour.attendance?.totalHolidaysInMonth || 0,
@@ -396,29 +186,99 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
-            console.error('Error fetching salary generation data:', error);
             setNoDataAvailable(true);
-            toast.error(error.response?.data?.message || 'Error fetching salary generation data. Please try again later.');
+            toast.error(error.response?.data?.message || 'Error fetching salary generation data.');
         } finally {
             setLoading(false);
         }
+    }, [selectedMonth, selectedYear, fetchForAll, labourId, selectedBusinessUnit]);
+
+    // Fetch salary data on filter change
+    useEffect(() => {
+        if (selectedMonth && selectedYear) fetchSalaryGenerationForDateMonthAll();
+    }, [selectedMonth, selectedYear, selectedBusinessUnit, fetchSalaryGenerationForDateMonthAll]);
+
+    // Filter helpers
+    const isAllSelected = useMemo(() => projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length, [projectNames, selectedBusinessUnit]);
+    const isAllSelectedDep = useMemo(() => departments.length > 0 && selectedDepartment.length === departments.length, [departments, selectedDepartment]);
+
+    const handleBusinessUnitChange = (event) => {
+        const value = event.target.value;
+        if (value.includes('ALL')) {
+            setSelectedBusinessUnit(isAllSelected ? [] : projectNames.map(p => p.Id));
+        } else {
+            setSelectedBusinessUnit(value);
+        }
+    };
+    const handleDepartmentChange = (event) => {
+        const value = event.target.value;
+        if (value.includes('ALL')) {
+            setSelectedDepartment(isAllSelectedDep ? [] : departments.map(d => d.Id));
+        } else {
+            setSelectedDepartment(value);
+        }
+    };
+    const handleResetFilter = () => {
+        setSelectedBusinessUnit([]);
+        setSelectedDepartment([]);
+        setLabours(salaryData);
+        setFilterModalOpen(false);
+        setFilteredData([]);
+    };
+    const handleApplyFilters = () => {
+        const projectFilter = selectedBusinessUnit.map(Number);
+        const departmentFilter = selectedDepartment.map(Number);
+        const filtered = labours.filter(item =>
+            (projectFilter.length === 0 || projectFilter.includes(Number(item.projectId))) &&
+            (departmentFilter.length === 0 || departmentFilter.includes(Number(item.departmentId)))
+        );
+        setFilteredData(filtered);
+        setFilterModalOpen(false);
     };
 
-    useEffect(() => {
-        if (!selectedMonth && !selectedYear) {
-            fetchSalaryGenerationForDateMonthAll();
+    // Search
+    const handleSearch = useCallback((e) => {
+        e.preventDefault();
+        if (searchQuery.trim() === '') {
+            setSearchResults([]);
+            return;
         }
-    }, [selectedMonth, selectedYear, selectedBusinessUnit]);
-    // useEffect(() => {
-    //         fetchSalaryGenerationForDateMonthAll();
-    // },[]);
+        setLoading(true);
+        setTimeout(() => {
+            setSearchResults(searchLabourData(labours, searchQuery));
+            setPage(0);
+            setLoading(false);
+        }, 200);
+    }, [searchQuery, labours]);
 
+    // Table pagination
+    const handlePageChange = (e, newPage) => setPage(newPage);
+    const handleRowsPerPageChange = (e) => {
+        setRowsPerPage(parseInt(e.target.value, 10));
+        setPage(0);
+    };
 
+    // Filter data to only include the latest entry per LabourID
+    const filteredLabours = useMemo(() => {
+        const latestEntries = {};
+        (searchResults.length > 0 ? searchResults : labours).forEach((labour) => {
+            if (!latestEntries[labour.LabourID] ||
+                new Date(labour.CreatedAt) > new Date(latestEntries[labour.LabourID].CreatedAt)) {
+                latestEntries[labour.LabourID] = labour;
+            }
+        });
+        return Object.values(latestEntries);
+    }, [searchResults, labours]);
+
+    const paginatedLabours = useMemo(() => {
+        const data = filteredData.length > 0 ? filteredData : filteredLabours;
+        return data.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+    }, [filteredData, filteredLabours, page, rowsPerPage]);
+
+    // Export Payroll
     const exportPayrollData = async (data) => {
         setLoading(true);
-        // console.log("data export Payroll Data", JSON.stringify(data));
         try {
-
             const selectiveData = data.map(item => ({
                 Month: months.find(m => item.month === m.value)?.label || '',
                 Year: item.year,
@@ -428,7 +288,9 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 Department: item.department,
                 AadhaarNumber: item.aadhaarNumber,
                 AccountNumber: item.accountNumber,
-                presentDays: item.wageType === 'FIXED MONTHLY WAGES' ? (item.presentDays + item.additionalPresent + item.additionalHalf) : (item.presentDays + item.totalHolidaysInMonth + item.additionalPresent + item.additionalHalf),
+                presentDays: item.wageType === 'FIXED MONTHLY WAGES'
+                    ? (item.presentDays + item.additionalPresent + item.additionalHalf)
+                    : (item.presentDays + item.totalHolidaysInMonth + item.additionalPresent + item.additionalHalf),
                 Wage_Type: item.wageType,
                 DailyWage_Rate: item.dailyWageRate,
                 FixedMonthly_Rate: item.fixedMonthlyWage,
@@ -442,62 +304,35 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 Total_Deduction: item.totalDeductions,
                 Net_Pay: item.netPay,
             }));
-
             const worksheet = XLSX.utils.json_to_sheet(selectiveData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "PayrollData");
-
-            // Generate Excel file as an array buffer
             const workbookOutput = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-
             const blob = new Blob([workbookOutput], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             });
-
-            const fileName = ` Export Provisional PayRoll_${selectedMonth}_${selectedYear}.xlsx`;
-
+            const fileName = `Export_Provisional_PayRoll_${selectedMonth}_${selectedYear}.xlsx`;
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
             link.setAttribute('download', fileName);
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
-            toast.success(`Salary Data Exported successfully`)
+            toast.success(`Salary Data Exported successfully`);
         } catch (error) {
-            console.error('Error saving final payroll data:', error);
             toast.error(error.message || "Error Salary Data Exported. Please try again later.");
         } finally {
             setLoading(false);
         }
     };
 
-
-    const saveFinalPayrollData = async () => {
-        setLoading(true);
-        try {
-            if (salaryData.length === 0) {
-                toast.warning("No salary data available to save.");
-                setLoading(false);
-                return;
-            }
-            const response = await axios.post(`${API_BASE_URL}/insentive/insentive/generateMonthlyPayroll`, salaryData);
-            toast.success(response.data.message);
-        } catch (error) {
-            console.error('Error saving final payroll data:', error);
-            toast.error(error.response?.data?.message || "Error saving payroll data. Please try again later.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
+    // Finalize Payroll
     const saveFinalizePayrollData = async () => {
         setIsApproveConfirmOpen(false);
         if (!selectedMonth || !selectedYear) {
             toast.warning("Please select both Month and Year.");
             return;
         }
-
         setLoading(true);
         try {
             if (salaryData.length === 0) {
@@ -505,339 +340,66 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 setLoading(false);
                 return;
             }
-
             const response = await axios.post(`${API_BASE_URL}/insentive/generateMonthlyPayroll`, {
                 month: selectedMonth,
                 year: selectedYear,
             });
-
             toast.success(response.data.message || "Payroll generated successfully.");
         } catch (error) {
-            console.error('Error saving payroll data:', error);
             toast.error(error.response?.data?.message || "Error generating payroll. Please try again later.");
         } finally {
             setLoading(false);
         }
     };
 
+    // Modal handlers
+    const handleOpenModal = (labour) => { setSelectedLabour(labour); setModalOpen(true); };
+    const handleCloseModal = () => { setSelectedLabour(null); setModalOpen(false); };
+    const handleOpenModalBonus = (labour) => { setSelectedLabour(labour); setModalOpenBonus(true); };
+    const handleCloseModalBonus = () => { setSelectedLabour(null); setModalOpenBonus(false); };
+    const handleOpenModalDeduction = (labour) => { setSelectedLabour(labour); setModalOpenDeduction(true); };
+    const handleCloseModalDeduction = () => { setSelectedLabour(null); setModalOpenDeduction(false); };
+    const handleOpenModalNetpay = (labour) => { setSelectedLabour(labour); setModalOpenNetpay(true); };
+    const handleCloseModalNetpay = () => { setSelectedLabour(null); setModalOpenNetpay(false); };
 
-    // -------------------------------------   SHOW ATTENDACNE ----------------------
-
-    const handleOpenModal = (labour) => {
-        setSelectedLabour(labour);
-        setModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setSelectedLabour(null);
-        setModalOpen(false);
-    };
-    // ------------------------------------- SHOW BONUS ----------------------
-    const handleOpenModalBonus = (labour) => {
-        setSelectedLabour(labour);
-        setModalOpenBonus(true);
-    };
-
-    const handleCloseModalBonus = () => {
-        setSelectedLabour(null);
-        setModalOpenBonus(false);
-    };
-    // -------------------------------------   SHOW DEDUCTION ----------------------
-    const handleOpenModalDeduction = (labour) => {
-        setSelectedLabour(labour);
-        setModalOpenDeduction(true);
-    };
-
-    const handleCloseModalDeduction = () => {
-        setSelectedLabour(null);
-        setModalOpenDeduction(false);
-    };
-    // -------------------------------------   NET PAY ----------------------
-    const handleOpenModalNetpay = (labour) => {
-        setSelectedLabour(labour);
-        setModalOpenNetpay(true);
-    };
-
-    const handleCloseModalNetpay = () => {
-        setSelectedLabour(null);
-        setModalOpenNetpay(false);
-    };
-    // -----------------------------------------------------------------------------
-
-    const handleCancel = () => {
-        setModalOpen(false);
-        setModalOpenBonus(false);
-        setModalOpenDeduction(false);
-    };
-    const fetchBusinessUnits = async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
-            setBusinessUnits(response.data);
-        } catch (error) {
-            console.error('Error fetching business units:', error);
-            toast.error('Error fetching business units.');
-        }
-    };
-    useEffect(() => {
-        fetchBusinessUnits();
-    }, []);
-
-    const handleEdit = (labour) => {
-        setSelectedLabour(labour);  // Preserves all current details of the labour
-        setModalOpen(true);
-        setModalOpenBonus(true);
-        setModalOpenDeduction(true);
-    };
-
-    const handleApproved = (labour) => {
-        setSelectedLabour(labour);  // Preserves all current details of the labour
-        setOpenDialogSite(true);
-    };
-
-
-    function searchLabourData(data, searchQuery) {
-        if (!searchQuery) return data; // Return original data if search query is empty
-
-        searchQuery = searchQuery.toLowerCase(); // Convert query to lowercase for case-insensitive search
-
-        return data.filter(item =>
-            item.name.toLowerCase().includes(searchQuery) ||
-            item.LabourID.toLowerCase().includes(searchQuery) ||
-            item.projectName.toLowerCase().includes(searchQuery) ||
-            item.department.toLowerCase().includes(searchQuery)
-        );
-    }
-
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        if (searchQuery.trim() === '') {
-            setSearchResults([]);
-            return;
-        }
-        setLoading(true);
-        try {
-            // const response = await axios.get(`${API_BASE_URL}/labours/searchAttendance?q=${searchQuery}`);
-            const data = searchLabourData(labours, searchQuery);
-            setSearchResults(data);
-            setPage(0);
-        } catch (error) {
-            toast.error('Search failed');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleTabChange = (event, newValue) => {
-        setTabValue(newValue);
-        setPage(0);
-    };
-
-    const handlePageChange = (e, newPage) => {
-        setPage(newPage);
-    };
-
-    const handleRowsPerPageChange = (e) => {
-        const newRowsPerPage = parseInt(e.target.value, 10);
-        setRowsPerPage(newRowsPerPage);
-        setPage(0); // Reset to the first page
-    };
-    const handleSelectLabour = (selectedLabour) => {
-        setSelectedLabour(selectedLabour);
-    };
-
-    // Filter data to only include the latest entry per LabourID
-    const getLatestLabourData = (labours) => {
-        const latestEntries = {};
-        labours.forEach((labour) => {
-            if (
-                !latestEntries[labour.LabourID] ||
-                new Date(labour.CreatedAt) > new Date(latestEntries[labour.LabourID].CreatedAt)
-            ) {
-                latestEntries[labour.LabourID] = labour;
-            }
-        });
-        return Object.values(latestEntries);
-    };
-
-    const filteredLabours = getLatestLabourData(searchResults.length > 0 ? searchResults : labours);
-    const paginatedLabours = (filteredData.length > 0 ? filteredData : filteredLabours).slice(
-        page * rowsPerPage,
-        (page + 1) * rowsPerPage
-    );
-
-    // const getProjectDescription = (projectId) => {
-    //     if (!Array.isArray(projectNames) || projectNames.length === 0) {
-    //         return 'Unknown';
-    //     }
-    //     if (projectId === undefined || projectId === null || projectId === '') {
-    //         return 'Unknown';
-    //     }
-    //     const project = projectNames.find(proj => proj.Id === Number(projectId));
-    //     return project ? project.projectName : 'Unknown';
-    // };
-
-
-    const getDepartmentDescription = (departmentId) => {
-        if (!departments || departments.length === 0) {
-            return 'Unknown';
-        }
-        const department = departments.find(dept => dept.Id === Number(departmentId));
-        return department ? department.Description : 'Unknown';
-    };
-
-    const handleModalTransfer = () => {
-        setSelectedLabour(labour);
-        confirmTransfer();
-        setModalOpen(false);
-        setModalOpenBonus(false);
-        setModalOpenDeduction(false);
-        setOpenDialogSite(true);
-    };
-
-
-    const confirmTransfer = async () => {
-        setOpenDialogSite(false);
-
-        try {
-
-            if (!payStructure || !variablePay) {
-                toast.error("Please fill in all required fields.");
-                return;
-            }
-            const onboardName = user.name || null;
-            const transferDataPayload = {
-                userId: selectedLabour.id,
-                LabourID: selectedLabour.LabourID,
-                name: selectedLabour.name,
-                month: selectedLabour.month,
-                fullDate: selectedLabour.fullDate,
-                payStructure: selectedLabour.payStructure,
-                variablePay: selectedLabour.variablePay,
-                variablePayRemark: selectedLabour.variablePayRemark,
-                effectiveDate: selectedLabour.effectiveDate || new Date().toISOString().split('T')[0],
-                payAddedBy: onboardName,
-            };
-
-
-            const response = await axios.post(`${API_BASE_URL}/insentive/upsertVariablePay`, transferDataPayload);
-
-            if (response.status === 200) {
-                setLabours((prevLabours) =>
-                    prevLabours.map((labour) =>
-                        labour.LabourID === selectedLabour.LabourID
-                            ? { ...labour, ...selectedLabour }
-                            : labour
-                    )
-                );
-
-                toast.info(`Labour ${selectedLabour.name} Variable Pay sent for Admin Approval`);
-            } else {
-                toast.error(`Failed to transfer labour. ${response.data.message || "Unexpected error occurred."}`);
-            }
-        } catch (error) {
-            console.error("Error during site transfer:", error);
-            toast.error("Failed to sent for Admin Approval.");
-        }
-    };
-
-    const fetchs = async (labourIds) => {
-        try {
-            const response = await axios.post(`${API_BASE_URL}/api/allTransferSite`, { labourIds });
-            console.log('API Response:', response.data); // Debug response
-            return response.data.map((item) => ({
-                LabourID: item.LabourID,
-                projectNames: item.projectNames,
-                createdAt: item.createdAt,
-            }));
-        } catch (error) {
-            console.error('Error fetching transfer site names:', error);
-            return [];
-        }
-    };
-
-    useEffect(() => {
-        const fetchStatuses = async () => {
-            setLoading(true);
-
-            const labourIds = labours.map((labour) => labour.LabourID);
-            if (labourIds.length > 0) {
-                const statusesData = await fetchs(labourIds);
-                const mappedStatuses = statusesData.reduce((acc, status) => {
-                    acc[status.LabourID] = {
-                        projectNames: status.projectNames || '-',
-                        createdAt: status.createdAt || '-',
-                    };
-                    return acc;
-                }, {});
-                setStatusesSite(mappedStatuses);
-                console.log('Mapped Statuses with Dates:', mappedStatuses); // Debug statuses
-            }
-
-            setLoading(false);
-        };
-
-    }, [labours]);
-
-    const navigateToSalaryGeneration = () => {
-        setNavigating(true);
-        navigate('/SalaryRejester', { state: { selectedMonth, selectedYear } });
-        // setTimeout(() => {
-        //     navigate('/SalaryRejester');
-        // }, 1000);
-    };
-
-    const closePopup = () => {
-        setSelectedLabour(null);
-        setIsPopupOpen(false);
-    };
-
+    // Popup for ViewDetails
+    const closePopup = () => { setSelectedLabour(null); setIsPopupOpen(false); };
     const openPopup = async (labour) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/labours/${labour.id}`);
-            const labourDetails = response.data;
-            const projectName = getProjectDescription(labourDetails.projectName);
-            const department = getDepartmentDescription(labourDetails.department);
-
-            setSelectedLabour({
-                ...labourDetails,
-                projectName,
-                department,
-            });
+            setSelectedLabour({ ...response.data });
             setIsPopupOpen(true);
-        } catch (error) {
-            console.error('Error fetching labour details:', error);
+        } catch {
             toast.error('Error fetching labour details. Please try again.');
         }
     };
 
+    // Navigation
+    const navigateToSalaryGeneration = () => {
+        setNavigating(true);
+        navigate('/SalaryRejester', { state: { selectedMonth, selectedYear } });
+    };
 
+    // Approve confirm dialog
+    const handleApproveConfirmOpen = () => setIsApproveConfirmOpen(true);
+    const handleApproveConfirmClose = () => setIsApproveConfirmOpen(false);
+
+    // Render
     return (
         <Box sx={{ display: "flex", height: "100vh" }}>
             <ToastContainer />
-
-            <Box
-                sx={{
-                    flex: 3,
-                    overflowY: "auto",
-                    padding: "0px 24px",
-                    bgcolor: "#f9f9f9",
-                    borderRight: "1px solid #ddd",
-                    height: "90vh",
-                    scrollbarWidth: "none",
-                    "&::-webkit-scrollbar": {
-                        display: "none",
-                    },
-                }}
-            >
+            {/* Main Content */}
+            <Box sx={{
+                flex: 3, overflowY: "auto", padding: "0px 24px", bgcolor: "#f9f9f9",
+                borderRight: "1px solid #ddd", height: "90vh", scrollbarWidth: "none",
+                "&::-webkit-scrollbar": { display: "none" }
+            }}>
+                {/* Header */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <IconButton
-                            sx={{ marginRight: 2 }}
-                            onClick={navigateToSalaryGeneration} disabled={navigating}
-                        >
+                        <IconButton sx={{ marginRight: 2 }} onClick={navigateToSalaryGeneration} disabled={navigating}>
                             <ArrowBack />
                         </IconButton>
-
                         <Typography variant="h4" sx={{ fontSize: '18px', lineHeight: 3.435 }}>
                             Reports | Run PayRoll
                         </Typography>
@@ -848,211 +410,211 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         handleSearch={handleSearch}
                         searchResults={searchResults}
                         setSearchResults={setSearchResults}
-                        handleSelectLabour={handleSelectLabour}
+                        handleSelectLabour={setSelectedLabour}
                         showResults={false}
                         className="search-bar"
                     />
                 </Box>
 
 
-                {/* === Top: Filters / Selects === */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "flex-end",
-                        gap: 2,
-                        // force ONE row on sm+ (no wrapping); allow wrap only on xs
-                        flexWrap: { xs: "wrap", sm: "nowrap" },
-                        overflowX: { xs: "visible", sm: "auto" }, // scroll horizontally instead of creating a 3rd line
-                        pb: 1,
-                    }}
-                >
-                    <Select
-                        value={selectedMonth}
-                        onChange={(e) => setSelectedMonth(e.target.value)}
-                        displayEmpty
-                        sx={{ minWidth: 140, "& .MuiSelect-select": { py: 1.25 } }}
-                    >
-                        <MenuItem value="" disabled>Select Month</MenuItem>
-                        {months.map(m => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
-                    </Select>
+             {/* === Top: Filters / Selects === */}
+<Box
+  sx={{
+    display: "flex",
+    alignItems: "flex-end",
+    gap: 2,
+    // force ONE row on sm+ (no wrapping); allow wrap only on xs
+    flexWrap: { xs: "wrap", sm: "nowrap" },
+    overflowX: { xs: "visible", sm: "auto" }, // scroll horizontally instead of creating a 3rd line
+    pb: 1,
+  }}
+>
+  <Select
+    value={selectedMonth}
+    onChange={(e) => setSelectedMonth(e.target.value)}
+    displayEmpty
+    sx={{ minWidth: 140, "& .MuiSelect-select": { py: 1.25 } }}
+  >
+    <MenuItem value="" disabled>Select Month</MenuItem>
+    {months.map(m => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
+  </Select>
 
-                    <Select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        displayEmpty
-                        sx={{ minWidth: 140, "& .MuiSelect-select": { py: 1.25 } }}
-                    >
-                        <MenuItem value="" disabled>Select Year</MenuItem>
-                        {[2024, 2025].map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
-                    </Select>
+  <Select
+    value={selectedYear}
+    onChange={(e) => setSelectedYear(e.target.value)}
+    displayEmpty
+    sx={{ minWidth: 140, "& .MuiSelect-select": { py: 1.25 } }}
+  >
+    <MenuItem value="" disabled>Select Year</MenuItem>
+    {[2024, 2025].map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+  </Select>
 
-                    <FormControl sx={{ minWidth: 200 }}>
-                        <InputLabel id="business-unit-label">Business Unit</InputLabel>
-                        <Select
-                            labelId="business-unit-label"
-                            label="Business Unit"
-                            multiple
-                            value={selectedBusinessUnit}
-                            onChange={handleBusinessUnitChange}
-                            displayEmpty
-                            renderValue={(selected) => {
-                                if (!selected || selected.length === 0) return <em>All</em>;
-                                const selectedLabels = projectNames
-                                    .filter(p => selected.includes(p.Id))
-                                    .map(p => p.Business_Unit);
-                                return (
-                                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxHeight: 32, overflowY: "auto" }}>
-                                        {selectedLabels.map((label) => <Chip key={label} label={label} size="small" />)}
-                                    </Box>
-                                );
-                            }}
-                            MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
-                            sx={{ "& .MuiSelect-select": { py: 1.25 } }}
-                        >
-                            <MenuItem value="ALL">
-                                <Checkbox
-                                    checked={isAllSelected}
-                                    indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected}
-                                />
-                                <ListItemText primary="Select All" />
-                            </MenuItem>
-                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
-                                projectNames.map((project) => (
-                                    <MenuItem key={project.Id} value={project.Id}>
-                                        <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
-                                        <ListItemText primary={project.Business_Unit} />
-                                    </MenuItem>
-                                ))
-                            ) : (
-                                <MenuItem disabled>No Projects Available</MenuItem>
-                            )}
-                        </Select>
-                    </FormControl>
+  <FormControl sx={{ minWidth: 200 }}>
+    <InputLabel id="business-unit-label">Business Unit</InputLabel>
+    <Select
+      labelId="business-unit-label"
+      label="Business Unit"
+      multiple
+      value={selectedBusinessUnit}
+      onChange={handleBusinessUnitChange}
+      displayEmpty
+      renderValue={(selected) => {
+        if (!selected || selected.length === 0) return <em>All</em>;
+        const selectedLabels = projectNames
+          .filter(p => selected.includes(p.Id))
+          .map(p => p.Business_Unit);
+        return (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxHeight: 32, overflowY: "auto" }}>
+            {selectedLabels.map((label) => <Chip key={label} label={label} size="small" />)}
+          </Box>
+        );
+      }}
+      MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+      sx={{ "& .MuiSelect-select": { py: 1.25 } }}
+    >
+      <MenuItem value="ALL">
+        <Checkbox
+          checked={isAllSelected}
+          indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected}
+        />
+        <ListItemText primary="Select All" />
+      </MenuItem>
+      {Array.isArray(projectNames) && projectNames.length > 0 ? (
+        projectNames.map((project) => (
+          <MenuItem key={project.Id} value={project.Id}>
+            <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+            <ListItemText primary={project.Business_Unit} />
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem disabled>No Projects Available</MenuItem>
+      )}
+    </Select>
+  </FormControl>
 
-                    <FormControlLabel
-                        sx={{ ml: 1 }}
-                        control={
-                            <Switch
-                                checked={fetchForAll}
-                                onChange={(e) => setFetchForAll(e.target.checked)}
-                                color="primary"
-                            />
-                        }
-                    />
+  <FormControlLabel
+    sx={{ ml: 1 }}
+    control={
+      <Switch
+        checked={fetchForAll}
+        onChange={(e) => setFetchForAll(e.target.checked)}
+        color="primary"
+      />
+    }
+  />
 
-                    {!fetchForAll && (
-                        <TextField
-                            label="Labour ID"
-                            variant="outlined"
-                            size="small"
-                            value={labourId}
-                            onChange={(e) => setLabourId(e.target.value)}
-                            sx={{ minWidth: 150, "& .MuiInputBase-input": { py: 1.25, fontWeight: 500 } }}
-                        />
-                    )}
+  {!fetchForAll && (
+    <TextField
+      label="Labour ID"
+      variant="outlined"
+      size="small"
+      value={labourId}
+      onChange={(e) => setLabourId(e.target.value)}
+      sx={{ minWidth: 150, "& .MuiInputBase-input": { py: 1.25, fontWeight: 500 } }}
+    />
+  )}
 
-                    <Tooltip title={tooltipTitle} arrow disableHoverListener={canClickPayroll} sx={{ ml: "auto" }}>
-                        <span>
-                            <Button
-                                variant="contained"
-                                onClick={fetchSalaryGenerationForDateMonthAll}
-                                disabled={isDisabled}
-                                disableElevation
-                                sx={{
-                                    height: 44,
-                                    px: 3,
-                                    textTransform: "none",
-                                    fontWeight: 700,
-                                    borderRadius: 2,
-                                    letterSpacing: 0.2,
-                                    transition: "transform 120ms ease",
-                                    background: isDisabled
-                                        ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
-                                        : "linear-gradient(90deg, #1db954, #00c896)",
-                                    color: isDisabled ? "#9e9e9e" : "#ffffff",
-                                    boxShadow: isDisabled ? "none" : "0 6px 16px rgba(0,0,0,0.15)",
-                                    "&:hover": {
-                                        transform: isDisabled ? "none" : "translateY(-1px)",
-                                        background: isDisabled
-                                            ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
-                                            : "linear-gradient(90deg, #19a64c, #00b785)",
-                                    },
-                                    cursor: isDisabled ? "not-allowed" : "pointer",
-                                }}
-                                aria-disabled={isDisabled}
-                            >
-                                PayRoll
-                            </Button>
-                        </span>
-                    </Tooltip>
-                </Box>
+  <Tooltip title={tooltipTitle} arrow disableHoverListener={canClickPayroll} sx={{ ml: "auto" }}>
+    <span>
+      <Button
+        variant="contained"
+        onClick={fetchSalaryGenerationForDateMonthAll}
+        disabled={isDisabled}
+        disableElevation
+        sx={{
+          height: 44,
+          px: 3,
+          textTransform: "none",
+          fontWeight: 700,
+          borderRadius: 2,
+          letterSpacing: 0.2,
+          transition: "transform 120ms ease",
+          background: isDisabled
+            ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
+            : "linear-gradient(90deg, #1db954, #00c896)",
+          color: isDisabled ? "#9e9e9e" : "#ffffff",
+          boxShadow: isDisabled ? "none" : "0 6px 16px rgba(0,0,0,0.15)",
+          "&:hover": {
+            transform: isDisabled ? "none" : "translateY(-1px)",
+            background: isDisabled
+              ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
+              : "linear-gradient(90deg, #19a64c, #00b785)",
+          },
+          cursor: isDisabled ? "not-allowed" : "pointer",
+        }}
+        aria-disabled={isDisabled}
+      >
+        PayRoll
+      </Button>
+    </span>
+  </Tooltip>
+</Box>
 
-                {/* === Bottom: Filter / Edit / Pagination row === */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: { xs: "space-between", sm: "flex-end" },
-                        gap: 1.5,
-                        // force ONE row here too
-                        flexWrap: { xs: "wrap", sm: "nowrap" },
-                        pt: 0.5,
-                    }}
-                >
-                    <Button
-                        variant="outlined"
-                        color="secondary"
-                        startIcon={<FilterListIcon />}
-                        onClick={() => setFilterModalOpen(true)}
-                        sx={{ height: 40, px: 2 }}
-                    >
-                        Filter
-                    </Button>
+{/* === Bottom: Filter / Edit / Pagination row === */}
+<Box
+  sx={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: { xs: "space-between", sm: "flex-end" },
+    gap: 1.5,
+    // force ONE row here too
+    flexWrap: { xs: "wrap", sm: "nowrap" },
+    pt: 0.5,
+  }}
+>
+  <Button
+    variant="outlined"
+    color="secondary"
+    startIcon={<FilterListIcon />}
+    onClick={() => setFilterModalOpen(true)}
+    sx={{ height: 40, px: 2 }}
+  >
+    Filter
+  </Button>
 
-                    {selectedLabourIds.length > 0 && (
-                        <Button
-                            variant="outlined"
-                            color="secondary"
-                            startIcon={<EditIcon />}
-                            onClick={() => setModalOpen(true)}
-                            sx={{ height: 40, px: 2 }}
-                        >
-                            Edit ({selectedLabourIds.length})
-                        </Button>
-                    )}
+  {selectedLabourIds.length > 0 && (
+    <Button
+      variant="outlined"
+      color="secondary"
+      startIcon={<EditIcon />}
+      onClick={() => setModalOpen(true)}
+      sx={{ height: 40, px: 2 }}
+    >
+      Edit ({selectedLabourIds.length})
+    </Button>
+  )}
 
-                    <TablePagination
-                        component="div"
-                        rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
-                        count={filteredData.length > 0 ? filteredData.length : labours.length}
-                        rowsPerPage={rowsPerPage}
-                        page={page}
-                        onPageChange={handlePageChange}
-                        onRowsPerPageChange={handleRowsPerPageChange}
-                        sx={{
-                            ml: "auto",
-                            height: 40,
-                            "& .MuiTablePagination-toolbar": {
-                                minHeight: 40,
-                                px: 0,
-                                gap: 1,
-                                flexWrap: "nowrap",
-                            },
-                            "& .MuiTablePagination-selectLabel": {
-                                mr: 1,
-                                display: { xs: "none", sm: "inline-flex" },
-                            },
-                            "& .MuiTablePagination-displayedRows": {
-                                ml: 1,
-                                minWidth: 120,
-                            },
-                            "& .MuiTablePagination-select": { py: 0.5 },
-                            "& .MuiInputBase-root": { height: 34, mt: "-2px" },
-                            "& .MuiTablePagination-actions": { ml: 0.5 },
-                        }}
-                    />
-                </Box>
+  <TablePagination
+    component="div"
+    rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
+    count={filteredData.length > 0 ? filteredData.length : labours.length}
+    rowsPerPage={rowsPerPage}
+    page={page}
+    onPageChange={handlePageChange}
+    onRowsPerPageChange={handleRowsPerPageChange}
+    sx={{
+      ml: "auto",
+      height: 40,
+      "& .MuiTablePagination-toolbar": {
+        minHeight: 40,
+        px: 0,
+        gap: 1,
+        flexWrap: "nowrap",
+      },
+      "& .MuiTablePagination-selectLabel": {
+        mr: 1,
+        display: { xs: "none", sm: "inline-flex" },
+      },
+      "& .MuiTablePagination-displayedRows": {
+        ml: 1,
+        minWidth: 120,
+      },
+      "& .MuiTablePagination-select": { py: 0.5 },
+      "& .MuiInputBase-root": { height: 34, mt: "-2px" },
+      "& .MuiTablePagination-actions": { ml: 0.5 },
+    }}
+  />
+</Box>
 
 
 
@@ -1073,26 +635,11 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     <Box sx={{ width: '100%' }}>
                         <Table stickyHeader sx={{ minWidth: 800 }}>
                             <TableHead>
-                                <TableRow
-                                    sx={{
-                                        '& th': {
-                                            padding: '12px',
-                                            '@media (max-width: 600px)': {
-                                                padding: '10px',
-                                            },
-                                            backgroundColor: 'white', // Ensure the background color is set
-                                            position: 'sticky',
-                                            top: 0,
-                                            zIndex: 1,
-                                        },
-                                        '& td': {
-                                            padding: '16px 9px', // Applying padding to all td elements
-                                            '@media (max-width: 600px)': {
-                                                padding: '14px 8px', // Adjust padding for smaller screens if needed
-                                            },
-                                        },
-                                    }}
-                                >
+                                <TableRow sx={{
+                                    '& th': {
+                                        padding: '12px', backgroundColor: 'white', position: 'sticky', top: 0, zIndex: 1,
+                                    }
+                                }}>
                                     <TableCell>Sr No</TableCell>
                                     <TableCell>Labour ID</TableCell>
                                     <TableCell>Name</TableCell>
@@ -1111,17 +658,10 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                     <TableCell>Net Salary</TableCell>
                                 </TableRow>
                             </TableHead>
-                            <TableBody
-                                sx={{
-                                    '& td': {
-                                        padding: '16px 9px',
-                                        '@media (max-width: 600px)': { padding: '14px 8px' },
-                                    },
-                                }}
-                            >
+                            <TableBody>
                                 {loading ? (
                                     <TableRow>
-                                        <TableCell colSpan={13} align="center">
+                                        <TableCell colSpan={16} align="center">
                                             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                                 <TableSkeletonLoading rows={9} columns={13} sx={{ maxWidth: '300px' }} />
                                             </Box>
@@ -1129,13 +669,9 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                     </TableRow>
                                 ) : noDataAvailable ? (
                                     <TableRow>
-                                        <TableCell colSpan={13} align="center">
+                                        <TableCell colSpan={16} align="center">
                                             <Box display="flex" flexDirection="column" alignItems="center">
-                                                <img
-                                                    src={NoData}
-                                                    alt="No Data Available"
-                                                    style={{ width: "250px", opacity: 0.7 }}
-                                                />
+                                                <img src={NoData} alt="No Data Available" style={{ width: "250px", opacity: 0.7 }} />
                                                 <Typography variant="h6" sx={{ mt: 2, color: "#777" }}>
                                                     No labour salary available for this month.
                                                 </Typography>
@@ -1145,11 +681,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 ) : (paginatedLabours.map((labour, index) => (
                                     <TableRow key={labour.LabourID}>
                                         <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                        {/* <TableCell>{labour.LabourID}</TableCell> */}
-                                        <TableCell
-                                            onClick={() => openPopup(labour)} // Open modal with selected labour details
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
+                                        <TableCell onClick={() => openPopup(labour)} sx={{ cursor: "pointer", color: "blue" }}>
                                             {labour.LabourID}
                                         </TableCell>
                                         <TableCell>{labour.name || '-'}</TableCell>
@@ -1161,210 +693,35 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                                 : labour.dailyWageRate}
                                         </TableCell>
                                         <TableCell>{labour.daysInSlice}</TableCell>
-                                        <TableCell
-                                            onClick={() => handleOpenModal(labour)}
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
-                                            {/* {labour.totalHolidaysConsider}, {labour.totalHolidaysInMonth}, {labour.additionalPresent}, {labour.additionalHalf}, {labour.presentDays} */}
-                                            {labour.totalHolidaysConsider > 0 ? ((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0)) : ((labour.presentDays || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0))}
+                                        <TableCell onClick={() => handleOpenModal(labour)} sx={{ cursor: "pointer", color: "blue" }}>
+                                            {labour.totalHolidaysConsider > 0
+                                                ? ((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0))
+                                                : ((labour.presentDays || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0))}
                                         </TableCell>
                                         <TableCell>{labour.totalOvertimeHours}</TableCell>
                                         <TableCell>{labour.overtimePay}</TableCell>
                                         <TableCell>{labour.weeklyOffPay}</TableCell>
-                                        <TableCell
-                                            onClick={() => handleOpenModalBonus(labour)}
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
+                                        <TableCell onClick={() => handleOpenModalBonus(labour)} sx={{ cursor: "pointer", color: "blue" }}>
                                             {labour.bonuses}
                                         </TableCell>
-                                        <TableCell
-                                            onClick={() => handleOpenModalDeduction(labour)}
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
+                                        <TableCell onClick={() => handleOpenModalDeduction(labour)} sx={{ cursor: "pointer", color: "blue" }}>
                                             {labour.advancePay}
                                         </TableCell>
-                                        <TableCell
-                                            onClick={() => handleOpenModalDeduction(labour)}
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
+                                        <TableCell onClick={() => handleOpenModalDeduction(labour)} sx={{ cursor: "pointer", color: "blue" }}>
                                             {labour.debit}
                                         </TableCell>
                                         <TableCell>{labour.fullResponse.grossPay}</TableCell>
-                                        {/* <TableCell>{labour.netPay}</TableCell> */}
-                                        <TableCell
-                                            onClick={() => handleOpenModalNetpay(labour)}
-                                            sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
-                                        >
+                                        <TableCell onClick={() => handleOpenModalNetpay(labour)} sx={{ cursor: "pointer", color: "blue" }}>
                                             {labour.netPay}
                                         </TableCell>
-
                                     </TableRow>
                                 )))}
                             </TableBody>
                         </Table>
                     </Box>
                 </TableContainer>
-                <Modal open={modalOpen} onClose={() => setModalOpen(false)} aria-labelledby="attendance-details-modal">
-                    <Box sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        width: 400,
-                        bgcolor: "background.paper",
-                        boxShadow: 24,
-                        p: "20px 70px 20px 70px",
-                        borderRadius: 2
-                    }}>
-                        <Typography
-                            variant="h6"
-                            sx={{ mb: 4, fontSize: { xs: "1rem", sm: "1.25rem" } }}
-                        >
-                            Labour ID: {selectedLabour?.LabourID || "N/A"} <br />
-                            Name:   {selectedLabour?.name || "N/A"}
-                        </Typography>
-
-                        <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 1,
-                            }}
-                        >
-                            {[
-                                { label: "Present Days", value: (selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0), color: "green" },
-                                { label: "Half Days", value: (selectedLabour?.halfDays || 0) + (selectedLabour?.additionalHalf || 0), color: "green" },
-                                { label: "WeeklyOff Days", value: selectedLabour?.WeeklyOffDays || 0, color: "green" },
-                                { label: "Holiday Days", value: selectedLabour?.totalHolidaysInMonth || 0, color: "green" },
-                                { label: "Absent Days", value: selectedLabour?.absentDays || 0, color: "red" },
-                                { label: "Miss Punch Days", value: selectedLabour?.missPunchDays || 0, color: "red" },
-                            ].map((item) => (
-                                <Box key={item.label} sx={{ display: "flex", justifyContent: "space-between" }}>
-                                    <Typography sx={{ color: item.color, fontWeight: "bold" }}>{item.label}:</Typography>
-                                    <Typography sx={{ color: item.color }}>{item.value}</Typography>
-                                </Box>
-                            ))}<hr/>
-
-                            <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
-                                <Typography sx={{ color: "green", fontWeight: "bold" }}>Total Salary Days:</Typography>
-                                <Typography sx={{ color: "green", fontWeight: "bold" }}>
-                                    {(selectedLabour?.presentDays || 0) +
-                                        (selectedLabour?.additionalPresent || 0) +
-                                        (selectedLabour?.halfDays || 0) +
-                                        (selectedLabour?.additionalHalf || 0) +
-                                        (selectedLabour?.WeeklyOffDays || 0) +
-                                        (selectedLabour?.totalHolidaysInMonth || 0)}
-                                </Typography>
-                            </Box><hr/>
-
-                            {/* Total Days */}
-                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                                <Typography sx={{ fontWeight: "bold" }}>Total Days:</Typography>
-                                <Typography sx={{ fontWeight: "bold" }}>
-                                    {(selectedLabour?.presentDays || 0) +
-                                        (selectedLabour?.additionalPresent || 0) +
-                                        (selectedLabour?.absentDays || 0) +
-                                        (selectedLabour?.halfDays || 0) +
-                                        (selectedLabour?.additionalHalf || 0) +
-                                        (selectedLabour?.missPunchDays || 0) +
-                                        (selectedLabour?.totalHolidaysInMonth || 0) +
-                                        (selectedLabour?.WeeklyOffDays || 0)}
-                                </Typography>
-                            </Box>
-                        </Box>
-
-
-                        {/* <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 1,
-                            }}
-                        >
-
-                            <Typography sx={{ color: "green" }}>
-                                <strong style={{ marginRight: "12%" }}>Present Days:</strong>{" "}
-                                {(selectedLabour?.presentDays || 0) +
-                                    (selectedLabour?.additionalPresent || 0)}
-                            </Typography>
-
-                            <Typography sx={{ color: "green" }}>
-                                <strong style={{ marginRight: "18.5%" }}>Half Days:</strong>{" "}
-                                {(selectedLabour?.halfDays || 0) +
-                                    (selectedLabour?.additionalHalf || 0)}
-                            </Typography>
-
-                            <Typography sx={{ color: "green" }} >
-                                <strong style={{ marginRight: "7%" }}>WeeklyOff Days:</strong>{" "}
-                                {selectedLabour?.WeeklyOffDays || 0}
-                            </Typography>
-
-                            <Typography sx={{ color: "green" }}>
-                                <strong style={{ marginRight: "12.5%" }}>Holiday Days:</strong>{" "}
-                                {selectedLabour?.totalHolidaysInMonth || 0}
-                            </Typography>
-
-                            <Typography sx={{ color: "red" }}>
-                                <strong style={{ marginRight: "13%" }}>Absent Days:</strong>{" "}
-                                {selectedLabour?.absentDays || 0}
-                            </Typography>
-
-                            <Typography sx={{ color: "red" }}>
-                                <strong style={{ marginRight: "5%" }}>Miss Punch Days:</strong>{" "}
-                                {selectedLabour?.missPunchDays || 0}
-                            </Typography>
-
-                            <Typography
-                                sx={{
-                                    color: "green",
-                                    fontWeight: "bold",
-                                    mt: 1,
-                                }}
-                            >
-                                <strong>Total Salary Days:</strong>{" "}
-                                {(selectedLabour?.presentDays || 0) +
-                                    (selectedLabour?.additionalPresent || 0) +
-                                    (selectedLabour?.halfDays || 0) +
-                                    (selectedLabour?.additionalHalf || 0) +
-                                    (selectedLabour?.WeeklyOffDays || 0) +
-                                    (selectedLabour?.totalHolidaysInMonth || 0)}
-                            </Typography>
-
-                            <Typography
-                                sx={{
-                                    fontWeight: "bold",
-                                    color: "black",
-                                }}
-                            >
-                                <strong>Total Days:</strong>{" "}
-                                {(selectedLabour?.presentDays || 0) +
-                                    (selectedLabour?.additionalPresent || 0) +
-                                    (selectedLabour?.absentDays || 0) +
-                                    (selectedLabour?.halfDays || 0) +
-                                    (selectedLabour?.additionalHalf || 0) +
-                                    (selectedLabour?.missPunchDays || 0) +
-                                    (selectedLabour?.totalHolidaysInMonth || 0) +
-                                    (selectedLabour?.WeeklyOffDays || 0)}
-                            </Typography>
-                        </Box> */}
-
-
-                        <Button variant="contained" sx={{
-                            mt: 3, float: 'right',
-                            backgroundColor: '#fce4ec',
-                            color: 'rgb(255, 100, 100)',
-                            width: '100px',
-                            '&:hover': {
-                                backgroundColor: '#f8bbd0',
-                            },
-                        }} onClick={handleCloseModal}>
-                            Close
-                        </Button>
-                    </Box>
-                </Modal>
-
-                {/* --------------------------------------------------------------------------- */}
-                <Modal open={modalOpenBonus} onClose={() => setModalOpenBonus(false)} aria-labelledby="attendance-details-modal">
+                {/* Modals */}
+                <Modal open={modalOpen} onClose={handleCloseModal}>
                     <Box sx={{
                         position: "absolute",
                         top: "50%",
@@ -1383,6 +740,94 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             Labour ID: {selectedLabour?.LabourID || "N/A"}
                         </Typography>
 
+<Box
+  sx={{
+    display: "flex",
+    flexDirection: "column",
+    gap: 1,
+  }}
+>
+  <Typography>
+    <strong style={{ marginRight: "25%" }}>Name:</strong>{" "}
+    {selectedLabour?.name || "N/A"}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "12%" }}>Present Days:</strong>{" "}
+    {(selectedLabour?.presentDays || 0) +
+      (selectedLabour?.additionalPresent || 0)}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "13%" }}>Absent Days:</strong>{" "}
+    {selectedLabour?.absentDays || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "18.5%" }}>Half Days:</strong>{" "}
+    {(selectedLabour?.halfDays || 0) +
+      (selectedLabour?.additionalHalf || 0)}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "5%" }}>Miss Punch Days:</strong>{" "}
+    {selectedLabour?.missPunchDays || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "12.5%" }}>Holiday Days:</strong>{" "}
+    {selectedLabour?.totalHolidaysInMonth || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "13.5%" }}>Total Days:</strong>{" "}
+    {(selectedLabour?.presentDays || 0) +
+      (selectedLabour?.additionalPresent || 0) +
+      (selectedLabour?.absentDays || 0) +
+      (selectedLabour?.halfDays || 0) +
+      (selectedLabour?.additionalHalf || 0) +
+      (selectedLabour?.missPunchDays || 0) + (selectedLabour?.totalHolidaysInMonth || 0)}
+  </Typography>
+</Box>
+
+
+
+
+                        {/* <Box sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                        }}>
+                            <Typography><strong style={{ marginRight: '25%' }}>Name:</strong> {selectedLabour?.name || "N/A"}</Typography>
+                            <Typography><strong style={{ marginRight: '12%' }}>Present Days:</strong> {(selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0) - (selectedLabour?.totalHolidaysConsider || 0)}</Typography>
+                            <Typography><strong style={{ marginRight: '13%' }}>Absent Days:</strong> {selectedLabour?.absentDays || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '18.5%' }}>Half Days:</strong> {(selectedLabour?.halfDays || 0) - (selectedLabour?.additionalHalf || 0)}</Typography>
+                            <Typography><strong style={{ marginRight: '5%' }}>Miss Punch Days:</strong> {selectedLabour?.missPunchDays || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '12.5%' }}>Holiday Days:</strong> {selectedLabour?.totalHolidaysInMonth || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '13.5%' }}>Total Days:</strong> {(selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0) - (selectedLabour?.totalHolidaysConsider || 0) + (selectedLabour?.absentDays || 0) + (selectedLabour?.halfDays || 0) + (selectedLabour?.missPunchDays || 0) + (selectedLabour?.totalHolidaysInMonth || 0)}</Typography>
+                        </Box> */}
+
+                        <Button variant="contained" sx={{
+                            mt: 3, float: 'right',
+                            backgroundColor: '#fce4ec',
+                            color: 'rgb(255, 100, 100)',
+                            width: '100px',
+                            '&:hover': {
+                                backgroundColor: '#f8bbd0',
+                            },
+                        }} onClick={handleCloseModal}>
+                            Close
+                        </Button>
+                    </Box>
+                </Modal>
+                <Modal open={modalOpenBonus} onClose={handleCloseModalBonus}>
+                    <Box sx={{
+                        position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+                        width: 400, bgcolor: "background.paper", boxShadow: 24, p: 4, borderRadius: 2
+                    }}>
+                        <Typography variant="h6" sx={{ mb: 4, fontSize: { xs: "1rem", sm: "1.25rem" } }}>
+                            Labour ID: {selectedLabour?.LabourID || "N/A"}
+                        </Typography>
                         <Box sx={{
                             display: "flex",
                             flexDirection: "column",
@@ -1392,7 +837,6 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             <Typography><strong style={{ marginRight: '12%' }}>Incentive:</strong> {selectedLabour?.incentivePay || 0}</Typography>
                             <Typography><strong style={{ marginRight: '13%' }}>Incentive Remarks:</strong> {selectedLabour?.incentiveRemarks || '-'}</Typography>
                         </Box>
-
                         <Button variant="contained" sx={{
                             mt: 3, float: 'right',
                             backgroundColor: '#fce4ec',
@@ -1406,8 +850,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         </Button>
                     </Box>
                 </Modal>
-                {/* --------------------------------------------------------------------------- */}
-                <Modal open={modalOpenDeduction} onClose={() => setModalOpenDeduction(false)} aria-labelledby="attendance-details-modal">
+                <Modal open={modalOpenDeduction} onClose={handleCloseModalDeduction}>
                     <Box sx={{
                         position: "absolute",
                         top: "50%",
@@ -1451,9 +894,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         </Button>
                     </Box>
                 </Modal>
-                {/* --------------------------------------------------------------------------- */}
-
-                <Modal open={modalOpenNetpay} onClose={handleCloseModalNetpay} aria-labelledby="attendance-details-modal">
+                <Modal open={modalOpenNetpay} onClose={handleCloseModalNetpay}>
                     <Box sx={modalStyle}>
                         {/* Header */}
                         <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -1476,7 +917,6 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 marginBottom: '20px',
                                 padding: "12px 30px",
                                 clipPath: "polygon(19% 0%, 100% 0%, 100% 100%, 0% 100%)",
-                                // clipPath: "polygon(100% 0%, 0% 0%, 15% 100%, 100% 100%)",
                                 borderRadius: "4px",
                                 display: "inline-block"
                             }}>
@@ -1633,107 +1073,103 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         {/* Action Buttons */}
                         <Box display="flex" justifyContent="center" gap={2} sx={{ m: "20px 0px" }}>
                             <Button variant="contained" color="primary">Download</Button>
-                            {/* <Button variant="contained" color="secondary">View Details</Button> */}
-                            <Button
-                                variant="contained"
-                                className="modal-close-button"
-                                onClick={handleCloseModalNetpay}
+                            <Button variant="contained" className="modal-close-button" onClick={handleCloseModalNetpay}>Close</Button>
+                        </Box>
+                    </Box>
+                </Modal>
+                {/* ViewDetails Modal */}
+                <Modal open={isPopupOpen} onClose={closePopup} closeAfterTransition>
+                    <Fade in={isPopupOpen}>
+                        <div className="modal">
+                            {selectedLabour && (
+                                <ViewDetails selectedLabour={selectedLabour} onClose={closePopup} />
+                            )}
+                        </div>
+                    </Fade>
+                </Modal>
+                {/* Filter Modal */}
+                <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
+                    <Box sx={{
+                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                        width: 400, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 24, p: 4,
+                    }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6" gutterBottom>Filter Options</Typography>
+                            <Button onClick={() => setFilterModalOpen(false)}><CloseIcon /></Button>
+                        </Box>
+                        {/* Business Unit */}
+                        <Box sx={{ mb: 2 }}>
+                            <Typography variant="body1">Business Unit</Typography>
+                            <Select
+                                fullWidth multiple value={selectedBusinessUnit} onChange={handleBusinessUnitChange} displayEmpty
+                                renderValue={selected => {
+                                    if (selected.length === 0) return <em>All</em>;
+                                    const selectedLabels = projectNames.filter(project => selected.includes(project.Id)).map(project => project.Business_Unit);
+                                    return selectedLabels.join(', ');
+                                }} sx={{ mt: 1 }}
                             >
-                                Close
+                                <MenuItem value="ALL">
+                                    <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
+                                    <ListItemText primary="Select All" />
+                                </MenuItem>
+                                {projectNames.map((project) => (
+                                    <MenuItem key={project.Id} value={project.Id}>
+                                        <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                        <ListItemText primary={project.Business_Unit} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </Box>
+                        {/* Department */}
+                        <Box sx={{ mb: 2 }}>
+                            <Typography variant="body1">Department</Typography>
+                            <Select
+                                fullWidth multiple value={selectedDepartment} onChange={handleDepartmentChange} displayEmpty
+                                renderValue={selected => {
+                                    if (selected.length === 0) return <em>All</em>;
+                                    const selectedLabels = departments.filter(dept => selected.includes(dept.Id)).map(dept => dept.Description);
+                                    return selectedLabels.join(', ');
+                                }} sx={{ mt: 1 }}
+                            >
+                                <MenuItem value="ALL">
+                                    <Checkbox checked={isAllSelectedDep} indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep} />
+                                    <ListItemText primary="Select All" />
+                                </MenuItem>
+                                {departments.map((department) => (
+                                    <MenuItem key={department.Id} value={department.Id}>
+                                        <Checkbox checked={selectedDepartment.includes(department.Id)} />
+                                        <ListItemText primary={department.Description} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                            <Button variant="outlined" color="secondary" onClick={handleResetFilter}>
+                                Reset
+                            </Button>
+                            <Button variant="contained" sx={{
+                                backgroundColor: "rgb(229, 255, 225)", color: "rgb(43, 217, 144)", width: "100px",
+                                marginRight: "10px", marginBottom: "3px", "&:hover": { backgroundColor: "rgb(229, 255, 225)" },
+                            }} onClick={handleApplyFilters}>
+                                Apply
                             </Button>
                         </Box>
                     </Box>
                 </Modal>
-
-
-
-
-
-                {/* Dialog for Confirmation */}
-                <Dialog open={openDialogSite} onClose={() => setOpenDialogSite(false)}>
-                    <DialogTitle>Confirm Variable Pay</DialogTitle>
-                    <DialogContent>
-                        <DialogContentText id="EditLabour-dialog-description">
-                            Are you sure you want Variable Pay Labour{" "}
-                            <span style={{ fontWeight: "bold" }}>{selectedLabour?.name} </span>
-                            with JCcode{" "}
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button
-                            onClick={() => setOpenDialogSite(false)}
-                            variant="outlined"
-                            color="secondary"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={confirmTransfer}
-                            sx={{
-                                backgroundColor: "rgb(229, 255, 225)",
-                                color: "rgb(43, 217, 144)",
-                                width: "100px",
-                                marginRight: "10px",
-                                marginBottom: "3px",
-                                "&:hover": {
-                                    backgroundColor: "rgb(229, 255, 225)",
-                                },
-                            }}
-                            autoFocus
-                        >
-                            Add Pay
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
             </Box>
-
-            <Box
-                sx={{
-                    flex: 1,
-                    paddingTop: 3,
-                    bgcolor: "#f5f6fa", // Light background color for sidebar
-                    boxShadow: "-2px 0px 5px rgba(0, 0, 0, 0.1)",
-                    overflowY: "auto", // Enable vertical scrolling
-                    maxWidth: "260px",
-                    height: "90vh",
-                    display: "flex",
-                    padding: "0px 10px",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    scrollbarWidth: "none", // Firefox hides scrollbar
-                    "&::-webkit-scrollbar": {
-                        display: "none", // Chrome, Safari, and Edge hide scrollbar
-                    },
-                }}
-            >
-                <Box
-                    display="flex"
-                    justifyContent="center"
-                    sx={{ margin: "70px 0px 20px 0px" }}
-                >
-
-
-                    <Box
-                        sx={{
-                            width: "100%",
-                            gap: "20px",
-                            display: "flex",
-                            flexDirection: { xs: "column", sm: "column" }, // Stack selectors vertically on smaller screens, horizontally on larger
-                            alignItems: "center", // Center align items for better visual alignment
-                            justifyContent: "flex-start", // Align items to the start of the container
-                            padding: "20px", // Add some padding around the controls for spacing
-                        }}
-                    >
-                        <Select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            displayEmpty
-                            sx={{
-                                width: "100%", // Full width to fill the container space
-                                marginBottom: { xs: "20px", sm: "0" } // Add bottom margin on small screens
-                            }}
-                        >
+            {/* Sidebar */}
+            <Box sx={{
+                flex: 1, paddingTop: 3, bgcolor: "#f5f6fa", boxShadow: "-2px 0px 5px rgba(0, 0, 0, 0.1)",
+                overflowY: "auto", maxWidth: "260px", height: "90vh", display: "flex", padding: "0px 10px",
+                flexDirection: "column", alignItems: "center", scrollbarWidth: "none",
+                "&::-webkit-scrollbar": { display: "none" },
+            }}>
+                <Box display="flex" justifyContent="center" sx={{ margin: "70px 0px 20px 0px" }}>
+                    <Box sx={{
+                        width: "100%", gap: "20px", display: "flex", flexDirection: { xs: "column", sm: "column" },
+                        alignItems: "center", justifyContent: "flex-start", padding: "20px",
+                    }}>
+                        <Select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} displayEmpty sx={{ width: "100%", marginBottom: { xs: "20px", sm: "0" } }}>
                             <MenuItem value="" disabled>
                                 Select Month
                             </MenuItem>
@@ -1743,16 +1179,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 </MenuItem>
                             ))}
                         </Select>
-
-                        <Select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(e.target.value)}
-                            displayEmpty
-                            sx={{
-                                width: "100%", // Ensure this also takes full width
-                                marginBottom: { xs: "20px", sm: "0" } // Margin bottom on small screens
-                            }}
-                        >
+                        <Select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} displayEmpty sx={{ width: "100%", marginBottom: { xs: "20px", sm: "0" } }}>
                             <MenuItem value="" disabled>
                                 Select Year
                             </MenuItem>
@@ -1765,22 +1192,15 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                         <Typography variant="h4" sx={{ fontSize: '15px', lineHeight: 1.435, background: '#d89d9d', padding: '15px' }}>
                             Finalize your payroll to view the required amount.
                         </Typography>
-
                         <Button
                             variant="contained"
                             onClick={() => {
                                 exportPayrollData(salaryData);
-                                setIsFinalizeEnabled(prev => !prev); // toggle finalize enabled/disabled
+                                setIsFinalizeEnabled(prev => !prev);
                             }}
                             sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                height: "40px",
-                                width: "100%",
-                                backgroundColor: "#EFE6F7",
-                                color: "#8236BC",
-                                '&:hover': {
-                                    backgroundColor: "#EFE6F7",
-                                },
+                                fontSize: { xs: "0.8rem", sm: "1rem" }, height: "40px", width: "100%",
+                                backgroundColor: "#EFE6F7", color: "#8236BC", '&:hover': { backgroundColor: "#EFE6F7" },
                                 marginBottom: { xs: "20px", sm: "0" }
                             }}
                         >
@@ -1791,18 +1211,13 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 variant="contained"
                                 onClick={() => {
                                     handleApproveConfirmOpen();
-                                    setIsFinalizeClicked(true); // permanently disable after 1st click
+                                    setIsFinalizeClicked(true);
                                 }}
                                 disabled={!isFinalizeEnabled || isFinalizeClicked}
                                 sx={{
-                                    fontSize: { xs: "0.8rem", sm: "1rem" },
-                                    height: "40px",
-                                    width: "100%",
-                                    backgroundColor: "rgb(229, 255, 225)",
-                                    color: "rgb(43, 217, 144)",
-                                    '&:hover': {
-                                        backgroundColor: "rgb(229, 255, 225)",
-                                    },
+                                    fontSize: { xs: "0.8rem", sm: "1rem" }, height: "40px", width: "100%",
+                                    backgroundColor: "rgb(229, 255, 225)", color: "rgb(43, 217, 144)",
+                                    '&:hover': { backgroundColor: "rgb(229, 255, 225)" },
                                     marginBottom: { xs: "20px", sm: "0" },
                                     opacity: (!isFinalizeEnabled || isFinalizeClicked) ? 0.5 : 1,
                                     cursor: (!isFinalizeEnabled || isFinalizeClicked) ? 'not-allowed' : 'pointer'
@@ -1811,14 +1226,10 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 Finalize PayRoll
                             </Button>
                         )}
-
                     </Box>
-
-
-
                 </Box>
             </Box>
-
+            {/* Approve Confirm Dialog */}
             <Dialog
                 open={isApproveConfirmOpen}
                 onClose={handleApproveConfirmClose}
@@ -1855,7 +1266,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-
+            {/* History Modal */}
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
                 <Box
                     sx={{
@@ -2013,23 +1424,19 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     </Box>
                 </Box>
             </Modal>
-
-
             {/* ===== FILTER MODAL ===== */}
             <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 400,
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        boxShadow: 24,
-                        p: 4,
-                    }}
-                >
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 400,
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    boxShadow: 24,
+                    p: 4,
+                }}>
                     {/* Modal Header with Title and Close Button */}
                     <Box
                         sx={{
@@ -2050,29 +1457,6 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     {/* Business Unit Filter using projectNames from props */}
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="body1">Business Unit</Typography>
-                        {/* <Select
-              fullWidth
-              value={selectedBusinessUnit}
-              onChange={(e) => setSelectedBusinessUnit(e.target.value)}
-              displayEmpty
-              sx={{ mt: 1 }}
-            >
-              <MenuItem value="">
-                <em>All</em>
-              </MenuItem>
-              {Array.isArray(projectNames) && projectNames.length > 0 ? (
-                projectNames.map((project) => (
-                  <MenuItem key={project.Id} value={project.Id}>
-                    {project.Business_Unit}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem value="Unknown" disabled>
-                  No Projects Available
-                </MenuItem>
-              )}
-            </Select> */}
-
                         <Select
                             fullWidth
                             multiple
@@ -2092,18 +1476,12 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 <Checkbox checked={isAllSelected} indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected} />
                                 <ListItemText primary="Select All" />
                             </MenuItem>
-                            {Array.isArray(projectNames) && projectNames.length > 0 ? (
-                                projectNames.map((project) => (
-                                    <MenuItem key={project.Id} value={project.Id}>
-                                        <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
-                                        <ListItemText primary={project.Business_Unit} />
-                                    </MenuItem>
-                                ))
-                            ) : (
-                                <MenuItem value="Unknown" disabled>
-                                    No Projects Available
+                            {projectNames.map((project) => (
+                                <MenuItem key={project.Id} value={project.Id}>
+                                    <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+                                    <ListItemText primary={project.Business_Unit} />
                                 </MenuItem>
-                            )}
+                            ))}
                         </Select>
                     </Box>
 
@@ -2125,25 +1503,15 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             sx={{ mt: 1 }}
                         >
                             <MenuItem value="ALL">
-                                <Checkbox
-                                    checked={isAllSelectedDep}
-                                    indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep}
-                                />
+                                <Checkbox checked={isAllSelectedDep} indeterminate={selectedDepartment.length > 0 && !isAllSelectedDep} />
                                 <ListItemText primary="Select All" />
                             </MenuItem>
-
-                            {Array.isArray(departments) && departments.length > 0 ? (
-                                departments.map((department) => (
-                                    <MenuItem key={department.Id} value={department.Id}>
-                                        <Checkbox checked={selectedDepartment.includes(department.Id)} />
-                                        <ListItemText primary={department.Description} />
-                                    </MenuItem>
-                                ))
-                            ) : (
-                                <MenuItem value="Unknown" disabled>
-                                    No Department Available
+                            {departments.map((department) => (
+                                <MenuItem key={department.Id} value={department.Id}>
+                                    <Checkbox checked={selectedDepartment.includes(department.Id)} />
+                                    <ListItemText primary={department.Description} />
                                 </MenuItem>
-                            )}
+                            ))}
                         </Select>
                     </Box>
 
@@ -2153,33 +1521,13 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             Reset
                         </Button>
                         <Button variant="contained" sx={{
-                            backgroundColor: "rgb(229, 255, 225)",
-                            color: "rgb(43, 217, 144)",
-                            width: "100px",
-                            marginRight: "10px",
-                            marginBottom: "3px",
-                            "&:hover": {
-                                backgroundColor: "rgb(229, 255, 225)",
-                            },
+                            backgroundColor: "rgb(229, 255, 225)", color: "rgb(43, 217, 144)", width: "100px",
+                            marginRight: "10px", marginBottom: "3px", "&:hover": { backgroundColor: "rgb(229, 255, 225)" },
                         }} onClick={handleApplyFilters}>
                             Apply
                         </Button>
                     </Box>
                 </Box>
-            </Modal>
-
-            <Modal
-                open={isPopupOpen}
-                onClose={closePopup}
-                closeAfterTransition
-            >
-                <Fade in={isPopupOpen}>
-                    <div className="modal">
-                        {selectedLabour && (
-                            <ViewDetails selectedLabour={selectedLabour} onClose={closePopup} />
-                        )}
-                    </div>
-                </Fade>
             </Modal>
         </Box>
     );
