@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -79,14 +78,14 @@ const ExportAttendance = () => {
                 fileExt = 'pdf';
             }
 
-        
-
+            // Add maxAbsentDays parameter to filter those NOT absent more than 30 days
             const response = await axios.get(url, {
                 params: {
                     projectName: selectedProjectIds.join(','),
                     department: selectedDepartments.join(','),
                     startDate,
-                    endDate
+                    endDate,
+                    maxAbsentDays: 30 // <-- Only include those NOT absent more than 30 days
                 },
                 responseType: 'blob',
             });

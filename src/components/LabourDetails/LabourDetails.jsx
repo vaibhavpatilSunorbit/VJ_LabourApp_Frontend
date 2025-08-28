@@ -204,11 +204,6 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
   const JIH_DEPARTMENTS = [336, 337, 338, 339, 340, 341, 342];
   const approveLabour = async (id, departmentId) => {
     try {
-      // const { data: { nextID } } = await axios.get(`${API_BASE_URL}/api/labours/next-id`,{params: { departmentId }});
-      // const labourID = nextID;
-
-      // const labourResponse = await axios.get(`${API_BASE_URL}/api/labours/${id}`);
-      // const labour = labourResponse.data;
 
       const { data: labour } = await axios.get(
         `${API_BASE_URL}/api/labours/${id}`
@@ -801,31 +796,6 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     }
   });
 
-  // const getDepartmentDescription = (departmentId) => {
-  //   if (!departments || departments.length === 0) {
-  //     return 'Unknown';
-  //   }
-  //   const department = departments.find(dept => dept.Id === Number(departmentId));
-  //   console.log("department new--->", department);
-  //   return department ? department.Description : 'Unknown';
-  // };
-
-
-
-  // const getProjectDescription = (projectId) => {
-  //   if (!Array.isArray(projectNames) || projectNames.length === 0) {
-  //     return 'Unknown';
-  //   }
-  //   if (projectId === undefined || projectId === null || projectId === '') {
-  //     return 'Unknown';
-  //   }
-
-  //   const project = projectNames.find(proj => proj.Id === Number(projectId));
-  //   console.log("project new--->", project);
-  //   return project ? project.Business_Unit : 'Unknown';
-  // };
-
-
   const getDepartmentDescription = (departmentId) => {
     if (!departmentsNew.length) return 'Unknown';
     const dept = departmentsNew.find(d => d.Id === Number(departmentId));
@@ -904,68 +874,7 @@ const LabourDetails = ({ departments, projectNames, labour, labourlist }) => {
     }
   }, [searchResults, filteredIconLabours, labours]);
 
-  // useEffect(() => {
-  //   const fetchStatuses = async (labourIds) => {
-  //     try {
-  //       const response = await axios.post(`${API_BASE_URL}/api/labours/getCombinedStatuses`, { labourIds });
-  //       return response.data;
-  //     } catch (error) {
-  //       console.error('Error fetching statuses:', error);
-  //       return [];
-  //     }
-  //   };
-
-  //   const fetchDisableAttendance = async (labourIds) => {
-  //     try {
-  //       const response = await axios.post(`${API_BASE_URL}/api/labours/getDisableLaborsAttendance`, { labourIds });
-  //       return response.data;
-  //     } catch (error) {
-  //       console.error('Error fetching disable attendance:', error);
-  //       return [];
-  //     }
-  //   };
-
-  //   const updateStatuses = async () => {
-  //     const labourList = searchResults.length > 0 ? searchResults : (filteredIconLabours.length > 0 ? filteredIconLabours : labours);
-  //     const labourIds = labourList.map(labour => labour.LabourID || labour.id);
-
-  //     if (labourIds.length === 0) return;
-
-  //     const [statuses, disabledStatuses] = await Promise.all([
-  //       fetchStatuses(labourIds),
-  //       fetchDisableAttendance(labourIds),
-  //     ]);
-
-  //     const updatedStatuses = {};
-
-  //     // Process statuses from `getCombinedStatuses`
-  //     statuses.forEach(status => {
-  //       updatedStatuses[status.LabourID] = {
-  //         esslStatus: status.esslStatus === 'success',
-  //         employeeMasterStatus: status.employeeMasterStatus === 'true',
-  //         // disabledAttendanceCreatedAt to be updated from second API
-  //         disabledAttendanceCreatedAt: null,
-  //       };
-  //     });
-
-  //     // Merge with disabled attendance data
-  //     disabledStatuses.forEach(disabled => {
-  //       const id = disabled.LabourID;
-  //       if (!updatedStatuses[id]) {
-  //         updatedStatuses[id] = {};
-  //       }
-  //       updatedStatuses[id].disabledAttendanceCreatedAt = disabled.CreatedAt ? new Date(disabled.CreatedAt) : null;
-  //     });
-
-  //     setStatuses(updatedStatuses);
-  //   };
-
-  //   updateStatuses();
-  // }, []);
-
-
-
-  // Filter icon with filter the labours for tha icon.....................
+  // Filter icon with filter the labours for tha in.....................
 
 
   const handleFilterClick = (event) => {
