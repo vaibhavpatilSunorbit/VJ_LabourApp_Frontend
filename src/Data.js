@@ -103,13 +103,6 @@ export const SidebarData = [
     path: "Dashboard",
     roles: ["superadmin","admin", "user"],
   },
-{
-    icon: UilFileAlt,
-    heading: "User Approval",
-    path: "userApproval",
-    roles: ["user"],
-  },
-
   // {
   //   icon: UilFileAlt,
   //   heading: "People",

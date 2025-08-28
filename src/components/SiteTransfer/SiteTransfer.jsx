@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import {
   Table,
@@ -556,137 +556,271 @@ const SiteTransfer = ({ departments, projectNames, labour, labourlist }) => {
     }));
   };
 
+  // Build once per render
+const projectById = React.useMemo(() => {
+  const m = new Map();
+  (projectNamesNew || []).forEach(p => m.set(Number(p.Id), p));
+  return m;
+}, [projectNamesNew]);
 
-  const confirmTransfer = async () => {
-    setOpenDialogSite(false);
+const getBusinessUnitName = (projectId) => {
+  const p = projectById.get(Number(projectId));
+  return p?.Business_Unit ?? "Unknown";
+};
 
-    if (!selectedLabourIds || selectedLabourIds.length === 0) {
-      toast.error("No labour(s) selected to transfer.");
-      return;
+const confirmTransfer = async () => {
+  setOpenDialogSite(false);
+
+  if (!selectedLabourIds || selectedLabourIds.length === 0) {
+    toast.error("No labour(s) selected to transfer.");
+    return;
+  }
+
+  // fetch device status once
+  let projectDevices = [];
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
+    projectDevices = Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error("Failed to fetch project device status:", error);
+    toast.error("Unable to verify project device status. Try again later.");
+    return;
+  }
+
+  // --- Same-site guard (use labour.projectName, not labour.projectNamesNew) ---
+  const sameSiteLabours = labours.filter((labour) => {
+    if (!selectedLabourIds.includes(labour.LabourID)) return false;
+
+    const currentSiteName  = getBusinessUnitName(labour.projectName);      // FIXED
+    const transferSiteName = getBusinessUnitName(newSite);
+
+    return currentSiteName !== "Unknown" &&
+           transferSiteName !== "Unknown" &&
+           currentSiteName === transferSiteName;
+  });
+
+  if (sameSiteLabours.length > 0) {
+    toast.error("Same Business unit site, Cannot transfer For selected LabourID. Transfer aborted.");
+    return;
+  }
+
+  // --- Device conflict check (consistent names) ---
+  for (const labour of labours) {
+    if (!selectedLabourIds.includes(labour.LabourID)) continue;
+
+    const currentSiteName  = getBusinessUnitName(labour.projectName);      // FIXED
+    const transferSiteName = getBusinessUnitName(newSite);
+
+    // If we couldn't resolve either site, skip the conflict check for this labour
+    if (currentSiteName === "Unknown" || transferSiteName === "Unknown") continue;
+
+    // Your projectDevices objects seem to use `BusinessUnit` (not Business_Unit)
+    const currentSiteDevices  = projectDevices.filter(d => d.BusinessUnit === currentSiteName);
+    const transferSiteDevices = projectDevices.filter(d => d.BusinessUnit === transferSiteName);
+
+    const conflict = currentSiteDevices.some(cd =>
+      transferSiteDevices.some(td =>
+        cd.DeviceID === td.DeviceID || cd.SerialNumber === td.SerialNumber
+      )
+    );
+
+    if (conflict) {
+      toast.error(`Current site "${currentSiteName}" and transfer site "${transferSiteName}" device with same DeviceID or SerialNumber.`);
+      return; // Abort transfer
     }
+  }
 
+  try {
+    // Build payload
+    const selectedLaboursData = labours
+      .filter(l => selectedLabourIds.includes(l.LabourID))
+      .map((labour) => {
+        const currentSiteName  = getBusinessUnitName(labour.projectName);  // FIXED
+        const transferSiteName = getBusinessUnitName(newSite);
 
-    // Fetch project device status data once before other checks
-    let projectDevices = [];
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
-      projectDevices = response.data; // assuming data is an array of devices
-    } catch (error) {
-      console.error("Failed to fetch project device status:", error);
-      toast.error("Unable to verify project device status. Try again later.");
-      return;
-    }
+        return {
+          userId: labour.id,
+          LabourID: labour.LabourID,
+          name: labour.name,
+          currentSite: labour.projectName,      // stays as id per your note
+          transferSite: newSite,                // id
+          currentSiteName,                      // now resolves correctly
+          transferSiteName,
+          transferDate,
+          siteTransferBy: user.name || null,
+        };
+      });
 
-    // Check if any selected labour is being transferred to the same site (current logic)
-    const sameSiteLabours = labours.filter((labour) => {
-      if (!selectedLabourIds.includes(labour.LabourID)) return false;
+    const response = await axios.post(
+      `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
+      { labours: selectedLaboursData }
+    );
 
-      const currentSiteName = projectNamesNew.find((p) => p.Id === labour.projectNamesNew)?.Business_Unit || "Unknown";
-      const transferSiteName = projectNamesNew.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
+    if (response.status === 201) {
+      const transferSiteName = getBusinessUnitName(newSite);
 
-      return currentSiteName === transferSiteName;
-    });
-
-    if (sameSiteLabours.length > 0) {
-      toast.error("Same Business unit site, Cannot transfer For selected LabourID. Transfer aborted.");
-      return;
-    }
-
-    // NEW: Check if currentSiteName and transferSiteName have matching DeviceID or SerialNumber
-    for (const labour of labours) {
-      if (!selectedLabourIds.includes(labour.LabourID)) continue;
-
-      const currentSiteName = projectNamesNew.find((p) => p.Id === labour.projectNamesNew)?.Business_Unit || "Unknown";
-      const transferSiteName = projectNamesNew.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
-
-      // Filter devices for current and transfer sites
-      const currentSiteDevices = projectDevices.filter(d => d.BusinessUnit === currentSiteName);
-      const transferSiteDevices = projectDevices.filter(d => d.BusinessUnit === transferSiteName);
-
-      // Check for any device with same DeviceID or SerialNumber between the two sites
-      const conflict = currentSiteDevices.some(currentDevice =>
-        transferSiteDevices.some(transferDevice =>
-          currentDevice.DeviceID === transferDevice.DeviceID ||
-          currentDevice.SerialNumber === transferDevice.SerialNumber
+      setLabours((prev) =>
+        prev.map((labour) =>
+          selectedLabourIds.includes(labour.LabourID)
+            ? {
+                ...labour,
+                projectName: newSite,            // keep id in state
+                Business_Unit: transferSiteName, // helpful for UI
+              }
+            : labour
         )
       );
 
-      if (conflict) {
-        toast.error(`Current site "${currentSiteName}" and transfer site "${transferSiteName}" device with same DeviceID or SerialNumber.`);
-        return; // Abort transfer
-      }
-    }
-
-    try {
-      // Build payload for each selected labour
-      const selectedLaboursData = labours
-        .filter((labour) => selectedLabourIds.includes(labour.LabourID))
-        .map((labour) => {
-          const currentSiteName = projectNamesNew.find((p) => p.Id === labour.projectNamesNew)?.Business_Unit || "Unknown";
-          const transferSiteName = projectNamesNew.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
-
-          return {
-            userId: labour.id,
-            LabourID: labour.LabourID,
-            name: labour.name,
-            currentSite: labour.projectName,
-            transferSite: newSite,
-            currentSiteName,
-            transferSiteName,
-            transferDate,
-            siteTransferBy: user.name || null,
-          };
-        });
-
-      const response = await axios.post(
-        `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
-        { labours: selectedLaboursData }
-      );
-
-      if (response.status === 201) {
-        const transferSiteName = projectNamesNew.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
-
-        setLabours((prev) =>
-          prev.map((labour) => {
-            if (selectedLabourIds.includes(labour.LabourID)) {
-              return {
-                ...labour,
-                projectName: newSite,
-                Business_Unit: transferSiteName,
-              };
-            }
-            return labour;
-          })
-        );
-
-        setFormData({
-          projectName: "",
-          projectId: null,
-          companyName: "",
-        });
-        setTransferDate("");
-        setNewSite(null);
-        toast.success(`Site transfer sent for ${selectedLabourIds.length} labour(s) for Admin Approval.`);
-        setSelectedLabourIds([]);
-      } else {
-        // throw new Error(response.data?.details?.pendingApprovalErrors[0].error || "Unexpected error occurred.");
-        const pendingErrors = response.data?.details?.pendingApprovalErrors[0].error || [];
-        toast.error(pendingErrors || "Failed to transfer labour(s).");
-      }
-
-    } catch (error) {
-      setFormData({
-        projectName: "",
-        projectId: null,
-        companyName: "",
-      });
+      setFormData({ projectName: "", projectId: null, companyName: "" });
       setTransferDate("");
       setNewSite(null);
-      console.error("Error during site transfer:", error);
-      toast.error("Failed to transfer labour(s).");
       setSelectedLabourIds([]);
+      toast.success(`Site transfer sent for ${selectedLabourIds.length} labour(s) for Admin Approval.`);
+    } else {
+      const pendingErrors = response.data?.details?.pendingApprovalErrors?.[0]?.error || [];
+      toast.error(pendingErrors || "Failed to transfer labour(s).");
     }
-  };
+  } catch (error) {
+    setFormData({ projectName: "", projectId: null, companyName: "" });
+    setTransferDate("");
+    setNewSite(null);
+    setSelectedLabourIds([]);
+    console.error("Error during site transfer:", error);
+    toast.error("Failed to transfer labour(s).");
+  }
+};
+
+
+  // const confirmTransfer = async () => {
+  //   setOpenDialogSite(false);
+
+  //   if (!selectedLabourIds || selectedLabourIds.length === 0) {
+  //     toast.error("No labour(s) selected to transfer.");
+  //     return;
+  //   }
+
+
+  //   // Fetch project device status data once before other checks
+  //   let projectDevices = [];
+  //   try {
+  //     const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
+  //     projectDevices = response.data; // assuming data is an array of devices
+  //   } catch (error) {
+  //     console.error("Failed to fetch project device status:", error);
+  //     toast.error("Unable to verify project device status. Try again later.");
+  //     return;
+  //   }
+
+  //   // Check if any selected labour is being transferred to the same site (current logic)
+  //   const sameSiteLabours = labours.filter((labour) => {
+  //     if (!selectedLabourIds.includes(labour.LabourID)) return false;
+
+  //     const currentSiteName = projectNamesNew.find((p) => p.Id === labour.projectNamesNew)?.Business_Unit || "Unknown";
+  //     const transferSiteName = projectNamesNew.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
+
+  //     return currentSiteName === transferSiteName;
+  //   });
+
+  //   if (sameSiteLabours.length > 0) {
+  //     toast.error("Same Business unit site, Cannot transfer For selected LabourID. Transfer aborted.");
+  //     return;
+  //   }
+
+  //   // NEW: Check if currentSiteName and transferSiteName have matching DeviceID or SerialNumber
+  //   for (const labour of labours) {
+  //     if (!selectedLabourIds.includes(labour.LabourID)) continue;
+
+  //     const currentSiteName = projectNamesNew.find((p) => p.Id === labour.projectNamesNew)?.Business_Unit || "Unknown";
+  //     const transferSiteName = projectNamesNew.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
+
+  //     // Filter devices for current and transfer sites
+  //     const currentSiteDevices = projectDevices.filter(d => d.BusinessUnit === currentSiteName);
+  //     const transferSiteDevices = projectDevices.filter(d => d.BusinessUnit === transferSiteName);
+
+  //     // Check for any device with same DeviceID or SerialNumber between the two sites
+  //     const conflict = currentSiteDevices.some(currentDevice =>
+  //       transferSiteDevices.some(transferDevice =>
+  //         currentDevice.DeviceID === transferDevice.DeviceID ||
+  //         currentDevice.SerialNumber === transferDevice.SerialNumber
+  //       )
+  //     );
+
+  //     if (conflict) {
+  //       toast.error(`Current site "${currentSiteName}" and transfer site "${transferSiteName}" device with same DeviceID or SerialNumber.`);
+  //       return; // Abort transfer
+  //     }
+  //   }
+
+  //   try {
+  //     // Build payload for each selected labour
+  //     const selectedLaboursData = labours
+  //       .filter((labour) => selectedLabourIds.includes(labour.LabourID))
+  //       .map((labour) => {
+  //         const currentSiteName = projectNamesNew.find((p) => p.Id === labour.projectNamesNew)?.Business_Unit || "Unknown";
+  //         const transferSiteName = projectNamesNew.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
+
+  //         return {
+  //           userId: labour.id,
+  //           LabourID: labour.LabourID,
+  //           name: labour.name,
+  //           currentSite: labour.projectName,
+  //           transferSite: newSite,
+  //           currentSiteName,
+  //           transferSiteName,
+  //           transferDate,
+  //           siteTransferBy: user.name || null,
+  //         };
+  //       });
+
+  //     const response = await axios.post(
+  //       `${API_BASE_URL}/api/admin/sitetransfertoadmin`,
+  //       { labours: selectedLaboursData }
+  //     );
+
+  //     if (response.status === 201) {
+  //       const transferSiteName = projectNamesNew.find((p) => p.Id === Number(newSite))?.Business_Unit || "Unknown";
+
+  //       setLabours((prev) =>
+  //         prev.map((labour) => {
+  //           if (selectedLabourIds.includes(labour.LabourID)) {
+  //             return {
+  //               ...labour,
+  //               projectName: newSite,
+  //               Business_Unit: transferSiteName,
+  //             };
+  //           }
+  //           return labour;
+  //         })
+  //       );
+
+  //       setFormData({
+  //         projectName: "",
+  //         projectId: null,
+  //         companyName: "",
+  //       });
+  //       setTransferDate("");
+  //       setNewSite(null);
+  //       toast.success(`Site transfer sent for ${selectedLabourIds.length} labour(s) for Admin Approval.`);
+  //       setSelectedLabourIds([]);
+  //     } else {
+  //       // throw new Error(response.data?.details?.pendingApprovalErrors[0].error || "Unexpected error occurred.");
+  //       const pendingErrors = response.data?.details?.pendingApprovalErrors[0].error || [];
+  //       toast.error(pendingErrors || "Failed to transfer labour(s).");
+  //     }
+
+  //   } catch (error) {
+  //     setFormData({
+  //       projectName: "",
+  //       projectId: null,
+  //       companyName: "",
+  //     });
+  //     setTransferDate("");
+  //     setNewSite(null);
+  //     console.error("Error during site transfer:", error);
+  //     toast.error("Failed to transfer labour(s).");
+  //     setSelectedLabourIds([]);
+  //   }
+  // };
 
 
   const selectedLabours = labours.filter((l) =>

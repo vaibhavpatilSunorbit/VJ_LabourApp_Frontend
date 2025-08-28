@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { API_BASE_URL } from '../Data';
 
 ChartJS.register(
   CategoryScale,
@@ -36,7 +37,7 @@ const AttendanceLineGraph = () => {
       setError(null);
       try {
         // Change this URL to your actual backend API URL
-        const response = await axios.get('http://localhost:4000/dashboard/getAllAPM', {
+        const response = await axios.get(`${API_BASE_URL}/api/getAllAPM`, {
           params: { period: timeRange } // lastWeek, lastMonth, allTime as per your backend
         });
 

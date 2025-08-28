@@ -724,7 +724,7 @@ const VariableInputApproval = ({ departments, projectNames, labour }) => {
                 <TableCell>Site Transfer By</TableCell>
                 {/* <TableCell>Status</TableCell> */}
                 {tabValue === 0 && <TableCell>Send Approval Date</TableCell>}
-                {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>}
+                {/* {tabValue !== 1 && tabValue !== 2 && <TableCell>Edit</TableCell>} */}
                 {tabValue !== 1 && tabValue !== 2 && <TableCell>Action</TableCell>}
                 {tabValue === 1 && <TableCell>Approve Date</TableCell>}
                 {tabValue !== 0 && tabValue !== 1 && <TableCell>Rejected Date</TableCell>}
@@ -810,7 +810,7 @@ const VariableInputApproval = ({ departments, projectNames, labour }) => {
                     </TableCell>
                   )}
 
-                  {tabValue === 0 && (
+                  {/* {tabValue === 0 && (
                     <TableCell>
                       {(user.userType === 'user' && labour.ApprovalStatusPay === 'AdminPending') && (
                         <IconButton
@@ -827,7 +827,7 @@ const VariableInputApproval = ({ departments, projectNames, labour }) => {
                         </IconButton>
                       )}
                     </TableCell>
-                  )}
+                  )} */}
 
                   {user.userType === 'admin' || user.userType === 'superadmin' && (
                     <TableCell>
