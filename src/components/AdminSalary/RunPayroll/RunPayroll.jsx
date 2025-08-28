@@ -123,59 +123,66 @@ const RunPayroll = ({ departments, projectNames, labourlist }) => {
                 setLabours([]); setSalaryData([]); setNoDataAvailable(true); return;
             }
             setNoDataAvailable(false);
-            const ShowSalaryGeneration = fetchedData.map((labour, index) => ({
-                srNo: index + 1,
-                id: labour.id || 0,
-                LabourID: labour.labourId,
-                name: labour.name || "-",
-                projectId: labour.projectName || "-",
-                departmentId: labour.department || "-",
-                projectName: labour.businessUnit || "-",
-                department: labour.departmentName || "-",
-                aadhaarNumber: labour.aadhaarNumber || "-",
-                accountNumber: labour.accountNumber || "-",
-                attendanceCount: labour.attendanceCount || 0,
-                presentDays: labour.attendance?.presentDays || 0,
-                absentDays: labour.attendance?.absentDays || 0,
-                halfDays: labour.attendance?.halfDays || 0,
-                missPunchDays: labour.attendance?.missPunchDays || 0,
-                normalOvertimeCount: labour.attendance?.normalOvertimeCount || 0,
-                holidayOvertimeCount: labour.attendance?.holidayOvertimeCount || 0,
-                totalHolidaysInMonth: labour.attendance?.totalHolidaysInMonth || 0,
-                holidayOvertimeHours: labour.attendance?.holidayOvertimeHours || 0,
-                holidayOvertimeWages: labour.attendance?.holidayOvertimeWages || 0,
-                totalHolidaysConsider: labour.attendance?.totalHolidaysConsider || 0,
-                sundayPayment: labour.attendance?.sundayPayment || 0,
-                additionalPresent: labour.attendance?.additionalPresent || 0,
-                additionalHalf: labour.attendance?.additionalHalf || 0,
-                totalOvertimeHours: labour.cappedOvertime || 0,
-                derivedPerHour: labour.derivedPerHour || 0,
-                basicSalary: labour.baseWage || 0,
-                overtimePay: labour.overtimePay || 0,
-                holidayOvertimePay: labour.holidayOvertimePay || 0,
-                weeklyOffPay: labour.weeklyOffPay || 0,
-                bonuses: labour.bonuses || 0,
-                previousWageAmount: labour.previousWageAmount || 0,
-                totalAttendanceDeductions: labour.totalAttendanceDeductions || 0,
-                totalDeductions: labour.totalDeductions || 0,
-                baseWage: labour.baseWage || 0,
-                netPay: labour.netPay || 0,
-                advancePay: labour.variablePay?.advance || 0,
-                advanceRemarks: labour.variablePay?.advanceRemarks || "-",
-                debit: labour.variablePay?.debit || 0,
-                debitRemarks: labour.variablePay?.debitRemarks || "-",
-                incentivePay: labour.variablePay?.incentive || 0,
-                incentiveRemarks: labour.variablePay?.incentiveRemarks || "-",
-                month: labour.month || "-",
-                year: labour.year || "-",
-                wageType: labour.wageType || "-",
-                daysInSlice: labour.daysInSlice || "-",
-                dailyWageRate: labour.dailyWageRate || 0,
-                fixedMonthlyWage: labour.fixedMonthlyWage || 0,
-                totalWagesForMonth: labour.wagesInfo?.totalWagesForMonth || 0,
-                wageBreakdown: labour.wagesInfo?.wageBreakdown || [],
-                fullResponse: labour
-            }));
+
+            const ShowSalaryGeneration = fetchedData.map((labour, index) => {
+                return {
+                    srNo: index + 1,
+                    id: labour.id || 0,
+                    LabourID: labour.labourId,
+                    name: labour.name || "-",
+                    projectId: labour.projectName || "-",
+                    departmentId: labour.department || "-",
+                    projectName: labour.businessUnit || "-",
+                    department: labour.departmentName || "-",
+                    aadhaarNumber: labour.aadhaarNumber || "-",
+                    accountNumber: labour.accountNumber || "-",
+                    attendanceCount: labour.attendanceCount || 0,
+                    presentDays: labour.attendance?.presentDays || 0,
+                    absentDays: labour.attendance?.absentDays || 0,
+                    halfDays: labour.attendance?.halfDays || 0,
+                    missPunchDays: labour.attendance?.missPunchDays || 0,
+                    normalOvertimeCount: labour.attendance?.normalOvertimeCount || 0,
+                    holidayOvertimeCount: labour.attendance?.holidayOvertimeCount || 0,
+                    totalHolidaysInMonth: labour.attendance?.totalHolidaysInMonth || 0,
+                    holidayOvertimeHours: labour.attendance?.holidayOvertimeHours || 0,
+                    holidayOvertimeWages: labour.attendance?.holidayOvertimeWages || 0,
+                    totalHolidaysConsider: labour.attendance?.totalHolidaysConsider || 0,
+                    sundayPayment: labour.attendance?.sundayPayment || 0,
+                    additionalPresent: labour.attendance?.additionalPresent || 0,
+                    additionalHalf: labour.attendance?.additionalHalf || 0,
+                    // additionalAbsent: labour.attendance?.additionalAbsent || 0,
+                    totalOvertimeHours: labour.cappedOvertime || 0,
+                    derivedPerHour: labour.derivedPerHour || 0,
+                    basicSalary: labour.baseWage || 0,
+                    overtimePay: labour.overtimePay || 0,
+                    holidayOvertimePay: labour.holidayOvertimePay || 0,
+                    weeklyOffPay: labour.weeklyOffPay || 0,
+                    bonuses: labour.bonuses || 0,
+                    previousWageAmount: labour.previousWageAmount || 0,
+                    totalAttendanceDeductions: labour.totalAttendanceDeductions || 0,
+                    totalDeductions: labour.totalDeductions || 0,
+                    baseWage: labour.baseWage || 0,
+                    netPay: labour.netPay || 0,
+                    // Variable Pay
+                    advancePay: labour.variablePay?.advance || 0,
+                    advanceRemarks: labour.variablePay?.advanceRemarks || "-",
+                    debit: labour.variablePay?.debit || 0,
+                    debitRemarks: labour.variablePay?.debitRemarks || "-",
+                    incentivePay: labour.variablePay?.incentive || 0,
+                    incentiveRemarks: labour.variablePay?.incentiveRemarks || "-",
+                    month: labour.month || "-",
+                    year: labour.year || "-",
+                    // Wages Info
+                    wageType: labour.wageType || "-",
+                    daysInSlice: labour.daysInSlice || "-",
+                    dailyWageRate: labour.dailyWageRate || 0,
+                    fixedMonthlyWage: labour.fixedMonthlyWage || 0,
+                    totalWagesForMonth: labour.wagesInfo?.totalWagesForMonth || 0,
+                    wageBreakdown: labour.wagesInfo?.wageBreakdown || [],
+                    fullResponse: labour
+                };
+            });
+            console.log('ShowSalaryGeneration for month', JSON.stringify(ShowSalaryGeneration))
             setLabours(ShowSalaryGeneration);
             setSalaryData(ShowSalaryGeneration);
         } catch (error) {
@@ -408,115 +415,223 @@ const RunPayroll = ({ departments, projectNames, labourlist }) => {
                         className="search-bar"
                     />
                 </Box>
-                {/* Filters */}
-                <Box sx={{
-                    display: "flex", alignItems: "flex-end", gap: 2,
-                    flexWrap: { xs: "wrap", sm: "nowrap" }, overflowX: { xs: "visible", sm: "auto" }, pb: 1,
-                }}>
-                    <Select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} displayEmpty sx={{ minWidth: 140 }}>
-                        <MenuItem value="" disabled>Select Month</MenuItem>
-                        {months.map(m => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
-                    </Select>
-                    <Select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} displayEmpty sx={{ minWidth: 140 }}>
-                        <MenuItem value="" disabled>Select Year</MenuItem>
-                        {[2024, 2025].map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
-                    </Select>
-                    <FormControlLabel
-                        sx={{ ml: 1 }}
-                        control={<Switch checked={fetchForAll} onChange={e => setFetchForAll(e.target.checked)} color="primary" />}
-                    />
-                    {!fetchForAll && (
-                        <TextField
-                            label="Labour ID"
-                            variant="outlined"
-                            size="small"
-                            value={labourId}
-                            onChange={e => setLabourId(e.target.value)}
-                            sx={{ minWidth: 150 }}
-                        />
-                    )}
-                    <Tooltip title={tooltipTitle} arrow disableHoverListener={canClickPayroll} sx={{ ml: "auto" }}>
-                        <span>
-                            <Button
-                                variant="contained"
-                                onClick={fetchSalaryGenerationForDateMonthAll}
-                                disabled={isDisabled}
-                                disableElevation
-                                sx={{
-                                    height: 44, px: 3, textTransform: "none", fontWeight: 700, borderRadius: 2,
-                                    letterSpacing: 0.2, transition: "transform 120ms ease",
-                                    background: isDisabled
-                                        ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
-                                        : "linear-gradient(90deg, #1db954, #00c896)",
-                                    color: isDisabled ? "#9e9e9e" : "#ffffff",
-                                    boxShadow: isDisabled ? "none" : "0 6px 16px rgba(0,0,0,0.15)",
-                                    "&:hover": {
-                                        transform: isDisabled ? "none" : "translateY(-1px)",
-                                        background: isDisabled
-                                            ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
-                                            : "linear-gradient(90deg, #19a64c, #00b785)",
-                                    },
-                                    cursor: isDisabled ? "not-allowed" : "pointer",
-                                }}
-                                aria-disabled={isDisabled}
-                            >
-                                PayRoll
-                            </Button>
-                        </span>
-                    </Tooltip>
-                </Box>
-                {/* Filter/Edit/Pagination */}
-                <Box sx={{
-                    display: "flex", alignItems: "center", justifyContent: { xs: "space-between", sm: "flex-end" },
-                    gap: 1.5, flexWrap: { xs: "wrap", sm: "nowrap" }, pt: 0.5,
-                }}>
-                    <Button
-                        variant="outlined"
-                        color="secondary"
-                        startIcon={<FilterListIcon />}
-                        onClick={() => setFilterModalOpen(true)}
-                        sx={{ height: 40, px: 2 }}
-                    >
-                        Filter
-                    </Button>
-                    {selectedLabourIds.length > 0 && (
-                        <Button
-                            variant="outlined"
-                            color="secondary"
-                            startIcon={<EditIcon />}
-                            onClick={() => setModalOpen(true)}
-                            sx={{ height: 40, px: 2 }}
-                        >
-                            Edit ({selectedLabourIds.length})
-                        </Button>
-                    )}
-                    <TablePagination
-                        component="div"
-                        rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
-                        count={filteredData.length > 0 ? filteredData.length : labours.length}
-                        rowsPerPage={rowsPerPage}
-                        page={page}
-                        onPageChange={handlePageChange}
-                        onRowsPerPageChange={handleRowsPerPageChange}
-                        sx={{
-                            ml: "auto", height: 40,
-                            "& .MuiTablePagination-toolbar": { minHeight: 40, px: 0, gap: 1, flexWrap: "nowrap" },
-                            "& .MuiTablePagination-selectLabel": { mr: 1, display: { xs: "none", sm: "inline-flex" } },
-                            "& .MuiTablePagination-displayedRows": { ml: 1, minWidth: 120 },
-                            "& .MuiTablePagination-select": { py: 0.5 },
-                            "& .MuiInputBase-root": { height: 34, mt: "-2px" },
-                            "& .MuiTablePagination-actions": { ml: 0.5 },
-                        }}
-                    />
-                </Box>
-                {/* Table */}
-                <TableContainer component={Paper} sx={{
-                    mb: isMobile ? 6 : 0, overflowX: 'auto', borderRadius: 2, boxShadow: 3,
-                    maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
-                    '&::-webkit-scrollbar': { width: '8px' },
-                    '&::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1' },
-                    '&::-webkit-scrollbar-thumb': { backgroundColor: '#888', borderRadius: '4px' },
-                }}>
+
+
+             {/* === Top: Filters / Selects === */}
+<Box
+  sx={{
+    display: "flex",
+    alignItems: "flex-end",
+    gap: 2,
+    // force ONE row on sm+ (no wrapping); allow wrap only on xs
+    flexWrap: { xs: "wrap", sm: "nowrap" },
+    overflowX: { xs: "visible", sm: "auto" }, // scroll horizontally instead of creating a 3rd line
+    pb: 1,
+  }}
+>
+  <Select
+    value={selectedMonth}
+    onChange={(e) => setSelectedMonth(e.target.value)}
+    displayEmpty
+    sx={{ minWidth: 140, "& .MuiSelect-select": { py: 1.25 } }}
+  >
+    <MenuItem value="" disabled>Select Month</MenuItem>
+    {months.map(m => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
+  </Select>
+
+  <Select
+    value={selectedYear}
+    onChange={(e) => setSelectedYear(e.target.value)}
+    displayEmpty
+    sx={{ minWidth: 140, "& .MuiSelect-select": { py: 1.25 } }}
+  >
+    <MenuItem value="" disabled>Select Year</MenuItem>
+    {[2024, 2025].map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+  </Select>
+
+  <FormControl sx={{ minWidth: 200 }}>
+    <InputLabel id="business-unit-label">Business Unit</InputLabel>
+    <Select
+      labelId="business-unit-label"
+      label="Business Unit"
+      multiple
+      value={selectedBusinessUnit}
+      onChange={handleBusinessUnitChange}
+      displayEmpty
+      renderValue={(selected) => {
+        if (!selected || selected.length === 0) return <em>All</em>;
+        const selectedLabels = projectNames
+          .filter(p => selected.includes(p.Id))
+          .map(p => p.Business_Unit);
+        return (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxHeight: 32, overflowY: "auto" }}>
+            {selectedLabels.map((label) => <Chip key={label} label={label} size="small" />)}
+          </Box>
+        );
+      }}
+      MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+      sx={{ "& .MuiSelect-select": { py: 1.25 } }}
+    >
+      <MenuItem value="ALL">
+        <Checkbox
+          checked={isAllSelected}
+          indeterminate={selectedBusinessUnit.length > 0 && !isAllSelected}
+        />
+        <ListItemText primary="Select All" />
+      </MenuItem>
+      {Array.isArray(projectNames) && projectNames.length > 0 ? (
+        projectNames.map((project) => (
+          <MenuItem key={project.Id} value={project.Id}>
+            <Checkbox checked={selectedBusinessUnit.includes(project.Id)} />
+            <ListItemText primary={project.Business_Unit} />
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem disabled>No Projects Available</MenuItem>
+      )}
+    </Select>
+  </FormControl>
+
+  <FormControlLabel
+    sx={{ ml: 1 }}
+    control={
+      <Switch
+        checked={fetchForAll}
+        onChange={(e) => setFetchForAll(e.target.checked)}
+        color="primary"
+      />
+    }
+  />
+
+  {!fetchForAll && (
+    <TextField
+      label="Labour ID"
+      variant="outlined"
+      size="small"
+      value={labourId}
+      onChange={(e) => setLabourId(e.target.value)}
+      sx={{ minWidth: 150, "& .MuiInputBase-input": { py: 1.25, fontWeight: 500 } }}
+    />
+  )}
+
+  <Tooltip title={tooltipTitle} arrow disableHoverListener={canClickPayroll} sx={{ ml: "auto" }}>
+    <span>
+      <Button
+        variant="contained"
+        onClick={fetchSalaryGenerationForDateMonthAll}
+        disabled={isDisabled}
+        disableElevation
+        sx={{
+          height: 44,
+          px: 3,
+          textTransform: "none",
+          fontWeight: 700,
+          borderRadius: 2,
+          letterSpacing: 0.2,
+          transition: "transform 120ms ease",
+          background: isDisabled
+            ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
+            : "linear-gradient(90deg, #1db954, #00c896)",
+          color: isDisabled ? "#9e9e9e" : "#ffffff",
+          boxShadow: isDisabled ? "none" : "0 6px 16px rgba(0,0,0,0.15)",
+          "&:hover": {
+            transform: isDisabled ? "none" : "translateY(-1px)",
+            background: isDisabled
+              ? "linear-gradient(0deg, #e0e0e0, #e0e0e0)"
+              : "linear-gradient(90deg, #19a64c, #00b785)",
+          },
+          cursor: isDisabled ? "not-allowed" : "pointer",
+        }}
+        aria-disabled={isDisabled}
+      >
+        PayRoll
+      </Button>
+    </span>
+  </Tooltip>
+</Box>
+
+{/* === Bottom: Filter / Edit / Pagination row === */}
+<Box
+  sx={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: { xs: "space-between", sm: "flex-end" },
+    gap: 1.5,
+    // force ONE row here too
+    flexWrap: { xs: "wrap", sm: "nowrap" },
+    pt: 0.5,
+  }}
+>
+  <Button
+    variant="outlined"
+    color="secondary"
+    startIcon={<FilterListIcon />}
+    onClick={() => setFilterModalOpen(true)}
+    sx={{ height: 40, px: 2 }}
+  >
+    Filter
+  </Button>
+
+  {selectedLabourIds.length > 0 && (
+    <Button
+      variant="outlined"
+      color="secondary"
+      startIcon={<EditIcon />}
+      onClick={() => setModalOpen(true)}
+      sx={{ height: 40, px: 2 }}
+    >
+      Edit ({selectedLabourIds.length})
+    </Button>
+  )}
+
+  <TablePagination
+    component="div"
+    rowsPerPageOptions={[25, 100, 200, { label: "All", value: -1 }]}
+    count={filteredData.length > 0 ? filteredData.length : labours.length}
+    rowsPerPage={rowsPerPage}
+    page={page}
+    onPageChange={handlePageChange}
+    onRowsPerPageChange={handleRowsPerPageChange}
+    sx={{
+      ml: "auto",
+      height: 40,
+      "& .MuiTablePagination-toolbar": {
+        minHeight: 40,
+        px: 0,
+        gap: 1,
+        flexWrap: "nowrap",
+      },
+      "& .MuiTablePagination-selectLabel": {
+        mr: 1,
+        display: { xs: "none", sm: "inline-flex" },
+      },
+      "& .MuiTablePagination-displayedRows": {
+        ml: 1,
+        minWidth: 120,
+      },
+      "& .MuiTablePagination-select": { py: 0.5 },
+      "& .MuiInputBase-root": { height: 34, mt: "-2px" },
+      "& .MuiTablePagination-actions": { ml: 0.5 },
+    }}
+  />
+</Box>
+
+
+
+                <TableContainer
+                    component={Paper}
+                    sx={{
+                        mb: isMobile ? 6 : 0,
+                        overflowX: 'auto',
+                        // overflowY: 'auto',
+                        borderRadius: 2,
+                        boxShadow: 3,
+                        maxHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(75vh - 64px)',
+                        '&::-webkit-scrollbar': { width: '8px' },
+                        '&::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1' },
+                        '&::-webkit-scrollbar-thumb': { backgroundColor: '#888', borderRadius: '4px' },
+                    }}
+                >
                     <Box sx={{ width: '100%' }}>
                         <Table stickyHeader sx={{ minWidth: 800 }}>
                             <TableHead>
@@ -608,88 +723,101 @@ const RunPayroll = ({ departments, projectNames, labourlist }) => {
                 {/* Modals */}
                 <Modal open={modalOpen} onClose={handleCloseModal}>
                     <Box sx={{
-                        position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-                        width: 380, bgcolor: "background.paper", boxShadow: 24, borderRadius: 2, p: 0, overflow: "hidden",
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: 400,
+                        bgcolor: "background.paper",
+                        boxShadow: 24,
+                        p: 4,
+                        borderRadius: 2
                     }}>
-                        <Box sx={{ p: 2, position: "relative", textAlign: "center" }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                {selectedLabour?.LabourID || "N/A"}
-                            </Typography>
-                            <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                                {selectedLabour?.name || "N/A"}
-                            </Typography>
-                            <Button onClick={handleCloseModal} sx={{
-                                position: "absolute", top: 8, right: 8, minWidth: 0, p: 0, color: "grey.700",
-                            }}>
-                                <CloseIcon />
-                            </Button>
-                        </Box>
-                        <Divider />
-                        <Box sx={{ p: 3, textAlign: "left" }}>
-                            <Typography sx={{ color: "green", mb: 0.5 }}>
-                                Present Days
-                                <span style={{ float: "right" }}>
-                                    {String(
-                                        (selectedLabour?.presentDays || 0) +
-                                        (selectedLabour?.additionalPresent || 0)
-                                    ).padStart(2, "0")}
-                                </span>
-                            </Typography>
-                            <Typography sx={{ color: "green", mb: 0.5 }}>
-                                Holidays
-                                <span style={{ float: "right" }}>
-                                    {String(selectedLabour?.totalHolidaysInMonth || 0).padStart(2, "0")}
-                                </span>
-                            </Typography>
-                            <Typography sx={{ color: "green", mb: 0.5 }}>
-                                Half Days
-                                <span style={{ float: "right" }}>
-                                    {String(
-                                        (selectedLabour?.halfDays || 0) +
-                                        (selectedLabour?.additionalHalf || 0)
-                                    ).padStart(2, "0")}
-                                </span>
-                            </Typography>
-                            <Typography sx={{ color: "red", mb: 0.5 }}>
-                                Miss Punch
-                                <span style={{ float: "right" }}>
-                                    {String(selectedLabour?.missPunchDays || 0).padStart(2, "0")}
-                                </span>
-                            </Typography>
-                            <Typography sx={{ color: "red", mb: 0.5 }}>
-                                Absent Days
-                                <span style={{ float: "right" }}>
-                                    {String(selectedLabour?.absentDays || 0).padStart(2, "0")}
-                                </span>
-                            </Typography>
-                            <Box sx={{
-                                bgcolor: "#e8f5e9", mt: 2, p: 1.5, borderRadius: 1, textAlign: "center", fontWeight: 600, color: "green",
-                            }}>
-                                Total Salary Days:{" "}
-                                {String(
-                                    (selectedLabour?.presentDays || 0) +
-                                    (selectedLabour?.additionalPresent || 0) +
-                                    (selectedLabour?.halfDays || 0) +
-                                    (selectedLabour?.additionalHalf || 0) +
-                                    (selectedLabour?.totalHolidaysInMonth || 0)
-                                ).padStart(2, "0")}
-                            </Box>
-                        </Box>
-                        <Box sx={{ px: 3, py: 2 }}>
-                            <Button
-                                variant="contained"
-                                onClick={handleCloseModal}
-                                fullWidth
-                                sx={{
-                                    bgcolor: "#f5f5f5",
-                                    color: "#000",
-                                    textTransform: "none",
-                                    "&:hover": { bgcolor: "#e0e0e0" },
-                                }}
-                            >
-                                Close
-                            </Button>
-                        </Box>
+                        <Typography
+                            variant="h6"
+                            sx={{ mb: 4, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+                        >
+                            Labour ID: {selectedLabour?.LabourID || "N/A"}
+                        </Typography>
+
+<Box
+  sx={{
+    display: "flex",
+    flexDirection: "column",
+    gap: 1,
+  }}
+>
+  <Typography>
+    <strong style={{ marginRight: "25%" }}>Name:</strong>{" "}
+    {selectedLabour?.name || "N/A"}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "12%" }}>Present Days:</strong>{" "}
+    {(selectedLabour?.presentDays || 0) +
+      (selectedLabour?.additionalPresent || 0)}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "13%" }}>Absent Days:</strong>{" "}
+    {selectedLabour?.absentDays || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "18.5%" }}>Half Days:</strong>{" "}
+    {(selectedLabour?.halfDays || 0) +
+      (selectedLabour?.additionalHalf || 0)}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "5%" }}>Miss Punch Days:</strong>{" "}
+    {selectedLabour?.missPunchDays || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "12.5%" }}>Holiday Days:</strong>{" "}
+    {selectedLabour?.totalHolidaysInMonth || 0}
+  </Typography>
+
+  <Typography>
+    <strong style={{ marginRight: "13.5%" }}>Total Days:</strong>{" "}
+    {(selectedLabour?.presentDays || 0) +
+      (selectedLabour?.additionalPresent || 0) +
+      (selectedLabour?.absentDays || 0) +
+      (selectedLabour?.halfDays || 0) +
+      (selectedLabour?.additionalHalf || 0) +
+      (selectedLabour?.missPunchDays || 0) + (selectedLabour?.totalHolidaysInMonth || 0)}
+  </Typography>
+</Box>
+
+
+
+
+                        {/* <Box sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                        }}>
+                            <Typography><strong style={{ marginRight: '25%' }}>Name:</strong> {selectedLabour?.name || "N/A"}</Typography>
+                            <Typography><strong style={{ marginRight: '12%' }}>Present Days:</strong> {(selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0) - (selectedLabour?.totalHolidaysConsider || 0)}</Typography>
+                            <Typography><strong style={{ marginRight: '13%' }}>Absent Days:</strong> {selectedLabour?.absentDays || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '18.5%' }}>Half Days:</strong> {(selectedLabour?.halfDays || 0) - (selectedLabour?.additionalHalf || 0)}</Typography>
+                            <Typography><strong style={{ marginRight: '5%' }}>Miss Punch Days:</strong> {selectedLabour?.missPunchDays || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '12.5%' }}>Holiday Days:</strong> {selectedLabour?.totalHolidaysInMonth || 0}</Typography>
+                            <Typography><strong style={{ marginRight: '13.5%' }}>Total Days:</strong> {(selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0) - (selectedLabour?.totalHolidaysConsider || 0) + (selectedLabour?.absentDays || 0) + (selectedLabour?.halfDays || 0) + (selectedLabour?.missPunchDays || 0) + (selectedLabour?.totalHolidaysInMonth || 0)}</Typography>
+                        </Box> */}
+
+                        <Button variant="contained" sx={{
+                            mt: 3, float: 'right',
+                            backgroundColor: '#fce4ec',
+                            color: 'rgb(255, 100, 100)',
+                            width: '100px',
+                            '&:hover': {
+                                backgroundColor: '#f8bbd0',
+                            },
+                        }} onClick={handleCloseModal}>
+                            Close
+                        </Button>
                     </Box>
                 </Modal>
                 <Modal open={modalOpenBonus} onClose={handleCloseModalBonus}>
@@ -896,6 +1024,7 @@ const RunPayroll = ({ departments, projectNames, labourlist }) => {
                                     <TableHead>
                                         <TableRow>
                                             <TableCell><b>Earnings Pay</b></TableCell>
+                                            <TableCell><b>Overtime Pay</b></TableCell>
                                             <TableCell><b>Monthly Bonus</b></TableCell>
                                             <TableCell><b>Monthly Deduction</b></TableCell>
                                             <TableCell><b>Total</b></TableCell>
@@ -904,6 +1033,7 @@ const RunPayroll = ({ departments, projectNames, labourlist }) => {
                                     <TableBody>
                                         <TableRow>
                                             <TableCell>{selectedLabour?.basicSalary || "0.00"}</TableCell>
+                                            <TableCell>{selectedLabour?.overtimePay || "0.00"}</TableCell>
                                             <TableCell>{selectedLabour?.bonuses || "0.00"}</TableCell>
                                             <TableCell>{selectedLabour?.totalDeductions || "0.00"}</TableCell>
                                             <TableCell>{selectedLabour?.netPay || "0.00"}</TableCell>

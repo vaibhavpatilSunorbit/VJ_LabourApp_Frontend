@@ -29,6 +29,7 @@ import Badge from '@mui/material/Badge';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
 import 'react-toastify/dist/ReactToastify.css';
+import { set } from 'date-fns';
 
 const AttendanceReport = ({ departments, labour, labourlist }) => {
     const theme = useTheme();
@@ -79,7 +80,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState([]);
     const [selectedLabourIds, setSelectedLabourIds] = useState([]);
-    const [employeeToggle, setEmployeeToggle] = useState('all');
+// const [employeeToggle, setEmployeeToggle] = useState('all');
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [filters, setFilters] = useState({});
     const [laboursAttenadance, setLaboursAttenadance] = useState([]);
@@ -89,8 +90,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
     // -----------------------------------------------------  FILTER START ------------------
 
-    // const allowedProjectIds = user && user.projectIds ? JSON.parse(user.projectIds) : [];
-    // const allowedDepartmentIds = user && user.departmentIds ? JSON.parse(user.departmentIds) : [];
 
     const allowedProjectIds =
         user && user.projectIds ? JSON.parse(user.projectIds) : [];
@@ -246,9 +245,9 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             filters.DepartmentID = selectedDepartment.join(',');
         }
 
-        if (employeeToggle === 'single' && selectedEmployee) {
-            filters.EmployeeID = selectedEmployee; // or filters.employee = ...
-        }
+        // if (employeeToggle === 'single' && selectedEmployee) {
+        //     filters.EmployeeID = selectedEmployee; // or filters.employee = ...
+        // }
 
         fetchLaboursAttenadance(filters);
         setFilterModalOpen(false);
@@ -457,10 +456,147 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     };
 
 
+    // const handleSaveManualEdit = async () => {
+    //     setIsLoading(true);
+    //     let latestLabourWageRecord = null;
+    //     let updatedAttendanceData;
+    //     try {
+    //     handleManualEditDialogClose();
+
+    //         if (manualEditData?.status === 'weeklyOff') {
+    //             const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
+    //                 params: { labourId: selectedDay.labourId }
+    //             });
+    //             const wagesData = wagesResponse.data;
+    //             // console.log("wagesData", wagesData);
+    //                const latestLabourWageRecord = wagesData
+    //                 .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+    //             [0];
+
+    //             if (!wagesData || wagesData.length === 0) {
+    //                 toast.error("Add the wages for that labour then add mark as weeklyOff");
+    //                  setIsLoading(false);
+    //                 return;
+    //             }
+             
+    //             if (!latestLabourWageRecord) {
+    //                 toast.error("Add the wages for that labour then add mark as weeklyOff");
+    //                  setIsLoading(false);
+    //                 return;
+    //             }
+
+    //             if (latestLabourWageRecord?.PayStructure === "DAILY WAGES") {
+    //                 toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
+    //                  setIsLoading(false);
+    //                 return;
+    //             }
+
+    //              if (latestLabourWageRecord?.WeeklyOff === 0) {
+    //               toast.error("You are not eligible for Weekly Off. It will not be marked Weekly Off In Wages.");
+    //               setIsLoading(false);
+    //                return; // 🚫 stop further execution
+    //             }
+    //         }
+
+
+    //         if (
+    //             manualEditData.status !== 'absent' &&
+    //             manualEditData.status !== 'weeklyOff' &&
+    //             (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4)
+    //         ) {
+    //             toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
+    //             return;
+    //         }
+    //         const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
+
+    //         const formattedPunchInDayFormat = dayjs(manualEditData.punchIn, 'HH:mm:ss');
+    //         const formattedPunchOutDayFormat = dayjs(manualEditData.punchOut, 'HH:mm:ss');
+
+    //         const formattedPunchIn = defaultTime ? defaultTime : manualEditData.punchIn !== "" && formattedPunchInDayFormat.isValid()
+    //             ? formattedPunchInDayFormat.format('HH:mm:ss')
+    //             : defaultTime;
+
+    //         const formattedPunchOut = defaultTime ? defaultTime : manualEditData.punchOut !== "" && formattedPunchOutDayFormat.isValid()
+    //             ? formattedPunchOutDayFormat.format('HH:mm:ss')
+    //             : defaultTime;
+
+    //         const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
+    //         const hasOvertime = overtime !== '';
+    //         const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
+
+    //         if (!hasOvertime && !hasPunchInOrOut) {
+    //             toast.error('At least provide Overtime or Punch In/Out details to save.');
+    //             return;
+    //         }
+
+    //         const onboardName = user.name || null;
+    //         const workingHours = manualEditData.shift || selectedDay.workingHours;
+    //         const AttendanceStatus = manualEditData.attendanceStatus || null;
+    //         const payload = {
+    //             labourId: selectedDay.labourId,
+    //             date: selectedDay.date,
+    //             AttendanceId: manualEditData.AttendanceId || "",
+    //             ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
+    //             ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
+    //             ...(hasOvertime && { overtimeManually: manualEditData.overtimemanually }),
+    //             ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
+    //             workingHours,
+    //             ...(onboardName && { onboardName }), AttendanceStatus,
+    //             markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
+    //             updatedFields: changedFields,
+    //             userType: user.userType || null,
+    //         };
+
+    //         console.log("payload for attendance only", payload)
+    //         // const response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
+    //           // 🧠 Conditional API logic
+    //     const isOnlyOvertime = changedFields.length === 1 && changedFields[0] === "overtimemanually";
+    //     let response;
+    //     if (isOnlyOvertime) {
+    //         response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload); 
+    //     } else {
+    //         response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
+    //         }
+
+    //          updatedAttendanceData = attendanceData.map((day) =>
+    //             day.date === selectedDay.date
+    //                 ? {
+    //                     ...day,
+    //                     ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
+    //                     ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
+    //                     ...(hasOvertime && { overtimemanually: manualEditData.overtimemanually || 0 }),
+    //                     ...(manualEditData.remark && { remark: manualEditData.remark }),
+    //                     workingHours, AttendanceStatus,
+    //                     markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
+    //                 }
+    //                 : day
+    //         );
+
+    //         setAttendanceData(updatedAttendanceData);
+    //         setIsLoading(false);
+    //         toast.success(response.data.message || 'Attendance updated successfully!');
+    //     } catch (error) {
+    //         const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
+    //         console.error('Error saving attendance:', errorMessage);
+
+    //         if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
+    //             toast.info('The date is a holiday. You cannot modify punch times or overtime.');
+    //         } else {
+    //             toast.error(errorMessage);
+    //         }
+    //         setIsLoading(false);
+    //     }
+    //     finally {
+    //         setIsLoading(false);
+    //     if (updatedAttendanceData) {    
+    //         setAttendanceData(updatedAttendanceData || attendanceData);
+    //         // fetchAttendanceWithLoading();
+    //     }}
+    // };
+
     const handleSaveManualEdit = async () => {
-        handleManualEditDialogClose();
-        setIsLoading(true);
-         let latestLabourWageRecord = null;
+        let latestLabourWageRecord = null;
+            handleManualEditDialogClose();
         try {
             if (manualEditData.status === 'weeklyOff') {
                 const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
@@ -481,14 +617,15 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                     toast.error("Add the wages for that labour then add mark as weeklyOff");
                     return;
                 }
-                 if (latestLabourWageRecord.WeeklyOff === 0) {
-                  toast.error("You are not eligible for Weekly Off. It will not be marked Weekly Off In Wages.");
-                   return; // 🚫 stop further execution
-                }
 
                 if (latestLabourWageRecord.PayStructure === "DAILY WAGES") {
                     toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
                     return;
+                }
+
+                 if (latestLabourWageRecord?.WeeklyOff === 0) {
+                  toast.error("You are not eligible for Weekly Off. It will not be marked Weekly Off In Wages.");
+                   return; 
                 }
             }
 
@@ -562,14 +699,15 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                         ...(hasOvertime && { overtimemanually: manualEditData.overtimemanually || 0 }),
                         ...(manualEditData.remark && { remark: manualEditData.remark }),
                         workingHours, AttendanceStatus,
-                        markWeeklyOff: manualEditData.status === 'weeklyOff',
+                        markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
                     }
                     : day
             );
 
             setAttendanceData(updatedAttendanceData);
-            setIsLoading(false);
+
             toast.success(response.data.message || 'Attendance updated successfully!');
+            handleManualEditDialogClose();
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
             console.error('Error saving attendance:', errorMessage);
@@ -828,6 +966,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                     halfDays: labour.HalfDays,
                     absentDays: labour.AbsentDays,
                     misspunchDays: labour.MissPunchDays,
+                    WeeklyOffDays: labour.WeeklyOffDays,
                     // totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
                     totalOvertimeHours: formatTotalOvertime(labour.TotalOvertimeHours || 0),
                     roundOffTotalOvertime: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
@@ -1533,6 +1672,7 @@ const handleImportSuccess = (msg) => {
                                 <TableCell>Half Days</TableCell>
                                 <TableCell>Absent Days</TableCell>
                                 <TableCell>MissPunch Days</TableCell>
+                                <TableCell>WeeklyOff Days</TableCell>
                                 <TableCell>Overtime (Hours)</TableCell>
                                 <TableCell>RoundOffTotalOvertime (Hours)</TableCell>
                                 <TableCell>Actions</TableCell>
@@ -1563,9 +1703,11 @@ const handleImportSuccess = (msg) => {
                                             <TableCell>{labour.workingHours || '-'}</TableCell>
                                             <TableCell>{labourAttendance ? labourAttendance.totalDays : '-'}</TableCell>
                                             <TableCell>{labourAttendance ? labourAttendance.presentDays : '-'}</TableCell>
+                                             {/* <TableCell> {labourAttendance ? (parseInt(labourAttendance.presentDays || 0, 10) + parseInt(labourAttendance.WeeklyOffDays || 0, 10)) : '-'} </TableCell> */}
                                             <TableCell>{labourAttendance ? labourAttendance.halfDays : '-'}</TableCell>
                                             <TableCell>{labourAttendance ? labourAttendance.absentDays : '-'}</TableCell>
                                             <TableCell>{labourAttendance ? labourAttendance.misspunchDays : '-'}</TableCell>
+                                            <TableCell>{labourAttendance ? labourAttendance.WeeklyOffDays : '-'}</TableCell>
                                             {/* <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell> */}
                                             <TableCell>
                                                 {labourAttendance && labourAttendance.totalOvertimeHours ? (
@@ -2284,3 +2426,6 @@ const handleImportSuccess = (msg) => {
 };
 
 export default AttendanceReport;
+
+
+
