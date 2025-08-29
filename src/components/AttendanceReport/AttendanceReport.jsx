@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import {
     Table, IconButton, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Typography, TableFooter, Modal,
@@ -98,62 +97,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const laboursSource =
         labourlist && labourlist.length > 0 ? labourlist : labours;
 
-    // const fetchLaboursAttenadance = async (filters = {}) => {
-    //     setLoading(true);
-    //     try {
-    //         const response = await axios.get(
-    //             `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
-    //             { params: filters }
-    //         );
-
-    //         console.log("Filtered Attendance Response", response.data);
-
-    //         const uniqueLaboursMap = new Map();
-    //         console.log("uniqueLaboursMap", uniqueLaboursMap);
-    //         response.data.forEach(item => {
-    //             if (!uniqueLaboursMap.has(item.LabourID)) {
-    //                 uniqueLaboursMap.set(item.LabourID, {
-    //                     LabourID: item.LabourID,
-    //                     name: item.name,
-    //                     projectName: item.projectName,
-    //                     department: item.department,
-    //                     workingHours: item.workingHours || item.Shift,
-    //                     businessUnit: item.businessUnit,
-    //                     departmentName: item.departmentName,
-    //                     status: item.status || 'Approved',
-    //                     PresentDays: item.PresentDays,
-    //                     AbsentDays: item.AbsentDays,
-    //                     HalfDays: item.HalfDays,
-    //                     Overtime: item.RoundOffTotalOvertime
-    //                 });
-    //             }
-    //         });
-
-    //         const uniqueLabours = Array.from(uniqueLaboursMap.values());
-    //         console.log("uniqueLabours", uniqueLabours);
-    //         setLaboursAttenadance(response.data);
-    //         setLabours(uniqueLabours);
-
-    //     } catch (error) {
-    //         console.error('Error fetching labours:', error);
-    //         toast.error('Failed to fetch data');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-
-
-    // setAttendanceData(response.data);
-    // setLabours(uniqueLabours); 
-    //     } catch (error) {
-    //         console.error('Error fetching labours:', error);
-    //         toast.error('Failed to fetch data');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
     const fetchLaboursAttenadance = async (filters = {}) => {
     setLoading(true);
     try {
@@ -200,14 +143,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         fetchProjectNames();
     }, []);
 
-    // const handleApplyFilter = async () => {
-    //     const params = {};
-    //     if (selectedBusinessUnit) params.businessUnit = selectedBusinessUnit;
-    //     if (selectedDepartment) params.department = selectedDepartment;
-    //     if (employeeToggle === 'single' && selectedEmployee) {
-    //         params.employee = selectedEmployee;
-    //     }
-    // }
     const handleResetFilter = () => {
         // setSelectedBusinessUnit('');
         // setSelectedDepartment('');
@@ -218,21 +153,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         setSelectedEmployee('');
     };
 
-    // const handleApplyFilters = () => {
-    //     const filters = {};
-    //     if (selectedBusinessUnit) {
-    //     //   filters.projectName = selectedBusinessUnit;
-    //     filters.ProjectID = selectedBusinessUnit.join(',');
-    //     }
-    //     if (selectedDepartment) {
-    //       filters.department = selectedDepartment;
-    //     }
-    //     if (employeeToggle === 'single' && selectedEmployee) {
-    //       filters.employee = selectedEmployee;
-    //     }
-    //     fetchLaboursAttenadance(filters);
-    //     setFilterModalOpen(false);
-    //   };
 
     const handleApplyFilters = () => {
         const filters = {};
@@ -454,145 +374,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const handleManualEditDialogClose = () => {
         setEditManualDialogOpen(false);
     };
-
-
-    // const handleSaveManualEdit = async () => {
-    //     setIsLoading(true);
-    //     let latestLabourWageRecord = null;
-    //     let updatedAttendanceData;
-    //     try {
-    //     handleManualEditDialogClose();
-
-    //         if (manualEditData?.status === 'weeklyOff') {
-    //             const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
-    //                 params: { labourId: selectedDay.labourId }
-    //             });
-    //             const wagesData = wagesResponse.data;
-    //             // console.log("wagesData", wagesData);
-    //                const latestLabourWageRecord = wagesData
-    //                 .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
-    //             [0];
-
-    //             if (!wagesData || wagesData.length === 0) {
-    //                 toast.error("Add the wages for that labour then add mark as weeklyOff");
-    //                  setIsLoading(false);
-    //                 return;
-    //             }
-             
-    //             if (!latestLabourWageRecord) {
-    //                 toast.error("Add the wages for that labour then add mark as weeklyOff");
-    //                  setIsLoading(false);
-    //                 return;
-    //             }
-
-    //             if (latestLabourWageRecord?.PayStructure === "DAILY WAGES") {
-    //                 toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
-    //                  setIsLoading(false);
-    //                 return;
-    //             }
-
-    //              if (latestLabourWageRecord?.WeeklyOff === 0) {
-    //               toast.error("You are not eligible for Weekly Off. It will not be marked Weekly Off In Wages.");
-    //               setIsLoading(false);
-    //                return; // 🚫 stop further execution
-    //             }
-    //         }
-
-
-    //         if (
-    //             manualEditData.status !== 'absent' &&
-    //             manualEditData.status !== 'weeklyOff' &&
-    //             (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4)
-    //         ) {
-    //             toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
-    //             return;
-    //         }
-    //         const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
-
-    //         const formattedPunchInDayFormat = dayjs(manualEditData.punchIn, 'HH:mm:ss');
-    //         const formattedPunchOutDayFormat = dayjs(manualEditData.punchOut, 'HH:mm:ss');
-
-    //         const formattedPunchIn = defaultTime ? defaultTime : manualEditData.punchIn !== "" && formattedPunchInDayFormat.isValid()
-    //             ? formattedPunchInDayFormat.format('HH:mm:ss')
-    //             : defaultTime;
-
-    //         const formattedPunchOut = defaultTime ? defaultTime : manualEditData.punchOut !== "" && formattedPunchOutDayFormat.isValid()
-    //             ? formattedPunchOutDayFormat.format('HH:mm:ss')
-    //             : defaultTime;
-
-    //         const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
-    //         const hasOvertime = overtime !== '';
-    //         const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
-
-    //         if (!hasOvertime && !hasPunchInOrOut) {
-    //             toast.error('At least provide Overtime or Punch In/Out details to save.');
-    //             return;
-    //         }
-
-    //         const onboardName = user.name || null;
-    //         const workingHours = manualEditData.shift || selectedDay.workingHours;
-    //         const AttendanceStatus = manualEditData.attendanceStatus || null;
-    //         const payload = {
-    //             labourId: selectedDay.labourId,
-    //             date: selectedDay.date,
-    //             AttendanceId: manualEditData.AttendanceId || "",
-    //             ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
-    //             ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
-    //             ...(hasOvertime && { overtimeManually: manualEditData.overtimemanually }),
-    //             ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
-    //             workingHours,
-    //             ...(onboardName && { onboardName }), AttendanceStatus,
-    //             markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
-    //             updatedFields: changedFields,
-    //             userType: user.userType || null,
-    //         };
-
-    //         console.log("payload for attendance only", payload)
-    //         // const response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
-    //           // 🧠 Conditional API logic
-    //     const isOnlyOvertime = changedFields.length === 1 && changedFields[0] === "overtimemanually";
-    //     let response;
-    //     if (isOnlyOvertime) {
-    //         response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload); 
-    //     } else {
-    //         response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
-    //         }
-
-    //          updatedAttendanceData = attendanceData.map((day) =>
-    //             day.date === selectedDay.date
-    //                 ? {
-    //                     ...day,
-    //                     ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
-    //                     ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
-    //                     ...(hasOvertime && { overtimemanually: manualEditData.overtimemanually || 0 }),
-    //                     ...(manualEditData.remark && { remark: manualEditData.remark }),
-    //                     workingHours, AttendanceStatus,
-    //                     markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
-    //                 }
-    //                 : day
-    //         );
-
-    //         setAttendanceData(updatedAttendanceData);
-    //         setIsLoading(false);
-    //         toast.success(response.data.message || 'Attendance updated successfully!');
-    //     } catch (error) {
-    //         const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
-    //         console.error('Error saving attendance:', errorMessage);
-
-    //         if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
-    //             toast.info('The date is a holiday. You cannot modify punch times or overtime.');
-    //         } else {
-    //             toast.error(errorMessage);
-    //         }
-    //         setIsLoading(false);
-    //     }
-    //     finally {
-    //         setIsLoading(false);
-    //     if (updatedAttendanceData) {    
-    //         setAttendanceData(updatedAttendanceData || attendanceData);
-    //         // fetchAttendanceWithLoading();
-    //     }}
-    // };
 
     const handleSaveManualEdit = async () => {
         let latestLabourWageRecord = null;
@@ -990,29 +771,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         }
     }, [selectedMonth, selectedYear]);
 
-
-    // const getFilteredLaboursForTable = () => {
-    //     let baseLabours = rowsPerPage > 0
-    //         ? (searchResults.length > 0
-    //             ? searchResults
-    //             : (filteredIconLabours.length > 0
-    //                 ? filteredIconLabours
-    //                 : [...labours]))
-    //         : [];
-
-    //     baseLabours = baseLabours.filter((labour) => {
-    //         const labourProjectId = Number(labour.projectId);
-    //         const labourDepartmentId = Number(labour.departmentId);
-    //         return (
-    //             allowedProjectIds.includes(labourProjectId) &&
-    //             allowedDepartmentIds.includes(labourDepartmentId)
-    //         );
-    //     });
-    //     baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
-    //     return baseLabours;
-    // };
-
-
    const getFilteredLaboursForTable = () => {
     let baseLabours = rowsPerPage > 0
         ? (searchResults.length > 0
@@ -1187,7 +945,7 @@ const handleImportSuccess = (msg) => {
                 </Typography>
             </Box>
 
-            <Box display="flex" alignItems="center">
+            <Box display="flex" alignItems="center" mb={1} mr={2}>
                 <CircleIcon
                     sx={{
                         color: "#FF6F00",
@@ -1263,26 +1021,6 @@ const handleImportSuccess = (msg) => {
     useEffect(() => {
         fetchBusinessUnits();
     }, []);
-
-    // const handleBusinessUnitChange = async (event) => {
-    //     const selectedUnit = event.target.value;
-    //     setSelectedBusinessUnit(selectedUnit);
-
-    //     const selectedProject = businessUnits.find((unit) => unit.BusinessUnit === selectedUnit);
-    //     if (selectedProject) {
-    //         setProjectName(selectedProject.ProjectID);
-
-    //         try {
-    //             const response = await axios.get(`${API_BASE_URL}/labours`, {
-    //                 params: { projectName: selectedProject.ProjectID },
-    //             });
-    //             setLabours(response.data);
-    //         } catch (error) {
-    //             console.error('Error fetching labours for project:', error);
-    //             toast.error('Error fetching labours for the selected project.');
-    //         }
-    //     }
-    // };
 
     const isAllSelected = projectNames.length > 0 && selectedBusinessUnit.length === projectNames.length;
     const isAllSelectedDep = departments.length > 0 && selectedDepartment.length === departments.length;
@@ -1680,7 +1418,6 @@ const handleImportSuccess = (msg) => {
                         </TableHead>
 
                         <TableBody>
-
                             {getFilteredLaboursForTable()
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((labour, index) => {
@@ -2212,6 +1949,7 @@ const handleImportSuccess = (msg) => {
                     >
                         <Box>
                             <TextField
+
                                 select
                                 label="Mark Attendance As"
                                 value={manualEditData.status}
