@@ -74,7 +74,8 @@ const SearchRegister = ({
   searchResults = [],
   setSearchResults,
   handleSelectLabour,
-  showResults 
+  showResults,
+  fetchAttendanceForMonthAll   
 }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -98,12 +99,13 @@ const SearchRegister = ({
             setSearchQuery(e.target.value);
             if (e.target.value.trim() === '') {
               setSearchResults([]); // Clear search results if input is empty
+              fetchAttendanceForMonthAll();
             }
           }}
         />
         <button type="submit" className="search-register__button">Go</button>
       </form>
-
+          
       {showResults && searchResults.length > 0 && (
         <div className="search-register__results">
           <ul className="search-register__results-list">

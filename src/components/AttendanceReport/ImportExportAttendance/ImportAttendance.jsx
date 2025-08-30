@@ -11,8 +11,6 @@ import {
     Modal,
     Grid,
 } from '@mui/material';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import Loading from '../../Loading/Loading';
 
 const ImportAttendance = ({ onSuccess }) => {
@@ -28,7 +26,7 @@ const ImportAttendance = ({ onSuccess }) => {
 
     const handleImport = async () => {
         if (!file) {
-            toast.error('Please select an Excel file');
+            // toast.error('Please select an Excel file');
             return;
         }
         const selectedFile = file;
@@ -56,12 +54,11 @@ const ImportAttendance = ({ onSuccess }) => {
                         .map((row) => `Row ${row.index + 1}: ${JSON.stringify(row.row)}`)
                         .join('\n');
 
-                    console.log(`Error: ${message}\n\nInvalid Rows:\n${errorMessage}`);
                 } else {
-                    toast.message(`Error: ${message}`);
+                    // toast.message(`Error: ${message}`);
                 }
             } else {
-                toast.error('Unexpected error:', error);
+                // toast.error('Unexpected error:', error);
             }
         } finally {
             setLoading(false);
@@ -70,7 +67,6 @@ const ImportAttendance = ({ onSuccess }) => {
 
     return (
         <>
-<ToastContainer /> 
             {loading && (
                 <Box
                     sx={{

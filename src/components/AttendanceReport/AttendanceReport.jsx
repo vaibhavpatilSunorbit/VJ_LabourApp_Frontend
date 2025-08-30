@@ -28,8 +28,6 @@ import Tooltip from '@mui/material/Tooltip';
 import Badge from '@mui/material/Badge';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
-import 'react-toastify/dist/ReactToastify.css';
-import { set } from 'date-fns';
 
 const AttendanceReport = ({ departments, labour, labourlist }) => {
     const theme = useTheme();
@@ -597,6 +595,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const handleSaveManualEdit = async () => {
         let latestLabourWageRecord = null;
             handleManualEditDialogClose();
+            await fetchAttendanceWithLoading();
         try {
             if (manualEditData.status === 'weeklyOff') {
                 const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
@@ -678,7 +677,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 userType: user.userType || null,
             };
 
-            console.log("payload for attendance only", payload)
             // const response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
               // 🧠 Conditional API logic
         const isOnlyOvertime = changedFields.length === 1 && changedFields[0] === "overtimemanually";
@@ -737,14 +735,12 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
     const handleSearch = async (e) => {
         e.preventDefault();
-        if (searchQuery.trim() === '') {
-            setSearchResults([]);
-            return;
-        }
+        
         try {
-            const response = await axios.get(`${API_BASE_URL}/api/labours/searchAttendance?q=${searchQuery}`);
-            setSearchResults(response.data);
+            // const response = await axios.get(`${API_BASE_URL}/api/labours/searchAttendance?q=${searchQuery}`);
+            setSearchQuery(e.target.value);
             setPage(0);
+            fetchAttendanceForMonthAll();
         } catch (error) {
             setError('Error searching. Please try again.');
         }
@@ -754,7 +750,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/labours/getAllRecordsLaboursOnboarding`);
             const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID);
-            console.log("sortedLabours for fetchlabours", sortedLabours);
             setLabours(sortedLabours);
             setLoading(false);
         } catch (error) {
@@ -843,7 +838,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 };
             });
             setAttendanceData(fullMonthAttendance);
-            console.log("fullMonthAttendance", response);
             
         } catch (error) {
             console.error('Error fetching attendance data:', error);
@@ -949,7 +943,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         setLoading(true);
         try {
             const response = await axios.get(`${API_BASE_URL}/api/labours/attendancelabours`, {
-                params: { month: selectedMonth, year: selectedYear },
+                params: { month: selectedMonth, year: selectedYear, search: searchQuery },
             });
 
             const attendanceList = response.data;
@@ -1014,12 +1008,11 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
 
    const getFilteredLaboursForTable = () => {
+    // let laboursData = searchResults.length > 0
+    // ? searchResults : [...labours];
+
     let baseLabours = rowsPerPage > 0
-        ? (searchResults.length > 0
-            ? searchResults
-            : (filteredIconLabours.length > 0
-                ? filteredIconLabours
-                : [...labours]))
+        ? ([...labours])
         : [];
 
     baseLabours = baseLabours.filter((labour) => {
@@ -1032,14 +1025,33 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     });
 
     // Only show users with presentDays > 0
-    baseLabours = baseLabours.filter((labour) => {
-        const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
-        return (labour.status === 'Approved' || labour.status === 'Disable') &&
-            labourAttendance &&
-            Number(labourAttendance.presentDays) > 0;
-    });
+    // baseLabours = baseLabours.filter((labour) => {
+    //     const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
+    //     return (labour.status === 'Approved' || labour.status === 'Disable') &&
+    //         labourAttendance &&
+    //         Number(labourAttendance.presentDays) > 0;
+    // });
 
-    return baseLabours;
+
+    const mergedLabours = baseLabours.map((labour) => {
+        // Find matching attendance
+        const labourAttendance = attendanceData.find(
+          (att) => att.labourId === labour.LabourID
+        );
+      
+        // Merge attendance into labour object (if found)
+        return {
+          ...labour,
+          attendance: labourAttendance || null, // add null if no attendance
+        };
+      }).filter((item) => {
+            return (item.status === 'Approved' || item.status === 'Disable') &&
+            item.attendance &&
+            Number(item.attendance.presentDays) > 0;
+      });
+      
+
+    return mergedLabours;
 };
 
     const handleModalClose = () => {
@@ -1430,7 +1442,6 @@ const handleImportSuccess = (msg) => {
           } else if (!isChanged && prevFields.includes(fieldName)) {
             return prevFields.filter((field) => field !== fieldName);
           }
-          console.log("prevFields---->", prevFields);
           return prevFields;
         });
       };
@@ -1453,6 +1464,7 @@ const handleImportSuccess = (msg) => {
                     setSearchResults={setSearchResults}
                     handleSelectLabour={handleSelectLabour}
                     showResults={false}
+                    fetchAttendanceForMonthAll={fetchAttendanceForMonthAll}
                 />
             </Box>
             {loading && <Loading />}
@@ -1603,7 +1615,7 @@ const handleImportSuccess = (msg) => {
 
                             <ExportAttendance />
                             <ImportAttendance onSuccess={handleImportSuccess}/>
-<ToastContainer position="top-right" autoClose={3000} />
+                            <ToastContainer position="top-right" autoClose={3000} />
                             </Box>
 
                         <TablePagination
@@ -1684,7 +1696,7 @@ const handleImportSuccess = (msg) => {
                             {getFilteredLaboursForTable()
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((labour, index) => {
-                                    const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
+                                    // const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
 
                                     return (
                                         <TableRow key={labour.LabourID}
@@ -1701,25 +1713,25 @@ const handleImportSuccess = (msg) => {
                                             <TableCell>{labour.LabourID}</TableCell>
                                             <TableCell>{labour.name || '-'}</TableCell>
                                             <TableCell>{labour.workingHours || '-'}</TableCell>
-                                            <TableCell>{labourAttendance ? labourAttendance.totalDays : '-'}</TableCell>
-                                            <TableCell>{labourAttendance ? labourAttendance.presentDays : '-'}</TableCell>
+                                            <TableCell>{labour.attendance ? labour.attendance.totalDays : '-'}</TableCell>
+                                            <TableCell>{labour.attendance ? labour.attendance.presentDays : '-'}</TableCell>
                                              {/* <TableCell> {labourAttendance ? (parseInt(labourAttendance.presentDays || 0, 10) + parseInt(labourAttendance.WeeklyOffDays || 0, 10)) : '-'} </TableCell> */}
-                                            <TableCell>{labourAttendance ? labourAttendance.halfDays : '-'}</TableCell>
-                                            <TableCell>{labourAttendance ? labourAttendance.absentDays : '-'}</TableCell>
-                                            <TableCell>{labourAttendance ? labourAttendance.misspunchDays : '-'}</TableCell>
-                                            <TableCell>{labourAttendance ? labourAttendance.WeeklyOffDays : '-'}</TableCell>
+                                            <TableCell>{labour.attendance ? labour.attendance.halfDays : '-'}</TableCell>
+                                            <TableCell>{labour.attendance ? labour.attendance.absentDays : '-'}</TableCell>
+                                            <TableCell>{labour.attendance ? labour.attendance.misspunchDays : '-'}</TableCell>
+                                            <TableCell>{labour.attendance ? labour.attendance.WeeklyOffDays : '-'}</TableCell>
                                             {/* <TableCell>{labourAttendance ? labourAttendance.totalOvertimeHours : '-'}</TableCell> */}
                                             <TableCell>
-                                                {labourAttendance && labourAttendance.totalOvertimeHours ? (
-                                                    <Tooltip title={`${labourAttendance.totalOvertimeHours.hours} hours ${labourAttendance.totalOvertimeHours.minutes} minutes`}>
-                                                        <span>{`${labourAttendance.totalOvertimeHours.hours}h ${labourAttendance.totalOvertimeHours.minutes ? labourAttendance.totalOvertimeHours.minutes + 'm' : ''}`}</span>
+                                                {labour.attendance && labour.attendance.totalOvertimeHours ? (
+                                                    <Tooltip title={`${labour.attendance.totalOvertimeHours.hours} hours ${labour.attendance.totalOvertimeHours.minutes} minutes`}>
+                                                        <span>{`${labour.attendance.totalOvertimeHours.hours}h ${labour.attendance.totalOvertimeHours.minutes ? labour.attendance.totalOvertimeHours.minutes + 'm' : ''}`}</span>
                                                     </Tooltip>
                                                 ) : "0h"}
                                             </TableCell>
                                             <TableCell>
-                                                {labourAttendance && labourAttendance.roundOffTotalOvertime ? (
-                                                    <Tooltip title={`${labourAttendance.roundOffTotalOvertime.hours} hours ${labourAttendance.roundOffTotalOvertime.minutes} minutes`}>
-                                                        <span>{`${labourAttendance.roundOffTotalOvertime.hours}h ${labourAttendance.roundOffTotalOvertime.minutes ? labourAttendance.roundOffTotalOvertime.minutes + 'm' : ''}`}</span>
+                                                {labour.attendance && labour.attendance.roundOffTotalOvertime ? (
+                                                    <Tooltip title={`${labour.attendance.roundOffTotalOvertime.hours} hours ${labour.attendance.roundOffTotalOvertime.minutes} minutes`}>
+                                                        <span>{`${labour.attendance.roundOffTotalOvertime.hours}h ${labour.attendance.roundOffTotalOvertime.minutes ? labour.attendance.roundOffTotalOvertime.minutes + 'm' : ''}`}</span>
                                                     </Tooltip>
                                                 ) : "0h"}
                                             </TableCell>
@@ -1730,14 +1742,14 @@ const handleImportSuccess = (msg) => {
                                                     overlap="rectangular"
                                                     color="error"
                                                     variant="dot"
-                                                    invisible={!labourAttendance?.InApprovalStatus}
+                                                    invisible={!labour.attendance?.InApprovalStatus}
                                                 >
                                                     <Button
                                                         onClick={() =>
                                                             handleModalOpen(
                                                                 labour,
-                                                                labourAttendance.totalOvertimeHours,
-                                                                labourAttendance.TotalOvertimeHoursManually
+                                                                labour.attendance.totalOvertimeHours,
+                                                                labour.attendance.TotalOvertimeHoursManually
                                                             )
                                                         }
                                                         sx={{

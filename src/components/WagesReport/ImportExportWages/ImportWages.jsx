@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import * as XLSX from 'xlsx';
 import { API_BASE_URL } from "../../../Data";
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import {
@@ -10,203 +9,84 @@ import {
     Modal,
     Grid,
 } from '@mui/material';
-// import { ToastContainer, toast } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
-import PropTypes from 'prop-types';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Loading from '../../Loading/Loading';
 
-const ImportWages = ({ handleToast = (type, message) => console[type]?.(message), onboardName, modalOpens, setModalOpens  }) => {
+const ImportAttendance = ({ onSuccess }) => {
     const [open, setOpen] = useState(false);
     const [file, setFile] = useState(null);
-    // const handleClosed = () => setModalOpen(false);
-
+    const [loading, setLoading] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
-        setFile(null); 
-        setModalOpens(false);
+        setFile(null);
         setOpen(false);
     };
 
-    const handleFilePreview = async (file) => {
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-                const jsonData = XLSX.utils.sheet_to_json(sheet);
-                console.log('Excel Data:', jsonData); // Log data to console
-            };
-            reader.readAsArrayBuffer(file);
-        }
-    };
-    
-    // const handleImport = async () => {
-    //     if (!file) {
-    //         handleToast('error','Please select an Excel file');
-    //         return;
-    //     }
-    
-    //     await handleFilePreview(file);
-    
-    //     const formData = new FormData();
-    //     formData.append('file', file);
-    //     formData.append('wagesEditedBy', onboardName);
-    
-    //     try {
-    //         const response = await axios.post(`${API_BASE_URL}/labours/importWagesExcel`, formData, {
-    //             headers: { 'Content-Type': 'multipart/form-data' },
-    //             responseType: 'blob', // Handle file or JSON response
-    //         });
-    
-    //         const contentType = response.headers['content-type'];
-    //         if (contentType.includes('application/json')) {
-    //             // Handle JSON response
-    //             const text = await new Response(response.data).text(); // Convert blob to text
-    //             const jsonResponse = JSON.parse(text);
-    //             if (jsonResponse.message) {
-    //                 handleToast('success', jsonResponse.message);
-    //                 setModalOpens(false);
-    //                 setOpen(false);
-    //             }
-    //         } else if (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
-    //             // Handle Excel file download for error rows
-    //             const blob = new Blob([response.data], {
-    //                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //             });
-    //             const link = document.createElement('a');
-    //             link.href = window.URL.createObjectURL(blob);
-    //             link.setAttribute('download', 'Error_Rows.xlsx');
-    //             document.body.appendChild(link);
-    //             link.click();
-    //             link.parentNode.removeChild(link);
-    
-    //             handleToast('error','Errors occurred during import. Downloaded error file.');
-    //             setModalOpens(false);
-    //         } else {
-    //             handleToast('error','Unexpected response from the server.');
-    //         }
-    //     } catch (error) {
-    //         if (error.response && error.response.data) {
-    //             const reader = new FileReader();
-    //             reader.onload = () => {
-    //                 try {
-    //                     const responseData = JSON.parse(reader.result);
-    //                     if (responseData.message) {
-    //                         let userMessage = '';
 
-    //                         if (responseData.message.includes("Pending' approval already exists")) {
-    //                             userMessage = 'This labour already has a pending wage update. Please wait for admin approval before re-uploading.';
-    //                         } else {
-    //                             userMessage = `Error: ${responseData.message}`;
-    //                         }
-
-    //                         handleToast('error', userMessage);
-    //                     }
-    //                 } catch (parseError) {
-    //                     handleToast('error', 'Unexpected error from server response.');
-    //                 }
-    //             };
-    //             reader.readAsText(error.response.data);
-    //         } else {
-    //             handleToast('error', 'Error uploading the file. Please try again.');
-    //         }
-    //         handleToast('error', 'Error uploading the file:', error);
-    //         setModalOpens(false);
-    //     }
-    //     ImportWages.propTypes = {
-    //         handleToast: PropTypes.func,
-    //         onboardName: PropTypes.string,
-    //         modalOpens: PropTypes.bool,
-    //         setModalOpens: PropTypes.func,
-    //     };
-    // };
- 
     const handleImport = async () => {
         if (!file) {
-            handleToast('error', 'Please select an Excel file');
+            toast.error('Please select an Excel file');
             return;
         }
-    
-        await handleFilePreview(file);
-    
+        const selectedFile = file;
+        handleClose();
+
+        setLoading(true);
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('wagesEditedBy', onboardName);
-    
+        formData.append('file', selectedFile);
+
         try {
-            const response = await axios.post(`${API_BASE_URL}/api/labours/importWagesExcel`, formData, {
+            const response = await axios.post(`${API_BASE_URL}/api/labours/import`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                responseType: 'blob',
             });
-    
-            const contentType = response.headers['content-type'];
-    
-            if (contentType.includes('application/json')) {
-                const text = await new Response(response.data).text();
-                const jsonResponse = JSON.parse(text);
-                if (jsonResponse.message) {
-                    handleToast('success', jsonResponse.message);
-                    setOpen(false);
-                }
-            } else if (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
-                const blob = new Blob([response.data], {
-                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                });
-                const link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.setAttribute('download', 'Error_Rows.xlsx');
-                document.body.appendChild(link);
-                link.click();
-                link.parentNode.removeChild(link);
-    
-                handleToast('error', 'Errors occurred during import. Downloaded error file.');
-            } else {
-                handleToast('error', 'Unexpected response from the server.');
-            }
+            // toast.success(response.data.message || 'Attendance imported successfully!');
+            // toast.message(response.data.message);
+            if (onSuccess) onSuccess(response.data.message);
         } catch (error) {
             if (error.response && error.response.data) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    try {
-                        const responseData = JSON.parse(reader.result);
-                        if (responseData.message) {
-                            let userMessage = '';
-    
-                            if (responseData.message.includes("Pending' approval already exists")) {
-                                userMessage = 'This labour already has a pending wage update. Please wait for admin approval before re-uploading.';
-                            } else {
-                                userMessage = `Error: ${responseData.message}`;
-                            }
-    
-                            handleToast('error', userMessage);
-                        }
-                    } catch (parseError) {
-                        handleToast('error', 'Unexpected error from server response.');
-                    }
-                };
-                reader.readAsText(error.response.data);
+                const { message, invalidRows } = error.response.data;
+
+                if (invalidRows && invalidRows.length > 0) {
+                    console.error('Invalid rows:', invalidRows);
+
+                    const errorMessage = invalidRows
+                        .map((row) => `Row ${row.index + 1}: ${JSON.stringify(row.row)}`)
+                        .join('\n');
+
+                } else {
+                    toast.message(`Error: ${message}`);
+                }
             } else {
-                handleToast('error', 'Error uploading the file. Please try again.');
+                toast.error('Unexpected error:', error);
             }
-            console.error('Upload Error:', error); // Optional: for debugging
         } finally {
-            // ✅ Always close modal
-            setOpen(false);
+            setLoading(false);
         }
     };
-    
-    // Define prop types outside the function
-    ImportWages.propTypes = {
-        handleToast: PropTypes.func,
-        onboardName: PropTypes.string,
-        modalOpens: PropTypes.bool,
-        setModalOpens: PropTypes.func,
-    };
 
-    
     return (
         <>
+<ToastContainer /> 
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        zIndex: 1000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Loading />
+                </Box>
+            )}
+
             <Button
                 onClick={handleOpen}
                 sx={{
@@ -253,11 +133,10 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
                         component="h2"
                         sx={{ fontWeight: 'bold', marginBottom: 1 }}
                     >
-                        Import Wages
+                        Import Attendance Data
                     </Typography>
 
                     <Box display="flex" flexDirection="column" gap={3}>
-                        {/* <ToastContainer /> */}
 
                         <Box>
                             <Typography
@@ -270,10 +149,7 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
                             </Typography>
                             <input
                                 type="file"
-                                onChange={(e) => {
-                                    setFile(e.target.files[0]);
-                                    handleFilePreview(e.target.files[0]);
-                                }}
+                                onChange={(e) => setFile(e.target.files[0])}
                                 style={{
                                     padding: '10px 4px',
                                     border: '1px solid #ccc',
@@ -283,7 +159,6 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
                                 }}
                             />
                         </Box>
-
                         <Grid container spacing={2} justifyContent="flex-end">
                             <Grid item>
                                 <Button
@@ -312,6 +187,7 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
                                             backgroundColor: '#45a049',
                                         },
                                     }}
+
                                 >
                                     Import
                                 </Button>
@@ -324,4 +200,4 @@ const ImportWages = ({ handleToast = (type, message) => console[type]?.(message)
     );
 };
 
-export default ImportWages;
+export default ImportAttendance;

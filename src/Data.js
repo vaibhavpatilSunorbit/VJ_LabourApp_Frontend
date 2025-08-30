@@ -3,20 +3,13 @@ import { UilUniversity, UilUserPlus, UilFileAlt } from '@iconscout/react-unicons
 
 
 
-// export const API_BASE_URL = "https://laboursandbox.vjerp.com";
-export const API_BASE_URL = "http://localhost:4000";
+export const API_BASE_URL = "https://laboursandbox.vjerp.com";
+// export const API_BASE_URL = "http://localhost:4000";
 // export const API_BASE_URL = "https://vjlabour.vjerp.com";
-
 
 
 // Data.js
 export const SidebarData = [
-  {
-    icon: UilFileAlt,
-    heading: "Dashboard",
-    path: "Dashboard",
-    roles: ["superadmin","admin", "user"],
-  },
   {
     icon: UilUniversity,
     heading: "Application",
