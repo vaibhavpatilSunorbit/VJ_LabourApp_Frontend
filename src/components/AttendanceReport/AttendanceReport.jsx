@@ -592,131 +592,295 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     //     }}
     // };
 
+
+
     const handleSaveManualEdit = async () => {
-        let latestLabourWageRecord = null;
-            handleManualEditDialogClose();
-            await fetchAttendanceWithLoading();
+        let latestLabourWageRecord = null; // keep single binding
+        handleManualEditDialogClose();
+        await fetchAttendanceWithLoading();
+      
         try {
-            if (manualEditData.status === 'weeklyOff') {
-                const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
-                    params: { labourId: selectedDay.labourId }
-                });
-                const wagesData = wagesResponse.data;
-                // console.log("wagesData", wagesData);
-
-                if (!wagesData || wagesData.length === 0) {
-                    toast.error("Add the wages for that labour then add mark as weeklyOff");
-                    return;
-                }
-                const latestLabourWageRecord = wagesData
-                    .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
-                [0];
-
-                if (!latestLabourWageRecord) {
-                    toast.error("Add the wages for that labour then add mark as weeklyOff");
-                    return;
-                }
-
-                if (latestLabourWageRecord.PayStructure === "DAILY WAGES") {
-                    toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
-                    return;
-                }
-
-                 if (latestLabourWageRecord?.WeeklyOff === 0) {
-                  toast.error("You are not eligible for Weekly Off. It will not be marked Weekly Off In Wages.");
-                   return; 
-                }
+          if (manualEditData.status === 'weeklyOff') {
+            const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
+              params: { labourId: selectedDay.labourId }
+            });
+            const wagesData = wagesResponse.data || [];
+      
+            if (!wagesData.length) {
+              toast.error("Add the wages for that labour then mark Weekly Off.");
+              return;
             }
-
-
-            if (
-                manualEditData.status !== 'absent' &&
-                manualEditData.status !== 'weeklyOff' &&
-                (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4)
-            ) {
-                toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
-                return;
+      
+            // latest wages row
+            latestLabourWageRecord = wagesData
+              .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))[0];
+      
+            if (!latestLabourWageRecord) {
+              toast.error("Add the wages for that labour then mark Weekly Off.");
+              return;
             }
-            const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
-
-            const formattedPunchInDayFormat = dayjs(manualEditData.punchIn, 'HH:mm:ss');
-            const formattedPunchOutDayFormat = dayjs(manualEditData.punchOut, 'HH:mm:ss');
-
-            const formattedPunchIn = defaultTime ? defaultTime : manualEditData.punchIn !== "" && formattedPunchInDayFormat.isValid()
-                ? formattedPunchInDayFormat.format('HH:mm:ss')
-                : defaultTime;
-
-            const formattedPunchOut = defaultTime ? defaultTime : manualEditData.punchOut !== "" && formattedPunchOutDayFormat.isValid()
-                ? formattedPunchOutDayFormat.format('HH:mm:ss')
-                : defaultTime;
-
-            const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
-            const hasOvertime = overtime !== '';
-            const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
-
-            if (!hasOvertime && !hasPunchInOrOut) {
-                toast.error('At least provide Overtime or Punch In/Out details to save.');
-                return;
+      
+            if (latestLabourWageRecord.PayStructure === "DAILY WAGES") {
+              toast.error("The selected labour is on DAILY WAGES; Weekly Off cannot be marked.");
+              return;
             }
-
-            const onboardName = user.name || null;
-            const workingHours = manualEditData.shift || selectedDay.workingHours;
-            const AttendanceStatus = manualEditData.attendanceStatus || null;
-            const payload = {
-                labourId: selectedDay.labourId,
-                date: selectedDay.date,
-                AttendanceId: manualEditData.AttendanceId || "",
-                ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
-                ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
-                ...(hasOvertime && { overtimeManually: manualEditData.overtimemanually }),
-                ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
-                workingHours,
-                ...(onboardName && { onboardName }), AttendanceStatus,
-                markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
-                updatedFields: changedFields,
-                userType: user.userType || null,
-            };
-
-            // const response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
-              // 🧠 Conditional API logic
-        const isOnlyOvertime = changedFields.length === 1 && changedFields[0] === "overtimemanually";
-        let response;
-
-        if (isOnlyOvertime) {
-            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload); 
-        } else {
+      
+            const weeklyOffEntitlement = Number(latestLabourWageRecord?.WeeklyOff ?? 0);
+            if (weeklyOffEntitlement === 0) {
+              toast.error("You are not eligible for Weekly Off as per wages.");
+              return;
+            }
+      
+            // === MONTHLY CAP CHECK ===
+            // Count all Weekly Off already marked for this labour in the month of selectedDay.date
+            const selected = dayjs(selectedDay.date, 'YYYY-MM-DD');
+            const monthStart = selected.startOf('month');
+            const monthEnd = selected.endOf('month');
+      
+            const monthlyWeeklyOffCount = (attendanceData || []).filter(d => {
+              if (d.labourId !== selectedDay.labourId) return false;
+              const dDate = dayjs(d.date, 'YYYY-MM-DD');
+              const inSameMonth = dDate.isAfter(monthStart.subtract(1, 'millisecond')) &&
+                                  dDate.isBefore(monthEnd.add(1, 'millisecond'));
+              const markedWeeklyOff =
+                d.markWeeklyOff === true ||
+                d.AttendanceStatus === 'WO' ||
+                d.status === 'WO';
+              return inSameMonth && markedWeeklyOff;
+            }).length;
+      
+            if (monthlyWeeklyOffCount >= weeklyOffEntitlement) {
+              toast.info(
+                `Weekly Off limit (${weeklyOffEntitlement}) reached for ${selected.format('MMMM YYYY')}. ` +
+                `Attendance will not be adjusted.`
+              );
+              return;
+            }   
+          }
+      
+      
+          const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
+          const formattedPunchInDayFormat = dayjs(manualEditData.punchIn, 'HH:mm:ss');
+          const formattedPunchOutDayFormat = dayjs(manualEditData.punchOut, 'HH:mm:ss');
+          const formattedPunchIn = defaultTime ? defaultTime :
+            (manualEditData.punchIn !== "" && formattedPunchInDayFormat.isValid()
+              ? formattedPunchInDayFormat.format('HH:mm:ss')
+              : defaultTime);
+          const formattedPunchOut = defaultTime ? defaultTime :
+            (manualEditData.punchOut !== "" && formattedPunchOutDayFormat.isValid()
+              ? formattedPunchOutDayFormat.format('HH:mm:ss')
+              : defaultTime);
+      
+          const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
+          const hasOvertime = overtime !== '';
+          const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
+      
+          if (
+            manualEditData.status !== 'absent' &&
+            manualEditData.status !== 'weeklyOff' &&
+            (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4)
+          ) {
+            toast.error("Overtime manually cannot be greater than system overtime or exceed 4 hours.");
+            return;
+          }
+          if (!hasOvertime && !hasPunchInOrOut) {
+            toast.error('Provide at least Overtime or Punch In/Out details to save.');
+            return;
+          }
+      
+          const onboardName = user.name || null;
+          const workingHours = manualEditData.shift || selectedDay.workingHours;
+          const AttendanceStatus = manualEditData.attendanceStatus || null;
+      
+          const canMarkWeeklyOff = manualEditData.status === 'weeklyOff'
+            ? Number(latestLabourWageRecord?.WeeklyOff ?? 0) > 0
+            : false;
+      
+          const payload = {
+            labourId: selectedDay.labourId,
+            date: selectedDay.date,
+            AttendanceId: manualEditData.AttendanceId || "",
+            ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
+            ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
+            ...(hasOvertime && { overtimeManually: manualEditData.overtimemanually }),
+            ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
+            workingHours,
+            ...(onboardName && { onboardName }),
+            AttendanceStatus,
+            markWeeklyOff: canMarkWeeklyOff, // will be true only if eligible and monthly cap not exceeded
+            updatedFields: changedFields,
+            userType: user.userType || null,
+          };
+      
+          const isOnlyOvertime = changedFields.length === 1 && changedFields[0] === "overtimemanually";
+          let response;
+          if (isOnlyOvertime) {
+            response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload);
+          } else {
             response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
-            }
-
-            const updatedAttendanceData = attendanceData.map((day) =>
-                day.date === selectedDay.date
-                    ? {
-                        ...day,
-                        ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
-                        ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
-                        ...(hasOvertime && { overtimemanually: manualEditData.overtimemanually || 0 }),
-                        ...(manualEditData.remark && { remark: manualEditData.remark }),
-                        workingHours, AttendanceStatus,
-                        markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
-                    }
-                    : day
-            );
-
-            setAttendanceData(updatedAttendanceData);
-
-            toast.success(response.data.message || 'Attendance updated successfully!');
-            handleManualEditDialogClose();
+          }
+      
+          const updatedAttendanceData = attendanceData.map((day) =>
+            day.date === selectedDay.date
+              ? {
+                  ...day,
+                  ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
+                  ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
+                  ...(hasOvertime && { overtimemanually: manualEditData.overtimemanually || 0 }),
+                  ...(manualEditData.remark && { remark: manualEditData.remark }),
+                  workingHours,
+                  AttendanceStatus,
+                  markWeeklyOff: canMarkWeeklyOff,
+                }
+              : day
+          );
+          setAttendanceData(updatedAttendanceData);
+      
+          toast.success(response.data.message || 'Attendance updated successfully!');
+          handleManualEditDialogClose();
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
-            console.error('Error saving attendance:', errorMessage);
-
-            if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
-                toast.info('The date is a holiday. You cannot modify punch times or overtime.');
-            } else {
-                toast.error(errorMessage);
-            }
+          const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
+          console.error('Error saving attendance:', errorMessage);
+          if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
+            toast.info('The date is a holiday. You cannot modify punch times or overtime.');
+          } else {
+            toast.error(errorMessage);
+          }
         }
-    };
+      };
+      
+
+
+//----------------------------------------  START   CHANGE CODE 30-08-2025  PUSH ON SANDBOX    ------------------------------------
+
+
+    // const handleSaveManualEdit = async () => {
+    //     let latestLabourWageRecord = null;
+    //         handleManualEditDialogClose();
+    //         await fetchAttendanceWithLoading();
+    //     try {
+    //         if (manualEditData.status === 'weeklyOff') {
+    //             const wagesResponse = await axios.get(`${API_BASE_URL}/users/monthlyWages`, {
+    //                 params: { labourId: selectedDay.labourId }
+    //             });
+    //             const wagesData = wagesResponse.data || [];
+    //             console.log("wagesData", wagesData);
+
+    //             if (!wagesData || wagesData.length === 0) {
+    //                 toast.error("Add the wages for that labour then add mark as weeklyOff");
+    //                 return;
+    //             }
+    //             const latestLabourWageRecord = wagesData
+    //                 .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+    //             [0];
+
+    //             if (!latestLabourWageRecord) {
+    //                 toast.error("Add the wages for that labour then add mark as weeklyOff");
+    //                 return;
+    //             }
+
+    //             if (latestLabourWageRecord.PayStructure === "DAILY WAGES") {
+    //                 toast.error("The selected labour is DAILY WAGES it cannot add weeklyOff");
+    //                 return;
+    //             }
+
+    //              if (latestLabourWageRecord?.WeeklyOff === 0) {
+    //               toast.error("You are not eligible for Weekly Off. It will not be marked Weekly Off In Wages.");
+    //                return; 
+    //             }
+    //         }
+
+
+    //         if (
+    //             manualEditData.status !== 'absent' &&
+    //             manualEditData.status !== 'weeklyOff' &&
+    //             (manualEditData.overtimemanually > manualEditData.overtime || Number(manualEditData.overtimemanually) > 4)
+    //         ) {
+    //             toast.error("Overtime manually cannot greater than system overtime or exceed 4 hours.");
+    //             return;
+    //         }
+    //         const defaultTime = (manualEditData.status === 'absent' || manualEditData.status === 'weeklyOff') ? '00:00:00' : null;
+
+    //         const formattedPunchInDayFormat = dayjs(manualEditData.punchIn, 'HH:mm:ss');
+    //         const formattedPunchOutDayFormat = dayjs(manualEditData.punchOut, 'HH:mm:ss');
+
+    //         const formattedPunchIn = defaultTime ? defaultTime : manualEditData.punchIn !== "" && formattedPunchInDayFormat.isValid()
+    //             ? formattedPunchInDayFormat.format('HH:mm:ss')
+    //             : defaultTime;
+
+    //         const formattedPunchOut = defaultTime ? defaultTime : manualEditData.punchOut !== "" && formattedPunchOutDayFormat.isValid()
+    //             ? formattedPunchOutDayFormat.format('HH:mm:ss')
+    //             : defaultTime;
+
+    //         const overtime = manualEditData.overtime ? String(manualEditData.overtime).trim() : '';
+    //         const hasOvertime = overtime !== '';
+    //         const hasPunchInOrOut = formattedPunchIn || formattedPunchOut;
+
+    //         if (!hasOvertime && !hasPunchInOrOut) {
+    //             toast.error('At least provide Overtime or Punch In/Out details to save.');
+    //             return;
+    //         }
+
+    //         const onboardName = user.name || null;
+    //         const workingHours = manualEditData.shift || selectedDay.workingHours;
+    //         const AttendanceStatus = manualEditData.attendanceStatus || null;
+    //         const payload = {
+    //             labourId: selectedDay.labourId,
+    //             date: selectedDay.date,
+    //             AttendanceId: manualEditData.AttendanceId || "",
+    //             ...(formattedPunchIn && { firstPunchManually: formattedPunchIn }),
+    //             ...(formattedPunchOut && { lastPunchManually: formattedPunchOut }),
+    //             ...(hasOvertime && { overtimeManually: manualEditData.overtimemanually }),
+    //             ...(manualEditData.remark && { remarkManually: manualEditData.remark }),
+    //             workingHours,
+    //             ...(onboardName && { onboardName }), AttendanceStatus,
+    //             markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
+    //             updatedFields: changedFields,
+    //             userType: user.userType || null,
+    //         };
+
+    //         // const response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
+    //           // 🧠 Conditional API logic
+    //     const isOnlyOvertime = changedFields.length === 1 && changedFields[0] === "overtimemanually";
+    //     let response;
+
+    //     if (isOnlyOvertime) {
+    //         response = await axios.post(`${API_BASE_URL}/api/labours/updateOTHoursAttendance`, payload); 
+    //     } else {
+    //         response = await axios.post(`${API_BASE_URL}/api/labours/upsertAttendance`, payload);
+    //         }
+
+    //         const updatedAttendanceData = attendanceData.map((day) =>
+    //             day.date === selectedDay.date
+    //                 ? {
+    //                     ...day,
+    //                     ...(formattedPunchIn && { firstPunch: formattedPunchIn }),
+    //                     ...(formattedPunchOut && { lastPunch: formattedPunchOut }),
+    //                     ...(hasOvertime && { overtimemanually: manualEditData.overtimemanually || 0 }),
+    //                     ...(manualEditData.remark && { remark: manualEditData.remark }),
+    //                     workingHours, AttendanceStatus,
+    //                     markWeeklyOff: manualEditData.status === 'weeklyOff' && latestLabourWageRecord?.WeeklyOff !== 0,
+    //                 }
+    //                 : day
+    //         );
+
+    //         setAttendanceData(updatedAttendanceData);
+
+    //         toast.success(response.data.message || 'Attendance updated successfully!');
+    //         handleManualEditDialogClose();
+    //     } catch (error) {
+    //         const errorMessage = error.response?.data?.message || 'Error updating attendance. Please try again later.';
+    //         console.error('Error saving attendance:', errorMessage);
+
+    //         if (errorMessage === 'The date is a holiday. You cannot modify punch times or overtime.') {
+    //             toast.info('The date is a holiday. You cannot modify punch times or overtime.');
+    //         } else {
+    //             toast.error(errorMessage);
+    //         }
+    //     }
+    // };
+
+//----------------------------------------  END   CHANGE CODE 30-08-2025  PUSH ON SANDBOX    ------------------------------------
 
     const months = [
         { value: 1, label: 'January' },

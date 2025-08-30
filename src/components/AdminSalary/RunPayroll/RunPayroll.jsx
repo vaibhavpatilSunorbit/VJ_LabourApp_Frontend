@@ -350,7 +350,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     absentDays: labour.attendance?.absentDays || 0,
                     halfDays: labour.attendance?.halfDays || 0,
                     missPunchDays: labour.attendance?.missPunchDays || 0,
-                    WeeklyOffDays: labour.attendance?.WeeklyOffDays || 0,
+                    weeklyOffDays: labour.weeklyOffDays || 0,
                     normalOvertimeCount: labour.attendance?.normalOvertimeCount || 0,
                     holidayOvertimeCount: labour.attendance?.holidayOvertimeCount || 0,
                     totalHolidaysInMonth: labour.attendance?.totalHolidaysInMonth || 0,
@@ -360,7 +360,8 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                     sundayPayment: labour.attendance?.sundayPayment || 0,
                     additionalPresent: labour.attendance?.additionalPresent || 0,
                     additionalHalf: labour.attendance?.additionalHalf || 0,
-                    // additionalAbsent: labour.attendance?.additionalAbsent || 0,
+                    additionalAbsent: labour.attendance?.additionalAbsent || 0, 
+                    additionalmissPunchDays: labour.attendance?.additionalmissPunchDays || 0, 
                     totalOvertimeHours: labour.cappedOvertime || 0,
                     derivedPerHour: labour.derivedPerHour || 0,
                     basicSalary: labour.baseWage || 0,
@@ -428,7 +429,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 Department: item.department,
                 AadhaarNumber: item.aadhaarNumber,
                 AccountNumber: item.accountNumber,
-                presentDays: item.wageType === 'FIXED MONTHLY WAGES' ? (item.presentDays + item.additionalPresent + item.additionalHalf) : (item.presentDays + item.totalHolidaysInMonth + item.additionalPresent + item.additionalHalf),
+                presentDays: item.wageType === 'FIXED MONTHLY WAGES' ? (item.presentDays + item.additionalPresent + item.additionalHalf + item.weeklyOffDays) : (item.presentDays + item.totalHolidaysInMonth + item.additionalPresent + item.additionalHalf + item.weeklyOffDays),
                 Wage_Type: item.wageType,
                 DailyWage_Rate: item.dailyWageRate,
                 FixedMonthly_Rate: item.fixedMonthlyWage,
@@ -1166,7 +1167,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
                                             {/* {labour.totalHolidaysConsider}, {labour.totalHolidaysInMonth}, {labour.additionalPresent}, {labour.additionalHalf}, {labour.presentDays} */}
-                                            {labour.totalHolidaysConsider > 0 ? ((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0)) : ((labour.presentDays || 0) + (labour.additionalPresent || 0) + (labour.additionalHalf || 0))}
+                                            {labour.totalHolidaysConsider > 0 ? ((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.halfDays || 0) + (labour.additionalHalf || 0) + (labour.weeklyOffDays || 0)) : ((labour.presentDays || 0) + (labour.additionalPresent || 0)+ (labour.halfDays || 0) + (labour.additionalHalf || 0) + (labour.weeklyOffDays || 0))}
                                         </TableCell>
                                         <TableCell>{labour.totalOvertimeHours}</TableCell>
                                         <TableCell>{labour.overtimePay}</TableCell>
@@ -1234,10 +1235,11 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             {[
                                 { label: "Present Days", value: (selectedLabour?.presentDays || 0) + (selectedLabour?.additionalPresent || 0), color: "green" },
                                 { label: "Half Days", value: (selectedLabour?.halfDays || 0) + (selectedLabour?.additionalHalf || 0), color: "green" },
-                                { label: "WeeklyOff Days", value: selectedLabour?.WeeklyOffDays || 0, color: "green" },
+                                { label: "WeeklyOff Days", value: selectedLabour?.weeklyOffDays || 0, color: "green" },
                                 { label: "Holiday Days", value: selectedLabour?.totalHolidaysInMonth || 0, color: "green" },
+                                // { label: "Absent Days", value: (selectedLabour?.absentDays || 0) + (selectedLabour?.additionalAbsent || 0), color: "red" },
                                 { label: "Absent Days", value: selectedLabour?.absentDays || 0, color: "red" },
-                                { label: "Miss Punch Days", value: selectedLabour?.missPunchDays || 0, color: "red" },
+                                { label: "Miss Punch Days", value: (selectedLabour?.missPunchDays) + (selectedLabour?.additionalmissPunchDays) || 0, color: "red" },
                             ].map((item) => (
                                 <Box key={item.label} sx={{ display: "flex", justifyContent: "space-between" }}>
                                     <Typography sx={{ color: item.color, fontWeight: "bold" }}>{item.label}:</Typography>
@@ -1252,7 +1254,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                         (selectedLabour?.additionalPresent || 0) +
                                         (selectedLabour?.halfDays || 0) +
                                         (selectedLabour?.additionalHalf || 0) +
-                                        (selectedLabour?.WeeklyOffDays || 0) +
+                                        (selectedLabour?.weeklyOffDays || 0) +
                                         (selectedLabour?.totalHolidaysInMonth || 0)}
                                 </Typography>
                             </Box><hr/>
@@ -1268,7 +1270,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                         (selectedLabour?.additionalHalf || 0) +
                                         (selectedLabour?.missPunchDays || 0) +
                                         (selectedLabour?.totalHolidaysInMonth || 0) +
-                                        (selectedLabour?.WeeklyOffDays || 0)}
+                                        (selectedLabour?.weeklyOffDays || 0)}
                                 </Typography>
                             </Box>
                         </Box>
