@@ -429,7 +429,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                 Department: item.department,
                 AadhaarNumber: item.aadhaarNumber,
                 AccountNumber: item.accountNumber,
-                presentDays: item.wageType === 'FIXED MONTHLY WAGES' ? (item.presentDays + item.additionalPresent + item.additionalHalf + item.weeklyOffDays) : (item.presentDays + item.totalHolidaysInMonth + item.additionalPresent + item.additionalHalf + item.weeklyOffDays),
+                presentDays: item.wageType === 'FIXED MONTHLY WAGES' ? (item.presentDays + item.additionalPresent + item.additionalHalf + item.weeklyOffDays + item.totalHolidaysInMonth + item.halfDays) : (item.presentDays + item.totalHolidaysInMonth + item.additionalPresent + item.additionalHalf + item.weeklyOffDays + item.halfDays),
                 Wage_Type: item.wageType,
                 DailyWage_Rate: item.dailyWageRate,
                 FixedMonthly_Rate: item.fixedMonthlyWage,
@@ -1167,7 +1167,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                             sx={{ cursor: "pointer", color: "blue", textDecoration: "none" }}
                                         >
                                             {/* {labour.totalHolidaysConsider}, {labour.totalHolidaysInMonth}, {labour.additionalPresent}, {labour.additionalHalf}, {labour.presentDays} */}
-                                            {labour.totalHolidaysConsider > 0 ? ((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.halfDays || 0) + (labour.additionalHalf || 0) + (labour.weeklyOffDays || 0)) : ((labour.presentDays || 0) + (labour.additionalPresent || 0)+ (labour.halfDays || 0) + (labour.additionalHalf || 0) + (labour.weeklyOffDays || 0))}
+                                            {labour.totalHolidaysConsider > 0 ? ((labour.presentDays || 0) + (labour.totalHolidaysInMonth || 0) + (labour.additionalPresent || 0) + (labour.halfDays || 0) + (labour.additionalHalf || 0) + (labour.weeklyOffDays || 0)) : ((labour.presentDays || 0) + (labour.additionalPresent || 0) + (labour.halfDays || 0) + (labour.additionalHalf || 0) + (labour.weeklyOffDays || 0))}
                                         </TableCell>
                                         <TableCell>{labour.totalOvertimeHours}</TableCell>
                                         <TableCell>{labour.overtimePay}</TableCell>
