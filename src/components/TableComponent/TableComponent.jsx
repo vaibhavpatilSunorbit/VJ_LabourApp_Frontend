@@ -9,7 +9,7 @@ const TableComponent = ({ rows, columns, loading, onRowClick }) => {
       rows={rows}
       columns={columns}
       onRowClick={onRowClick}
-      getRowId={(row) => row.id || row.LabourID} // Unique row identification
+      getRowId={(row) => row.id || row.LabourID} // Unique row identification 
       loading={loading}
       rowHeight={60} // Correct dynamic row height
       checkboxSelection
