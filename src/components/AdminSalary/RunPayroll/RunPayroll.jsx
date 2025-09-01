@@ -898,12 +898,12 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                             onChange={handleBusinessUnitChange}
                             displayEmpty
                             renderValue={(selected) => {
-                                if (!selected || selected.length === 0) return <em>All</em>;
+                                // if (!selected || selected.length === 0) return;
                                 const selectedLabels = projectNames
                                     .filter(p => selected.includes(p.Id))
                                     .map(p => p.Business_Unit);
                                 return (
-                                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxHeight: 32, overflowY: "auto" }}>
+                                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxHeight: 20, overflowY: "auto" }}>
                                         {selectedLabels.map((label) => <Chip key={label} label={label} size="small" />)}
                                     </Box>
                                 );
@@ -1238,7 +1238,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                 { label: "WeeklyOff Days", value: selectedLabour?.weeklyOffDays || 0, color: "green" },
                                 { label: "Holiday Days", value: selectedLabour?.totalHolidaysInMonth || 0, color: "green" },
                                 // { label: "Absent Days", value: (selectedLabour?.absentDays || 0) + (selectedLabour?.additionalAbsent || 0), color: "red" },
-                                { label: "Absent Days", value: selectedLabour?.absentDays || 0, color: "red" },
+                                { label: "Absent Days", value: (selectedLabour?.absentDays || 0) + (selectedLabour?.additionalAbsent || 0), color: "red" },
                                 { label: "Miss Punch Days", value: (selectedLabour?.missPunchDays) + (selectedLabour?.additionalmissPunchDays) || 0, color: "red" },
                             ].map((item) => (
                                 <Box key={item.label} sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -1270,7 +1270,7 @@ const RunPayroll = ({ departments, projectNames, labour, labourlist }) => {
                                         (selectedLabour?.additionalHalf || 0) +
                                         (selectedLabour?.missPunchDays || 0) +
                                         (selectedLabour?.totalHolidaysInMonth || 0) +
-                                        (selectedLabour?.weeklyOffDays || 0)}
+                                        (selectedLabour?.weeklyOffDays || 0) + (selectedLabour?.additionalAbsent || 0)}
                                 </Typography>
                             </Box>
                         </Box>
