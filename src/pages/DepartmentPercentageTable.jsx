@@ -76,7 +76,7 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/api/deptPercentageCount`);
+        const response = await axios.get(`${API_BASE_URL}/dashboard/deptPercentageCount`);
         if (response.data.success) {
           setData(response.data.data);
         } else {
@@ -99,7 +99,7 @@ const DepartmentPercentageTable = ({ staticMachineData = [] }) => {
         try {
           setMachineLoading(true);
           // Replace this URL with your actual machine data endpoint
-          const response = await axios.get(`${API_BASE_URL}/api/getDevices`);
+          const response = await axios.get(`${API_BASE_URL}/dashboard/getDevices`);
           if (response.data) {
             setMachineData(response.data);
           } else {

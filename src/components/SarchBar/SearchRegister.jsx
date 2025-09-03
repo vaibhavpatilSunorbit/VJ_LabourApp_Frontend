@@ -75,7 +75,7 @@ const SearchRegister = ({
   setSearchResults,
   handleSelectLabour,
   showResults,
-  fetchAttendanceForMonthAll   
+  // fetchAttendanceForMonthAll   
 }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -99,7 +99,6 @@ const SearchRegister = ({
             setSearchQuery(e.target.value);
             if (e.target.value.trim() === '') {
               setSearchResults([]); // Clear search results if input is empty
-              fetchAttendanceForMonthAll();
             }
           }}
         />

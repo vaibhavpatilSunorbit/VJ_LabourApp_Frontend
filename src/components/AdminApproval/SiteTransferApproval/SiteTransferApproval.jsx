@@ -218,7 +218,9 @@ const SiteTransferApproval = ({ onApprove, departments, projectNames, labour, la
         });
 
         if (response.data.success) {
-          toast.error(`Site transfer approved and processed successfully. ${labourObj.id}`);
+          toast.success(`Site transfer approved and processed successfully. ${labourObj.id}`);
+        }else{
+          toast.error(response.data.message || 'Failed to approve labour. Please try again.');
         }
       }
 

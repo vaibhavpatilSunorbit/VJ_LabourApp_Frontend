@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, } from 'react';
 import axios from 'axios';
 import {
     Table, IconButton, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, TextField, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Tabs, Typography, TableFooter, Modal,
@@ -34,9 +34,11 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [labours, setLabours] = useState(labourlist || []);
     const [attendanceData, setAttendanceData] = useState([]);
+    const [singleAttendance, setSingleAttendance] = useState([]);
+    // const [searchData, setSearchData] = useState([]);
     const [selectedLabour, setSelectedLabour] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState(null);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -197,6 +199,12 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         fetchLaboursAttenadance();
         fetchProjectNames();
     }, []);
+
+//     useEffect(() => {
+//   if (!searchQuery) {
+//     setSearchData([]);
+//   }
+// }, [searchQuery]);
 
     // const handleApplyFilter = async () => {
     //     const params = {};
@@ -734,8 +742,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 }
               : day
           );
-          setAttendanceData(updatedAttendanceData);
-      
+        //   setAttendanceData(updatedAttendanceData);
+          setSingleAttendance(updatedAttendanceData);
           toast.success(response.data.message || 'Attendance updated successfully!');
           handleManualEditDialogClose();
         } catch (error) {
@@ -899,12 +907,11 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
 
     const handleSearch = async (e) => {
         e.preventDefault();
-        
-        try {
-            // const response = await axios.get(`${API_BASE_URL}/api/labours/searchAttendance?q=${searchQuery}`);
-            setSearchQuery(e.target.value);
+        try {          
             setPage(0);
-            fetchAttendanceForMonthAll();
+            if (searchQuery && searchQuery.trim() !== '') {
+                fetchAttendanceForMonthAll();
+            }
         } catch (error) {
             setError('Error searching. Please try again.');
         }
@@ -1001,7 +1008,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                     projectName: attendanceRecord?.projectName,
                 };
             });
-            setAttendanceData(fullMonthAttendance);
+            setSingleAttendance(fullMonthAttendance);
             
         } catch (error) {
             console.error('Error fetching attendance data:', error);
@@ -1016,11 +1023,11 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     };
 
 
-    useEffect(() => {
-        if (selectedMonth && selectedYear) {
-            fetchAttendanceForMonth();
-        }
-    }, [selectedMonth, selectedYear]);
+    // useEffect(() => {
+    //     if (selectedMonth && selectedYear) {
+    //         fetchAttendanceForMonth();
+    //     }
+    // }, [selectedMonth, selectedYear]);
 
 
     const fetchAttendance = async () => {
@@ -1044,7 +1051,7 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                     status: record ? record.Status : 'NA',
                 };
             });
-            setAttendanceData(fullMonthAttendance);
+            setSingleAttendance(fullMonthAttendance);
         } catch (error) {
             console.error('Error fetching attendance:', error);
         }
@@ -1135,6 +1142,16 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             });
 
             setAttendanceData(processedAttendance);
+
+        //     if (searchQuery && searchQuery.trim() !== '') {
+        //     // When searching → use searchData
+        //     setSearchData(processedAttendance);
+        //     setAttendanceData([]);
+        // } else {
+        //     // Normal fetch → use attendanceData
+        //     setAttendanceData(processedAttendance);
+        //     setSearchData([]);
+        // }
         } catch (error) {
             console.error('Error fetching attendance data:', error);
             toast.error(error.response?.data?.message || 'Error fetching attendance data. Please try again later.');
@@ -1171,13 +1188,55 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     // };
 
 
-   const getFilteredLaboursForTable = () => {
-    // let laboursData = searchResults.length > 0
-    // ? searchResults : [...labours];
+//    const getFilteredLaboursForTable = () => {
+//     // let laboursData = searchResults.length > 0
+//     // ? searchResults : [...labours];
 
-    let baseLabours = rowsPerPage > 0
-        ? ([...labours])
-        : [];
+//     let baseLabours = rowsPerPage > 0
+//         ? ([...labours])
+//         : [];
+
+//     baseLabours = baseLabours.filter((labour) => {
+//         const labourProjectId = Number(labour.projectName);
+//         const labourDepartmentId = Number(labour.department);
+//         return (
+//             allowedProjectIds.includes(labourProjectId) &&
+//             allowedDepartmentIds.includes(labourDepartmentId)
+//         );
+//     });
+
+//     // Only show users with presentDays > 0
+//     // baseLabours = baseLabours.filter((labour) => {
+//     //     const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
+//     //     return (labour.status === 'Approved' || labour.status === 'Disable') &&
+//     //         labourAttendance &&
+//     //         Number(labourAttendance.presentDays) > 0;
+//     // });
+
+
+//     const mergedLabours = baseLabours.map((labour) => {
+//         // Find matching attendance
+//         const labourAttendance = (searchData.length > 0 ? searchData : attendanceData).find(
+//           (att) => att.labourId === labour.LabourID
+//         );
+      
+//         // Merge attendance into labour object (if found)
+//         return {
+//           ...labour,
+//           attendance: labourAttendance || null, // add null if no attendance
+//         };
+//       }).filter((item) => {
+//             return (item.status === 'Approved' || item.status === 'Disable') &&
+//             item.attendance &&
+//             Number(item.attendance.presentDays) > 0;
+//       });
+      
+
+//     return mergedLabours;
+// };
+
+const getFilteredLaboursForTable =() => {
+    let baseLabours = rowsPerPage > 0 ? [...labours] : [];
 
     baseLabours = baseLabours.filter((labour) => {
         const labourProjectId = Number(labour.projectName);
@@ -1188,32 +1247,28 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
         );
     });
 
-    // Only show users with presentDays > 0
-    // baseLabours = baseLabours.filter((labour) => {
-    //     const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
-    //     return (labour.status === 'Approved' || labour.status === 'Disable') &&
-    //         labourAttendance &&
-    //         Number(labourAttendance.presentDays) > 0;
-    // });
+    // const sourceAttendance = searchData.length > 0 ? searchData : attendanceData;
+    // console.log("sourceAttendance", sourceAttendance);
 
+    const mergedLabours = baseLabours
+        .map((labour) => {
+            const labourAttendance = attendanceData.find(
+                (att) => att.labourId === labour.LabourID
+            );
 
-    const mergedLabours = baseLabours.map((labour) => {
-        // Find matching attendance
-        const labourAttendance = attendanceData.find(
-          (att) => att.labourId === labour.LabourID
-        );
-      
-        // Merge attendance into labour object (if found)
-        return {
-          ...labour,
-          attendance: labourAttendance || null, // add null if no attendance
-        };
-      }).filter((item) => {
-            return (item.status === 'Approved' || item.status === 'Disable') &&
-            item.attendance &&
-            Number(item.attendance.presentDays) > 0;
-      });
-      
+            return {
+                ...labour,
+                attendance: labourAttendance || null,
+            };
+        })
+        .filter((item) => {
+            return (
+                (item.status === 'Approved' || item.status === 'Disable') &&
+                item.attendance &&
+                Number(item.attendance.presentDays) > 0
+            );
+        });
+    console.log("mergedLabours", mergedLabours);
 
     return mergedLabours;
 };
@@ -1226,7 +1281,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const handleModalCloseCalender = () => {
         setOpen(false)
         fetchAttendanceForMonthAll()
-        // setAttendanceData([]);
     };
 
     const calculateTotalHours = (attendanceEntry) => {
@@ -1525,7 +1579,7 @@ const handleImportSuccess = (msg) => {
 
     const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-    const generateCalendar = (attendanceData, year, month) => {
+    const generateCalendar = (singleAttendance, year, month) => {
         const daysInMonth = new Date(year, month, 0).getDate();
         const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
 
@@ -1540,7 +1594,7 @@ const handleImportSuccess = (msg) => {
                 } else if (dayCounter > daysInMonth) {
                     week.push({ day: null, status: null });
                 } else {
-                    const currentDay = attendanceData.find(
+                    const currentDay = singleAttendance.find(
                         (data) => new Date(data.date).getDate() === dayCounter
                     );
                     week.push({ day: dayCounter, status: currentDay ? currentDay.status : 'NA' });
@@ -1553,7 +1607,7 @@ const handleImportSuccess = (msg) => {
         return calendar;
     };
 
-    const calendar = generateCalendar(attendanceData, selectedYear, selectedMonth);
+    const calendar = generateCalendar(singleAttendance, selectedYear, selectedMonth);
 
     function convertToHoursMinutes(total) {
         const hours = Math.floor(total);
@@ -1863,7 +1917,7 @@ const handleImportSuccess = (msg) => {
                                     // const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
 
                                     return (
-                                        <TableRow key={labour.LabourID}
+                                        <TableRow key={String(labour.LabourID)}
                                         // sx={{
                                         //     backgroundColor: labourAttendance?.InApprovalStatus === true
                                         //       ? '#ffe6e6'
@@ -2072,8 +2126,8 @@ const handleImportSuccess = (msg) => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {attendanceData.length > 0 ? (
-                                        attendanceData.map((day, index) => (
+                                    {singleAttendance.length > 0 ? (
+                                        singleAttendance.map((day, index) => (
                                             <TableRow key={index}
                                                 sx={{
                                                     backgroundColor:
@@ -2602,6 +2656,3 @@ const handleImportSuccess = (msg) => {
 };
 
 export default AttendanceReport;
-
-
-

@@ -70,7 +70,7 @@ function Header({ OpenSidebar }) {
   // Fetch site transfer notifications
   const fetchSiteTransferNotifications = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/getnotification`);
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getnotification`);
       if (response.data.success) {
         const notifications = response.data.data.map(notif => ({
           id: `site-${notif.currentSiteName}`,
@@ -92,7 +92,7 @@ function Header({ OpenSidebar }) {
   // Fetch attendance approval notifications
   const fetchAttendanceNotifications = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/getAllNotification`);
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getAllNotification`);
       if (response.data.success) {
         const notifications = response.data.data.map(notif => {
           return {
@@ -122,7 +122,7 @@ function Header({ OpenSidebar }) {
   // Fetch variable pay notifications for the Alerts tab
   const fetchAlertNotifications = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/getNotificationVariablePay`);
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getNotificationVariablePay`);
       if (response.data.success) {
         const notifications = response.data.data.map(notif => {
           // Create a formatted message with the required fields
@@ -176,7 +176,7 @@ function Header({ OpenSidebar }) {
   // Fetch wages approval notifications for the Updates tab
   const fetchUpdateNotifications = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/getNotificationWagesApproval`);
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getNotificationWagesApproval`);
       if (response.data.success) {
         const notifications = response.data.data.map(notif => {
           // Determine which wage value to display based on PayStructure
@@ -277,7 +277,7 @@ function Header({ OpenSidebar }) {
   // Fetch all other notifications
   const fetchOtherNotifications = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/getAllNotification`);
+      const response = await axios.get(`${API_BASE_URL}/dashboard/getAllNotification`);
       if (response.data.success) {
         // Process all notifications to ensure they have proper messages
         const processedNotifications = response.data.data.filter(notif => 
