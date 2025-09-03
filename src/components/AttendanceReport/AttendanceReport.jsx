@@ -522,6 +522,16 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             setSearchResults([]);
             return;
         }
+
+        // If searchQuery is a number, search by LabourId locally
+        if (!isNaN(searchQuery.trim())) {
+            const results = searchAttendanceByLabourId(searchQuery.trim());
+            setSearchResults(results);
+            setPage(0);
+            return;
+        }
+
+        // Otherwise, do your existing API search
         try {
             const response = await axios.get(`${API_BASE_URL}/api/labours/searchAttendance?q=${searchQuery}`);
             setSearchResults(response.data);
@@ -1177,6 +1187,11 @@ const handleImportSuccess = (msg) => {
         setFilters(newFilters);
     };
 
+    const searchAttendanceByLabourId = (labourId) => {
+        if (!attendanceData || !labourId) return [];
+        return attendanceData.filter(att => String(att.labourId) === String(labourId));
+    };
+
     return (
         <Box mb={1} py={0} px={1} sx={{ width: isMobile ? '95vw' : 'auto', overflowX: isMobile ? 'auto' : 'visible' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }} >
@@ -1497,9 +1512,6 @@ const handleImportSuccess = (msg) => {
                     </Table>
                 </Box>
             </TableContainer>
-
-
-
 
             <Dialog
                 open={modalOpen}
@@ -2164,6 +2176,4 @@ const handleImportSuccess = (msg) => {
 };
 
 export default AttendanceReport;
-
-
 

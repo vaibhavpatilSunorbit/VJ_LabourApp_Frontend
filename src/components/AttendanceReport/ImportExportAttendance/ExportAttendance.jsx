@@ -1,99 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import {
-    Button, Box, TextField, Select, MenuItem, Typography, Modal, Grid
+    Button, Box, TextField, Select, MenuItem, Typography, Modal, Grid, Chip
 } from '@mui/material';
 import { API_BASE_URL } from "../../../Data";
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import { Chip } from '@mui/material';
 
 const ExportAttendance = () => {
     const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [open, setOpen] = useState(false);
     const [businessUnits, setBusinessUnits] = useState([]);
     const [selectedBusinessUnit, setSelectedBusinessUnit] = useState([]);
-    const [projectName, setProjectName] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [departments, setDepartments] = useState([]);
     const [selectedDepartments, setSelectedDepartments] = useState([]);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
-    const fetchDepartments = async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/departments`);
-            setDepartments(response.data);
-        } catch (error) {
-            console.error('Error fetching departments:', error);
-            toast.error('Error fetching departments.');
-        }
-    };
+    // Memoized lists for select-all logic
+    const allBusinessUnits = useMemo(() => businessUnits.map(unit => unit.BusinessUnit), [businessUnits]);
+    const allDepartmentIds = useMemo(() => departments.map(dept => dept.Id), [departments]);
 
     useEffect(() => {
-        fetchDepartments();
+        axios.get(`${API_BASE_URL}/api/departments`)
+            .then(res => setDepartments(res.data))
+            .catch(() => toast.error('Error fetching departments.'));
+        axios.get(`${API_BASE_URL}/api/projectDeviceStatus`)
+            .then(res => setBusinessUnits(res.data))
+            .catch(() => toast.error('Error fetching business units.'));
     }, []);
 
-    const fetchBusinessUnits = async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/projectDeviceStatus`);
-            setBusinessUnits(response.data);
-        } catch (error) {
-            console.error('Error fetching business units:', error);
-            toast.error('Error fetching business units.');
-        }
-    };
-    useEffect(() => {
-        fetchBusinessUnits();
-    }, []);
-
-    // Unified export handler for both Excel and PDF
+    // Unified export handler
     const handleExport = async (type = "excel") => {
-        if (!selectedBusinessUnit || !startDate || !endDate) {
+        if (!selectedBusinessUnit.length || !startDate || !endDate) {
             toast.error('Please select a Business Unit, Start Date, and End Date.');
             return;
         }
         const selectedProjectIds = selectedBusinessUnit
-            .map((bu) => {
-                const project = businessUnits.find((unit) => unit.BusinessUnit === bu);
-                return project ? project.ProjectID : null;
+            .map(bu => {
+                const project = businessUnits.find(unit => unit.BusinessUnit === bu);
+                return project?.ProjectID;
             })
             .filter(Boolean);
 
+        const url = type === "excel"
+            ? `${API_BASE_URL}/api/labours/export`
+            : `${API_BASE_URL}/api/labours/exportAttendanceExcel`;
+        const fileType = type === "excel"
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'application/pdf';
+        const fileExt = type === "excel" ? 'xlsx' : 'pdf';
+
         try {
-            let url = "";
-            let fileType = "";
-            let fileExt = "";
-
-            if (type === "excel") {
-                url = `${API_BASE_URL}/api/labours/export`;
-                fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-                fileExt = 'xlsx';
-            } else if (type === "pdf") {
-                url = `${API_BASE_URL}/api/labours/exportAttendanceExcel`;
-                fileType = 'application/pdf';
-                fileExt = 'pdf';
-            }
-
-            // Add maxAbsentDays parameter to filter those NOT absent more than 30 days
             const response = await axios.get(url, {
                 params: {
                     projectName: selectedProjectIds.join(','),
                     department: selectedDepartments.join(','),
                     startDate,
                     endDate,
-                    maxAbsentDays: 30 // <-- Only include those NOT absent more than 30 days
+                    maxAbsentDays: 30
                 },
                 responseType: 'blob',
             });
-
             const blob = new Blob([response.data], { type: fileType });
             const fileName = `Attendance_${startDate}_${endDate}.${fileExt}`;
-
-            // Direct download for both Excel and PDF
             const downloadUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = downloadUrl;
@@ -102,26 +75,60 @@ const ExportAttendance = () => {
             link.click();
             document.body.removeChild(link);
             window.URL.revokeObjectURL(downloadUrl);
-
             toast.success(`Attendance ${type === "excel" ? "Excel" : "PDF"} exported successfully!`);
         } catch (error) {
-            console.error('Error exporting data:', error);
-
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(`Export Error: ${error.response.data.message}`);
-            } else {
-                toast.error('Error exporting data. Please try again later.');
-            }
+            toast.error(error?.response?.data?.message || 'Error exporting data. Please try again later.');
         }
     };
 
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+    // Select handlers
+    const handleBusinessUnitChange = (e) => {
+        const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+        if (value.includes("All")) {
+            setSelectedBusinessUnit(selectedBusinessUnit.length === allBusinessUnits.length ? [] : allBusinessUnits);
+        } else {
+            setSelectedBusinessUnit(value);
+        }
+    };
+
+    const handleDepartmentChange = (e) => {
+        const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+        if (value.includes("All")) {
+            setSelectedDepartments(selectedDepartments.length === allDepartmentIds.length ? [] : allDepartmentIds);
+        } else {
+            setSelectedDepartments(value);
+        }
+    };
+
+    // Chip rendering helper
+    const renderChips = (selected, allItems, labelKey = null) => (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxHeight: '100px', overflowY: 'auto' }}>
+            {selected.map((val) => {
+                const label = labelKey
+                    ? (allItems.find(item => item[labelKey] === val)?.Description || val)
+                    : val;
+                return (
+                    <Chip
+                        key={val}
+                        label={label}
+                        onMouseDown={e => e.stopPropagation()}
+                        onDelete={() => {
+                            if (labelKey) {
+                                setSelectedDepartments(selected.filter(item => item !== val));
+                            } else {
+                                setSelectedBusinessUnit(selected.filter(item => item !== val));
+                            }
+                        }}
+                    />
+                );
+            })}
+        </Box>
+    );
 
     return (
         <>
             <Button
-                onClick={handleOpen}
+                onClick={() => setOpen(true)}
                 sx={{
                     background: 'none',
                     color: 'rgb(43, 217, 144)',
@@ -130,11 +137,8 @@ const ExportAttendance = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    '&:hover': {
-                        background: 'none',
-                        textDecoration: 'underline',
-                    },
-                    padding: 0,
+                    '&:hover': { background: 'none', textDecoration: 'underline' },
+                    p: 0,
                 }}
             >
                 <FileDownloadOutlinedIcon />
@@ -143,9 +147,8 @@ const ExportAttendance = () => {
 
             <Modal
                 open={open}
-                onClose={handleClose}
+                onClose={() => setOpen(false)}
                 aria-labelledby="export-attendance-title"
-                aria-describedby="export-attendance-description"
             >
                 <Box
                     sx={{
@@ -164,91 +167,33 @@ const ExportAttendance = () => {
                     <Typography
                         id="export-attendance-title"
                         variant="h6"
-                        component="h2"
-                        sx={{ fontWeight: 'bold', marginBottom: 2 }}
+                        sx={{ fontWeight: 'bold', mb: 2 }}
                     >
                         Export Attendance Data
                     </Typography>
 
                     <Box component="form" display="flex" flexDirection="column" gap={2}>
+                        {/* Business Unit Select */}
                         <Box>
-                            <Typography
-                                component="label"
-                                variant="body2"
-                                color="textSecondary"
-                                sx={{ marginBottom: 0.5 }}
-                            >
+                            <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
                                 Select Business Unit
                             </Typography>
                             <Select
                                 multiple
                                 value={selectedBusinessUnit}
-                                onChange={(e) => {
-                                    const { value } = e.target;
-                                    const selected = typeof value === 'string' ? value.split(',') : value;
-
-                                    if (selected.includes("All")) {
-                                        const allUnits = businessUnits.map((unit) => unit.BusinessUnit);
-                                        if (selectedBusinessUnit.length === businessUnits.length) {
-                                            setSelectedBusinessUnit([]);
-                                        } else {
-                                            setSelectedBusinessUnit(allUnits);
-                                        }
-                                        return;
-                                    }
-
-                                    setSelectedBusinessUnit(selected);
-
-                                    if (selected.length === 1) {
-                                        const selectedProject = businessUnits.find(
-                                            (unit) => unit.BusinessUnit === selected[0]
-                                        );
-                                        setProjectName(selectedProject?.ProjectID || '');
-                                    } else {
-                                        setProjectName('');
-                                    }
-                                }}
+                                onChange={handleBusinessUnitChange}
                                 fullWidth
                                 variant="outlined"
                                 displayEmpty
-                                renderValue={(selected) => {
-                                    if (selected.length === 0) return "Select Business Unit(s)";
-                                    return (
-                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, height: '100px', overflowY: 'auto' }}>
-                                            {selected.map((value) => (
-                                                <Chip
-                                                    key={value}
-                                                    label={value}
-                                                    onMouseDown={(e) => e.stopPropagation()}
-                                                    onDelete={() => {
-                                                        const updated = selectedBusinessUnit.filter(item => item !== value);
-                                                        setSelectedBusinessUnit(updated);
-
-                                                        if (updated.length === 1) {
-                                                            const selectedProject = businessUnits.find(
-                                                                (unit) => unit.BusinessUnit === updated[0]
-                                                            );
-                                                            setProjectName(selectedProject?.ProjectID || '');
-                                                        } else {
-                                                            setProjectName('');
-                                                        }
-                                                    }}
-                                                />
-                                            ))}
-                                        </Box>
-                                    );
-                                }}
-                                sx={{
-                                    paddingTop: '4px',
-                                    paddingBottom: '2px',
-
-                                }}
+                                renderValue={selected =>
+                                    selected.length === 0
+                                        ? "Select Business Unit(s)"
+                                        : renderChips(selected, businessUnits)
+                                }
+                                sx={{ pt: '4px', pb: '2px' }}
                             >
-
-                                <MenuItem value="All">
-                                    <em>Select All</em>
-                                </MenuItem>
-                                {businessUnits.map((unit) => (
+                                <MenuItem value="All"><em>Select All</em></MenuItem>
+                                {businessUnits.map(unit => (
                                     <MenuItem key={unit.BusinessUnit} value={unit.BusinessUnit}>
                                         {unit.BusinessUnit}
                                     </MenuItem>
@@ -256,8 +201,9 @@ const ExportAttendance = () => {
                             </Select>
                         </Box>
 
+                        {/* Department Select */}
                         <Box>
-                            <Typography component="label" variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
+                            <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
                                 Select Department(s)
                             </Typography>
                             <Select
@@ -265,52 +211,16 @@ const ExportAttendance = () => {
                                 fullWidth
                                 variant="outlined"
                                 value={selectedDepartments}
-                                onChange={(e) => {
-                                    const { value } = e.target;
-                                    const selected = typeof value === 'string' ? value.split(',') : value;
-
-                                    if (selected.includes('All')) {
-                                        if (selectedDepartments.length === departments.length) {
-                                            setSelectedDepartments([]);
-                                        } else {
-                                            const allDeptIds = departments.map((dept) => dept.Id);
-                                            setSelectedDepartments(allDeptIds);
-                                        }
-                                        return;
-                                    }
-
-                                    setSelectedDepartments(selected);
-                                }}
-                                renderValue={(selected) => {
-                                    if (selected.length === 0) return "Select Department(s)";
-                                    return (
-                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, height: '90px', overflowY: 'auto' }}>
-                                            {selected.map((id) => {
-                                                const dept = departments.find((d) => d.Id === id);
-                                                return (
-                                                    <Chip
-                                                        key={id}
-                                                        label={dept?.Description || id}
-                                                        onMouseDown={(e) => e.stopPropagation()}
-                                                        onDelete={() => {
-                                                            const updated = selectedDepartments.filter(item => item !== id);
-                                                            setSelectedDepartments(updated);
-                                                        }}
-                                                    />
-                                                );
-                                            })}
-                                        </Box>
-                                    );
-                                }}
-                                sx={{
-                                    paddingTop: '4px',
-                                    paddingBottom: '2px',
-                                }}
+                                onChange={handleDepartmentChange}
+                                renderValue={selected =>
+                                    selected.length === 0
+                                        ? "Select Department(s)"
+                                        : renderChips(selected, departments, "Id")
+                                }
+                                sx={{ pt: '4px', pb: '2px' }}
                             >
-                                <MenuItem value="All">
-                                    <em>Select All</em>
-                                </MenuItem>
-                                {departments.map((dept) => (
+                                <MenuItem value="All"><em>Select All</em></MenuItem>
+                                {departments.map(dept => (
                                     <MenuItem key={dept.Id} value={dept.Id}>
                                         {dept.Description}
                                     </MenuItem>
@@ -318,46 +228,44 @@ const ExportAttendance = () => {
                             </Select>
                         </Box>
 
+                        {/* Date Pickers */}
                         <Box>
-                            <Typography component="label" variant="body2" color="textSecondary">
+                            <Typography variant="body2" color="textSecondary">
                                 Start Date
                             </Typography>
                             <TextField
                                 type="date"
                                 value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
+                                onChange={e => setStartDate(e.target.value)}
                                 fullWidth
                                 variant="outlined"
-                                sx={{ '& .MuiInputBase-input': { paddingBottom: '12px' } }}
+                                sx={{ '& .MuiInputBase-input': { pb: '12px' } }}
                             />
                         </Box>
-
                         <Box>
-                            <Typography component="label" variant="body2" color="textSecondary">
+                            <Typography variant="body2" color="textSecondary">
                                 End Date
                             </Typography>
                             <TextField
                                 type="date"
                                 value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
+                                onChange={e => setEndDate(e.target.value)}
                                 fullWidth
                                 variant="outlined"
-                                sx={{ '& .MuiInputBase-input': { paddingBottom: '12px' } }}
+                                sx={{ '& .MuiInputBase-input': { pb: '12px' } }}
                             />
                         </Box>
 
+                        {/* Action Buttons */}
                         <Grid container spacing={2} justifyContent="flex-end">
                             <Grid item>
                                 <Button
-                                    onClick={handleClose}
+                                    onClick={() => setOpen(false)}
                                     variant="outlined"
                                     sx={{
                                         color: '#6c757d',
                                         borderColor: '#6c757d',
-                                        '&:hover': {
-                                            backgroundColor: '#f8f9fa',
-                                            borderColor: '#6c757d',
-                                        },
+                                        '&:hover': { backgroundColor: '#f8f9fa', borderColor: '#6c757d' },
                                     }}
                                 >
                                     Cancel
@@ -370,9 +278,7 @@ const ExportAttendance = () => {
                                     sx={{
                                         backgroundColor: '#1976d2',
                                         color: '#fff',
-                                        '&:hover': {
-                                            backgroundColor: '#115293',
-                                        },
+                                        '&:hover': { backgroundColor: '#115293' },
                                         mr: 1
                                     }}
                                 >
@@ -384,9 +290,7 @@ const ExportAttendance = () => {
                                     sx={{
                                         backgroundColor: '#4CAF50',
                                         color: '#fff',
-                                        '&:hover': {
-                                            backgroundColor: '#388e3c',
-                                        },
+                                        '&:hover': { backgroundColor: '#388e3c' },
                                     }}
                                 >
                                     Export PDF
@@ -397,7 +301,7 @@ const ExportAttendance = () => {
                 </Box>
             </Modal>
         </>
-    )
+    );
 };
 
 

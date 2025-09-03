@@ -1,9 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Box, Typography, Button, Dialog, DialogActions, DialogContent,
-  DialogTitle, IconButton, Paper, Grid, Tabs, Tab, Divider,
-  Table, TableBody, TableCell, TableContainer, TableRow
+  DialogTitle, IconButton, Paper, Tabs, Tab, Table, TableBody, TableCell, TableContainer, TableRow
 } from '@mui/material';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -26,38 +24,47 @@ import Slider from '@mui/material/Slider';
 import { API_BASE_URL } from '../../Data';
 
 const trimUrl = (url) => {
-  // const baseUrl = "http://localhost:4000/uploads/";
-  const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
+  const baseUrl = "http://localhost:4000/uploads/";
+  // const baseUrl = "https://laboursandbox.vjerp.com/uploads/";
   // const baseUrl = "https://vjlabour.vjerp.com/uploads/";
   return typeof url === 'string' ? url.replace(baseUrl, '') : '';
 };
+
+const cropStateDefaults = { crop: { x: 0, y: 0 }, zoom: 1, rotation: 0, croppedAreaPixels: null };
 
 const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdate }) => {
   const [tabValue, setTabValue] = useState(0);
   const [openModal, setOpenModal] = useState(false);
   const [modalImageSrc, setModalImageSrc] = useState('');
   const [currentDocumentType, setCurrentDocumentType] = useState('');
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [crop, setCrop] = useState(cropStateDefaults.crop);
+  const [zoom, setZoom] = useState(cropStateDefaults.zoom);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(cropStateDefaults.croppedAreaPixels);
   const [isCropping, setIsCropping] = useState(false);
-  const [rotation, setRotation] = useState(0);
+  const [rotation, setRotation] = useState(cropStateDefaults.rotation);
   const [isSaving, setIsSaving] = useState(false);
 
-  const onCropComplete = (croppedArea, croppedAreaPixels) => {
+  const resetCropStates = useCallback(() => {
+    setCrop(cropStateDefaults.crop);
+    setZoom(cropStateDefaults.zoom);
+    setRotation(cropStateDefaults.rotation);
+    setCroppedAreaPixels(cropStateDefaults.croppedAreaPixels);
+    setIsCropping(false);
+  }, []);
+
+  const onCropComplete = useCallback((_, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
-  };
+  }, []);
 
   const handleStartCrop = () => setIsCropping(true);
 
-  // Function to determine document type based on URL
-  const getDocumentType = (url) => {
+  const getDocumentType = useCallback((url) => {
     if (selectedLabour.uploadInductionDoc === url) return 'induction';
     if (selectedLabour.uploadAadhaarFront === url) return 'aadhaar_front';
     if (selectedLabour.uploadAadhaarBack === url) return 'aadhaar_back';
     if (selectedLabour.uploadIdProof === url) return 'id_proof';
     return 'unknown';
-  };
+  }, [selectedLabour]);
 
   const getCroppedImg = (imageSrc, pixelCrop, rotation = 0) => {
     return new Promise((resolve, reject) => {
@@ -67,8 +74,6 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
       image.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
-        // Calculate bounding box of the rotated image
         const radians = rotation * Math.PI / 180;
         const sin = Math.abs(Math.sin(radians));
         const cos = Math.abs(Math.cos(radians));
@@ -76,8 +81,6 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
         const height = image.height;
         const bboxWidth = Math.ceil(width * cos + height * sin);
         const bboxHeight = Math.ceil(width * sin + height * cos);
-        
-        // Draw rotated image to temp canvas
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = bboxWidth;
         tempCanvas.height = bboxHeight;
@@ -87,8 +90,6 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
         tempCtx.rotate(radians);
         tempCtx.drawImage(image, -width / 2, -height / 2);
         tempCtx.restore();
-        
-        // Now crop from the rotated image
         canvas.width = pixelCrop.width;
         canvas.height = pixelCrop.height;
         ctx.drawImage(
@@ -102,7 +103,6 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
           pixelCrop.width,
           pixelCrop.height
         );
-        
         canvas.toBlob((blob) => {
           if (!blob) {
             reject(new Error('canvas is empty'));
@@ -120,27 +120,17 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
       toast.error('Please crop the image first');
       return;
     }
-
     setIsSaving(true);
     try {
-      // Get the cropped image blob
       const croppedImageBlob = await getCroppedImg(modalImageSrc, croppedAreaPixels, rotation);
-      
-      // Create FormData for upload
       const formData = new FormData();
       formData.append('croppedImage', croppedImageBlob, 'cropped_document.jpg');
       formData.append('labourId', selectedLabour.id);
       formData.append('documentType', currentDocumentType);
-
-      // Upload to server
       const response = await axios.post(`${API_BASE_URL}/api/labour/update-document`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-
       if (response.data.success) {
-        // Update the labour data with new image URL
         const updatedLabour = { ...selectedLabour };
         const fieldMap = {
           'induction': 'uploadInductionDoc',
@@ -148,28 +138,12 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
           'aadhaar_back': 'uploadAadhaarBack',
           'id_proof': 'uploadIdProof'
         };
-
         const fieldName = fieldMap[currentDocumentType];
-        if (fieldName) {
-          updatedLabour[fieldName] = response.data.updatedImageUrl;
-        }
-
-        // Call the update callback if provided
-        if (onLabourUpdate) {
-          onLabourUpdate(updatedLabour);
-        }
-
-        // Update the modal image source to show the new image
+        if (fieldName) updatedLabour[fieldName] = response.data.updatedImageUrl;
+        onLabourUpdate?.(updatedLabour);
         setModalImageSrc(response.data.updatedImageUrl);
-        
         toast.success('Document updated successfully in database');
-        setIsCropping(false);
-        
-        // Reset crop states
-        setCrop({ x: 0, y: 0 });
-        setZoom(1);
-        setRotation(0);
-        setCroppedAreaPixels(null);
+        resetCropStates();
       } else {
         toast.error(response.data.message || 'Failed to update document');
       }
@@ -199,39 +173,24 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
     }
   };
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
+  const handleTabChange = (_, newValue) => setTabValue(newValue);
 
   const handleOpenModal = (url) => {
     setModalImageSrc(url);
     setCurrentDocumentType(getDocumentType(url));
     setOpenModal(true);
-    // Reset cropping states
-    setIsCropping(false);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    setRotation(0);
-    setCroppedAreaPixels(null);
+    resetCropStates();
   };
 
   const handleCloseModal = () => {
     setOpenModal(false);
     setModalImageSrc('');
     setCurrentDocumentType('');
-    setIsCropping(false);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    setRotation(0);
-    setCroppedAreaPixels(null);
+    resetCropStates();
   };
 
   const downloadFullForm = async () => {
-    if (!selectedLabour) {
-      console.error('Selected labour data is missing.');
-      return;
-    }
-
+    if (!selectedLabour) return;
     const formData = {
       "Labour ID": selectedLabour.LabourID || "",
       "Labour Ownership": selectedLabour.labourOwnership || "",
@@ -266,73 +225,49 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
       "Upload IdProof Document": trimUrl(selectedLabour.uploadIdProof) || "",
       "Upload AadhaarBack Document": trimUrl(selectedLabour.uploadAadhaarBack) || "",
     };
-
     if (selectedLabour.labourOwnership === "Contractor") {
       formData["Contractor Name"] = selectedLabour.contractorName || "";
       formData["Contractor Number"] = selectedLabour.contractorNumber || "";
     }
-
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const title = "Labour Details";
     const titleX = (pageWidth - doc.getStringUnitWidth(title) * doc.internal.getFontSize() / doc.internal.scaleFactor) / 2;
     doc.setFontSize(20);
     doc.text(title, titleX, 15);
-
     if (selectedLabour.photoSrc) {
       try {
         const response = await axios.get(selectedLabour.photoSrc, { responseType: 'blob' });
         const imageUrl = URL.createObjectURL(response.data);
-        const imageWidth = 50;
-        const imageHeight = 50;
-        const imageX = (pageWidth - imageWidth) / 2;
-        doc.addImage(imageUrl, 'JPEG', imageX, 20, imageWidth, imageHeight);
+        doc.addImage(imageUrl, 'JPEG', (pageWidth - 50) / 2, 20, 50, 50);
       } catch (error) {
-        console.error('Error fetching image:', error);
         toast.error('Error fetching image. Please try again.');
       }
     }
-
-    const tableColumns = ["Field", "Value"];
-    const tableRows = Object.entries(formData).map(([field, value]) => [
-      field.toUpperCase(),
-      (value || 'N/A').toString().toUpperCase(),
-    ]);
-
     doc.autoTable({
-      head: [tableColumns],
-      body: tableRows,
+      head: [["Field", "Value"]],
+      body: Object.entries(formData).map(([field, value]) => [
+        field.toUpperCase(),
+        (value || 'N/A').toString().toUpperCase(),
+      ]),
       startY: selectedLabour.photoSrc ? 80 : 30,
-      styles: {
-        overflow: 'linebreak',
-        fontSize: 9,
-        cellPadding: 2,
-        textColor: [0, 0, 0],
-      },
-      columnStyles: {
-        0: { cellWidth: 60, fontStyle: 'bold' },
-        1: { cellWidth: 130 },
-      },
+      styles: { overflow: 'linebreak', fontSize: 9, cellPadding: 2, textColor: [0, 0, 0] },
+      columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' }, 1: { cellWidth: 130 } },
       margin: { top: 10 },
     });
-
     doc.save(`Labour_${selectedLabour.id}_FullForm.pdf`);
   };
 
   const downloadAadhaarCard = async () => {
     try {
-      const baseUrl = "";
       const { uploadAadhaarFront, uploadAadhaarBack, uploadIdProof, uploadInductionDoc } = selectedLabour;
-
       if (!uploadAadhaarFront && !uploadIdProof && !uploadAadhaarBack && !uploadInductionDoc) {
-        console.error("All document URLs are missing.");
         toast.error("No documents are available for download.");
         return;
       }
-
       const downloadFile = async (fileUrl, fileName) => {
         try {
-          const response = await axios.get(`${baseUrl}${fileUrl}`, { responseType: 'blob' });
+          const response = await axios.get(fileUrl, { responseType: 'blob' });
           const url = window.URL.createObjectURL(new Blob([response.data], { type: 'image/jpeg' }));
           const link = document.createElement('a');
           link.href = url;
@@ -340,72 +275,52 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-        } catch (error) {
-          console.error(`Error downloading ${fileName}:`, error);
+        } catch {
           toast.error(`Error downloading ${fileName}.`);
         }
       };
-      if (uploadAadhaarFront) {
-        await downloadFile(uploadAadhaarFront, `Labour_${selectedLabour.id}_Aadhaar_Front.jpg`);
-      } else {
-        console.warn("Aadhaar Front not uploaded.");
-      }
-
-      if (uploadAadhaarBack) {
-        await downloadFile(uploadAadhaarBack, `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
-      } else {
-        console.warn("Aadhaar Back not uploaded.");
-      }
-
-      if (uploadIdProof) {
-        await downloadFile(uploadIdProof, `Labour_${selectedLabour.id}_ID_Proof.jpg`);
-      } else {
-        console.warn("ID Proof not uploaded.");
-      }
-
-      if (uploadInductionDoc) {
-        await downloadFile(uploadInductionDoc, `Labour_${selectedLabour.id}_Induction_Doc.jpg`);
-      } else {
-        console.warn("Induction Document not uploaded.");
-      }
-
+      if (uploadAadhaarFront) await downloadFile(uploadAadhaarFront, `Labour_${selectedLabour.id}_Aadhaar_Front.jpg`);
+      if (uploadAadhaarBack) await downloadFile(uploadAadhaarBack, `Labour_${selectedLabour.id}_Aadhaar_Back.jpg`);
+      if (uploadIdProof) await downloadFile(uploadIdProof, `Labour_${selectedLabour.id}_ID_Proof.jpg`);
+      if (uploadInductionDoc) await downloadFile(uploadInductionDoc, `Labour_${selectedLabour.id}_Induction_Doc.jpg`);
       toast.success('Uploaded documents have been downloaded successfully.');
-    } catch (error) {
-      console.error('Error during document download process:', error);
+    } catch {
       toast.error('An error occurred while downloading documents. Please try again.');
     }
   };
 
-  // Organize data into sections
-  const personalDetails = {
-    "Labour ID": selectedLabour?.LabourID || "",
-    "Labour Ownership": selectedLabour.labourOwnership || "",
-    "Title": selectedLabour.title || "",
-    "Name": selectedLabour.name || "",
-    "Aadhaar No": selectedLabour.aadhaarNumber || "",
-    "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'dd-MM-yyyy') : "",
-    "Contact No": selectedLabour.contactNumber || "",
-    "Emergency Contact": selectedLabour?.emergencyContact || "",
-    "Gender": selectedLabour.gender || "",
-    "Date of Joining": selectedLabour.dateOfJoining ? format(new Date(selectedLabour.dateOfJoining), 'dd-MM-yyyy') : "",
-    "Marital Status": selectedLabour?.Marital_Status || "",
-  };
+  // Memoized details objects
+  const personalDetails = useMemo(() => {
+    const details = {
+      "Labour ID": selectedLabour?.LabourID || "",
+      "Labour Ownership": selectedLabour.labourOwnership || "",
+      "Title": selectedLabour.title || "",
+      "Name": selectedLabour.name || "",
+      "Aadhaar No": selectedLabour.aadhaarNumber || "",
+      "Date of Birth": selectedLabour.dateOfBirth ? format(new Date(selectedLabour.dateOfBirth), 'dd-MM-yyyy') : "",
+      "Contact No": selectedLabour.contactNumber || "",
+      "Emergency Contact": selectedLabour?.emergencyContact || "",
+      "Gender": selectedLabour.gender || "",
+      "Date of Joining": selectedLabour.dateOfJoining ? format(new Date(selectedLabour.dateOfJoining), 'dd-MM-yyyy') : "",
+      "Marital Status": selectedLabour?.Marital_Status || "",
+    };
+    if (selectedLabour?.labourOwnership === "Contractor") {
+      details["Contractor Name"] = selectedLabour?.contractorName || "";
+      details["Contractor Number"] = selectedLabour?.contractorNumber || "";
+    }
+    return details;
+  }, [selectedLabour]);
 
-  if (selectedLabour?.labourOwnership === "Contractor") {
-    personalDetails["Contractor Name"] = selectedLabour?.contractorName || "";
-    personalDetails["Contractor Number"] = selectedLabour?.contractorNumber || "";
-  }
-
-  const addressDetails = {
+  const addressDetails = useMemo(() => ({
     "Address": selectedLabour.address || "",
     "Village": selectedLabour?.village || "",
     "Pincode": selectedLabour.pincode || "",
     "District": selectedLabour?.district || "",
     "Taluka": selectedLabour.taluka || "",
     "State": selectedLabour?.state || "",
-  };
+  }), [selectedLabour]);
 
-  const workDetails = {
+  const workDetails = useMemo(() => ({
     "Project Name": selectedLabour?.projectName || "",
     "Company Name": selectedLabour?.companyName || "",
     "Department": selectedLabour?.department || "",
@@ -414,60 +329,28 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
     "Working Hours": selectedLabour?.workingHours || "",
     "Induction Date": selectedLabour?.Induction_Date ? format(new Date(selectedLabour.Induction_Date), 'dd-MM-yyyy') : "",
     "Induction By": selectedLabour?.Inducted_By || "",
-  };
+  }), [selectedLabour]);
 
-  const bankDetails = {
+  const bankDetails = useMemo(() => ({
     "Bank Name": selectedLabour?.bankName || "",
     "Account Number": selectedLabour?.accountNumber || "",
     "IFSC Code": selectedLabour?.ifscCode || "",
-  };
+  }), [selectedLabour]);
 
-  const documentDetails = {
+  const documentDetails = useMemo(() => ({
     "Induction Document": selectedLabour.uploadInductionDoc ? (
-      <Button
-        variant="outlined"
-        size="small"
-        color="primary"
-        onClick={() => handleOpenModal(selectedLabour.uploadInductionDoc)}
-        startIcon={<DescriptionIcon />}
-      >
-        View
-      </Button>
+      <Button variant="outlined" size="small" color="primary" onClick={() => handleOpenModal(selectedLabour.uploadInductionDoc)} startIcon={<DescriptionIcon />}>View</Button>
     ) : "N/A",
     "Aadhaar Front": selectedLabour.uploadAadhaarFront ? (
-      <Button
-        variant="outlined"
-        size="small"
-        color="primary"
-        onClick={() => handleOpenModal(selectedLabour.uploadAadhaarFront)}
-        startIcon={<DescriptionIcon />}
-      >
-        View
-      </Button>
+      <Button variant="outlined" size="small" color="primary" onClick={() => handleOpenModal(selectedLabour.uploadAadhaarFront)} startIcon={<DescriptionIcon />}>View</Button>
     ) : "N/A",
     "ID Proof": selectedLabour.uploadIdProof ? (
-      <Button
-        variant="outlined"
-        size="small"
-        color="primary"
-        onClick={() => handleOpenModal(selectedLabour.uploadIdProof)}
-        startIcon={<DescriptionIcon />}
-      >
-        View
-      </Button>
+      <Button variant="outlined" size="small" color="primary" onClick={() => handleOpenModal(selectedLabour.uploadIdProof)} startIcon={<DescriptionIcon />}>View</Button>
     ) : "N/A",
     "Aadhaar Back": selectedLabour.uploadAadhaarBack ? (
-      <Button
-        variant="outlined"
-        size="small"
-        color="primary"
-        onClick={() => handleOpenModal(selectedLabour.uploadAadhaarBack)}
-        startIcon={<DescriptionIcon />}
-      >
-        View
-      </Button>
+      <Button variant="outlined" size="small" color="primary" onClick={() => handleOpenModal(selectedLabour.uploadAadhaarBack)} startIcon={<DescriptionIcon />}>View</Button>
     ) : "N/A",
-  };
+  }), [selectedLabour, handleOpenModal]);
 
   const renderTableSection = (details) => (
     <TableContainer component={Paper} elevation={0} sx={{ mb: 2 }}>
@@ -478,15 +361,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
               '&:nth-of-type(odd)': { backgroundColor: '#f9f9f9' },
               '&:hover': { backgroundColor: '#f0f7ff' }
             }}>
-              <TableCell
-                component="th"
-                scope="row"
-                sx={{
-                  fontWeight: 'bold',
-                  width: '40%',
-                  borderBottom: '1px solid #e0e0e0'
-                }}
-              >
+              <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', width: '40%', borderBottom: '1px solid #e0e0e0' }}>
                 {key}
               </TableCell>
               <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
@@ -511,16 +386,14 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            bgcolor: '#13315c',
-            color: 'white',
-            p: 2
-          }}
-        >
+        <DialogTitle sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          bgcolor: '#13315c',
+          color: 'white',
+          p: 2
+        }}>
           <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
             Labour Details
           </Typography>
@@ -561,14 +434,12 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
                   </Box>
                 )}
               </Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: { xs: 'column', sm: 'column' },
-                  flexWrap: 'wrap',
-                  gap: 1,
-                }}
-              >
+              <Box sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'column' },
+                flexWrap: 'wrap',
+                gap: 1,
+              }}>
                 <Typography variant="body1" sx={{ color: '#555' }}>
                   <Box component="span" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Name:</Box> {selectedLabour.name || 'N/A'}
                 </Typography>
@@ -591,19 +462,9 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
                 variant="scrollable"
                 scrollButtons="auto"
                 sx={{
-                  '& .MuiTab-root': {
-                    minWidth: 'auto',
-                    px: 3,
-                    py: 1,
-                    fontWeight: 'bold',
-                  },
-                  '& .Mui-selected': {
-                    color: '#1976d2 !important',
-                  },
-                  '& .MuiTabs-indicator': {
-                    backgroundColor: '#1976d2',
-                    height: 3,
-                  }
+                  '& .MuiTab-root': { minWidth: 'auto', px: 3, py: 1, fontWeight: 'bold' },
+                  '& .Mui-selected': { color: '#1976d2 !important' },
+                  '& .MuiTabs-indicator': { backgroundColor: '#1976d2', height: 3 }
                 }}
               >
                 <Tab icon={<PersonIcon />} label="Personal" iconPosition="start" />
@@ -620,10 +481,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
               sx={{
                 "&::-webkit-scrollbar": { width: "8px" },
                 "&::-webkit-scrollbar-track": { backgroundColor: "#f1f1f1" },
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: "#888",
-                  borderRadius: "4px",
-                },
+                "&::-webkit-scrollbar-thumb": { backgroundColor: "#888", borderRadius: "4px" },
                 p: 2,
                 bgcolor: '#ffffff'
               }}
@@ -709,10 +567,10 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
         fullWidth
         PaperProps={{ sx: { borderRadius: 2 } }}
       >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <DialogTitle sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           p: 2,
           bgcolor: '#1976d2',
           color: 'white'
@@ -720,33 +578,26 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
           <Typography variant="h6">
             Document Viewer {currentDocumentType && `- ${currentDocumentType.replace('_', ' ').toUpperCase()}`}
           </Typography>
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseModal}
-            sx={{ color: 'white' }}
-          >
+          <IconButton aria-label="close" onClick={handleCloseModal} sx={{ color: 'white' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
         <DialogContent sx={{ p: 0, textAlign: 'center', minHeight: 400 }}>
           {modalImageSrc && !isCropping && (
-            <>
-              <img
-                src={modalImageSrc}
-                alt="Document"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '70vh',
-                  objectFit: 'contain'
-                }}
-              />
-            </>
+            <img
+              src={modalImageSrc}
+              alt="Document"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '70vh',
+                objectFit: 'contain'
+              }}
+            />
           )}
 
           {modalImageSrc && isCropping && (
             <Box sx={{ position: 'relative', width: '100%', height: 400, bgcolor: '#222' }}>
-             
               <Cropper
                 image={modalImageSrc}
                 crop={crop}
@@ -763,7 +614,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
                   min={1}
                   max={3}
                   step={0.1}
-                  onChange={(e, z) => setZoom(z)}
+                  onChange={(_, z) => setZoom(z)}
                 />
                 <Typography gutterBottom color="white">Rotation</Typography>
                 <Slider
@@ -771,7 +622,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
                   min={0}
                   max={360}
                   step={1}
-                  onChange={(e, value) => setRotation(value)}
+                  onChange={(_, value) => setRotation(value)}
                 />
               </Box>
             </Box>
@@ -780,8 +631,8 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
 
         <DialogActions sx={{ p: 2, justifyContent: 'center', gap: 1 }}>
           {!isCropping ? (
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               onClick={handleStartCrop}
               sx={{ bgcolor: '#1976d2' }}
             >
@@ -789,9 +640,9 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
             </Button>
           ) : (
             <>
-              <Button 
-                variant="contained" 
-                color="success" 
+              <Button
+                variant="contained"
+                color="success"
                 onClick={handleSaveCroppedImageToDatabase}
                 startIcon={<SaveIcon />}
                 disabled={isSaving}
@@ -799,18 +650,18 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
               >
                 {isSaving ? 'Saving...' : 'Replace Original'}
               </Button>
-              <Button 
-                variant="outlined" 
-                color="primary" 
+              <Button
+                variant="outlined"
+                color="primary"
                 onClick={handleSaveCroppedImage}
                 startIcon={<DownloadIcon />}
               >
                 Download Cropped
               </Button>
-              <Button 
-                variant="outlined" 
-                color="error" 
-                onClick={() => setIsCropping(false)}
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={resetCropStates}
               >
                 Cancel
               </Button>
@@ -831,4 +682,4 @@ ViewDetails.propTypes = {
 
 export default ViewDetails;
 
-    
+
