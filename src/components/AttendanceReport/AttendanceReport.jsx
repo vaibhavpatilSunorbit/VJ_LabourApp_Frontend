@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, } from 'react';
 import axios from 'axios';
 import {
@@ -98,49 +97,49 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     const laboursSource =
         labourlist && labourlist.length > 0 ? labourlist : labours;
 
-    // const fetchLaboursAttenadance = async (filters = {}) => {
-    //     setLoading(true);
-    //     try {
-    //         const response = await axios.get(
-    //             `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
-    //             { params: filters }
-    //         );
+    const fetchLaboursAttenadance = async (filters = {}) => {
+        setLoading(true);
+        try {
+            const response = await axios.get(
+                `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
+                { params: filters }
+            );
 
-    //         console.log("Filtered Attendance Response", response.data);
+            console.log("Filtered Attendance Response", response.data);
 
-    //         const uniqueLaboursMap = new Map();
-    //         console.log("uniqueLaboursMap", uniqueLaboursMap);
-    //         response.data.forEach(item => {
-    //             if (!uniqueLaboursMap.has(item.LabourID)) {
-    //                 uniqueLaboursMap.set(item.LabourID, {
-    //                     LabourID: item.LabourID,
-    //                     name: item.name,
-    //                     projectName: item.projectName,
-    //                     department: item.department,
-    //                     workingHours: item.workingHours || item.Shift,
-    //                     businessUnit: item.businessUnit,
-    //                     departmentName: item.departmentName,
-    //                     status: item.status || 'Approved',
-    //                     PresentDays: item.PresentDays,
-    //                     AbsentDays: item.AbsentDays,
-    //                     HalfDays: item.HalfDays,
-    //                     Overtime: item.RoundOffTotalOvertime
-    //                 });
-    //             }
-    //         });
+            const uniqueLaboursMap = new Map();
+            console.log("uniqueLaboursMap", uniqueLaboursMap);
+            response.data.forEach(item => {
+                if (!uniqueLaboursMap.has(item.LabourID)) {
+                    uniqueLaboursMap.set(item.LabourID, {
+                        LabourID: item.LabourID,
+                        name: item.name,
+                        projectName: item.projectName,
+                        department: item.department,
+                        workingHours: item.workingHours || item.Shift,
+                        businessUnit: item.businessUnit,
+                        departmentName: item.departmentName,
+                        status: item.status || 'Approved',
+                        PresentDays: item.PresentDays,
+                        AbsentDays: item.AbsentDays,
+                        HalfDays: item.HalfDays,
+                        Overtime: item.RoundOffTotalOvertime
+                    });
+                }
+            });
 
-    //         const uniqueLabours = Array.from(uniqueLaboursMap.values());
-    //         console.log("uniqueLabours", uniqueLabours);
-    //         setLaboursAttenadance(response.data);
-    //         setLabours(uniqueLabours);
+            const uniqueLabours = Array.from(uniqueLaboursMap.values());
+            console.log("uniqueLabours", uniqueLabours);
+            setLaboursAttenadance(response.data);
+            setLabours(uniqueLabours);
 
-    //     } catch (error) {
-    //         console.error('Error fetching labours:', error);
-    //         toast.error('Failed to fetch data');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
+        } catch (error) {
+            console.error('Error fetching labours:', error);
+            toast.error('Failed to fetch data');
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
 
@@ -154,46 +153,46 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     //     }
     // };
 
-    const fetchLaboursAttenadance = async (filters = {}) => {
-    setLoading(true);
-    try {
-        const response = await axios.get(
-            `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
-            { params: filters }
-        );
+//     const fetchLaboursAttenadance = async (filters = {}) => {
+//     setLoading(true);
+//     try {
+//         const response = await axios.get(
+//             `${API_BASE_URL}/api/labours/getAttendanceReportAndLabourOnboardingJoin`,
+//             { params: filters }
+//         );
 
-        const uniqueLaboursMap = new Map();
-        response.data.forEach(item => {
-            if (!uniqueLaboursMap.has(item.LabourID)) {
-                uniqueLaboursMap.set(item.LabourID, {
-                    LabourID: item.LabourID,
-                    name: item.name,
-                    projectName: item.projectName,
-                    department: item.department,
-                    workingHours: item.workingHours || item.Shift,
-                    businessUnit: item.businessUnit,
-                    departmentName: item.departmentName,
-                    status: item.status || 'Approved',
-                    PresentDays: item.PresentDays,
-                    AbsentDays: item.AbsentDays,
-                    HalfDays: item.HalfDays,
-                    Overtime: item.RoundOffTotalOvertime
-                });
-            }
-        });
+//         const uniqueLaboursMap = new Map();
+//         response.data.forEach(item => {
+//             if (!uniqueLaboursMap.has(item.LabourID)) {
+//                 uniqueLaboursMap.set(item.LabourID, {
+//                     LabourID: item.LabourID,
+//                     name: item.name,
+//                     projectName: item.projectName,
+//                     department: item.department,
+//                     workingHours: item.workingHours || item.Shift,
+//                     businessUnit: item.businessUnit,
+//                     departmentName: item.departmentName,
+//                     status: item.status || 'Approved',
+//                     PresentDays: item.PresentDays,
+//                     AbsentDays: item.AbsentDays,
+//                     HalfDays: item.HalfDays,
+//                     Overtime: item.RoundOffTotalOvertime
+//                 });
+//             }
+//         });
 
-        const uniqueLabours = Array.from(uniqueLaboursMap.values());
-        setLaboursAttenadance(response.data);
-        setLabours(uniqueLabours);
-        setAttendanceData(response.data); // <-- ADD THIS LINE
+//         const uniqueLabours = Array.from(uniqueLaboursMap.values());
+//         setLaboursAttenadance(response.data);
+//         setLabours(uniqueLabours);
+//         setAttendanceData(response.data); // <-- ADD THIS LINE
 
-    } catch (error) {
-        console.error('Error fetching labours:', error);
-        toast.error('Failed to fetch data');
-    } finally {
-        setLoading(false);
-    }
-};
+//     } catch (error) {
+//         console.error('Error fetching labours:', error);
+//         toast.error('Failed to fetch data');
+//     } finally {
+//         setLoading(false);
+//     }
+// };
 
     useEffect(() => {
         fetchLaboursAttenadance();
@@ -742,8 +741,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 }
               : day
           );
-        //   setAttendanceData(updatedAttendanceData);
-          setSingleAttendance(updatedAttendanceData);
+          setAttendanceData(updatedAttendanceData);
+        //   setSingleAttendance(updatedAttendanceData);
           toast.success(response.data.message || 'Attendance updated successfully!');
           handleManualEditDialogClose();
         } catch (error) {
@@ -916,25 +915,42 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
             setError('Error searching. Please try again.');
         }
     };
-    const fetchLabours = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get(`${API_BASE_URL}/api/labours/getAllRecordsLaboursOnboarding`);
-            const sortedLabours = response.data.sort((a, b) => a.LabourID - b.LabourID);
-            setLabours(sortedLabours);
-            setLoading(false);
-        } catch (error) {
-            setError('Error fetching labours. Please try again.');
-            setLoading(false);
-            console.error('Error fetching labours:', error);
-        }
-    };
+ 
+const fetchLabours = async (searchLabourIds = []) => {
+    setLoading(true);
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/labours/getAllRecordsLaboursOnboarding`);
+        // Remove duplicates by LabourID
+        const uniqueLaboursMap = new Map();
+        response.data.forEach(labour => {
+            if (!uniqueLaboursMap.has(labour.LabourID)) {
+                uniqueLaboursMap.set(labour.LabourID, labour);
+            }
+        });
+        let uniqueLabours = Array.from(uniqueLaboursMap.values()).sort((a, b) => a.LabourID - b.LabourID);
 
+        // If searchLabourIds is provided, filter the labours
+        if (Array.isArray(searchLabourIds) && searchLabourIds.length > 0) {
+            uniqueLabours = uniqueLabours.filter(labour =>
+                searchLabourIds.includes(String(labour.LabourID))
+            );
+        }
+
+        setLabours(uniqueLabours);
+        setLoading(false);
+    } catch (error) {
+        setError('Error fetching labours. Please try again.');
+        setLoading(false);
+        console.error('Error fetching labours:', error);
+    }
+};
 
     useEffect(() => {
         fetchLabours();
     }, []);
 
+
+    
     // useEffect(() => {
     //     if (modalOpen) {
     //         fetchProjectNames();
@@ -1008,8 +1024,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                     projectName: attendanceRecord?.projectName,
                 };
             });
-            setSingleAttendance(fullMonthAttendance);
-            
+            // setSingleAttendance(fullMonthAttendance);
+            setAttendanceData(fullMonthAttendance)
         } catch (error) {
             console.error('Error fetching attendance data:', error);
 
@@ -1051,7 +1067,8 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                     status: record ? record.Status : 'NA',
                 };
             });
-            setSingleAttendance(fullMonthAttendance);
+            // setSingleAttendance(fullMonthAttendance);
+            setAttendanceData(fullMonthAttendance)
         } catch (error) {
             console.error('Error fetching attendance:', error);
         }
@@ -1132,7 +1149,6 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                     absentDays: labour.AbsentDays,
                     misspunchDays: labour.MissPunchDays,
                     WeeklyOffDays: labour.WeeklyOffDays,
-                    // totalOvertimeHours: parseFloat(totalOvertime.toFixed(1)),
                     totalOvertimeHours: formatTotalOvertime(labour.TotalOvertimeHours || 0),
                     roundOffTotalOvertime: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
                     TotalOvertimeHoursManually: formatRoundOffTotalOvertime(labour.TotalOvertimeHoursManually || 0),
@@ -1141,17 +1157,13 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
                 };
             });
 
-            setAttendanceData(processedAttendance);
-
-        //     if (searchQuery && searchQuery.trim() !== '') {
-        //     // When searching → use searchData
-        //     setSearchData(processedAttendance);
-        //     setAttendanceData([]);
-        // } else {
-        //     // Normal fetch → use attendanceData
-        //     setAttendanceData(processedAttendance);
-        //     setSearchData([]);
-        // }
+            // If searching, set searchResults; else, set attendanceData
+            if (searchQuery && searchQuery.trim() !== '') {
+                setSearchResults(processedAttendance);
+            } else {
+                setAttendanceData(processedAttendance);
+                setSearchResults([]); // Clear previous search results
+            }
         } catch (error) {
             console.error('Error fetching attendance data:', error);
             toast.error(error.response?.data?.message || 'Error fetching attendance data. Please try again later.');
@@ -1166,93 +1178,26 @@ const AttendanceReport = ({ departments, labour, labourlist }) => {
     }, [selectedMonth, selectedYear]);
 
 
-    // const getFilteredLaboursForTable = () => {
-    //     let baseLabours = rowsPerPage > 0
-    //         ? (searchResults.length > 0
-    //             ? searchResults
-    //             : (filteredIconLabours.length > 0
-    //                 ? filteredIconLabours
-    //                 : [...labours]))
-    //         : [];
+    const getFilteredLaboursForTable = () => {
+        let baseLabours = rowsPerPage > 0 ? [...labours] : [];
 
-    //     baseLabours = baseLabours.filter((labour) => {
-    //         const labourProjectId = Number(labour.projectId);
-    //         const labourDepartmentId = Number(labour.departmentId);
-    //         return (
-    //             allowedProjectIds.includes(labourProjectId) &&
-    //             allowedDepartmentIds.includes(labourDepartmentId)
-    //         );
-    //     });
-    //     baseLabours = baseLabours.filter((labour) => labour.status === 'Approved');
-    //     return baseLabours;
-    // };
+        baseLabours = baseLabours.filter((labour) => {
+            const labourProjectId = Number(labour.projectName);
+            const labourDepartmentId = Number(labour.department);
+            return (
+                allowedProjectIds.includes(labourProjectId) &&
+                allowedDepartmentIds.includes(labourDepartmentId)
+            );
+        });
 
+        // Use searchResults if searching, else use attendanceData
+        const sourceAttendance = (searchQuery && searchQuery.trim() !== '' && searchResults.length > 0)
+            ? searchResults
+            : attendanceData;
 
-//    const getFilteredLaboursForTable = () => {
-//     // let laboursData = searchResults.length > 0
-//     // ? searchResults : [...labours];
-
-//     let baseLabours = rowsPerPage > 0
-//         ? ([...labours])
-//         : [];
-
-//     baseLabours = baseLabours.filter((labour) => {
-//         const labourProjectId = Number(labour.projectName);
-//         const labourDepartmentId = Number(labour.department);
-//         return (
-//             allowedProjectIds.includes(labourProjectId) &&
-//             allowedDepartmentIds.includes(labourDepartmentId)
-//         );
-//     });
-
-//     // Only show users with presentDays > 0
-//     // baseLabours = baseLabours.filter((labour) => {
-//     //     const labourAttendance = attendanceData.find((att) => att.labourId === labour.LabourID);
-//     //     return (labour.status === 'Approved' || labour.status === 'Disable') &&
-//     //         labourAttendance &&
-//     //         Number(labourAttendance.presentDays) > 0;
-//     // });
-
-
-//     const mergedLabours = baseLabours.map((labour) => {
-//         // Find matching attendance
-//         const labourAttendance = (searchData.length > 0 ? searchData : attendanceData).find(
-//           (att) => att.labourId === labour.LabourID
-//         );
-      
-//         // Merge attendance into labour object (if found)
-//         return {
-//           ...labour,
-//           attendance: labourAttendance || null, // add null if no attendance
-//         };
-//       }).filter((item) => {
-//             return (item.status === 'Approved' || item.status === 'Disable') &&
-//             item.attendance &&
-//             Number(item.attendance.presentDays) > 0;
-//       });
-      
-
-//     return mergedLabours;
-// };
-
-const getFilteredLaboursForTable =() => {
-    let baseLabours = rowsPerPage > 0 ? [...labours] : [];
-
-    baseLabours = baseLabours.filter((labour) => {
-        const labourProjectId = Number(labour.projectName);
-        const labourDepartmentId = Number(labour.department);
-        return (
-            allowedProjectIds.includes(labourProjectId) &&
-            allowedDepartmentIds.includes(labourDepartmentId)
-        );
-    });
-
-    // const sourceAttendance = searchData.length > 0 ? searchData : attendanceData;
-    // console.log("sourceAttendance", sourceAttendance);
-
-    const mergedLabours = baseLabours
+    let mergedLabours = baseLabours
         .map((labour) => {
-            const labourAttendance = attendanceData.find(
+            const labourAttendance = sourceAttendance.find(
                 (att) => att.labourId === labour.LabourID
             );
 
@@ -1268,10 +1213,16 @@ const getFilteredLaboursForTable =() => {
                 Number(item.attendance.presentDays) > 0
             );
         });
-    console.log("mergedLabours", mergedLabours);
+
+    // Filter by searchQuery (LabourID) if searching
+    if (searchQuery && searchQuery.trim() !== '') {
+        mergedLabours = mergedLabours.filter(
+            (item) => String(item.LabourID) === String(searchQuery.trim())
+        );
+    }
 
     return mergedLabours;
-};
+    };
 
     const handleModalClose = () => {
         setModalOpen(false);
@@ -1417,7 +1368,7 @@ const handleImportSuccess = (msg) => {
                 </Typography>
             </Box>
 
-            <Box display="flex" alignItems="center">
+            <Box display="flex" alignItems="center" mb={1} mr={2}>
                 <CircleIcon
                     sx={{
                         color: "#FF6F00",
@@ -1579,7 +1530,7 @@ const handleImportSuccess = (msg) => {
 
     const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-    const generateCalendar = (singleAttendance, year, month) => {
+    const generateCalendar = (attendanceData, year, month) => {
         const daysInMonth = new Date(year, month, 0).getDate();
         const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
 
@@ -1594,7 +1545,7 @@ const handleImportSuccess = (msg) => {
                 } else if (dayCounter > daysInMonth) {
                     week.push({ day: null, status: null });
                 } else {
-                    const currentDay = singleAttendance.find(
+                    const currentDay = attendanceData.find(
                         (data) => new Date(data.date).getDate() === dayCounter
                     );
                     week.push({ day: dayCounter, status: currentDay ? currentDay.status : 'NA' });
@@ -1607,7 +1558,7 @@ const handleImportSuccess = (msg) => {
         return calendar;
     };
 
-    const calendar = generateCalendar(singleAttendance, selectedYear, selectedMonth);
+    const calendar = generateCalendar(attendanceData, selectedYear, selectedMonth);
 
     function convertToHoursMinutes(total) {
         const hours = Math.floor(total);
@@ -1682,7 +1633,7 @@ const handleImportSuccess = (msg) => {
                     setSearchResults={setSearchResults}
                     handleSelectLabour={handleSelectLabour}
                     showResults={false}
-                    fetchAttendanceForMonthAll={fetchAttendanceForMonthAll}
+                    // fetchAttendanceForMonthAll={fetchAttendanceForMonthAll}
                 />
             </Box>
             {loading && <Loading />}
@@ -1920,6 +1871,7 @@ const handleImportSuccess = (msg) => {
                                         <TableRow key={String(labour.LabourID)}
                                         // sx={{
                                         //     backgroundColor: labourAttendance?.InApprovalStatus === true
+                                       
                                         //       ? '#ffe6e6'
                                         //       : labourAttendance?.InApprovalStatus === false
                                         //       ? 'inherit'
@@ -2126,8 +2078,8 @@ const handleImportSuccess = (msg) => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {singleAttendance.length > 0 ? (
-                                        singleAttendance.map((day, index) => (
+                                    {attendanceData.length > 0 ? (
+                                        attendanceData.map((day, index) => (
                                             <TableRow key={index}
                                                 sx={{
                                                     backgroundColor:
