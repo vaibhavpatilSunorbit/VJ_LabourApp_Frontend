@@ -778,7 +778,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
           )}
         </DialogContent>
 
-        <DialogActions sx={{ p: 2, justifyContent: 'center', gap: 1 }}>
+        {/* <DialogActions sx={{ p: 2, justifyContent: 'center', gap: 1 }}>
           {!isCropping ? (
             <Button 
               variant="contained" 
@@ -816,7 +816,7 @@ const ViewDetails = ({ selectedLabour, onClose, hideAadhaarButton, onLabourUpdat
               </Button>
             </>
           )}
-        </DialogActions>
+        </DialogActions> */}
       </Dialog>
     </>
   );
