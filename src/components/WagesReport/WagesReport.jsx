@@ -36,6 +36,7 @@ import './wagesReport.css'
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import  AdapterDateFns  from '@date-io/date-fns';
 import { format, parse } from 'date-fns';
+import { CollectionsBookmarkOutlined } from '@mui/icons-material';
 
 const AttendanceReport = ({ departments, projectNames, labourlist, labour }) => {
     const theme = useTheme();
